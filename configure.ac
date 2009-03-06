@@ -21,6 +21,7 @@ AC_CONFIG_FILES([
   Makefile
   m4/Makefile
   examples/Makefile
+  dune-pdelab-howto.pc
 ])
 AC_OUTPUT
 # finally print the summary information
