@@ -1,0 +1,9 @@
+#dune module information file#
+##############################
+
+#Name of the module
+Module: dune-pdelab-howto
+Version: 0.1
+Maintainer: peter.bastian@iwr.uni-heidelberg.de
+#depending on 
+Depends: dune-common dune-grid dune-istl dune-localfunctions dune-pdelab

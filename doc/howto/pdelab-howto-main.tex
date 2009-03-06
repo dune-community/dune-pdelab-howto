@@ -1,0 +1,254 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% A general frame for lecture slides and lecture notes in one file
+% using LaTeX beamer
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% only for the article version
+\mode<article> 
+{
+  \usepackage{amsfonts}
+  \usepackage{amsthm}
+  \usepackage{fullpage}
+  \setlength{\parindent}{0pt}
+  \setlength{\parskip}{1.3ex plus 0.5ex minus 0.2ex}
+}
+
+% only presentation 
+\mode<presentation>
+{
+%  \usepackage{times}
+  \usetheme{default}
+%  \usetheme{Montpellier}
+  \setbeamercovered{transparent}
+  \setbeamertemplate{background canvas}[vertical shading][bottom=white!10,top=white!10]
+  \setlength{\parindent}{0pt}
+  \setlength{\parskip}{1.2ex plus 0.5ex minus 0.3ex}
+  \setbeamertemplate{theorems}[numbered]
+  \usefonttheme[onlysmall]{structurebold}
+}
+
+% all after
+\usepackage{graphicx}
+%\usepackage{multimedia}
+\usepackage{psfrag}
+\usepackage{listings}
+\lstset{language=C++, basicstyle=\ttfamily,
+  stringstyle=\ttfamily, commentstyle=\it, extendedchars=true}
+\usepackage{curves}
+\usepackage{epic}
+\usepackage{calc}
+\usepackage{fancybox}
+\usepackage{xspace}
+\usepackage{enumerate}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+
+\mode<article> 
+{
+\usepackage{hyperref}
+}
+
+%The theorems
+\mode<article> 
+{
+\newtheoremstyle{mystyle}%
+{3pt}%
+{3pt}%
+{}%
+{}%
+{\sffamily\bfseries}%
+{.}%
+{.5em}%
+{}%
+\theoremstyle{mystyle}
+}
+\mode<presentation> 
+{
+\theoremstyle{definition}
+}
+\newtheorem{Def}{Definiton}[section]
+\newtheorem{Exm}[Def]{Example}
+\newtheorem{Lem}[Def]{Lemma}
+\newtheorem{Rem}[Def]{Remark}
+\newtheorem{Rul}[Def]{Rule}
+\newtheorem{Thm}[Def]{Theorem}
+\newtheorem{Cor}[Def]{Corollary}
+\newtheorem{Obs}[Def]{Observation}
+\newtheorem{Ass}[Def]{Assumption}
+\newtheorem{Alg}[Def]{Algorithm}
+
+% Delete this, if you do not want the table of contents to pop up at
+% the beginning of each subsection:
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \frametitle{Contents}
+\tableofcontents[currentsection,sectionstyle=show/hide,subsectionstyle=show/show/hide]
+%    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+% Title definition
+\mode<presentation>
+{
+  \title{\texttt{dune-pdelab} Howto}
+  \author{Peter Bastian}
+  \institute[IPVS]
+  {
+    Universität Heidelberg\\
+    Interdisziplinäres Zentrum für Wissenschaftliches Rechnen\\
+    Im Neuenheimer Feld 368, D-69120 Heidelberg\\
+	email: \url{Peter.Bastian@iwr.uni-stuttgart.de}
+  }
+  \date{\today}
+  \logo{\includegraphics[width=9mm]{./EPS/iwrlogo-klein.eps}}
+}
+\mode<article>
+{
+  \title{\texttt{dune-pdelab} Howto}
+  \author{\textsc{Peter Bastian}\\
+    Universität Heidelberg\\
+    Interdisziplinäres Zentrum für Wissenschaftliches Rechnen\\
+    Im Neuenheimer Feld 368, D-69120 Heidelberg\\
+	email: \url{Peter.Bastian@iwr.uni-stuttgart.de}
+  }
+  \date{\today}
+}
+
+% logo nach oben
+\mode<presentation>
+{
+% No navigation symbols and no lower logo
+\setbeamertemplate{sidebar right}{}
+
+% logo
+\newsavebox{\logobox}
+\sbox{\logobox}{%
+    \hskip\paperwidth%
+    \rlap{%
+      % putting the logo should not change the vertical possition
+      \vbox to 0pt{%
+        \vskip-\paperheight%
+        \vskip0.1cm%
+        \llap{\insertlogo\hskip0.1cm}%
+        % avoid overfull \vbox messages
+        \vss%
+      }%
+    }%
+}
+
+\addtobeamertemplate{footline}{}{%
+    \usebox{\logobox}%
+}
+}
+
+% number equations within sections in article mode
+\numberwithin{equation}{section}
+
+% math symbols
+\newcommand{\diffd}{\,d}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% now comes the individual stuff lecture by lecture
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\mode<presentation>
+{
+  \begin{frame}
+    \titlepage
+  \end{frame}
+}
+\mode<article>
+{
+\maketitle
+}
+
+\begin{abstract}
+This article contains concepts for a general discretization module for
+the ``Distributed Numerics Environment'' (DUNE). It should enable one
+to build up a library of finite element methods in an easy and
+extendable way that is closely related to the mathematical formulation
+of finite element method. As the first necessary step an abstract
+framework for formulating a large variety of finite element methods is
+attempted. 
+\end{abstract}
+
+\mode<presentation>{
+\begin{frame}<presentation>
+\frametitle{Outline}
+\tableofcontents[section,sectionstyle=show/show,subsectionstyle=hide/hide/hide] 
+\end{frame}
+}
+
+\mode<article>
+{
+\tableofcontents
+}
+
+\mode<article>
+{
+\clearpage
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{What is missing in DUNE?}
+
+\begin{frame}
+\frametitle<presentation>{What is missing in DUNE?}
+\begin{itemize}
+\item FEM Framework. Define grid based discretization schemes for
+arbitrary systems of PDEs in an easy way that allows one to exploit
+all the features of DUNE.
+\item Coupling of problems on different grids (overlapping and
+non-overlapping, different dimension). Includes parallelization and
+mapping of grids to parts of a parallel machine.
+\item Robust solvers for coupled problems that are as general as
+possible. 
+\item Fast, robust and scalable grid manager for locally refined
+unstructured grids.
+\item Geometry module and CAD interface allowing definition of domains, coefficients and
+boundary conditions independent of a  specific grid
+manager. Integration in Salome framework?
+\item HDF based persistent storage of meshes and functions. Scalable
+to large data sets and read/write from many grid managers.
+\item Workflow environment. High-level description of simulation
+workflows. 
+\end{itemize}
+\cite{BrennerScott}
+\end{frame}
+
+
+% die weiterführende Literatur wollen wir in der Präsentation nie zeigen
+\mode<presentation>
+{
+\begin{frame}
+\frametitle{Bibliography}
+\bibliographystyle{alpha}
+\bibliography{lit}
+\end{frame}
+}
+
+% Literatur im Artikel jetzt hier
+\mode<article>
+{
+\clearpage
+\addcontentsline{toc}{section}{Literaturverzeichnis}
+\bibliographystyle{alpha}
+\bibliography{lit}
+}
+
+
+\end{document}
