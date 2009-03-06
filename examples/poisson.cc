@@ -16,7 +16,6 @@
 #include<dune/istl/solvers.hh>
 #include<dune/istl/preconditioners.hh>
 #include<dune/istl/io.hh>
-//#include<dune/istl/paamg/amg.hh>
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/p12dfem.hh>
@@ -232,18 +231,6 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
   Dune::SeqILU0<M,V,V> ilu0(m,1.0);
   Dune::Richardson<V,V> richardson(1.0);
-
-//   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
-//     Dune::Amg::FirstDiagonal> > Criterion;
-//   typedef Dune::SeqSSOR<M,V,V> Smoother;
-//   typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
-//   SmootherArgs smootherArgs;
-//   smootherArgs.iterations = 2;
-//   int maxlevel = 20, coarsenTarget = 100;
-//   Criterion criterion(maxlevel, coarsenTarget);
-//   criterion.setMaxDistance(2);
-//   typedef Dune::Amg::AMG<Dune::MatrixAdapter<M,V,V>,V,Smoother> AMG;
-//   AMG amg(opa,criterion,smootherArgs,1,1);
 
   Dune::CGSolver<V> solvera(opa,ilu0,1E-10,5000,2);
   Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
