@@ -46,6 +46,11 @@
 //           - \Delta u = f in \Omega, 
 //                    u = g on \partial\Omega_D
 //  -\nabla u \cdot \nu = j on \partial\Omega_N
+// In this case we actually want to solve the laplace equation,
+// i.e.
+//                 f = 0
+//  \partial\Omega_N = \emptyset
+//                 j = arbitrary
 //===============================================================
 //===============================================================
 
@@ -67,10 +72,7 @@ public:
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
-    if (x[0]>0.25 && x[0]<0.375 && x[1]>0.25 && x[1]<0.375)
-      y = 50.0;
-    else
-      y = 0.0;
+    y = 0.0;
   }
 };
 
@@ -95,19 +97,6 @@ public:
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
   {  
-    Dune::FieldVector<typename GV::Grid::ctype,GV::dimension> 
-      xg = ig.intersectionGlobal().global(x);
-
-    if (xg[1]<1E-6 || xg[1]>1.0-1E-6)
-      {
-        y = 0; // Neumann
-        return;
-      }
-    if (xg[0]>1.0-1E-6 && xg[1]>0.5+1E-6)
-      {
-        y = 0; // Neumann
-        return;
-      }
     y = 1; // Dirichlet
   }
 
@@ -132,10 +121,17 @@ public:
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
-    typename Traits::DomainType center;
-    for (int i=0; i<GV::dimension; i++) center[i] = 0.5;
-    center -= x;
-	y = exp(-center.two_norm2());
+    typename Traits::DomainFieldType rho = std::sqrt(x[0]*x[0]+x[1]*x[1]);
+    typename Traits::DomainFieldType theta = std::atan2(x[1], x[0]);
+    if(theta < 0.0) theta += 2*M_PI;
+    // how much pacman opens its mouth
+    const typename Traits::DomainFieldType opening = 10.0/180.0*M_PI;
+    if(theta > 2*M_PI - opening) {
+      y = 0.0;
+    }
+    else {
+      y = std::sin(theta/(2*M_PI-opening)*M_PI);
+    }
   }
 };
 
@@ -153,16 +149,7 @@ public:
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
-    if (x[1]<1E-6 || x[1]>1.0-1E-6)
-      {
-        y = 0;
-        return;
-      }
-    if (x[0]>1.0-1E-6 && x[1]>0.5+1E-6)
-      {
-        y = -5.0;
-        return;
-      }
+    y = 0.0;
   }
 };
 
@@ -176,7 +163,6 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 {
   // constants and types
   typedef typename GV::Grid::ctype DF;
-  const int dim = GV::dimension;
   typedef typename FEM::Traits::LocalFiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
 
@@ -233,6 +219,18 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   Dune::SeqILU0<M,V,V> ilu0(m,1.0);
   Dune::Richardson<V,V> richardson(1.0);
 
+//   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
+//     Dune::Amg::FirstDiagonal> > Criterion;
+//   typedef Dune::SeqSSOR<M,V,V> Smoother;
+//   typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
+//   SmootherArgs smootherArgs;
+//   smootherArgs.iterations = 2;
+//   int maxlevel = 20, coarsenTarget = 100;
+//   Criterion criterion(maxlevel, coarsenTarget);
+//   criterion.setMaxDistance(2);
+//   typedef Dune::Amg::AMG<Dune::MatrixAdapter<M,V,V>,V,Smoother> AMG;
+//   AMG amg(opa,criterion,smootherArgs,1,1);
+
   Dune::CGSolver<V> solvera(opa,ilu0,1E-10,5000,2);
   Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
@@ -248,9 +246,16 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   DGF dgf(gfs,x);
   
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  vtkwriter.write(filename,Dune::VTKOptions::ascii);
+  //  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  {
+    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
+    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
+    vtkwriter.write(filename,Dune::VTKOptions::ascii);
+  }
+  {
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    vtkwriter.write(filename+"_grid",Dune::VTKOptions::ascii);
+  }
 }
 
 //===============================================================
@@ -263,104 +268,16 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
 
-    // YaspGrid Q1 2D test
-    {
-      // make grid
-      Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
-      Dune::YaspGrid<2,2> grid(L,N,B,0);
-      grid.globalRefine(3);
-
-      // get view
-      typedef Dune::YaspGrid<2,2>::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
-
-      // make finite element map
-      typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::Q12DLocalFiniteElementMap<DF,double> FEM;
-      FEM fem;
-  
-      // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q1_2d");
-    }
-
-    // YaspGrid Q2 2D test
-    {
-      // make grid
-      Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
-      Dune::YaspGrid<2,2> grid(L,N,B,0);
-      grid.globalRefine(3);
-
-      // get view
-      typedef Dune::YaspGrid<2,2>::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
-
-      // make finite element map
-      typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::Q22DLocalFiniteElementMap<DF,double> FEM;
-      FEM fem;
-  
-      // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q2_2d");
-    }
-
-    // YaspGrid Q2 3D test
-    {
-      // make grid
-      Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(1);
-      Dune::FieldVector<bool,3> B(false);
-      Dune::YaspGrid<3,3> grid(L,N,B,0);
-      grid.globalRefine(3);
-
-      // get view
-      typedef Dune::YaspGrid<3,3>::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
-
-      // make finite element map
-      typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double,3> FEM;
-      FEM fem;
-  
-      // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q1_3d");
-    }
-
-    // UG Pk 2D test
-#if HAVE_UG
-    {
-      // make grid 
-      UGUnitSquare grid;
-      grid.globalRefine(4);
-
-      // get view
-      typedef UGUnitSquare::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
- 
-      // make finite element map
-      typedef GV::Grid::ctype DF;
-      typedef double R;
-      const int k=3;
-      const int q=2*k;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
-      FEM fem(gv);
-  
-      // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"poisson_UG_Pk_2d");
-    }
-#endif
-
 #if HAVE_ALBERTA
     {
+      typedef AlbertaReentrantCorner::Grid Grid;
       // make grid 
-      AlbertaUnitSquare grid;
-      grid.globalRefine(8);
+      AlbertaReentrantCorner gridp;
+      Grid &grid = *gridp;
+      grid.globalRefine(0);
       
       // get view
-      typedef AlbertaUnitSquare::LeafGridView GV;
+      typedef Grid::LeafGridView GV;
       const GV& gv=grid.leafView(); 
       
       // make finite element map
@@ -372,30 +289,7 @@ int main(int argc, char** argv)
       FEM fem(gv);
       
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"poisson_Alberta_Pk_2d");
-    }
-#endif
-
-#if HAVE_ALUGRID
-    {
-      // make grid 
-      ALUUnitSquare grid;
-      grid.globalRefine(4);
-
-      // get view
-      typedef ALUUnitSquare::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
-      
-      // make finite element map
-      typedef GV::Grid::ctype DF;
-      typedef double R;
-      const int k=3;
-      const int q=2*k;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
-      FEM fem(gv);
-      
-      // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"poisson_ALU_Pk_2d");
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"reentrantcorner_Alberta_Pk_2d");
     }
 #endif
 
