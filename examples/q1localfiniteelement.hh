@@ -12,28 +12,23 @@ public:
 										 Q1LocalCoefficients,
 	   				 Q1LocalInterpolation<Q1LocalBasis<D,R> > > Traits;
 
-  Q1LocalFiniteElement ()
-  {
+  Q1LocalFiniteElement () {
 	gt.makeQuadrilateral();
   }
 
-  const typename Traits::LocalBasisType& localBasis () const
-  {
+  const typename Traits::LocalBasisType& localBasis () const {
 	return basis;
   }
   
-  const typename Traits::LocalCoefficientsType& localCoefficients () const
-  {
+  const typename Traits::LocalCoefficientsType& localCoefficients () const {
 	return coefficients;
   }
   
-  const typename Traits::LocalInterpolationType& localInterpolation () const
-  {
+  const typename Traits::LocalInterpolationType& localInterpolation () const {
 	return interpolation;
   }
 	
-  Dune::GeometryType type () const
-  {
+  Dune::GeometryType type () const {
 	return gt;
   }
 
