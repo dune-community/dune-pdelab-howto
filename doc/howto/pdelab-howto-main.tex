@@ -1103,6 +1103,69 @@ Composite function spaces can be visualized as a tree:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Function Traits}
+\begin{lstlisting}[basicstyle=\scriptsize,tabsize=4]
+template<class DF, int n, class D, class RF, int m, class R>
+struct C0LocalBasisTraits 
+{
+  typedef DF DomainFieldType;
+  enum { dimDomain = n }; 
+  typedef D DomainType;
+  typedef RF RangeFieldType;
+  enum { dimRange = m }; 
+  typedef R RangeType;
+  enum { diffOrder=0 };
+};
+\end{lstlisting}
+\begin{lstlisting}[basicstyle=\scriptsize,tabsize=4]
+template<class DF, int n, class D, class RF, int m, class R, class J>
+struct C1LocalBasisTraits 
+  : public C0LocalBasisTraits<DF,n,D,RF,m,R> 
+{
+  typedef J JacobianType;
+  enum { diffOrder=1 };
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Local Basis}
+\lstinputlisting[basicstyle=\scriptsize,tabsize=4]{../../examples/q1localbasis.hh}
+\end{frame}
+
+\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Local Coefficients}
+\lstinputlisting[basicstyle=\scriptsize,tabsize=4]{../../examples/q1localcoefficients.hh}
+\end{frame}
+
+\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Local Interpolation}
+\lstinputlisting[basicstyle=\scriptsize,tabsize=4]{../../examples/q1localinterpolation.hh}
+\end{frame}
+
+\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Local Finite Element}
+\lstinputlisting[basicstyle=\scriptsize,tabsize=4]{../../examples/q1localfiniteelement.hh}
+\end{frame}
+
+\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Local Finite Element Map}
+\lstinputlisting[basicstyle=\scriptsize,tabsize=4]{../../examples/q1localfiniteelementmap.hh}
+\end{frame}
+
+\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Grid Function Space Example}
+\lstinputlisting[basicstyle=\scriptsize,tabsize=4]{../../examples/q1gridfunctionspace.hh}
+\end{frame}
+
+\begin{frame}
+\frametitle<presentation>{Visualization of the Result}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{./EPS/q1.eps}
+\end{center}
+\end{frame}
+
 \cleardoublepage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
