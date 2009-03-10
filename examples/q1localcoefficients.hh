@@ -1,0 +1,28 @@
+#include<dune/finiteelements/common/localcoefficients.hh>
+
+class Q1LocalCoefficients 
+  : public Dune::LocalCoefficientsInterface<Q1LocalCoefficients>
+{
+public:
+  //! \brief Standard constructor
+  Q1LocalCoefficients () : li(4)
+  {
+	for (int i=0; i<4; i++)
+	  li[i] = Dune::LocalKey(i,2,0);
+  }
+  
+  //! number of coefficients
+  int size () const
+  {
+	return 4;
+  }
+  
+  //! get i'th index
+  const Dune::LocalKey& localKey (int i) const
+  {
+	return li[i];
+  } 
+  
+private:
+  std::vector<Dune::LocalKey> li;
+};
