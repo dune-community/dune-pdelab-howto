@@ -31,6 +31,7 @@
   \setlength{\parskip}{1.35ex plus 0.5ex minus 0.3ex}
   \setbeamertemplate{theorems}[numbered]
   \usefonttheme[onlysmall]{structurebold}
+  \usepackage{amscd}
 }
 
 % all after
@@ -84,6 +85,7 @@
 \newtheorem{Ass}[Def]{Assumption}
 \newtheorem{Pro}[Def]{Property}
 \newtheorem{Alg}[Def]{Algorithm}
+\newtheorem{Prp}[Def]{Proposition}
 
 % Delete this, if you do not want the table of contents to pop up at
 % the beginning of each subsection:
@@ -922,6 +924,20 @@ Below we will make use of the following restriction operators
 (\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}\mathbf{u}')_i &= 
 (\mathbf{u}')_i \quad \forall i\in \bar{\mathcal{I}}_{U_h}.
 \end{align*}
+
+Note that $\mathbf{Q}_{\tilde{\mathbf{U}}}
+= \mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'}^T \mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'}$
+is an orthogonal projection.
+
+It can be used to project a function from $U_h$ to $\tilde{U}_h$ as
+follows:
+\begin{align*}
+P_h &: U_h \to \tilde{U}_h, & P_h  =
+FE_{\Phi_h'} \circ \mathbf{Q}_{\tilde{\mathbf{U}}} \circ
+FE_{\Phi_h'}^{-1} .
+\end{align*}
+
+The projection $P_h$ will play a major role below.
 \end{frame}
 
 \subsection{Examples of Constrained Spaces}
@@ -1042,6 +1058,41 @@ boundary conditions.
 \end{itemize}
 \end{frame}
 
+
+\subsection{Function Space Composition}
+
+\begin{frame}
+\frametitle<presentation>{Function Space Composition}
+For systems we need composite function spaces.
+
+Given $k>1$ function spaces $U_0, \ldots, U_{k-1}$ we define the
+composite function space 
+\begin{equation}
+U = U_0 \times U_1 \times \ldots \times U_{k-1} .
+\end{equation}
+
+If all component spaces are the same we can also write
+\begin{equation}
+U = V^k
+\end{equation}
+
+This can be done recursively. E.g. for solving the Stokes equation
+in dimension $d$ using Taylor-Hood elements we would require
+\begin{equation*}
+U_h^\text{TH} = \left( U_h^2\right)^d \times U_h^1
+\end{equation*}
+
+Composite function spaces can be visualized as a tree:
+\begin{minipage}[c]{0.2\textwidth}
+\psfrag{P1}{$U_h^1$} 
+\psfrag{P2}{$U_h^2$} 
+\psfrag{TH}{$U_h^\text{TH}$} 
+\psfrag{Vel}{$U_h^\text{V}$} 
+\includegraphics[width=\textwidth]{./EPS/THBaum.eps}
+\end{minipage}
+
+\end{frame}
+
 \cleardoublepage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1062,79 +1113,20 @@ boundary conditions.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Reormulation of Constrained Problem}
+\subsection{Solution of the Unconstrained Problem}
 
-\paragraph{Unconstrained problem}
+\paragraph{Unconstrained Problem in Original Basis}
 
-Let $r_h : U_h \times V_h \to \mathbb{K}$ be a map that is linear in its
-second argument but not necessarily in its first argument. 
-Then the unconstrained problem \textit{in residual formulation} reads
-\begin{equation}\label{Eq:UnconstrainedProblem}
-u_h\in U_h\ : \qquad r_h(u_h,v) = 0 \quad \forall v\in V_h.
+\begin{frame}
+\frametitle<presentation>{Unconstrained Problem in Original Basis}
+We recall the unconstrained problem in weighted residual form:
+\begin{equation}
+u_h\in U_h\ : \qquad r_h(u_h,v) = 0 \qquad \forall
+v\in V_h .
 \end{equation}
 
-\paragraph{Constrained problem}
-
-Often this problem is posed in its constrained form which reads
-\begin{equation}\label{Eq:ConstrainedProblem}
-u_h\in w_h + \tilde{U}'_h\ : \qquad r_h(u_h,v) = 0 \quad \forall v\in \tilde{V}'_h
-\end{equation}
-where the constrained spaces $\tilde{U}'_h, \tilde{V}'_h$ are
-generated via a basis transformation as described above. 
-We assume that Problem \eqref{Eq:ConstrainedProblem} is uniquely
-solvable. 
-
-\paragraph{Reformulation in unconstrained space}
-
-We now seek a reformulation of Problem \eqref{Eq:ConstrainedProblem}
-which seeks a solution in the unconstrained space $U_h$ and
-incorporates the constraint by stating an additional constraint
-equation. This is useful in practice where one does not want to change
-the solution space when e.~g.~a change in boundary conditions takes
-place. 
-
-\begin{Lem}
- Let $P_h : U_h \to \tilde{U}_h$ be a projection,
-i.~e.~$P_h^2 = P_h$ and assume that the affine shift is such that 
-$P_h w_h = 0$. Then 
-\begin{equation}\label{Eq:ConstrainedProblemReformII}
-u_h\in U_h\ : \qquad \left\{\begin{array}{ll}
-r_h(u_h,v) = 0 \quad \forall v\in \tilde{V}_h'\\
-(I-P_h)u_h = w_h
-\end{array}\right. 
-\end{equation}
-is equivalent to \eqref{Eq:ConstrainedProblem}.\\
-\textit{Proof}. Assume that \eqref{Eq:ConstrainedProblem} holds and
-$P_h w_h = 0$. Since $u_h$ solves \eqref{Eq:ConstrainedProblem}
-the first equation in \eqref{Eq:ConstrainedProblemReformII} clearly holds.
-Moreover, we have $u_h = w_h + \tilde{u}_h$ with $\tilde{u}_h\in
-\tilde{U}_h'$ which allows us to write $u_h = w_h + P_h v_h$ for some
-$v_h\in U_h$. When we can prove that $v_h=u_h$ we obtain the desired
-$(I-P_h)u_h = w_h$. We now show that $v_h=u_h$:
-Applying $P_h$ to both sides of the identity $u_h = w_h + P_h v_h$ yields
-$P_h u_h = P_h w_h + P_h^2 v_h$. Using $P_h w_h = 0$ and $P_h^2 = P_h$
-yields $P_h u_h = P_h v_h$. Thus we may identify $v_h$ and $u_h$ as
-$v_h$ was arbitrary.\\
-Assume now that \eqref{Eq:ConstrainedProblemReformII} holds. The first
-equation of \eqref{Eq:ConstrainedProblemReformII} is the same as 
-\eqref{Eq:ConstrainedProblem}. From the
-second equation we conclude $u_h = w_h + P_h u_h$, i.~e.~ $u_h\in w_h
-+ \tilde{U}_h'$. \hfill$\square$
-\end{Lem}
-
-\subsection{Solution of Unconstrained Problem}
-
-In practice the discrete problems are solved in coefficient space
-using a basis representation. 
-
-\paragraph{Unconstrained problem}
-
-We begin with problem \eqref{Eq:UnconstrainedProblem} in the
-original basis. Denote the basis of $U_h$ by
-$\Phi_{U_h}=\{\phi_i\,|\, i\in\mathcal{I}_{U_h}\}$ and that of $V_h$
-by $\Phi_{V_h}=\{\psi_i\,|\, i\in\mathcal{I}_{V_h}\}$.
-The unconstrained problem in coefficient space results in a nonlinear
-algebraic system
+Solving it in the original basis
+reduces to the solution of a nonlinear algebraic problem:
 \begin{equation}
 \begin{split}
 \mathbf{u}\in\mathbf{U} : \qquad
@@ -1144,15 +1136,21 @@ i\in\mathcal{I}_{V_h} \\
 \end{split}
 \end{equation}
 where we introduced the nonlinear residual map $\mathcal{R} :
-\mathbf{U} \to \mathbb{K}^{\mathcal{I}_{V_h}}$ defined as 
+\mathbf{U} = \mathbb{K}^{\mathcal{I}_{V_h}} \to \mathbb{K}^{\mathcal{I}_{V_h}}$ which is defined as 
 \begin{equation}
 \left(
 \mathcal{R}(\mathbf{u})\right)_i =
 r_h(\text{FE}_{U_h}(\mathbf{u}),\psi_i).
 \end{equation}
+$\Phi_{V_h} = \{\psi_i\,|\, i\in\mathcal{I}_{V_h}\}$ is the basis of $V_h$.  
+\end{frame}
 
-We may introduce basis transformations $\mathbf{T}_{U_h}$,
-$\mathbf{T}_{V_h}$ for trial and test space which gives us
+\paragraph{Unconstrained Problem in Transformed Basis}
+
+\begin{frame}
+\frametitle<presentation>{Unconstrained Problem in Transformed Basis}
+We may also solve the unconstrained problem 
+in the transformed basis for trial and test space:
 \begin{equation}\label{Eq:TransformedUnconstrainedProblem}
 \begin{split}
 \mathbf{u}'\in\mathbf{U}' : \qquad 
@@ -1172,37 +1170,51 @@ i\in\mathcal{I}_{V_h}\\
 = \mathbf{0} .
 \end{split}
 \end{equation}
-Note how we used the linearity with respect to the second argument of
-the residual formulation.
+Used linearity of residual form with respect to the second argument.
+
+Requires simple matrix multiplication.
+\end{frame}
 
 \paragraph{Newton solver}
 
-We now solve \eqref{Eq:TransformedUnconstrainedProblem} using Newton's
-method. Assume that a current iterate $\mathbf{u}_k'$ is given. We
-seek an update $\mathbf{z}'_k$ such that $\mathbf{u}'_{k+1} = \mathbf{u}_k'
-+ \mathbf{z}'_k$ and use the linearized form of the equation
+Use Newton's method to solve the algebraic problem.
+
+\begin{frame}
+\frametitle<presentation>{Newton Solver}
+Let a current iterate $\mathbf{u}_k'$ be given. 
+
+We seek an update $\mathbf{z}'_k$ such that $\mathbf{u}'_{k+1} = \mathbf{u}_k'
++ \mathbf{z}'_k$ and linearize:
 \begin{equation*}
 \mathbf{T}_{V_h}\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'_{k+1}\right) \approx 
 \mathbf{T}_{V_h}\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'_{k}\right) +
 \mathbf{T}_{V_h}\nabla\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'_{k}\right) 
-\mathbf{T}^T_{U_h} \mathbf{z}'_{k} = \mathbf{0}
+\mathbf{T}^T_{U_h} \mathbf{z}'_{k} = \mathbf{0} .
 \end{equation*}
-to get the linear system for the update
+
+A linear system for the update is 
 \begin{equation}\label{eq:UnconstrainedUpdate}
 \mathbf{T}_{V_h}\nabla\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'_{k}\right) 
 \mathbf{T}^T_{U_h} \mathbf{z}'_{k} = -
 \mathbf{T}_{V_h}\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'_{k}\right) .
 \end{equation}
-Here $\nabla\mathcal{R}\left(\mathbf{u}_{k}\right)$ denotes the
-Jacobian matrix of the map $\mathcal{R}$. Multiplying the update
-equation with $\mathbf{T}^T_{U_h}$ from the left yields
+
+$\nabla\mathcal{R}\left(\mathbf{u}_{k}\right)$ denotes the
+Jacobian matrix of the map $\mathcal{R}$. 
+
+Multiplying the update equation with $\mathbf{T}^T_{U_h}$ from the left yields
 \begin{equation}\label{eq:OriginalUpdate}
 \mathbf{T}^T_{U_h}\mathbf{u}'_{k+1} = \mathbf{T}^T_{U_h}\mathbf{u}_k' +
 \mathbf{T}^T_{U_h}\mathbf{z}'_k .
 \end{equation}
+
 Setting $\mathbf{u}_{k} := \mathbf{T}^T_{U_h}\mathbf{u}_k'$ allows us
 now to write the Newton scheme with respect to the original basis.
+\end{frame}
 
+
+\begin{frame}
+\frametitle<presentation>{Newton Solver (Contd.)}
 \begin{Alg}[Newton's method for unconstrained problem]
 Given the initial guess $\mathbf{u}_{0}$ iterate until convergence
 \begin{enumerate}[i)]
@@ -1216,33 +1228,126 @@ Given the initial guess $\mathbf{u}_{0}$ iterate until convergence
 \item Transform update: $\mathbf{z}_{k} =
   \mathbf{T}^T_{U_h}\mathbf{z}'_k$.
 \item Update: $\mathbf{u}_{k+1} = \mathbf{u}_k
-+ \mathbf{z}_k$.
++ \mathbf{z}_k$. \hfill$\square$
 \end{enumerate}
-Note that two applications of the basis transformation, for the
-residual and the update, are necessary in each step. These
-transformations are cheap due to the structure of the transformation
-\eqref{Eq:StructureTransformation}. In step (iii) the transformed
-Jacobian system is required. \hfill$\square$
 \end{Alg}
+
+Two applications of the basis transformation, for the
+residual and the update, are necessary in steps ii) and iv).
+
+These transformations are cheap due to the structure of the
+transformation.
+
+In step (iii) the \textit{transformed}
+Jacobian system is required.
+
+\textit{All these transformations are done generically by PDELab}!
+\end{frame}
 
 \subsection{Solution of Constrained Problem}
 
-\paragraph{Constrained problem} We now seek to solve problem
-\eqref{Eq:ConstrainedProblemReformII} in coefficient space. The
-projection $P_h$ is taken from the follwing commutative diagram:
+We now turn to the constrained problem.
+
+\paragraph{Reformulation in unconstrained space}
+
+\begin{frame}
+\frametitle<presentation>{Reformulation in unconstrained space}
+We recall the constrained problem in weighted residual form:
+\begin{equation}\label{Eq:ConstrainedProblem}
+u_h\in w_h + \tilde{U}_h\ : \qquad r_h(u_h,v) = 0 \quad \forall
+v\in \tilde{V}_h .
+\end{equation}
+
+This problem can be reformulated in the unconstrained space by adding
+a constrained equation:
+\begin{Prp}
+Let $P_h : U_h \to \tilde{U}_h$ be a projection (i.~e.~$P_h^2 = P_h$)
+and assume that the affine shift is such that $P_h w_h = 0$. Then 
+\begin{equation}\label{Eq:ConstrainedProblemReformII}
+u_h\in U_h\ : \qquad \left\{\begin{array}{ll}
+r_h(u_h,v) = 0 \quad \forall v\in \tilde{V}_h\\
+(I-P_h)u_h = w_h
+\end{array}\right. 
+\end{equation}
+is equivalent to \eqref{Eq:ConstrainedProblem}.
+
+\mode<article>{
+\textit{Proof}. Assume that \eqref{Eq:ConstrainedProblem} holds and
+$P_h w_h = 0$. Since $u_h$ solves \eqref{Eq:ConstrainedProblem}
+the first equation in \eqref{Eq:ConstrainedProblemReformII} clearly holds.
+Moreover, we have $u_h = w_h + \tilde{u}_h$ with $\tilde{u}_h\in
+\tilde{U}_h$ which allows us to write $u_h = w_h + P_h v_h$ for some
+$v_h\in U_h$. When we can prove that $v_h=u_h$ we obtain the desired
+$(I-P_h)u_h = w_h$. We now show that $v_h=u_h$:
+Applying $P_h$ to both sides of the identity $u_h = w_h + P_h v_h$ yields
+$P_h u_h = P_h w_h + P_h^2 v_h$. Using $P_h w_h = 0$ and $P_h^2 = P_h$
+yields $P_h u_h = P_h v_h$. Thus we may identify $v_h$ and $u_h$ as
+$v_h$ was arbitrary.\\
+Assume now that \eqref{Eq:ConstrainedProblemReformII} holds. The first
+equation of \eqref{Eq:ConstrainedProblemReformII} is the same as 
+\eqref{Eq:ConstrainedProblem}. From the
+second equation we conclude $u_h = w_h + P_h u_h$, i.~e.~ $u_h\in w_h
++ \tilde{U}_h$.} \hfill$\square$
+\end{Prp}
+\end{frame}
+
+\paragraph{Reformulated Problem in Coefficient Space} 
+
+We now seek to solve problem
+\eqref{Eq:ConstrainedProblemReformII} in coefficient space. 
+
+\begin{frame}
+\frametitle<presentation>{Reformulated Problem in Coefficient Space}
+The projection $P_h$ is taken from the follwing commutative diagram:
 \begin{equation*}
 \begin{CD}
 U_h @>{P_h = \text{FE}_{\Phi'_{U_h}}
 \mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'}
 \mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'} 
-\text{FE}_{\Phi'_{U_h}}^{-1}}>> \tilde{U}_h'\\
+\text{FE}_{\Phi'_{U_h}}^{-1}}>> \tilde{U}_h\\
 @A{\text{FE}_{\Phi'_{U_h}}}AA @AA{\text{FE}_{\Phi'_{U_h}}
 \mathbf{R}^T_{\tilde{\mathbf{U}}'\mathbf{U}'}}A\\
 \mathbf{U}' @>{\qquad\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'}\qquad}>> \tilde{\mathbf{U}}' 
 \end{CD}
 \end{equation*}
-Using this definition of the projection we obtain for the second
-equation in \eqref{Eq:ConstrainedProblemReformII}  
+
+\begin{Prp}
+Using this definition of $P_h$ the reformulated constrained
+problem \eqref{Eq:ConstrainedProblemReformII} in coefficient space reads
+\begin{equation}\label{Eq:ConstrainedProblemInCoefficientSpace}
+\mathbf{u}'\in\mathbf{U}' : \qquad \left\{\begin{array}{rcl}
+\mathbf{S}_{\tilde{\mathbf{V}}'}
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'\right)
+& = & \mathbf{0}\\
+\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}' & = & \mathbf{w}'
+\end{array}\right.
+\end{equation}
+with $\mathbf{S}_{\tilde{\mathbf{V}}'}=\mathbf{R}_{\tilde{\mathbf{V}}',\mathbf{V}'} +
+\mathbf{T}_{\tilde{V}_h,\bar{V}_h}\mathbf{R}_{\bar{\mathbf{V}}',\mathbf{V}'}$
+and $w_h =
+FE_{\Phi_{U_h}'}(\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}^T\mathbf{w}')$.
+\hfill$\square$
+\end{Prp}
+\end{frame}
+
+The idea in this formulation is that with respect to the transformed
+basis the affine shift (for Dirichlet boundary conditions) can be
+``encoded'' in the constrained degrees of freedom
+$\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}'$. This is
+possible because the subspace $\tilde{U}_h$ is the image
+of the unconstrained degrees of freedom
+$\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'} \mathbf{u}'$ 
+and the decomposition is orthogonal
+(i.~e.~$\mathbf{R}^T_{\bar{\mathbf{U}}',\mathbf{U}'}
+\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}$ and
+$\mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'}
+\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'}$ are orthogonal
+projections). 
+
+
+\begin{frame}
+\frametitle<presentation>{Proof of Proposition}
+The second equation is seen as follows:
 \begin{equation}\label{Eq:SideConditionCoefficient}
 \begin{split}
 &(I-P_h) u_h = w_h \\
@@ -1266,6 +1371,10 @@ equation in \eqref{Eq:ConstrainedProblemReformII}
 \mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}' = \mathbf{w}' .
 \end{split}
 \end{equation}
+\end{frame}
+
+\begin{frame}
+\frametitle<presentation>{Proof of Proposition (Contd.)}
 For the first equation in \eqref{Eq:ConstrainedProblemReformII} 
 we proceed as in \eqref{Eq:TransformedUnconstrainedProblem}
 \begin{equation}\label{Eq:TransformedConstrainedProblem2}
@@ -1290,42 +1399,62 @@ i\in\tilde{\mathcal{I}}_{V_h}\\
 = \mathbf{0} .
 \end{split}
 \end{equation}
-Here we made use of \eqref{Eq:StructureTransformation} in the final line.
-
-The equivalent formulation of
-\eqref{Eq:ConstrainedProblemReformII} in coefficient space then reads
-\begin{equation}\label{Eq:ConstrainedProblemInCoefficientSpace}
-\mathbf{u}'\in\mathbf{U}' : \qquad \left\{\begin{array}{rcl}
-\mathbf{S}_{\tilde{\mathbf{V}}'}
-\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'\right)
-& = & \mathbf{0}\\
-\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}' & = & \mathbf{w}'
-\end{array}\right. 
-\end{equation}
-The idea in this formulation is that with respect to the transformed
-basis the affine shift (for Dirichlet boundary conditions) can be
-``encoded'' in the constrained degrees of freedom
-$\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}'$. This is
-possible because the subspace $\tilde{U}_h'$ is the image
-of the unconstrained degrees of freedom
-$\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'} \mathbf{u}'$ 
-and the decomposition is orthogonal
-(i.~e.~$\mathbf{R}^T_{\bar{\mathbf{U}}',\mathbf{U}'}
-\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}$ and
-$\mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'}
-\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'}$ are orthogonal
-projections). 
+Here we made use of the structure of the transformation
+\eqref{Eq:StructureTransformation} in the final line.
+\end{frame}
 
 
+\paragraph{Newton's Method for Constrained Problem}
+
+Newton's method applied to the constrained
+problem \eqref{Eq:ConstrainedProblemInCoefficientSpace} is formulated
+in the following alorithm.
+
+\begin{frame}
+\frametitle<presentation>{Newton's Method for Constrained Problem}
+\begin{Alg}[Newton's method for constrained problem]
+Let the initial guess $\mathbf{u}_{0}$ with
+$\text{FE}_{\Phi_{U_h}}(\mathbf{u}_{0}) \in w_h + \tilde{U}_h$ be given. 
+Iterate until convergence
+\begin{enumerate}[i)]
+\item Compute residual:
+  $\mathbf{r}_k=-\mathcal{R}\left(\mathbf{u}_{k}\right)$.
+\item Transform residual: $\mathbf{r}_k' = \mathbf{S}_{\tilde{\mathbf{V}}'}
+  \mathbf{r}_k$.
+\item Solve update equation:
+\begin{equation*}
+\left(\begin{array}{cc}
+\mathbf{S}_{\tilde{\mathbf{V}}'} \nabla
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}'\right)
+\mathbf{S}^T_{\tilde{\mathbf{U}}'} & \mathbf{0}\\
+\mathbf{0} & \mathbf{I}
+\end{array}\right) 
+\left(\begin{array}{c}
+\tilde{\mathbf{z}}_{k}'\\
+\bar{\mathbf{z}}_{k}'
+\end{array}\right) =
+\left(\begin{array}{c}
+\mathbf{r}_k'\\
+\mathbf{0}
+\end{array}\right) 
+\end{equation*}
+and set $\mathbf{z}'_{k} = \left(\begin{smallmatrix}
+\tilde{\mathbf{z}}_{k}'\\ \bar{\mathbf{z}}_{k}'
+\end{smallmatrix}\right)$.
+\item Transform update: $\mathbf{z}_{k} =
+  \mathbf{T}^T_{U_h}\mathbf{z}'_k$. (This is where interpolation to
+  hanging nodes is done).
+\item Update: $\mathbf{u}_{k+1} = \mathbf{u}_k
++ \mathbf{z}_k$. \hfill$\square$
+\end{enumerate}
+\end{Alg}
+\end{frame}
 
 
-
-\paragraph{Newton's method for constrained problem}
-
-Now we need to solve \eqref{Eq:ConstrainedProblemInCoefficientSpace}
-with Newton's method. Let some $\mathbf{u}_{k}'$, set
-$\mathbf{u}_{k+1}' = \mathbf{u}_{k}' + \mathbf{z}_{k}'$ and
-seek an equation for the update $\mathbf{z}_{k}'$. 
+\begin{frame}
+\frametitle<presentation>{Constraint Equation in Newton's Method}
+Let $\mathbf{u}_{k}'$ be given.  Seek update $\mathbf{z}_{k}'$ s.t.
+$\mathbf{u}_{k+1}' = \mathbf{u}_{k}' + \mathbf{z}_{k}'$. 
 
 Inserting $\mathbf{u}_{k+1}'$ into the second equation of
 \eqref{Eq:ConstrainedProblemInCoefficientSpace} yields
@@ -1347,25 +1476,28 @@ where we introduced $\mathbf{z}_{k}' =
 \mathbf{R}^T_{\bar{\mathbf{U}}',\mathbf{U}'}
 \bar{\mathbf{z}}_{k}'$ and used $\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}
 \mathbf{R}^T_{\bar{\mathbf{U}}',\mathbf{U}'}=\mathbf{I}$. 
-Note that the affine shift is not changed during the iteration
+Note that the affine shift is not changed during the iteration:
 \begin{equation}
 \mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}\mathbf{u}_{k+1}' =
 \mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}_{k}' +
 \underbrace{\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}
   \mathbf{z}_{k}'}_{= \mathbf{0}} =
-\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}_{k}'
+\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}_{k}' .
 \end{equation}
-and it is thus sufficient to satisfy the affine shift in the initial
+Thus it is sufficient to satisfy the affine shift in the initial
 guess $\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}_{0}' =
 \bar{\mathbf{w}}'$.
+\end{frame}
 
+\begin{frame}
+\frametitle<presentation>{Constraint Equation in Newton's Method}
 Now insert  $\mathbf{u}_{k+1}'$ into the first equation of
 \eqref{Eq:ConstrainedProblemInCoefficientSpace}:
 \begin{equation}
 \begin{split}
 \mathbf{S}_{\tilde{\mathbf{V}}'}
-&\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k+1}'\right) \\
-&= \mathbf{S}_{\tilde{\mathbf{V}}'}
+&\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k+1}'\right)
+= \mathbf{S}_{\tilde{\mathbf{V}}'}
 \mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}' +
 \mathbf{T}^T_{U_h}\mathbf{z}_{k}' \right)\\
 &= \mathbf{S}_{\tilde{\mathbf{V}}'}
@@ -1404,8 +1536,13 @@ where we introduced $\mathbf{z}_{k}' =
 \mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'}
 \tilde{\mathbf{z}}_{k}'$ and used $\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'}
 \mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'}=\mathbf{I}$. 
+\end{frame}
+
+
+\begin{frame}
+\frametitle<presentation>{Constraint Equation in Newton's Method (Contd.)}
 Linearization now gives
-\begin{equation}
+\begin{equation*}
 \mathbf{S}_{\tilde{\mathbf{V}}'}
 \mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}' + 
 \mathbf{S}^T_{\tilde{\mathbf{U}}'} \tilde{\mathbf{z}}_{k}'\right)
@@ -1414,56 +1551,16 @@ Linearization now gives
 + \mathbf{S}_{\tilde{\mathbf{V}}'} \nabla
 \mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}'\right)
 \mathbf{S}^T_{\tilde{\mathbf{U}}'} \tilde{\mathbf{z}}_{k}' = \mathbf{0}.
-\end{equation}
+\end{equation*}
 Thus the equation for the update reads
-\begin{equation}
+\begin{equation*}
 \mathbf{S}_{\tilde{\mathbf{V}}'} \nabla
 \mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}'\right)
 \mathbf{S}^T_{\tilde{\mathbf{U}}'} \tilde{\mathbf{z}}_{k}'
 = - \mathbf{S}_{\tilde{\mathbf{V}}'}
 \mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}'\right) .
-\end{equation}
-
-We are now in a position to give the full algorithm for the
-constrained problem. As in the unconstrained version we make use of
-\eqref{eq:OriginalUpdate} to hold the iterates with respect to the
-original basis and only compute the update in the transformed basis. 
-
-\begin{Alg}[Newton's method for constrained problem]
-Let the initial guess $\mathbf{u}_{0}$ with
-$\text{FE}_{\Phi_{U_h}}(\mathbf{u}_{0}) \in w_h + \tilde{U}_h'$ be given. 
-Iterate until convergence
-\begin{enumerate}[i)]
-\item Compute residual:
-  $\mathbf{r}_k=-\mathcal{R}\left(\mathbf{u}_{k}\right)$.
-\item Transform residual: $\mathbf{r}_k' = \mathbf{S}_{\tilde{\mathbf{V}}'}
-  \mathbf{r}_k$.
-\item Solve update equation:
-\begin{equation*}
-\left(\begin{array}{cc}
-\mathbf{S}_{\tilde{\mathbf{V}}'} \nabla
-\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}'\right)
-\mathbf{S}^T_{\tilde{\mathbf{U}}'} & \mathbf{0}\\
-\mathbf{0} & \mathbf{I}
-\end{array}\right) 
-\left(\begin{array}{c}
-\tilde{\mathbf{z}}_{k}'\\
-\bar{\mathbf{z}}_{k}'
-\end{array}\right) =
-\left(\begin{array}{c}
-\mathbf{r}_k'\\
-\mathbf{0}
-\end{array}\right) 
 \end{equation*}
-and set $\mathbf{z}'_{k} =
-\mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'} \tilde{\mathbf{z}}_{k}'$.
-\item Transform update: $\mathbf{z}_{k} =
-  \mathbf{T}^T_{U_h}\mathbf{z}'_k$. (This is where interpolation to
-  hanging nodes is done).
-\item Update: $\mathbf{u}_{k+1} = \mathbf{u}_k
-+ \mathbf{z}_k$. \hfill$\square$
-\end{enumerate}
-\end{Alg}
+\end{frame}
 
 \cleardoublepage
 
