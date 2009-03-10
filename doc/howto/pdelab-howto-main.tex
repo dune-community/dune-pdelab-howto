@@ -552,9 +552,17 @@ continuous at face centers}\},\\
 
 The discrete problem then reads
 \begin{equation*}
-u_h \in w_h+\tilde{X}_h \quad : \quad r_h^\text{FE}(u_h,v) = 0 \qquad \forall v\in \tilde{X}_h,
+u_h \in w_h+\tilde{X}_h \quad : \quad r_h^\text{CR}(u_h,v) = 0 \qquad \forall v\in \tilde{X}_h,
 \end{equation*}
-where again $w_h\in X_h$ such that ``$w_h=g$'' on $\Gamma_D$.
+where
+\begin{equation*}
+\begin{split}
+r_h^\text{CR}(u &,v) = \sum_{e\in E_h^0} \int_{\Omega_e} \nabla u\cdot \nabla v
+ - fv \, dx + \sum_{\substack{b\in
+B^1_h\\\Omega_b\subseteq\Gamma_N}} \int_{\Omega_b} j v \,ds .
+\end{split}
+\end{equation*}
+Again $w_h\in X_h$ such that ``$w_h=g$'' on $\Gamma_D$.
 \end{frame}
 
 \paragraph{Mixed Finite Elements}
@@ -1103,6 +1111,10 @@ Composite function spaces can be visualized as a tree:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Explain idea behind local finite elements. Mention \texttt{dune-localfunctions}
+
+Explain $Q_1$ finite elements, including reference element.
+
 \begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Function Traits}
 \begin{lstlisting}[basicstyle=\scriptsize,tabsize=4]
@@ -1165,6 +1177,17 @@ struct C1LocalBasisTraits
 \includegraphics[width=0.5\textwidth]{./EPS/q1.eps}
 \end{center}
 \end{frame}
+
+Interpolate example.
+
+Integrate function with example.
+
+Interpolation error example. Use $Q_2$ as well.
+
+Constraints setzen.
+
+Composite spaces. Taylor Hood example.
+
 
 \cleardoublepage
 
