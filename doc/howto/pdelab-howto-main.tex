@@ -39,8 +39,9 @@
 %\usepackage{multimedia}
 \usepackage{psfrag}
 \usepackage{listings}
-\lstset{language=C++, basicstyle=\ttfamily,
-  stringstyle=\ttfamily, commentstyle=\it, extendedchars=true}
+\lstset{language=C++, basicstyle=\ttfamily, 
+  keywordstyle=\color{black}\bfseries, tabsize=4, stringstyle=\ttfamily,
+  commentstyle=\it, extendedchars=true, escapeinside={/*@}{@*/}}
 \usepackage{curves}
 %\usepackage{epic}
 \usepackage{calc}
@@ -86,6 +87,7 @@
 \newtheorem{Pro}[Def]{Property}
 \newtheorem{Alg}[Def]{Algorithm}
 \newtheorem{Prp}[Def]{Proposition}
+\newtheorem{Lst}[Def]{Listing}
 
 % Delete this, if you do not want the table of contents to pop up at
 % the beginning of each subsection:
@@ -1117,7 +1119,8 @@ Explain $Q_1$ finite elements, including reference element.
 
 \begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Function Traits}
-\begin{lstlisting}[basicstyle=\scriptsize,tabsize=4]
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]
 template<class DF, int n, class D, class RF, int m, class R>
 struct C0LocalBasisTraits 
 {
@@ -1130,7 +1133,8 @@ struct C0LocalBasisTraits
   enum { diffOrder=0 };
 };
 \end{lstlisting}
-\begin{lstlisting}[basicstyle=\scriptsize,tabsize=4]
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]
 template<class DF, int n, class D, class RF, int m, class R, class J>
 struct C1LocalBasisTraits 
   : public C0LocalBasisTraits<DF,n,D,RF,m,R> 
@@ -1141,35 +1145,84 @@ struct C1LocalBasisTraits
 \end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Basis}
-\lstinputlisting[basicstyle=\scriptsize,tabsize=4]{../../examples/q1localbasis.hh}
+\framesubtitle<presentation>{\texttt{q1localbasis.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1localbasis.hh}
 \end{frame}
+\mode<article>{
+\begin{Lst}[File examples/q1localbasis.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1localbasis.hh}
+\end{Lst}}
 
-\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Coefficients}
-\lstinputlisting[basicstyle=\scriptsize,tabsize=4]{../../examples/q1localcoefficients.hh}
+\framesubtitle<presentation>{\texttt{q1localcoefficients.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1localcoefficients.hh}
 \end{frame}
+\mode<article>{
+\begin{Lst}[File examples/q1localcoefficients.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1localcoefficients.hh}
+\end{Lst}}
 
-\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Interpolation}
-\lstinputlisting[basicstyle=\scriptsize,tabsize=4]{../../examples/q1localinterpolation.hh}
+\framesubtitle<presentation>{\texttt{q1localinterpolation.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1localinterpolation.hh}
 \end{frame}
+\mode<article>{
+\begin{Lst}[File examples/q1localinterpolation.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1localinterpolation.hh}
+\end{Lst}}
 
-\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Finite Element}
-\lstinputlisting[basicstyle=\scriptsize,tabsize=4]{../../examples/q1localfiniteelement.hh}
+\framesubtitle<presentation>{\texttt{q1localfiniteelement.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelement.hh}
 \end{frame}
+\mode<article>{
+\begin{Lst}[File examples/q1localfiniteelement.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelement.hh}
+\end{Lst}}
 
-\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Finite Element Map}
-\lstinputlisting[basicstyle=\scriptsize,tabsize=4]{../../examples/q1localfiniteelementmap.hh}
+\framesubtitle<presentation>{\texttt{q1localfiniteelementmap.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelementmap.hh}
 \end{frame}
+\mode<article>{
+\begin{Lst}[File examples/q1localfiniteelementmap.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelementmap.hh}
+\end{Lst}}
 
-\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Grid Function Space Example}
-\lstinputlisting[basicstyle=\scriptsize,tabsize=4]{../../examples/q1gridfunctionspace.hh}
+\framesubtitle<presentation>{\texttt{q1gridfunctionspace.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1gridfunctionspace.hh}
 \end{frame}
+\mode<article>{
+\begin{Lst}[File examples/q1gridfunctionspace.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1gridfunctionspace.hh}
+\end{Lst}}
 
 \begin{frame}
 \frametitle<presentation>{Visualization of the Result}
@@ -1178,7 +1231,76 @@ struct C1LocalBasisTraits
 \end{center}
 \end{frame}
 
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Grid Function from Analytic Function}
+\framesubtitle<presentation>{\texttt{q1analyticfunction.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1analyticfunction.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/q1analyticfunction.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1analyticfunction.hh}
+\end{Lst}}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Interpolating a Finite Element Function}
+\framesubtitle<presentation>{\texttt{q1interpolate.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolate.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/q1interpolate.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolate.hh}
+\end{Lst}}
+
 Interpolate example.
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Integrate Interpolation Error}
+\framesubtitle<presentation>{\texttt{integrateinterpolationerror.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/integrateinterpolationerror.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/integrateinterpolationerror.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/integrateinterpolationerror.hh}
+\end{Lst}}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Integration Example Driver}
+\framesubtitle<presentation>{\texttt{q1interpolationerror.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolationerror.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/q1interpolationerror.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolationerror.hh}
+\end{Lst}}
+
+\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Integration Example Output}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+interpolation error:        1 elements 4.63081768e-01
+interpolation error:        4 elements 1.02612039e-01
+interpolation error:       16 elements 3.03000305e-02
+interpolation error:       64 elements 7.77518775e-03
+interpolation error:      256 elements 1.95618596e-03
+interpolation error:     1024 elements 4.89819655e-04
+interpolation error:     4096 elements 1.22503221e-04
+interpolation error:    16384 elements 3.06288243e-05
+interpolation error:    65536 elements 7.65739477e-06
+interpolation error:   262144 elements 1.91436048e-06
+interpolation error:  1048576 elements 4.78590858e-07
+\end{lstlisting}
+\end{frame}
 
 Integrate function with example.
 
@@ -1188,6 +1310,7 @@ Constraints setzen.
 
 Composite spaces. Taylor Hood example.
 
+Liste der Beispiele im examples Verzeichnis machen !
 
 \cleardoublepage
 
