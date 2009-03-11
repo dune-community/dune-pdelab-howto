@@ -6,14 +6,13 @@ public:
   enum { doVolume = false };
 
   template<typename B, typename I, typename LFS, typename T>
-  void boundary (const B& b, const IntersectionGeometry<I>& ig, 
-				 const LFS& lfs, T& trafo) const
+  void boundary (const B& b, const I& ig, const LFS& lfs, T& trafo) const
   {
 	// 2D here, get midpoint of edge
-	typename F::Traits::DomainType ip(0.5);
+	typename B::Traits::DomainType ip(0.5);
 
 	// determine type of boundary condition
-	typename F::Traits::RangeType bctype;
+	typename B::Traits::RangeType bctype;
 	b.evaluate(ig,ip,bctype);
 
 	// >0 means Dirichlet boundary
