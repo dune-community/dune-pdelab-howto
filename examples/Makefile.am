@@ -5,7 +5,7 @@
 #AM_CPPFLAGS = $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS)
 dist_noinst_DATA = poisson laplacedirichletccfv
 
-noinst_PROGRAMS = poisson laplacedirichletccfv reentrantcorner q1gridfunctionspacemain q1interpolatemain q1interpolationerrormain
+noinst_PROGRAMS = poisson laplacedirichletccfv reentrantcorner q1gridfunctionspacemain q1interpolatemain q1interpolationerrormain q2interpolationerrormain
 
 poisson_SOURCES = poisson.cc
 poisson_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
@@ -38,6 +38,12 @@ q1interpolationerrormain_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(MPI_CPP
 q1interpolationerrormain_LDADD = $(MPI_LDFLAGS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 q1interpolationerrormain_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 q1interpolationerrormain_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
+
+q2interpolationerrormain_SOURCES = q2interpolationerrormain.cc
+q2interpolationerrormain_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
+q2interpolationerrormain_LDADD = $(MPI_LDFLAGS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+q2interpolationerrormain_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
+q2interpolationerrormain_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
 CLEANFILES = poisson_*.vtu reentrant_*.vtu dgfparser.log q1*.vtu 
 
