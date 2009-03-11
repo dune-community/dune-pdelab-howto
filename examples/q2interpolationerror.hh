@@ -18,8 +18,8 @@ void q2interpolationerror (const GV& gv)
 	Dune::PDELab::Q22DLocalFiniteElementMap<D,R> > GFS;    
   GFS gfs(gv,fem);                    // make grid function space
 
-  typedef typename GFS::template VectorContainer<R>::Type V;
-  V x(gfs,0.0);                       // make coefficient vector
+  typedef typename GFS::template VectorContainer<R>::Type X;
+  X x(gfs,0.0);                       // make coefficient vector
 
   U<GV,R> u(gv);                      // make analytic function object
   Dune::PDELab::interpolate(u,gfs,x); // make x interpolate u

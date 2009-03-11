@@ -15,11 +15,11 @@ void q1GridFunctionSpace (const GV& gv)
 	Q1LocalFiniteElementMap<D,R> > GFS;    
   GFS gfs(gv,fem);                    // make grid function space
 
-  typedef typename GFS::template VectorContainer<R>::Type V;
-  V x(gfs,0.0);                       // make coefficient vector
+  typedef typename GFS::template VectorContainer<R>::Type X;
+  X x(gfs,0.0);                       // make coefficient vector
   x[4] = 1.0;                         // set a component
 
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+  typedef Dune::PDELab::DiscreteGridFunction<GFS,X> DGF;
   DGF dgf(gfs,x);                     // make a grid function
 
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);  // plot result

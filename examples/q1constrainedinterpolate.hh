@@ -22,14 +22,14 @@ void q1interpolate (const GV& gv)
   B<GV> b(gv);                        // boundary condition function
   Dune::PDELab::constraints(b,gfs,t); // fill container
 
-  typedef typename GFS::template VectorContainer<R>::Type V;
-  V x(gfs,0.0);                       // make coefficient vector
+  typedef typename GFS::template VectorContainer<R>::Type X;
+  X x(gfs,0.0);                       // make coefficient vector
 
   U<GV,R> u(gv);                      // make analytic function object
   Dune::PDELab::interpolate(u,gfs,x); // interpolate x from u
   Dune::PDELab::set_nonconstrained_dofs(t,0.0,x); // clear interior
 
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+  typedef Dune::PDELab::DiscreteGridFunction<GFS,X> DGF;
   DGF dgf(gfs,x);                     // make a grid function
 
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,1); // plot result
