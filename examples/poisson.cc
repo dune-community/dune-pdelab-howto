@@ -307,7 +307,7 @@ int main(int argc, char** argv)
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q2_2d");
     }
 
-    // YaspGrid Q2 3D test
+    // YaspGrid Q1 3D test
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);

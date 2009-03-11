@@ -249,7 +249,7 @@ a PDE problem is. We will develop such an idea in this section.
 We claim that all problems we ever want to solve can be written in the form
 \begin{equation}
 \text{Find } u_h\in w_h + \tilde{U}_h : \qquad r_h(u_h,v) =
-0 \qquad \forall v\in V_h.  
+0 \qquad \forall v\in \tilde{V}_h.  
 \end{equation}
 Where:
 \begin{itemize}
@@ -1113,6 +1113,8 @@ Composite function spaces can be visualized as a tree:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\subsection{Local Finite Element Space}
+
 Explain idea behind local finite elements. Mention \texttt{dune-localfunctions}
 
 Explain $Q_1$ finite elements, including reference element.
@@ -1211,6 +1213,10 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelementmap.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelementmap.hh}
 \end{Lst}}
 
+
+\subsection{Unconstrained Global Finite Element Space}
+
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Grid Function Space Example}
 \framesubtitle<presentation>{\texttt{q1gridfunctionspace.hh}}
@@ -1227,7 +1233,8 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1gridfunctionspace.hh}
 \begin{frame}
 \frametitle<presentation>{Visualization of the Result}
 \begin{center}
-\includegraphics[width=0.5\textwidth]{./EPS/q1.eps}
+\includegraphics[width=0.49\textwidth]{./EPS/q1.eps}\hfill
+\includegraphics[width=0.49\textwidth]{./EPS/q1interpolate.eps}
 \end{center}
 \end{frame}
 
@@ -1259,17 +1266,20 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolate.hh}
 
 Interpolate example.
 
+\subsection{Interpolation Error}
+
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Integrate Interpolation Error}
-\framesubtitle<presentation>{\texttt{integrateinterpolationerror.hh}}
+\framesubtitle<presentation>{\texttt{l2interpolationerror.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
-numberstyle=\tiny, numbersep=5pt]{../../examples/integrateinterpolationerror.hh}
+numberstyle=\tiny, numbersep=5pt]{../../examples/l2interpolationerror.hh}
 \end{frame}
 \mode<article>{
-\begin{Lst}[File examples/integrateinterpolationerror.hh] \mbox
+\begin{Lst}[File examples/l2interpolationerror.hh] \mbox
 \nopagebreak
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
-numberstyle=\tiny, numbersep=5pt]{../../examples/integrateinterpolationerror.hh}
+numberstyle=\tiny, numbersep=5pt]{../../examples/l2interpolationerror.hh}
 \end{Lst}}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
@@ -1286,7 +1296,7 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolationerror.hh}
 \end{Lst}}
 
 \begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Integration Example Output}
+\frametitle<presentation>{$Q_1$ Interpolation Error}
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
 interpolation error:        1 elements 4.63081768e-01
 interpolation error:        4 elements 1.02612039e-01
@@ -1306,9 +1316,145 @@ Integrate function with example.
 
 Interpolation error example. Use $Q_2$ as well.
 
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{$Q_2$ Integration Example Driver}
+\framesubtitle<presentation>{\texttt{q2interpolationerror.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q2interpolationerror.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/q2interpolationerror.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q2interpolationerror.hh}
+\end{Lst}}
+
+\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{$Q_2$ Interpolation Error}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+interpolation error:        1 elements 4.65290291e-02
+interpolation error:        4 elements 1.20509875e-02
+interpolation error:       16 elements 1.36558258e-03
+interpolation error:       64 elements 1.71127393e-04
+interpolation error:      256 elements 2.14102072e-05
+interpolation error:     1024 elements 2.67692161e-06
+interpolation error:     4096 elements 3.34635709e-07
+interpolation error:    16384 elements 4.18301070e-08
+interpolation error:    65536 elements 5.22878350e-09
+interpolation error:   262144 elements 6.53598587e-10
+interpolation error:  1048576 elements 8.16998215e-11
+\end{lstlisting}
+\end{frame}
+
+\subsection{Constrained Global Finite Element Space}
+
 Constraints setzen.
 
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Constraints Assembler}
+\framesubtitle<presentation>{\texttt{q1constraints.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1constraints.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/q1constraints.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1constraints.hh}
+\end{Lst}}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Boundary Condition Type Functions}
+\framesubtitle<presentation>{\texttt{q1boundaryconditiontypefunction.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1boundaryconditiontypefunction.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/q1boundaryconditiontypefunction.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1boundaryconditiontypefunction.hh}
+\end{Lst}}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Function Space with Constraints}
+\framesubtitle<presentation>{\texttt{q1constrainedinterpolate.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1constrainedinterpolate.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/q1constrainedinterpolate.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1constrainedinterpolate.hh}
+\end{Lst}}
+
+\begin{frame}
+\frametitle<presentation>{Affine Shift Function}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{./EPS/q1constrainedinterpolate.eps}
+\end{center}
+\end{frame}
+
+
+\subsection{Composite Finite Element Spaces}
+
 Composite spaces. Taylor Hood example.
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Analytic Velocity Field}
+\framesubtitle<presentation>{\texttt{thvelocity.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/thvelocity.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/thvelocity.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/thvelocity.hh}
+\end{Lst}}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Taylor Hood Example}
+\framesubtitle<presentation>{\texttt{thinterpolate.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/thinterpolate.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/thinterpolate.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/thinterpolate.hh}
+\end{Lst}}
+
+\begin{frame}
+\frametitle<presentation>{Affine Shift Function}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{./EPS/thinterpolate.eps}
+\end{center}
+\end{frame}
+
+\subsection{Summary}
+
+\begin{frame}
+\frametitle<presentation>{Function Space Summary}
+In order to incorporate a function space in PDELab do the following: 
+\begin{itemize}
+\item Hope that somebody already included the local basis
+in \texttt{dune-localfunctions} and provided the finite element map
+in \texttt{dune-pdelab}. 
+\item If not, you have to
+\begin{itemize}
+\item Make a local basis.
+\item Make local coefficients.
+\item Make a local interpolation.
+\item Make a finite element.
+\item Make a finite element map.
+\end{itemize}
+\item Write a constraints assembler if required.
+\item Set up the function space via \texttt{GridFunctionSpace}
+\end{itemize}
+\end{frame}
 
 Liste der Beispiele im examples Verzeichnis machen !
 
@@ -1428,7 +1574,7 @@ now to write the Newton scheme with respect to the original basis.
 Given the initial guess $\mathbf{u}_{0}$ iterate until convergence
 \begin{enumerate}[i)]
 \item Compute residual:
-  $\mathbf{r}_k=-\mathcal{R}\left(\mathbf{u}_{k}\right)$.
+  $\mathbf{r}_k=\mathcal{R}\left(\mathbf{u}_{k}\right)$.
 \item Transform residual: $\mathbf{r}_k' = \mathbf{T}_{V_h}
   \mathbf{r}_k$.
 \item Solve update equation:
@@ -1437,7 +1583,7 @@ Given the initial guess $\mathbf{u}_{0}$ iterate until convergence
 \item Transform update: $\mathbf{z}_{k} =
   \mathbf{T}^T_{U_h}\mathbf{z}'_k$.
 \item Update: $\mathbf{u}_{k+1} = \mathbf{u}_k
-+ \mathbf{z}_k$. \hfill$\square$
+- \mathbf{z}_k$. \hfill$\square$
 \end{enumerate}
 \end{Alg}
 
@@ -1627,7 +1773,7 @@ $\text{FE}_{\Phi_{U_h}}(\mathbf{u}_{0}) \in w_h + \tilde{U}_h$ be given.
 Iterate until convergence
 \begin{enumerate}[i)]
 \item Compute residual:
-  $\mathbf{r}_k=-\mathcal{R}\left(\mathbf{u}_{k}\right)$.
+  $\mathbf{r}_k=\mathcal{R}\left(\mathbf{u}_{k}\right)$.
 \item Transform residual: $\mathbf{r}_k' = \mathbf{S}_{\tilde{\mathbf{V}}'}
   \mathbf{r}_k$.
 \item Solve update equation:
@@ -1654,7 +1800,7 @@ and set $\mathbf{z}'_{k} = \left(\begin{smallmatrix}
   \mathbf{T}^T_{U_h}\mathbf{z}'_k$. (This is where interpolation to
   hanging nodes is done).
 \item Update: $\mathbf{u}_{k+1} = \mathbf{u}_k
-+ \mathbf{z}_k$. \hfill$\square$
+- \mathbf{z}_k$. \hfill$\square$
 \end{enumerate}
 \end{Alg}
 \end{frame}
@@ -1780,6 +1926,48 @@ Thus the equation for the update reads
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Conforming Finite Elements for the Dirichlet Problem}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Local Operator for the Dirichlet Problem}
+\framesubtitle<presentation>{\texttt{laplacedirichletop.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/laplacedirichletop.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/laplacedirichletop.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/laplacedirichletop.hh}
+\end{Lst}}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{$Q_1$ Dirichlet Driver}
+\framesubtitle<presentation>{\texttt{laplacedirichlet.hh}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/laplacedirichlet.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/laplacedirichlet.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/laplacedirichlet.hh}
+\end{Lst}}
+
+\begin{frame}
+\frametitle<presentation>{Dirichlet Problem Solution}
+\begin{center}
+\includegraphics[width=0.49\textwidth]{./EPS/q1laplace.eps}\hfill
+\includegraphics[width=0.49\textwidth]{./EPS/q1laplace3d.eps}
+\end{center}
+\end{frame}
+
+\subsection{Summary}
+
+\begin{frame}
+\frametitle<presentation>{Operator Summary}
+\end{frame}
 
 \cleardoublepage
 

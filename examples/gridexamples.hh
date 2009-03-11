@@ -13,6 +13,7 @@
 #if HAVE_ALUGRID
 #include<dune/grid/alugrid.hh>
 #endif
+#include "basicunitcube.hh"
 
 class YaspUnitSquare : public Dune::YaspGrid<2,2>
 {
@@ -140,6 +141,42 @@ public:
 	this->createEnd();
   }
 };
+
+template< int dim, int variant >
+class UGUnitCube : public BasicUnitCube< dim >
+{
+public:
+  typedef Dune::UGGrid<dim> GridType;
+
+private:  
+  GridType* grid_;
+
+public:
+  UGUnitCube ()
+  {
+    Dune::GridFactory< GridType > factory;
+    BasicUnitCube< dim >::insertVertices( factory );
+    if( variant == 1 )
+      BasicUnitCube< dim >::insertCubes( factory );
+    else if( variant == 2 )
+      BasicUnitCube< dim >::insertSimplices( factory );
+    else
+      DUNE_THROW( Dune::NotImplemented, "Variant " 
+                  << variant << " of UG unit cube not implemented." );
+    grid_ = factory.createGrid();
+  }
+
+  ~UGUnitCube ()
+  {
+    delete grid_;
+  }
+
+  GridType &grid ()
+  {
+    return *grid_;
+  }
+};
+
 #endif // HAVE_UG
 
 #endif
