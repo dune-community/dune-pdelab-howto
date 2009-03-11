@@ -4,7 +4,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/finiteelementmap/q22dfem.hh>
-#include"integrateinterpolationerror.hh"
+#include"l2interpolationerror.hh"
 
 template<typename GV>
 void q2interpolationerror (const GV& gv)
@@ -27,5 +27,5 @@ void q2interpolationerror (const GV& gv)
   std::cout.precision(8);
   std::cout << "interpolation error: " 
 			<< std::setw(8) << gv.size(0) << " elements " 
-			<< std::scientific << integrateinterpolationerror(u,gfs,x,4) << std::endl;
+			<< std::scientific << l2interpolationerror(u,gfs,x,4) << std::endl;
 }

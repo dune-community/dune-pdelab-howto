@@ -63,7 +63,7 @@ q1laplacedirichletmain_LDADD = $(MPI_LDFLAGS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS)
 q1laplacedirichletmain_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 
 
-CLEANFILES = poisson_*.vtu reentrant_*.vtu dgfparser.log q1*.vtu 
+CLEANFILES = poisson_*.vtu reentrant_*.vtu dgfparser.log q1*.vtu *.vtu *.png 
 
 #============================================================
 # pass most important options when "make distcheck" is used
