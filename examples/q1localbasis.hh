@@ -12,9 +12,7 @@ public:
 								   R,1,Dune::FieldVector<R,1>,
 			    Dune::FieldVector<Dune::FieldVector<R,2>,1> > Traits;
 
-  unsigned int size () const {
-	return 4;
-  }
+  unsigned int size () const { return 4; }
 
   //! \brief Evaluate all shape functions
   inline void evaluateFunction (
@@ -30,10 +28,10 @@ public:
   evaluateJacobian (const typename Traits::DomainType& in,
 		   std::vector<typename Traits::JacobianType>& out) const {  
 	out.resize(4);
-	out[0][0][0] = in[1]-1; out[0][0][1] = in[0]-1; 
+	out[0][0][0] = in[1]-1; out[0][0][1] = in[0]-1; /*@\label{q1b:grad0}@*/
 	out[1][0][0] = 1-in[1]; out[1][0][1] = -in[0]; 
 	out[2][0][0] =  -in[1]; out[2][0][1] = 1-in[0]; 
-	out[3][0][0] =   in[1]; out[3][0][1] = in[0]; 
+	out[3][0][0] =   in[1]; out[3][0][1] = in[0];   /*@\label{q1b:grad3}@*/
   }
   
   //! \brief Polynomial order of the shape functions

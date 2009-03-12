@@ -3,16 +3,13 @@ class Q1LocalCoefficients
   : public Dune::LocalCoefficientsInterface<Q1LocalCoefficients> {
 public:
   Q1LocalCoefficients () : li(4)  {
-	for (int i=0; i<4; i++)
-	  li[i] = Dune::LocalKey(i,2,0);
+	for (int i=0; i<4; i++) li[i] = Dune::LocalKey(i,2,0);
   }
   
   //! number of coefficients
-  int size () const {
-	return 4;
-  }
+  int size () const { return 4; }
   
-  //! get i'th index
+  //! map index i to local key
   const Dune::LocalKey& localKey (int i) const  {
 	return li[i];
   } 

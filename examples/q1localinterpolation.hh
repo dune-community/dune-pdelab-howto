@@ -1,15 +1,13 @@
 #include<dune/finiteelements/common/localinterpolation.hh>
 
 template<class LB>
-class Q1LocalInterpolation 
-  : public Dune::LocalInterpolationInterface<Q1LocalInterpolation<LB> >
-{
+class Q1LocalInterpolation : public Dune::
+  LocalInterpolationInterface<Q1LocalInterpolation<LB> > {
 public:
-  
+
   //! \brief Local interpolation of a function
   template<typename F, typename C>
-  void interpolate (const F& f, std::vector<C>& out) const
-  {
+  void interpolate (const F& f, std::vector<C>& out) const {
 	typename LB::Traits::DomainType x;
 	typename LB::Traits::RangeType y;
 	

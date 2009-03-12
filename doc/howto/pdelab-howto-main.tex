@@ -227,6 +227,23 @@ attempted.
 
 \subsection{What is missing in DUNE?}
 
+\begin{frame}
+\frametitle<presentation>{Required Modules}
+To work through the examples the following DUNE modules are required: 
+\begin{itemize}
+\item \lstinline{dune-common},
+\item \lstinline{dune-grid},
+\item \lstinline{dune-istl},
+\item \lstinline{dune-localfunctions},
+\item \lstinline{dune-pdelab},
+\item \lstinline{dune-pdelab-howto},
+\end{itemize}
+
+In addition, at least one of the grid managers UG, ALU or Alberta is
+required to do the examples on simplex grids. 
+\end{frame}
+
+
 \cleardoublepage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1115,41 +1132,131 @@ Composite function spaces can be visualized as a tree:
 
 \subsection{Local Finite Element Space}
 
-Explain idea behind local finite elements. Mention \texttt{dune-localfunctions}
+A global finite element space is built up from a collection of local
+finite element spaces for each element.
 
-Explain $Q_1$ finite elements, including reference element.
+\begin{frame}
+\frametitle<presentation>{Local Finite Element Space}
+A local finite element space is represented by \lstinline{Dune::LocalFiniteElementInterface}
+and consists of the following:
+\begin{itemize}
+\item The type of reference element, given by \lstinline{Dune::GeometryType}.
+\item The local basis functions
+$\hat\Phi = \{\hat\phi_i : \mathbb{D}^n \to \mathbb{K}^m \,|\, 0\leq i < k\}$
+and their gradients in a class derived from \lstinline{Dune::C1LocalBasisInterface}.
+\item Information that allows to construct the local to global map $g:
+(e,i) \mapsto j$ in a class derived
+from \lstinline{Dune::LocalCoefficientsInterface}. 
+\item A method that allows to compute coefficients $z_i$ such that
+\begin{equation*}
+\sum_{0\leq i < k} z_i \hat\phi_i = \hat{u} \qquad \hat{u}\in\text{span}\hat\Phi 
+\end{equation*} 
+in a class derived
+from \lstinline{Dune::LocalInterpolationInterface}. For
+$\hat{u}\not\in\text{span}\hat\Phi$ the method provides a projection.
+\item The dune module \lstinline{dune-localfunctions} provides a
+collection of local finite element spaces.
+\end{itemize}
+\end{frame}
 
-\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\begin{frame}[fragile]
 \frametitle<presentation>{Function Traits}
+The local basis is required to contain a class \lstinline{Traits} that
+gives the types for
+$\mathbb{D}, \mathbb{D}^n, \mathbb{K}, \mathbb{K}^m$, the numbers $n$,
+$m$ and a type for the Jacobian:
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]
 template<class DF, int n, class D, class RF, int m, class R>
 struct C0LocalBasisTraits 
 {
-  typedef DF DomainFieldType;
-  enum { dimDomain = n }; 
-  typedef D DomainType;
-  typedef RF RangeFieldType;
-  enum { dimRange = m }; 
-  typedef R RangeType;
-  enum { diffOrder=0 };
+  typedef DF DomainFieldType; typedef D DomainType;
+  typedef RF RangeFieldType;  typedef R RangeType;
+  enum { dimDomain=n }; enum { dimRange=m }; enum { diffOrder=0 };
 };
 \end{lstlisting}
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]
 template<class DF, int n, class D, class RF, int m, class R, class J>
-struct C1LocalBasisTraits 
-  : public C0LocalBasisTraits<DF,n,D,RF,m,R> 
+struct C1LocalBasisTraits : public C0LocalBasisTraits<DF,n,D,RF,m,R> 
 {
-  typedef J JacobianType;
-  enum { diffOrder=1 };
+  typedef J JacobianType; enum { diffOrder=1 };
 };
 \end{lstlisting}
+
+Note: Basis functions may be vector-valued.
+
+Later on, other classes representing functions will use the same
+traits classes.
 \end{frame}
 
+\begin{frame}
+\frametitle<presentation>{$Q_1$ Local Basis}
+We now consider the bilinear elements $Q_1$ as an example.
+
+The basis functions are given by
+\begin{align*}
+\hat\phi_2(\hat{x}) &= (1-\hat{x}_0)\hat{x}_1, &
+\hat\phi_3(\hat{x}) &= \hat{x}_0\hat{x}_1, \\
+\hat\phi_0(\hat{x}) &= (1-\hat{x}_0)(1-\hat{x}_1), &
+\hat\phi_1(\hat{x}) &= \hat{x}_0(1-\hat{x}_1).
+\end{align*}
+
+
+\begin{columns}
+\begin{column}{0.65\textwidth}
+The numbering of the basis functions corresponds to the reference
+quadrilateral.
+\end{column}
+\mode<presentation>{
+\begin{column}{0.3\textwidth}
+\includegraphics[width=\textwidth]{./EPS/quadrilateral.eps}
+\end{column}}
+\end{columns}
+
+\mode<article>{
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{./EPS/quadrilateral.eps}
+\end{center}
+\caption{DUNE reference quadrilateral.}
+\end{figure}}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle<presentation>{$Q_1$ Local Basis Implementation}
+The following listing gives an implementation of the local basis
+functions. 
+
+The base class \lstinline{Dune::C1LocalBasisInterface} provides
+provides a Barton-Nackman style interface base class for
+differentiable basis functions.
+
+This interface will be extended to provide also higher derivatives.
+
+There is also an interface \lstinline{Dune::C0LocalBasisInterface}
+when no derivatives are provided.
+
+Evaluation always provides the values of \textit{all} basis functions
+or gradients at \textit{one} point. 
+
+Implementations typically use \lstinline{Dune::FieldVector<T,n>} to
+represent short vectors.
+
+\lstinline{JacobianType} is \lstinline{Dune::FieldVector<Dune::FieldVector<R,2>,1>}.
+
+In the jacobian evaluation in lines \ref{q1b:grad0} to \ref{q1b:grad3}
+we have
+\begin{equation*}
+\text{\lstinline{out[i][j][k]}}
+= \partial_{\hat{x}_k} \left(\hat\phi_i\right)_j (\hat{x}) . 
+\end{equation*}
+\end{frame}
+
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Local Basis}
-\framesubtitle<presentation>{\texttt{q1localbasis.hh}}
+\frametitle<presentation>{$Q_1$ Local Basis Listing}
+\framesubtitle<presentation>{File \texttt{examples/q1localbasis.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1localbasis.hh}
 \end{frame}
@@ -1161,9 +1268,33 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localbasis.hh}
 \end{Lst}}
 
 
+\begin{frame}
+\frametitle<presentation>{$Q_1$ Local Coefficients}
+In order to provide (different forms of) continuity of \textit{global} basis
+functions local indices in \textit{adjacent} elements need to be \textit{identified}.
+
+This is done via (sub-)entities of a given codim 0 entity.
+
+\textit{On the reference element} each local index $0\leq i < k$ is
+mapped to
+\begin{itemize}
+\item a subentity given by a number and a codimension.
+\item an offset with in that entity if several indices are mapped to
+the same subentity (offset is zero if only one local index is mapped
+to the subentity). 
+\end{itemize} 
+
+From this information a local-to-global map $g$ can be
+constructed \textit{generically}. 
+
+Class \lstinline{Dune::LocalKey} collects subentity and offset information.
+
+For the $Q_1$ element the code is given by the following listing.
+\end{frame}
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Local Coefficients}
-\framesubtitle<presentation>{\texttt{q1localcoefficients.hh}}
+\frametitle<presentation>{$Q_1$ Local Coefficients Listing}
+\framesubtitle<presentation>{File \texttt{examples/q1localcoefficients.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1localcoefficients.hh}
 \end{frame}
@@ -1174,9 +1305,26 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localcoefficients.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1localcoefficients.hh}
 \end{Lst}}
 
+
+\begin{frame}
+\frametitle<presentation>{$Q_1$ Local Interpolation}
+Local interpolation takes a function $\hat{u}(\hat{x})$ \textit{on the
+reference element} and provides a projection onto the space spanned by
+the local basis.
+
+For Lagrange basis functions this is point-wise evaluation.
+
+For other basis functions this might involve the solution of a local
+system (e.g. $L_2$-projection).
+
+The local interpolation interface is provided by
+\lstinline{Dune::LocalInterpolationInterface}.
+\end{frame}
+
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Local Interpolation}
-\framesubtitle<presentation>{\texttt{q1localinterpolation.hh}}
+\frametitle<presentation>{$Q_1$ Local Interpolation Listing}
+\framesubtitle<presentation>{File \texttt{examples/q1localinterpolation.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1localinterpolation.hh}
 \end{frame}
@@ -1187,9 +1335,32 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localinterpolation.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1localinterpolation.hh}
 \end{Lst}}
 
+\begin{frame}
+\frametitle<presentation>{$Q_1$ Local Interpolation Finite Element}
+Finally, we need to collect local basis, local coefficients and local
+interpolation in a local finite element.
+
+Local finite element also provides the reference element.
+
+The interface is given
+in \lstinline{Dune::LocalFiniteElementInterface}.
+
+Currently (March 2009), \lstinline{dune-localfunctions} implements the
+following elements:
+\begin{itemize}
+\item Piecewise constant elements $P_0$ for any reference element in any
+dimension. 
+\item Piecewise linear Lagrange elements $P_1$ in $1, 2, 3d$.
+\item Piecewise multi-linear Lagrange elements $Q_1$ in $1, 2, 3d$.
+\item $P_k$ on triangles.
+\item $Q_2$ on quadrilaterals.
+\item Lowest order Raviart-Thomas elements on triangles. 
+\end{itemize}
+\end{frame}
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Local Finite Element}
-\framesubtitle<presentation>{\texttt{q1localfiniteelement.hh}}
+\frametitle<presentation>{$Q_1$ Local Finite Element Listing}
+\framesubtitle<presentation>{File \texttt{examples/q1localfiniteelement.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelement.hh}
 \end{frame}
@@ -1199,6 +1370,9 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelement.hh}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelement.hh}
 \end{Lst}}
+
+
+\subsection{Unconstrained Global Finite Element Space}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Finite Element Map}
@@ -1212,10 +1386,6 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelementmap.hh}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelementmap.hh}
 \end{Lst}}
-
-
-\subsection{Unconstrained Global Finite Element Space}
-
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Grid Function Space Example}
