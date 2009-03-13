@@ -20,6 +20,7 @@ LIBS="$DUNE_LIBS"
 AC_CONFIG_FILES([
   Makefile
   m4/Makefile
+  doc/Makefile
   examples/Makefile
   dune-pdelab-howto.pc
 ])
