@@ -11,8 +11,8 @@
 #include"q1localinterpolation.hh"
 #include"q1localfiniteelement.hh"
 #include"q1localfiniteelementmap.hh"
-#include"q1analyticfunction.hh"
-#include"q1boundaryconditiontypefunction.hh"
+#include"analyticfunction.hh"
+#include"boundaryconditiontypefunction.hh"
 #include"q1constraints.hh"
 #include"q1constrainedinterpolate.hh"
 

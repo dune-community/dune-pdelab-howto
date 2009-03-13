@@ -6,7 +6,7 @@
 #include<dune/common/mpihelper.hh>
 #include<dune/grid/yaspgrid.hh>
 
-#include"q1analyticfunction.hh"
+#include"analyticfunction.hh"
 #include"q2interpolationerror.hh"
 
 int main(int argc, char** argv)

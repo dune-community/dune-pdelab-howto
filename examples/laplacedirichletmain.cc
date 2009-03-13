@@ -20,7 +20,7 @@
 #include"q1localinterpolation.hh"
 #include"q1localfiniteelement.hh"
 #include"q1localfiniteelementmap.hh"
-#include"q1analyticfunction.hh"
+#include"analyticfunction.hh"
 #include"q1constraints.hh"
 #include"laplacedirichlet.hh"
 #include"gridexamples.hh"

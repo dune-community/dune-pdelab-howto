@@ -11,7 +11,7 @@
 #include"q1localinterpolation.hh"
 #include"q1localfiniteelement.hh"
 #include"q1localfiniteelementmap.hh"
-#include"q1analyticfunction.hh"
+#include"analyticfunction.hh"
 #include"q1interpolationerror.hh"
 
 int main(int argc, char** argv)
