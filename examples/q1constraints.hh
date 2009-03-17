@@ -1,5 +1,4 @@
-class Q1Constraints
-{
+class Q1Constraints {
 public:
   enum{doBoundary=true};enum{doSkeleton=false};enum{doVolume=false};
 

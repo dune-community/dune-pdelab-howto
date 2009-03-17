@@ -1,4 +1,3 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif

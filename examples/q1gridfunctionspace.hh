@@ -6,21 +6,21 @@
 template<typename GV>
 void q1GridFunctionSpace (const GV& gv)
 {
-  typedef typename GV::Grid::ctype D; // domain type
-  typedef double R;                   // range type
+  typedef typename GV::Grid::ctype D;// domain type
+  typedef double R;                  // range type
 
-  Q1LocalFiniteElementMap<D,R> fem;   // maps entity to finite element
+  Q1LocalFiniteElementMap<D,R> fem;  // maps entity to finite element
 
   typedef Dune::PDELab::GridFunctionSpace<GV,
-	Q1LocalFiniteElementMap<D,R> > GFS;    
-  GFS gfs(gv,fem);                    // make grid function space
+	Q1LocalFiniteElementMap<D,R> > GFS; /*@\label{q1gfs:GFS}@*/    
+  GFS gfs(gv,fem);                   // make grid function space
 
   typedef typename GFS::template VectorContainer<R>::Type X;
-  X x(gfs,0.0);                       // make coefficient vector
-  x[4] = 1.0;                         // set a component
+  X x(gfs,0.0);                      // make coefficient vector
+  x[4] = 1.0;                        // set a component
 
   typedef Dune::PDELab::DiscreteGridFunction<GFS,X> DGF;
-  DGF dgf(gfs,x);                     // make a grid function
+  DGF dgf(gfs,x);                    // make a grid function
 
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);  // plot result
   vtkwriter.addVertexData(new Dune::PDELab::

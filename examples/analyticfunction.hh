@@ -4,8 +4,7 @@
 template<typename GV, typename RF>
 class U : public Dune::PDELab::AnalyticGridFunctionBase<
   Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-  U<GV,RF> >
-{
+  U<GV,RF> > {
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,U<GV,RF> > B;

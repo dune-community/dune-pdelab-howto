@@ -9,7 +9,7 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
-#include <dune/common/timer.hh>
+#include<dune/common/timer.hh>
 #include<dune/grid/yaspgrid.hh>
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
@@ -201,6 +201,17 @@ int main(int argc, char** argv)
       // solve problem :)
       test(grid.leafView());
     }
+
+    // UG Q1 2D test
+#if HAVE_UG
+    {
+      // make grid 
+      UGUnitSquareQ grid(1000);
+      grid.globalRefine(10);
+
+      test(grid.leafView());
+    }
+#endif
 
 	// test passed
 	return 0;

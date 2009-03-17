@@ -25,11 +25,40 @@
 #include"laplacedirichlet.hh"
 #include"gridexamples.hh"
 
+#include"gmshreader.hh"
+
 int main(int argc, char** argv)
 {
   try{
     //Maybe initialize Mpi
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
+
+    // UG P1 3D test
+#if HAVE_UG
+    {
+      Dune::UGGrid<3> grid(1000);
+      Dune::GmshReader<Dune::UGGrid<3> >::read(grid,"grids/pyramid.msh");
+
+      // make grid
+      //pg->globalRefine(1);
+
+      // get view
+      typedef Dune::UGGrid<3>::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+ 
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      typedef Dune::PDELab::P1LocalFiniteElementMap<DF,double,3> FEM;
+      FEM fem;
+  
+      // solve problem
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(gv,fem,2,"laplace_UG_Pyramid_P1_3d");
+    }
+#endif
+
+    return 0;
 
     // Yasp 2D example
     {
@@ -38,7 +67,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<int,2> N(1);
       Dune::FieldVector<bool,2> B(false);
       Dune::YaspGrid<2,2> grid(L,N,B,0);
-      grid.globalRefine(5);
+      grid.globalRefine(10);
 
       // get view
       typedef Dune::YaspGrid<2,2>::LeafGridView GV;
@@ -51,6 +80,28 @@ int main(int argc, char** argv)
 
       laplacedirichlet<GV,FEM,Q1Constraints>(gv,fem,3,"laplace_yasp_Q1_2d");
     }
+
+    // UG Q1 2D test
+#if HAVE_UG
+    {
+      // make grid 
+      UGUnitSquareQ grid(1000);
+      grid.globalRefine(10);
+
+      // get view
+      typedef UGUnitSquareQ::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+ 
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef Q1LocalFiniteElementMap<DF,double> FEM;
+      FEM fem;
+
+      // solve problem
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(gv,fem,3,"laplace_UG_Q1_2d");
+    }
+#endif
 
     // YaspGrid Q2 2D test
     {
@@ -74,6 +125,149 @@ int main(int argc, char** argv)
       laplacedirichlet<GV,FEM,Dune::PDELab::
         ConformingDirichletConstraints>(gv,fem,6,"laplace_yasp_Q2_2d");
     }
+
+#if HAVE_ALBERTA
+    {
+      // make grid 
+      AlbertaUnitSquare grid;
+      grid.globalRefine(4);
+      
+      // get view
+      typedef AlbertaUnitSquare::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+      
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      const int k=4;
+      const int q=2*k;
+      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
+      FEM fem(gv);
+      
+      // solve problem
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(gv,fem,q,"laplace_Alberta_Pk_2d");
+    }
+#endif
+
+#if HAVE_ALUGRID
+    {
+      // make grid 
+      ALUUnitSquare grid;
+      grid.globalRefine(4);
+
+      // get view
+      typedef ALUUnitSquare::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+      
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      const int k=4;
+      const int q=2*k;
+      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
+      FEM fem(gv);
+      
+      // solve problem
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(gv,fem,q,"laplace_ALU_Pk_2d");
+    }
+#endif
+
+    // UG Pk 2D test
+#if HAVE_UG
+    {
+      // make grid 
+      UGUnitSquare grid(1000);
+      grid.globalRefine(4);
+
+      // get view
+      typedef UGUnitSquare::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+ 
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      const int k=4;
+      const int q=2*k;
+      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
+      FEM fem(gv);
+  
+      // solve problem
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(gv,fem,q,"laplace_UG_Pk_2d");
+    }
+#endif
+
+    // UG Pk 2D test
+#if HAVE_UG
+    {
+      // make grid 
+      UGUnitSquare grid(1000);
+      grid.globalRefine(4);
+
+      // get view
+      typedef UGUnitSquare::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+ 
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      const int q=1;
+      typedef Dune::PDELab::P1LocalFiniteElementMap<DF,double,2> FEM;
+      FEM fem;
+  
+      // solve problem
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(gv,fem,q,"laplace_UG_P1_2d");
+    }
+#endif
+
+#if HAVE_ALBERTA
+    {
+      // make grid 
+      AlbertaUnitSquare grid;
+      grid.globalRefine(4);
+      
+      // get view
+      typedef AlbertaUnitSquare::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+      
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      const int q=1;
+      typedef Dune::PDELab::P1LocalFiniteElementMap<DF,double,2> FEM;
+      FEM fem;
+      
+      // solve problem
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(gv,fem,q,"laplace_Alberta_P1_2d");
+    }
+#endif
+
+#if HAVE_ALUGRID
+    {
+      // make grid 
+      ALUUnitSquare grid;
+      grid.globalRefine(4);
+
+      // get view
+      typedef ALUUnitSquare::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+      
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      const int q=1;
+      typedef Dune::PDELab::P1LocalFiniteElementMap<DF,double,2> FEM;
+      FEM fem;
+      
+      // solve problem
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(gv,fem,q,"laplace_ALU_P1_2d");
+    }
+#endif
 
     // YaspGrid Q1 3D test
     {

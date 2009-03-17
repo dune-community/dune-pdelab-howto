@@ -8,26 +8,26 @@
 template<typename GV>
 void q1interpolate (const GV& gv)
 {
-  typedef typename GV::Grid::ctype D; // domain type
-  typedef double R;                   // range type
+  typedef typename GV::Grid::ctype D;// domain type
+  typedef double R;                  // range type
 
-  Q1LocalFiniteElementMap<D,R> fem;   // maps entity to finite element
+  Q1LocalFiniteElementMap<D,R> fem;  // map entity to finite element
 
   typedef Dune::PDELab::GridFunctionSpace<GV,
-	Q1LocalFiniteElementMap<D,R>,Q1Constraints> GFS;    
-  GFS gfs(gv,fem);                    // make grid function space
+	Q1LocalFiniteElementMap<D,R>,Q1Constraints> GFS;                    /*@\label{cint:newparameter}@*/
+  GFS gfs(gv,fem);                   // make grid function space
 
-  typedef typename GFS::template ConstraintsContainer<R>::Type T;
-  T t;                                // container for transformation
-  B<GV> b(gv);                        // boundary condition function
-  Dune::PDELab::constraints(b,gfs,t); // fill container
+  typedef typename GFS::template ConstraintsContainer<R>::Type T;       /*@\label{cint:container}@*/ 
+  T t;                               // container for transformation    
+  B<GV> b(gv);                       // boundary condition function     /*@\label{cint:bctfunction}@*/
+  Dune::PDELab::constraints(b,gfs,t);// fill container                  /*@\label{cint:constraints}@*/
 
   typedef typename GFS::template VectorContainer<R>::Type X;
-  X x(gfs,0.0);                       // make coefficient vector
+  X x(gfs,0.0);                      // make coefficient vector
 
-  U<GV,R> u(gv);                      // make analytic function object
-  Dune::PDELab::interpolate(u,gfs,x); // interpolate x from u
-  Dune::PDELab::set_nonconstrained_dofs(t,0.0,x); // clear interior
+  U<GV,R> u(gv);                     // analytic function object
+  Dune::PDELab::interpolate(u,gfs,x);// interpolate x from u            
+  Dune::PDELab::set_nonconstrained_dofs(t,0.0,x); // clear interior     /*@\label{cint:setconstraints}@*/
 
   typedef Dune::PDELab::DiscreteGridFunction<GFS,X> DGF;
   DGF dgf(gfs,x);                     // make a grid function

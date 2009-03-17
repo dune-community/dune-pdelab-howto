@@ -90,6 +90,29 @@ public:
   }
 };
 
+class UGUnitSquareQ : public Dune::UGGrid<2>
+{
+public:
+  UGUnitSquareQ (unsigned int heapSize=100) : Dune::UGGrid<2>(heapSize)
+  {
+	this->createBegin();
+	Dune::FieldVector<double,2> pos;
+	pos[0] = 0;  pos[1] = 0;
+	this->insertVertex(pos);
+	pos[0] = 1;  pos[1] = 0;
+	this->insertVertex(pos);
+	pos[0] = 0;  pos[1] = 1;
+	this->insertVertex(pos);
+	pos[0] = 1;  pos[1] = 1;
+	this->insertVertex(pos);
+	std::vector<unsigned int> cornerIDs(4);
+	cornerIDs[0] = 0;  cornerIDs[1] = 1;  cornerIDs[2] = 2;  cornerIDs[3] = 3;
+	this->insertElement(Dune::GeometryType(Dune::GeometryType::cube,2), cornerIDs);
+	this->createEnd();
+  }
+};
+
+
 class UGUnitTriangle : public Dune::UGGrid<2>
 {
 public:

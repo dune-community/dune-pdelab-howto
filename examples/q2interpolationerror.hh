@@ -12,10 +12,10 @@ void q2interpolationerror (const GV& gv)
   typedef typename GV::Grid::ctype D; // domain type
   typedef double R;                   // range type
 
-  Dune::PDELab::Q22DLocalFiniteElementMap<D,R> fem; // Q_2 now !
+  Dune::PDELab::Q22DLocalFiniteElementMap<D,R> fem; // Q_2 now ! /*@\label{l2int:q2}@*/
 
   typedef Dune::PDELab::GridFunctionSpace<GV,
-	Dune::PDELab::Q22DLocalFiniteElementMap<D,R> > GFS;    
+	Dune::PDELab::Q22DLocalFiniteElementMap<D,R> > GFS;          /*@\label{l2int:q22}@*/
   GFS gfs(gv,fem);                    // make grid function space
 
   typedef typename GFS::template VectorContainer<R>::Type X;
