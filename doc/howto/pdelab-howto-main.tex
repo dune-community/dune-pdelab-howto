@@ -16,7 +16,7 @@
   \usepackage{amscd}
   \usepackage{fullpage}
   \setlength{\parindent}{0pt}
-  \setlength{\parskip}{1.3ex plus 0.5ex minus 0.2ex}
+  \setlength{\parskip}{1.25ex plus 0.5ex minus 0.2ex}
 }
 
 % only presentation 
@@ -125,6 +125,13 @@
 	email: \url{Peter.Bastian@iwr.uni-stuttgart.de}
   }
   \date{\today}
+  \publishers{%
+  \vspace{10mm}
+  \includegraphics[width=0.9\textwidth]{./EPS/rotbilinear}
+  \\
+  \vspace{10mm}
+  \url{http://www.dune-project.org/}\\
+  }
 }
 
 % logo nach oben
@@ -228,6 +235,30 @@ attempted.
 \subsection{What is missing in DUNE?}
 
 \begin{frame}
+\frametitle<presentation>{DUNE PDELab Features}
+\begin{itemize}
+\item Rapid prototyping: Substantially reduce time to implement
+discretizations and solvers for systems of PDEs based on DUNE.
+\item Simple things should be simple --- suitable for teaching.
+\item Discrete function spaces spaces:
+\begin{itemize}
+\item Conforming and non-conforming,
+\item hp-refinement,
+\item general approach to constraints,
+\item generic generation of product spaces for systems.
+\end{itemize} 
+\item Operators based on weighted residual formulation:
+\begin{itemize}
+\item Linear and nonlinear,
+\item stationary and transient,
+\item FE and FV schemes requiring at most face-neighbors.
+\end{itemize} 
+\item Exchangeable linear algebra backend. 
+\item User only involved with ``local'' view on (reference) element.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
 \frametitle<presentation>{Required Modules}
 To work through the examples the following DUNE modules are required: 
 \begin{itemize}
@@ -261,7 +292,6 @@ a PDE problem is. We will develop such an idea in this section.
 
 \begin{frame}
 \frametitle<presentation>{Weighted Residual Formulation}
-
 \begin{Def}[Weighted Residual Formulation]
 We claim that all problems we ever want to solve can be written in the form
 \begin{equation}
@@ -715,8 +745,8 @@ b&\in B^1_h : & r^\text{bnd}_{h,b}(u,v) &= r^\text{bnd}_{h,b}(\chi_{\Omega_{l(b)
 where $\chi_\omega(x) : \omega \to \{0,1\}$ is the characteristic function of $\omega$.
 
 This is a consequence of  $r^\text{vol}_{h,e}$, $r^\text{skel}_{h,e}$
-and $r^\text{bnd}_{h,e}$ being integrals over an element, an face or a
-boundary face. \hfill$\square$
+and $r^\text{bnd}_{h,e}$ being integrals over an element, a face or a
+boundary face.
 \end{Pro}
 \end{frame}
 
@@ -1374,9 +1404,31 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelement.hh}
 
 \subsection{Unconstrained Global Finite Element Space}
 
+\begin{frame}
+\frametitle<presentation>{Finite Element Map}
+A global finite element space is made up from a collection of local
+finite element spaces. 
+
+So we need a map that delivers for each element (codim 0 entity) $e\in E_h^0$ a
+local finite element.
+
+But there is only one \textit{type} for all the local finite elements
+which then has to be polymorphic.
+
+For multi-element type meshes and $hp$-refinement this map may be
+rather complicated.
+
+In our implementation of $P_k$ elements for $k>2$ we use the map to
+match the degrees of freedom on common edges and faces.
+
+For the special case where we have \textit{the same} local finite
+element for \textit{all} the elements there is a default implementation that is
+used in the following listing.
+\end{frame}
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Local Finite Element Map}
-\framesubtitle<presentation>{\texttt{q1localfiniteelementmap.hh}}
+\frametitle<presentation>{$Q_1$ Local Finite Element Map Listing}
+\framesubtitle<presentation>{File \texttt{examples/q1localfiniteelementmap.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelementmap.hh}
 \end{frame}
@@ -1387,9 +1439,33 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelementmap.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelementmap.hh}
 \end{Lst}}
 
+
+\begin{frame}
+\frametitle<presentation>{$Q_1$ Grid Function Space}
+Now use $Q_1$ local finite element to build
+a global finite element space.
+
+The main class is \lstinline{GridFunctionSpace} which 
+builds up the local to global map $g$ and provides information about
+the local finite elements.
+
+An element of the function space is represented by a coefficient
+vector that is
+encapsulated in a seperate type, see definition \lstinline{X}.
+
+The type \lstinline{X} is derived from \lstinline{std::vector<R>} here
+but his will be changed later.
+
+The remaining lines construct a function object that can be evaluated
+in local coordinates on the reference element.
+
+\lstinline{Dune::SubsamplingVTKWriter} allows the output of
+nonconforming and higher order functions.
+\end{frame}
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Grid Function Space Example}
-\framesubtitle<presentation>{\texttt{q1gridfunctionspace.hh}}
+\frametitle<presentation>{$Q_1$ Grid Function Space Listing}
+\framesubtitle<presentation>{File \texttt{examples/q1gridfunctionspace.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1gridfunctionspace.hh}
 \end{frame}
@@ -1401,16 +1477,130 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1gridfunctionspace.hh}
 \end{Lst}}
 
 \begin{frame}
-\frametitle<presentation>{Visualization of the Result}
-\begin{center}
-\includegraphics[width=0.49\textwidth]{./EPS/q1.eps}\hfill
-\includegraphics[width=0.49\textwidth]{./EPS/q1interpolate.eps}
-\end{center}
+\frametitle<presentation>{$Q_1$ Grid Function Space Main Program}
+Finally, in the main program a \lstinline{Dune::Grid} is instantiated
+and the generic function is called.
+
+We show only one main program here for illustration. In the other
+examples below the main programs will not be listed.
 \end{frame}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Grid Function from Analytic Function}
-\framesubtitle<presentation>{\texttt{analyticfunction.hh}}
+\frametitle<presentation>{$Q_1$ GFS Main Program Listing}
+\framesubtitle<presentation>{File \texttt{examples/q1gridfunctionspacemain.cc}}
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1gridfunctionspacemain.cc}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/q1gridfunctionspacemain.cc] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/q1gridfunctionspacemain.cc}
+\end{Lst}}
+
+
+\begin{frame}<presentation>
+\frametitle<presentation>{$Q_1$ Global Basis Function Visualization}
+\begin{center}
+\includegraphics[width=0.65\textwidth]{./EPS/q1.eps}
+\end{center}
+\end{frame}
+
+Figure \ref{fig:Q1GlobalBasisFunction} shows the result visualized
+with ParaView.
+
+\mode<article>{
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{./EPS/q1.eps}
+\end{center}
+\caption{$Q_1$ global basis function visualized with ParaView.}
+\label{fig:Q1GlobalBasisFunction}
+\end{figure}
+}
+
+\subsection{Interpolation from Analytic Function}
+
+\mode<article>{
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{./EPS/q1interpolate.eps}
+\end{center}
+\caption{Interpolation of $\exp(-3\|x-c\|^2)$ with $Q_1$ elements.}
+\label{fig:Q1Interpolation}
+\end{figure}
+}
+
+\begin{frame}
+\frametitle<presentation>{Functions}
+Often one wants to prescribe functions for initial or boundary
+conditions.
+
+PDELab offers several classes to represent functions:
+\begin{itemize}
+\item \lstinline{Dune::PDELab::FunctionInterface} is the interface for general
+functions $$u : \mathbb{D}^n \to \mathbb{K}^m, \qquad x \mapsto y.$$ 
+\item \lstinline{Dune::PDELab::GridFunctionInterface} is the interface
+for functions defined on a grid:
+$$u : E_h^0 \times \mathbb{D}^n \to \mathbb{K}^m, \qquad
+(e,\hat{x}) \mapsto y.$$
+$\hat{x}$ is on the \textit{reference element}.
+\item \lstinline{Dune::PDELab::BoundaryGridFunctionInterface} is the
+interface for \textit{grid functions} living on the boundary:
+$$u : (E_h^1\cap\partial\Omega) \times \mathbb{D}^{n'} \to \mathbb{K}^m, \qquad
+(f,\hat{x}) \mapsto y.$$
+\item Functions offer the same \lstinline{Traits} as the local basis.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle<presentation>{Useful Adapters and Base Classes}
+There are various useful adapters and base classes:
+
+\lstinline{Dune::PDELab::DiscreteGridFunction}: Takes a grid
+function space and a coefficient vector and makes a grid function out
+of it.
+
+\lstinline{Dune::PDELab::VTKGridFunctionAdapter}: Takes a grid
+function and makes a VTK function out of it (this is the input
+for \lstinline{VTKWriter}). These two classes have been used already above.
+
+\lstinline{Dune::PDELab::AnalyticGridFunctionBase}: Implements
+grid function interface from global function by deriving from it.
+This class will be used shortly.
+
+\end{frame}
+
+\begin{frame}
+\frametitle<presentation>{Less Useful Adapters}
+\lstinline{Dune::PDELab::FunctionToGridFunctionAdapter}: Takes a global
+function and makes a grid function out of it.
+
+\lstinline{Dune::PDELab::GlobalFunctionToLocalFunctionAdapter}:
+Takes a global function and an element and provides evaluation
+w.r.t.~reference element.
+
+\lstinline{Dune::PDELab::GridFunctionToLocalFunctionAdapter}:
+Takes grid function and element, acts as function on the
+reference element.
+
+\lstinline{Dune::PDELab::SelectComponentAdapter}. Takas
+vector-valued function and component number and provides a scalar function.
+
+\lstinline{D...::BoundaryGridFunctionSelectComponentAdapter}:
+Same for boundary grid functions.
+
+\lstinline{Dune::PDELab::PiolaBackwardAdapter}: Takes global
+vector-valued function, makes grid function tranformed back to
+reference element.
+
+For more details see \lstinline{dune/pdelab/common/function.hh}.
+\end{frame}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{\texttt{AnalyticGridFunctionBase} Example Listing}
+\framesubtitle<presentation>{File \texttt{examples/analyticfunction.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/analyticfunction.hh}
 \end{frame}
@@ -1421,9 +1611,16 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/analyticfunction.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/analyticfunction.hh}
 \end{Lst}}
 
+\begin{frame}
+\frametitle<presentation>{Generic Interpolation}
+Interpolation of a finite element function from a given function is
+now generic.
+\end{frame}
+
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Interpolating a Finite Element Function}
-\framesubtitle<presentation>{\texttt{q1interpolate.hh}}
+\frametitle<presentation>{Generic Interpolation Listing}
+\framesubtitle<presentation>{File \texttt{examples/q1interpolate.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolate.hh}
 \end{frame}
@@ -1434,14 +1631,67 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolate.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolate.hh}
 \end{Lst}}
 
-Interpolate example.
+\begin{frame}<presentation>
+\frametitle<presentation>{Visualization of the Result}
+\begin{center}
+\includegraphics[width=0.65\textwidth]{./EPS/q1interpolate.eps}
+\end{center}
+\end{frame}
+
+
 
 \subsection{Interpolation Error}
 
+\begin{frame}
+\frametitle<presentation>{Interpolation Error Example}
+Now, we do a little example that shows how one can work with global
+finite element functions.
+
+For a given function $u$ and its interpolant $u_h\in
+U_h(\mathbb{T}_h)$ we want to compute the $L_2$ interpolation error 
+\begin{equation*}
+\begin{split}
+\|&u-u_h\|_{L_2(\Omega)} = \int_\Omega (u-u_h)^2\, dx 
+= \sum_{e\in E_h^0} \int_{\Omega_e} (u-u_h)^2\, dx \\
+&= \sum_{e\in E_h^0} \int_{\hat{\Omega}_e} \left(u(\mu_e(\hat{x})) -
+u_h(\mu_e(\hat{x})) \right)^2 \text{det} \nabla\mu_e(\hat{x}) \,
+d\hat{x}\\
+&= \sum_{e\in E_h^0} \sum_{j=0}^{q(e)-1} w_{e,j} \left( u(\mu_e(\hat{x}_{e,j})) -
+u_h(\mu_e(\hat{x}_{e,j})) \right)^2 \text{det} \nabla\mu_e(\hat{x}_{e,j}) \,
+d\hat{x} \text{ $+$ error}\\
+&= \sum_{e\in E_h^0} \sum_{j=0}^{q(e)-1} w_{e,j} \left(u(\mu_e(\hat{x}_{e,j})) -
+\sum_{i=0}^{k(e)-1}(\mathbf{u})_{g(e,i)} \hat\phi_{e,i}(\hat{x}_{e,j}) \right)^2  
+\text{det} \nabla\mu_e(\hat{x}_{e,j}) \,  
+d\hat{x} \text{ $+$ error} .
+\end{split}
+\end{equation*}
+\end{frame}
+
+\begin{frame}
+\frametitle<presentation>{Interpolation Error Example}
+In the following code example the
+function \lstinline{l2interpolationerror} is parametrized by
+\begin{itemize}
+\item \lstinline{U}: Type for a function. 
+\item \lstinline{GFS}: Type for a grid function space.
+\item \lstinline{X}: Type for a coefficient vector.
+\end{itemize}
+The local function space
+\lstinline{GFS::LocalFunctionSpace} in line \ref{l2int:lfs} is a type 
+exported by a grid function space which
+\begin{itemize}
+\item is bound to an element $e$ later in line \ref{l2int:bind},
+\item provides the local finite element for that element $e$ ,
+\item provides the local to global map $g(e,\cdot)$ for that element,
+\item can read, write and add degrees of freedom of element $e$.
+\end{itemize}
+\lstinline{Dune::QuadratureRule} in line \ref{l2int:quad} provides
+quadrature rules for many element types, dimensions and orders.
+\end{frame}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Integrate Interpolation Error}
-\framesubtitle<presentation>{\texttt{l2interpolationerror.hh}}
+\frametitle<presentation>{Interpolation Error Listing}
+\framesubtitle<presentation>{File \texttt{examples/l2interpolationerror.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/l2interpolationerror.hh}
 \end{frame}
@@ -1452,9 +1702,12 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/l2interpolationerror.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/l2interpolationerror.hh}
 \end{Lst}}
 
+Next comes the driver that uses the generic $L_2$ interpolation error
+function.
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Integration Example Driver}
-\framesubtitle<presentation>{\texttt{q1interpolationerror.hh}}
+\frametitle<presentation>{Interpolation Error Driver Listing}
+\framesubtitle<presentation>{File \texttt{examples/q1interpolationerror.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolationerror.hh}
 \end{frame}
@@ -1465,8 +1718,10 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolationerror.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolationerror.hh}
 \end{Lst}}
 
-\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\begin{frame}[fragile]
 \frametitle<presentation>{$Q_1$ Interpolation Error}
+Evaluating the interpolaton error for our $Q_1$ basis for different
+levels of refinement produces the following result:
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
 interpolation error:        1 elements 4.63081768e-01
 interpolation error:        4 elements 1.02612039e-01
@@ -1480,15 +1735,22 @@ interpolation error:    65536 elements 7.65739477e-06
 interpolation error:   262144 elements 1.91436048e-06
 interpolation error:  1048576 elements 4.78590858e-07
 \end{lstlisting}
+Obviously, we get second order approximation.
 \end{frame}
 
-Integrate function with example.
+\begin{frame}
+\frametitle<presentation>{Modification for $Q_2$}
+Now it is very easy to compute the interpolation error for other
+function spaces.
 
-Interpolation error example. Use $Q_2$ as well.
+Just replace \lstinline{Q1LocalFiniteElementMap}
+with \lstinline{Dune::PDELab::Q22DLocalFiniteElementMap} in
+lines \ref{l2int:q2} and \ref{l2int:q22}!
+\end{frame}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{$Q_2$ Integration Example Driver}
-\framesubtitle<presentation>{\texttt{q2interpolationerror.hh}}
+\frametitle<presentation>{$Q_2$ Interpolation Error Driver Listing}
+\framesubtitle<presentation>{File \texttt{examples/q2interpolationerror.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q2interpolationerror.hh}
 \end{frame}
@@ -1499,8 +1761,9 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q2interpolationerror.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/q2interpolationerror.hh}
 \end{Lst}}
 
-\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+\begin{frame}[fragile]
 \frametitle<presentation>{$Q_2$ Interpolation Error}
+And we see third order approximation:
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
 interpolation error:        1 elements 4.65290291e-02
 interpolation error:        4 elements 1.20509875e-02
@@ -1518,11 +1781,37 @@ interpolation error:  1048576 elements 8.16998215e-11
 
 \subsection{Constrained Global Finite Element Space}
 
-Constraints setzen.
+We now show how constraints can be added to a grid function space.
+
+\begin{frame}
+\frametitle<presentation>{Adding Constraints to a Grid Function Space}
+Constraints are a property of a grid function space.
+
+In addition to the local finite elements we have to
+parametrize \lstinline{Dune::PDELab::GridFunctionSpace} with a type
+that can provide the sparse transformation matrix
+$\mathbf{T}_{\tilde{U}_h,\bar{U}_h}$ from \eqref{Eq:StructureTransformation}. 
+
+Information should be provided only locally. One
+column of $\mathbf{T}_{\tilde{U}_h,\bar{U}_h}$ may only involve
+degrees of freedom of two (intersecting) elements.
+
+A constraints class provides rows of
+$\mathbf{T}^T_{\tilde{U}_h,\bar{U}_h}$ and may have methods
+\begin{itemize}
+\item \lstinline{volume}: Constrain degrees of freedom associated with
+volume (useful in parallelization).
+\item \lstinline{skeleton}: Constrain degrees of freedom associated
+with interior intersections (useful for hanging nodes).
+\item \lstinline{boundary}: Constrain degrees of freedom on boundary
+intersections (for boundary conditions).
+\end{itemize}
+Flags \lstinline{do...} control which methods must be provided.
+\end{frame}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Constraints Assembler}
-\framesubtitle<presentation>{\texttt{q1constraints.hh}}
+\frametitle<presentation>{Constraints Assembler Listing}
+\framesubtitle<presentation>{File \texttt{examples/q1constraints.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1constraints.hh}
 \end{frame}
@@ -1533,9 +1822,19 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1constraints.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1constraints.hh}
 \end{Lst}}
 
+\begin{frame}
+\frametitle<presentation>{A Boundary Condition Function}
+To use assembling of constraints 
+we define a boundary grid function that gives the \textit{boundary
+condition type} for a point on the boundary.
+
+Note that \lstinline{RangeFieldType} is set to \lstinline{int} in
+line \ref{bct:int}.
+\end{frame}
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Boundary Condition Type Functions}
-\framesubtitle<presentation>{\texttt{boundaryconditiontypefunction.hh}}
+\frametitle<presentation>{Boundary Condition Type Function Listing}
+\framesubtitle<presentation>{File \texttt{examples/boundaryconditiontypefunction.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/boundaryconditiontypefunction.hh}
 \end{frame}
@@ -1546,9 +1845,36 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/boundaryconditiontypefunction.h
 numberstyle=\tiny, numbersep=5pt]{../../examples/boundaryconditiontypefunction.hh}
 \end{Lst}}
 
+\begin{frame}
+\frametitle<presentation>{Interpolation with Constraints}
+In the following listing we redo the interpolation example 
+with a constrained finite element space.
+
+In line \ref{cint:newparameter} the grid function space is
+parametrized with the constraints class.
+
+In line \ref{cint:container} the grid function space exports a type to
+hold the transformation matrix
+$\mathbf{T}^T_{\tilde{U}_h,\bar{U}_h}$. 
+
+In line \ref{cint:bctfunction} the function giving the boundary
+condition type is instantiated.
+
+Finally, in line \ref{cint:constraints} the constraints are assembled
+and stored.
+
+Function \lstinline{Dune::PDELab::set_nonconstrained_dofs} in
+line \ref{cint:setconstraints} allows to set all nonconstrained
+degrees of freedom to a given value.
+
+Function \lstinline{Dune::PDELab::set_constrained_dofs} does the same
+for the constrained degrees of freedom.
+\end{frame}
+
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Function Space with Constraints}
-\framesubtitle<presentation>{\texttt{q1constrainedinterpolate.hh}}
+\frametitle<presentation>{Constrained Interpolation Listing}
+\framesubtitle<presentation>{File \texttt{examples/q1constrainedinterpolate.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1constrainedinterpolate.hh}
 \end{frame}
@@ -1559,21 +1885,79 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1constrainedinterpolate.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1constrainedinterpolate.hh}
 \end{Lst}}
 
-\begin{frame}
-\frametitle<presentation>{Affine Shift Function}
+\begin{frame}<presentation>
+\frametitle<presentation>{Visualization of Affine Shift Function}
 \begin{center}
-\includegraphics[width=0.5\textwidth]{./EPS/q1constrainedinterpolate.eps}
+\includegraphics[width=0.65\textwidth]{./EPS/q1constrainedinterpolate.eps}
 \end{center}
 \end{frame}
 
+Figure \ref{fig:Q1ConstrainedInterpolation} shows the result obtained
+after setting the nonconstrained degrees of freedom to zero.
+
+
+\mode<article>{
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{./EPS/q1constrainedinterpolate.eps}
+\end{center}
+\caption{Interpolation of $\exp(-3\|x-c\|^2)$ with $Q_1$ elements with
+subsequent modification of nonconstrained degrees of freedom.}
+\label{fig:Q1ConstrainedInterpolation}
+\end{figure}
+}
 
 \subsection{Composite Finite Element Spaces}
 
-Composite spaces. Taylor Hood example.
+\mode<article>{
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{./EPS/thinterpolate.eps}
+\end{center}
+\caption{Visualization of velocity field and pressure in the
+Taylor-Hood example.}
+\label{fig:THInterpolation}
+\end{figure}
+}
+
+\begin{frame}
+\frametitle<presentation>{Composition of Finite Element Spaces}
+For systems of PDEs we need product function spaces.
+
+This can be achieved now in a completely generic way:
+\begin{itemize}
+\item \lstinline{Dune::PDELab::PowerGridFunctionSpace<GFS,k,M>} builds a
+new grid function space that is \lstinline{k}-times the product of \lstinline{GFS}.
+\item \lstinline{D...::CompositeGridFunctionSpace<M,GFS0,...,GFS8>}
+builds a new grid function space out of up to 9 existing grid function
+spaces. 
+\item \lstinline{M} controls construction of local to global map.
+\end{itemize}
+
+This can be applied recursively leading to a type tree.
+
+The local function space reflects this type tree.
+
+\lstinline{Dune::PDELab::GridFunctionSubSpace} allows the selection of
+subspaces.
+
+Functions can be composed in a similar way.
+\end{frame}
+
+\begin{frame}
+\frametitle<presentation>{Taylor-Hood Example}
+We now do the Taylor-Hood function space as an example.
+
+As before, we construct the function space and interpolate a finite
+element function from a given analytic function.
+
+Let us start by defining a vector-valued analytic function for the
+velocity field.  
+\end{frame}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Analytic Velocity Field}
-\framesubtitle<presentation>{\texttt{thvelocity.hh}}
+\frametitle<presentation>{Analytic Velocity Field Listing}
+\framesubtitle<presentation>{File \texttt{examples/thvelocity.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/thvelocity.hh}
 \end{frame}
@@ -1584,9 +1968,11 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/thvelocity.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/thvelocity.hh}
 \end{Lst}}
 
+Now the Taylor-Hood interpolation example.
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Taylor Hood Example}
-\framesubtitle<presentation>{\texttt{thinterpolate.hh}}
+\frametitle<presentation>{Taylor Hood Example Listing}
+\framesubtitle<presentation>{File \texttt{examples/thinterpolate.hh}}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/thinterpolate.hh}
 \end{frame}
@@ -1597,12 +1983,15 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/thinterpolate.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/thinterpolate.hh}
 \end{Lst}}
 
-\begin{frame}
-\frametitle<presentation>{Affine Shift Function}
+\begin{frame}<presentation>
+\frametitle<presentation>{Visualization of Taylor-Hood Function}
 \begin{center}
 \includegraphics[width=0.5\textwidth]{./EPS/thinterpolate.eps}
 \end{center}
 \end{frame}
+
+Figure \ref{fig:THInterpolation} visualizes the result of this
+example.
 
 \subsection{Summary}
 
@@ -1625,8 +2014,6 @@ in \texttt{dune-pdelab}.
 \item Set up the function space via \texttt{GridFunctionSpace}
 \end{itemize}
 \end{frame}
-
-Liste der Beispiele im examples Verzeichnis machen !
 
 \cleardoublepage
 
