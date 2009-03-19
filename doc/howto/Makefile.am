@@ -46,6 +46,9 @@ dist-hook:
 
 EXTRA_TEXINPUTS:=$(top_srcdir)
 
+pdelab-howto-article.dvi: pdelab-howto-main.tex $(EPS_FILES) lit.bib
+pdelab-howto-beamer.dvi: pdelab-howto-main.tex $(EPS_FILES) lit.bib
+
 art: pdelab-howto-article.pdf
 	xpdf -z 200 pdelab-howto-article.pdf
 beamer: pdelab-howto-beamer.pdf
