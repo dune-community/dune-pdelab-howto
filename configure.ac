@@ -6,6 +6,8 @@ AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([examples/poisson.cc])
 AM_CONFIG_HEADER([config.h])
 
+AC_CHECK_PROGS([CONVERT], [convert], [false])
+AM_CONDITIONAL([CONVERT], [test "x$CONVERT" != xfalse])
 
 # we need no more than the standard DE-stuff
 # this module depends on dune-common dune-grid dune-istl dune-localfunctions dune-pdelab
@@ -21,6 +23,8 @@ AC_CONFIG_FILES([
   Makefile
   m4/Makefile
   doc/Makefile
+  doc/howto/Makefile
+  doc/howto/Makefile.dist
   examples/Makefile
   dune-pdelab-howto.pc
 ])

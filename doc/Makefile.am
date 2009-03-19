@@ -1,2 +1,4 @@
+SUBDIRS = howto
+
 web-install:
-	echo ARGH! Kein WEBINSTALL!!
+	$(MAKE) -C howto web-install
