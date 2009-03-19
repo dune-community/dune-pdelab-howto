@@ -231,6 +231,8 @@ of finite element methods.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\subsection{PDELab Aims and Features}
+
 \begin{frame}
 \frametitle<presentation>{DUNE PDELab Features}
 \begin{itemize}
@@ -271,6 +273,31 @@ In addition, at least one of the grid managers UG, ALU or Alberta is
 required to do the examples on simplex grids. 
 \end{frame}
 
+\subsection{How to Read this Manual}
+
+Section 2 introduces the \textit{weighted residual formulation} which
+is the abstract formulation of PDE problems in PDELab. You should at
+least get some idea about it on your first reading.
+
+Section 3 presents the theory behind grid function
+spaces including the constuction of subspaces due to general
+constraints. An understanding of this is necessary if you want to
+implement new function spaces or constraints.
+
+Section 4 provides a step by step introduction to the implementation
+of grid function spaces. Working through these examples will enable
+you to use existing function spaces and implement new ones.
+
+Section 5 contains the theory behind the solution of the algebraic
+systems arising from the constrained weigthed residual formulation.
+
+Section 6 then shows how a discretization scheme is implemented using
+the grid function spaces. A simple conforming discretization of the
+Laplacian is worked through in detail and the set-up of solvers
+using \lstinline{dune-istl} is explained.
+
+Section 7 contains a list of the problems implemented in
+the \lstinline{examples} directory.
 
 \cleardoublepage
 
@@ -2844,6 +2871,47 @@ efficient.
 \end{frame}
 
 \cleardoublepage
+
+\mode<article>{
+\section{List of Main Programs Provided}
+
+\begin{description}
+\item[q1gridfunctionspacemain.cc] 
+Set up a $Q_1$ function space and display a global basis function.
+
+\item[q1interpolatemain.cc] 
+Interpolate a $Q_1$ function from a given analytic function.
+
+\item[q1constrainedinterpolatemain.cc]
+Set up constraints for a function space and manipulate the constrained
+degrees of freedom.
+
+\item[q1interpolationerrormain.cc]
+Compute the interpolation error in a $Q_1$ function.
+
+\item[q2interpolationerrormain.cc]
+Compute the interpolation error in a $Q_2$ function. 
+
+\item[thinterpolatemain.cc]
+Show the construction of composite function spaces taking the
+Taylor-Hood element $Q_2/Q_1$ as an example.
+
+\item[laplacedirichletmain.cc]
+Solve the Dirichlet problem for the Laplace equation with many
+different function spaces on different grids.
+
+\item[laplacedirichletccfv.cc]
+Cell-centered finite volume method on axi-parallel structured grids. 
+
+\item[poisson.cc]
+Solve the Poisson equation.
+
+\item[reentrantcorner.cc]
+Solve the reentrant corner problem.
+\end{description}
+
+\cleardoublepage
+}
 
 % die weiterführende Literatur wollen wir in der Präsentation nie zeigen
 \mode<presentation>
