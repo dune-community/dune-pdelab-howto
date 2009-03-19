@@ -33,6 +33,83 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
 
+    // UG P1 circle with first order boundary approximation
+#if HAVE_UG
+    {
+      // make grid 
+      Dune::UGGrid<2> grid(1000);
+      Dune::GmshReader<Dune::UGGrid<2> >::read(grid,"grids/circle1storder.msh");
+      grid.globalRefine(4);
+
+      // get view
+      typedef Dune::UGGrid<2>::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+ 
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      const int q=1;
+      typedef Dune::PDELab::P1LocalFiniteElementMap<DF,double,2> FEM;
+      FEM fem;
+  
+      // solve problem
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(gv,fem,q,"laplace_UG_P1_circle1storder");
+    }
+#endif
+
+    // UG P1 circle with *second order* boundary approximation
+#if HAVE_UG
+    {
+      // make grid 
+      Dune::UGGrid<2> grid(1000);
+      Dune::GmshReader<Dune::UGGrid<2> >::read(grid,"grids/circle2ndorder.msh");
+      grid.globalRefine(4);
+
+      // get view
+      typedef Dune::UGGrid<2>::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+ 
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      const int q=1;
+      typedef Dune::PDELab::P1LocalFiniteElementMap<DF,double,2> FEM;
+      FEM fem;
+  
+      // solve problem
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(gv,fem,q,"laplace_UG_P1_circle2ndorder");
+    }
+#endif
+
+    // UG P1 spline bounded domain with *second order* boundary approximation
+#if HAVE_UG
+    {
+      // make grid 
+      Dune::UGGrid<2> grid(1000);
+      Dune::GmshReader<Dune::UGGrid<2> >::read(grid,"grids/curved2d.msh");
+      grid.globalRefine(3);
+
+      // get view
+      typedef Dune::UGGrid<2>::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+ 
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      const int q=1;
+      typedef Dune::PDELab::P1LocalFiniteElementMap<DF,double,2> FEM;
+      FEM fem;
+  
+      // solve problem
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(gv,fem,q,"laplace_UG_P1_curved2d");
+    }
+#endif
+
+    return 0;
+
     // UG P1 3D test
 #if HAVE_UG
     {
