@@ -79,7 +79,7 @@ void laplacedirichlet (const GV& gv, const FEM& fem,
   // show result
   typedef Dune::PDELab::DiscreteGridFunction<GFS,X> DGF;             /*@\label{lapdriver:VTKFirst}@*/
   DGF dgf(gfs,x);                     // make a grid function
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2); // plot result
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,0); // plot result
   vtkwriter.addVertexData(new Dune::PDELab::
 						  VTKGridFunctionAdapter<DGF>(dgf,"u"));
   vtkwriter.write(filename,Dune::VTKOptions::ascii);                 /*@\label{lapdriver:VTKLast}@*/

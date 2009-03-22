@@ -67,8 +67,7 @@ int main(int argc, char** argv)
       grid.globalRefine(4);
 
       // get view
-      typedef Dune::UGGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
+      typedef Dune::UGGrid<2>::LevelGridView GV;
  
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -79,7 +78,13 @@ int main(int argc, char** argv)
   
       // solve problem
       laplacedirichlet<GV,FEM,Dune::PDELab::
-        ConformingDirichletConstraints>(gv,fem,q,"laplace_UG_P1_circle2ndorder");
+        ConformingDirichletConstraints>(grid.levelView(0),fem,q,"laplace_UG_P1_circle2ndorder_level0");
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(grid.levelView(1),fem,q,"laplace_UG_P1_circle2ndorder_level1");
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(grid.levelView(2),fem,q,"laplace_UG_P1_circle2ndorder_level2");
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(grid.levelView(3),fem,q,"laplace_UG_P1_circle2ndorder_level3");
     }
 #endif
 
@@ -92,8 +97,7 @@ int main(int argc, char** argv)
       grid.globalRefine(3);
 
       // get view
-      typedef Dune::UGGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
+      typedef Dune::UGGrid<2>::LevelGridView GV;
  
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -104,7 +108,13 @@ int main(int argc, char** argv)
   
       // solve problem
       laplacedirichlet<GV,FEM,Dune::PDELab::
-        ConformingDirichletConstraints>(gv,fem,q,"laplace_UG_P1_curved2d");
+        ConformingDirichletConstraints>(grid.levelView(0),fem,q,"laplace_UG_P1_curved2d_level0");
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(grid.levelView(1),fem,q,"laplace_UG_P1_curved2d_level1");
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(grid.levelView(2),fem,q,"laplace_UG_P1_curved2d_level2");
+      laplacedirichlet<GV,FEM,Dune::PDELab::
+        ConformingDirichletConstraints>(grid.levelView(3),fem,q,"laplace_UG_P1_curved2d_level3");
     }
 #endif
 

@@ -6,7 +6,7 @@ Point(1) = {-1, 0, 0, lc};
 Point(2) = {1, 0, 0, lc};
 Point(3) = {0, 0, 0, lc};
 
-Point(4) = {2,1,0,lc};
+Point(4) = {2,0.5,0,lc};
 Point(5) = {2.5,3,0,lc};
 Point(6) = {-1,1,0,lc};
 

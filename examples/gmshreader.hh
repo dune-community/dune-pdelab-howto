@@ -45,20 +45,30 @@ namespace Dune {
       QuadraticBoundarySegment (Dune::FieldVector<double,2> p0_, Dune::FieldVector<double,2> p1_, 
                                 Dune::FieldVector<double,2> p2_)
         : p0(p0_), p1(p1_), p2(p2_)
-      {}
+      {
+        Dune::FieldVector<double,2> d1(p1);
+        d1 -= p0;
+        Dune::FieldVector<double,2> d2(p2);
+        d2 -= p1;
+
+        alpha=d1.two_norm()/(d1.two_norm()+d2.two_norm());
+        if (alpha<1E-6 || alpha>1-1E-6)
+          DUNE_THROW(Dune::IOError, "ration in quadratic boundary segment bad");
+      }
 
       virtual Dune::FieldVector<double,2> operator() (const Dune::FieldVector<double,1>& local) const
       {
         Dune::FieldVector<double,2> y;
         y = 0.0;
-        y.axpy(2.0*(local[0]-0.5)*(local[0]-1.0),p0);
-        y.axpy(1.0-4.0*(local[0]-0.5)*(local[0]-0.5),p1);
-        y.axpy(2.0*local[0]*(local[0]-0.5),p2);
+        y.axpy((local[0]-alpha)*(local[0]-1.0)/alpha,p0);
+        y.axpy(local[0]*(local[0]-1.0)/(alpha*(alpha-1.0)),p1);
+        y.axpy(local[0]*(local[0]-alpha)/(1.0-alpha),p2);
         return y;
       }
 
     private:
       Dune::FieldVector<double,2> p0,p1,p2;
+      double alpha;
     };
 
     // quadratic boundary segments in 1d
