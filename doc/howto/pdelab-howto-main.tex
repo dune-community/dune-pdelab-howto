@@ -258,6 +258,15 @@ discretizations and solvers for systems of PDEs based on DUNE.
 \end{frame}
 
 \begin{frame}
+\frametitle<presentation>{DUNE Module Architecture}
+Major DUNE modules are:
+\begin{center}
+\mode<presentation>{\includegraphics[width=1.0\textwidth]{./EPS/modules.eps}}
+\mode<article>{\includegraphics[width=0.7\textwidth]{./EPS/modules.eps}}
+\end{center}
+\end{frame}
+
+\begin{frame}
 \frametitle<presentation>{Required Modules}
 To work through the examples the following DUNE modules are required: 
 \begin{itemize}
@@ -272,6 +281,8 @@ To work through the examples the following DUNE modules are required:
 In addition, at least one of the grid managers UG, ALU or Alberta is
 required to do the examples on simplex grids. 
 \end{frame}
+
+
 
 \subsection{How to Read this Manual}
 
@@ -678,7 +689,7 @@ u \, \nabla\cdot v \, dx & =
 & \forall v &\in \tilde{S}\\
 - \int\limits_\Omega \nabla\cdot\sigma \, q \, dx      &= 
 - \int\limits_\Omega f q \, ds &
-\forall q &\in L_2{\Omega}
+\forall q &\in L_2(\Omega)
 \end{align*}
 where $w\in S :$ ``$w\cdot\nu = j$'' on $\Gamma_N$.
 \end{frame}
@@ -860,7 +871,7 @@ element $e\in E_h^0$. $\mu_e : \overline{\hat\Omega}_e \to
   transformation. A non-trivial example is the Piola
   transformation \cite{BrezziFortin}
 \begin{equation*}
-\pi_e(\hat{x}) = \frac{1}{\text{det}\  \mu_e(\hat{x})} \nabla \mu_e(\hat{x})
+\pi_e(\hat{x}) = \frac{1}{\text{det}\  \nabla\mu_e(\hat{x})} \nabla \mu_e(\hat{x})
 \end{equation*}
 where $\nabla \mu_e$ denotes the Jacobian of the map $\mu_e$. For most
 finite element spaces $\pi_e$ is just the identity and we have $m'=m$.
@@ -2547,9 +2558,9 @@ Using splitting and localization properties we obtain
 &= \sum_{e\in E^0_h} \mathbf{R}_e^T\bm{\alpha}^\text{vol}_{h,e}(\mathbf{R}_e\mathbf{u}) 
 &&+ \sum_{e\in E^0_h} \mathbf{R}_e^T\bm{\lambda}^\text{vol}_{h,e} \\
 &+ \sum_{f\in E^1_h}
-\mathbf{R}_{l(e),r(e)}^T\bm{\alpha}^\text{skel}_{h,f}(\mathbf{R}_{l(e),r(e)}\mathbf{u}) 
-&&+ \sum_{f\in E^1_h} \mathbf{R}_{l(e),r(e)}^T\bm{\lambda}^\text{skel}_{h,f}\\
-&+ \sum_{b\in B^1_h} \mathbf{R}_{l(e)}^T\bm{\alpha}^\text{bnd}_{h,b}(\mathbf{R}_{l(e)}\mathbf{u})
+\mathbf{R}_{l(f),r(f)}^T\bm{\alpha}^\text{skel}_{h,f}(\mathbf{R}_{l(f),r(f)}\mathbf{u}) 
+&&+ \sum_{f\in E^1_h} \mathbf{R}_{l(f),r(f)}^T\bm{\lambda}^\text{skel}_{h,f}\\
+&+ \sum_{b\in B^1_h} \mathbf{R}_{l(b)}^T\bm{\alpha}^\text{bnd}_{h,b}(\mathbf{R}_{l(b)}\mathbf{u})
 &&+ \sum_{b\in B^1_h} \mathbf{R}_{l(b)}^T\bm{\lambda}^\text{bnd}_{h,b}.
 \end{align*}
 Restriction and prolongation operators are generic from local to global map.
@@ -2868,6 +2879,26 @@ efficient.
 \end{itemize}
 \item Put everything into a grid operator space.
 \end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle<presentation>{Final Notes}
+Things that are still to do:
+\begin{itemize}
+\item Implementation of constraints (only Dirichlet is done so far,
+the transformation matrices can be assembled but not applied). 
+\item Newton and time-stepping schemes.
+\item Real applications.
+\end{itemize}
+
+\medskip
+\begin{center}
+\textbf{Acknowledgements}
+
+BMBF Project AdaptHydroMod Förderkennzeichen 03BAPAF2
+
+StatoilHydro Research
+\end{center}
 \end{frame}
 
 \cleardoublepage
