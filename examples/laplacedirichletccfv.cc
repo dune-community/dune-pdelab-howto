@@ -196,7 +196,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<int,2> N(1);
       Dune::FieldVector<bool,2> B(false);
       Dune::YaspGrid<2,2> grid(L,N,B,0);
-      grid.globalRefine(10);
+      grid.globalRefine(6);
       
       // solve problem :)
       test(grid.leafView());
@@ -207,7 +207,7 @@ int main(int argc, char** argv)
     {
       // make grid 
       UGUnitSquareQ grid(1000);
-      grid.globalRefine(10);
+      grid.globalRefine(6);
 
       test(grid.leafView());
     }

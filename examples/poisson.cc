@@ -11,7 +11,7 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/grid/yaspgrid.hh>
-#include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
 #include<dune/istl/solvers.hh>
@@ -270,7 +270,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<int,2> N(1);
       Dune::FieldVector<bool,2> B(false);
       Dune::YaspGrid<2,2> grid(L,N,B,0);
-      grid.globalRefine(3);
+      grid.globalRefine(6);
 
       // get view
       typedef Dune::YaspGrid<2,2>::LeafGridView GV;
@@ -284,6 +284,7 @@ int main(int argc, char** argv)
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q1_2d");
     }
+    return 0;
 
     // YaspGrid Q2 2D test
     {

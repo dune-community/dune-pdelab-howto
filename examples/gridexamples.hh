@@ -82,9 +82,9 @@ public:
 	pos[0] = 1;  pos[1] = 1;
 	this->insertVertex(pos);
 	std::vector<unsigned int> cornerIDs(3);
-	cornerIDs[0] = 0;  cornerIDs[1] = 1;  cornerIDs[2] = 2;
+	cornerIDs[0] = 1;  cornerIDs[1] = 3;  cornerIDs[2] = 0;
 	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
-	cornerIDs[0] = 2;  cornerIDs[1] = 1;  cornerIDs[2] = 3;
+	cornerIDs[0] = 2;  cornerIDs[1] = 0;  cornerIDs[2] = 3;
 	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
 	this->createEnd();
   }
