@@ -424,7 +424,7 @@ Obviously, we have $r^\text{FE}_h(u_h,v) = r(u_h,v)$.
 This method uses a discontinuous test space that is constant on
 ``cells''. Let us introduce some notation to define this formally.
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Vertex-centered Finite Volumes}
 \begin{window}[0,r,{
 \psfrag{bi}{$c_i$}
@@ -453,7 +453,7 @@ V_h^0 & = \{ v\in L_2(\Omega) \,|\, \forall c\in C_h : v|_{\Omega_c} =
 
 \end{frame}
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Vertex Centered Finite Volumes (Contd.)}
 The discontinuities are located on the \textit{skeleton} which is given by:
 \begin{equation*}
@@ -484,7 +484,7 @@ $x\in\gamma\in\Gamma_h^{\text{int}}$ given by
 \end{equation*}
 \end{frame}
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Vertex Centered Finite Volumes (Contd.)}
 The discrete problem then reads as follows. Find $u_h\in w_h+\tilde{U}_h^1$ s.t.
 \begin{equation}
@@ -508,7 +508,7 @@ different trial and test functions.
 
 \paragraph{Cell Centered Finite Volumes}
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Cell Centered Finite Volumes}
 Assume that $\mathbb{T}_h$ is either a Delauney
 triangulation or a structured cube mesh.
@@ -569,7 +569,7 @@ conditions.
 
 \paragraph{Discontinuous Galerkin}
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Discontinuous Galerkin Finite Element
 Method}
 Let $k : E^0_h \to \mathbb{N}_0$ be a function that associates an
@@ -651,7 +651,7 @@ Again $w_h\in X_h$ such that ``$w_h=g$'' on $\Gamma_D$.
 
 \paragraph{Mixed Finite Elements}
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Mixed Finite Element Method}
 Defining the ``flux'' $\sigma=-\nabla u$ we rewrite problem
 \eqref{Eq:DiffusionEquation} as a system of first order equations:
@@ -666,7 +666,7 @@ Defining the ``flux'' $\sigma=-\nabla u$ we rewrite problem
 \end{subequations}
 \end{frame}
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Mixed Finite Element Method (Contd.)}
 For the flux we introduce the function space
 \begin{subequations}
@@ -694,7 +694,7 @@ u \, \nabla\cdot v \, dx & =
 where $w\in S :$ ``$w\cdot\nu = j$'' on $\Gamma_N$.
 \end{frame}
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Mixed Finite Element Method (Contd.)}
 For discretization use finite dimensional subspaces
 of the involved function spaces. 
@@ -855,7 +855,7 @@ continuous functions.\hfill$\square$
 \end{frame}
 
 The individual components in this definition are:
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Finite-dimensional Function Spaces (Contd.)}
 \begin{itemize}
 \item $\mathbb{K}=\mathbb{R}$ or $\mathbb{K}=\mathbb{C}$.
@@ -1005,7 +1005,7 @@ even zero).
 
 \paragraph{Restrictions} 
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Restriction Operators}
 Below we will make use of the following restriction operators
 \begin{align*}
@@ -1109,7 +1109,7 @@ For the vertex $i$ in the figure we obtain, e.~g., the basis function
 
 \paragraph{Pure Neumann Problem}
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Pure Neumann Problem}
 We wish to solve
 \begin{align*}
@@ -1138,7 +1138,7 @@ dx} \phi_0, \qquad \forall i\in\tilde{\mathcal{I}}_{U_h}.
 
 \begin{frame}
 \frametitle<presentation>{Other Constraints}
-In the same way we can also treat
+In addition to Dirichlet, hanging nodes and pure Neumann constraints we can also treat
 \begin{itemize}
 \item Varying polynomial degree in conforming finite elements
 ($p$-refinement).
@@ -2127,7 +2127,7 @@ Requires simple matrix multiplication.
 
 Use Newton's method to solve the algebraic problem.
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Newton Solver}
 Let a current iterate $\mathbf{u}_k'$ be given. 
 
@@ -2198,7 +2198,7 @@ We now turn to the constrained problem.
 
 \paragraph{Reformulation in unconstrained space}
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Reformulation in unconstrained space}
 We recall the constrained problem in weighted residual form:
 \begin{equation}\label{Eq:ConstrainedProblem}
@@ -2244,7 +2244,7 @@ second equation we conclude $u_h = w_h + P_h u_h$, i.~e.~ $u_h\in w_h
 We now seek to solve problem
 \eqref{Eq:ConstrainedProblemReformII} in coefficient space. 
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Reformulated Problem in Coefficient Space}
 The projection $P_h$ is taken from the follwing commutative diagram:
 \begin{equation*}
@@ -2293,7 +2293,7 @@ $\mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'}
 projections). 
 
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Proof of Proposition}
 The second equation is seen as follows:
 \begin{equation}\label{Eq:SideConditionCoefficient}
@@ -2321,7 +2321,7 @@ The second equation is seen as follows:
 \end{equation}
 \end{frame}
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Proof of Proposition (Contd.)}
 For the first equation in \eqref{Eq:ConstrainedProblemReformII} 
 we proceed as in \eqref{Eq:TransformedUnconstrainedProblem}
@@ -2399,7 +2399,7 @@ and set $\mathbf{z}'_{k} = \left(\begin{smallmatrix}
 \end{frame}
 
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Constraint Equation in Newton's Method}
 Let $\mathbf{u}_{k}'$ be given.  Seek update $\mathbf{z}_{k}'$ s.t.
 $\mathbf{u}_{k+1}' = \mathbf{u}_{k}' + \mathbf{z}_{k}'$. 
@@ -2437,8 +2437,8 @@ guess $\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}_{0}' =
 \bar{\mathbf{w}}'$.
 \end{frame}
 
-\begin{frame}
-\frametitle<presentation>{Constraint Equation in Newton's Method}
+\begin{frame}<article>
+\frametitle<presentation>{Constraint Equation in Newton's Method (Contd.)}
 Now insert  $\mathbf{u}_{k+1}'$ into the first equation of
 \eqref{Eq:ConstrainedProblemInCoefficientSpace}:
 \begin{equation}
@@ -2487,7 +2487,7 @@ where we introduced $\mathbf{z}_{k}' =
 \end{frame}
 
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Constraint Equation in Newton's Method (Contd.)}
 Linearization now gives
 \begin{equation*}
@@ -2568,7 +2568,7 @@ Restriction and prolongation operators are generic from local to global map.
 
 The $\bm{\alpha}^\ast$ and $\bm{\lambda}^\ast$ terms are given below.
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Local Residual Methods $\bm{\alpha}^\ast$ and $\bm{\lambda}^\ast$}
 {\small\begin{align*}
 \left(\bm{\alpha}^\text{vol}_{h,e}(\mathbf{R}_e\mathbf{u})\right)_i &=
@@ -2801,13 +2801,15 @@ various components.
 \begin{itemize}
 \item $Q_1$, $d=2$ : 80 lines + 20 lines for Dirichlet constraints.
 \item $P_k$, $d=2$, $k$ a template parameter : 358 lines.
-\item RT$_0$, $d=2$ : 183 lines.
+\item RT$_0$, $d=2$ : 187 lines.
 \end{itemize}
 \item Operators
 \begin{itemize}
 \item Laplace equation, Dirichlet b.c., conforming (any $d$, any $p$) : 79 lines.
-\item Poisson equation, Dirichlet and Neumann b.c., conforming (any $d$, any $p$) : 196 lines.
 \item Laplace equation, Dirichlet b.c., cell-centered FV (any $d$) : 138 lines.
+\item Poisson equation, Dirichlet and Neumann b.c., conforming (any $d$, any $p$) : 196 lines.
+\item Poisson equation, Dirichlet and Neumann b.c., $H(\text{div})$
+conforming (mixed) method (any $d$, any $p$) : 267 lines. 
 \end{itemize}
 \end{itemize}
 \end{frame}
@@ -2907,37 +2909,40 @@ StatoilHydro Research
 \section{List of Main Programs Provided}
 
 \begin{description}
-\item[q1gridfunctionspacemain.cc] 
+\item[\texttt{q1gridfunctionspacemain.cc}] 
 Set up a $Q_1$ function space and display a global basis function.
 
-\item[q1interpolatemain.cc] 
+\item[\texttt{q1interpolatemain.cc}] 
 Interpolate a $Q_1$ function from a given analytic function.
 
-\item[q1constrainedinterpolatemain.cc]
+\item[\texttt{q1constrainedinterpolatemain.cc}]
 Set up constraints for a function space and manipulate the constrained
 degrees of freedom.
 
-\item[q1interpolationerrormain.cc]
+\item[\texttt{q1interpolationerrormain.cc}]
 Compute the interpolation error in a $Q_1$ function.
 
-\item[q2interpolationerrormain.cc]
+\item[\texttt{q2interpolationerrormain.cc}]
 Compute the interpolation error in a $Q_2$ function. 
 
-\item[thinterpolatemain.cc]
+\item[\texttt{thinterpolatemain.cc}]
 Show the construction of composite function spaces taking the
 Taylor-Hood element $Q_2/Q_1$ as an example.
 
-\item[laplacedirichletmain.cc]
+\item[\texttt{laplacedirichletmain.cc}]
 Solve the Dirichlet problem for the Laplace equation with many
 different function spaces on different grids.
 
-\item[laplacedirichletccfv.cc]
-Cell-centered finite volume method on axi-parallel structured grids. 
+\item[\texttt{laplacedirichletccfv.cc}]
+Cell-centered finite volume method on axi-parallel structured grids for the Laplace equation. 
 
-\item[poisson.cc]
+\item[\texttt{poisson.cc}]
 Solve the Poisson equation.
 
-\item[reentrantcorner.cc]
+\item[\texttt{rt0main.cc}]
+Solve the Poisson equation using lowest order Raviart-Thomas elements.
+
+\item[\texttt{reentrantcorner.cc}]
 Solve the reentrant corner problem.
 \end{description}
 
