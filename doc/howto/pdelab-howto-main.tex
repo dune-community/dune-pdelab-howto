@@ -111,7 +111,7 @@
     Universität Heidelberg\\
     Interdisziplinäres Zentrum für Wissenschaftliches Rechnen\\
     Im Neuenheimer Feld 368, D-69120 Heidelberg\\
-	email: \url{Peter.Bastian@iwr.uni-stuttgart.de}
+	email: \url{Peter.Bastian@iwr.uni-heidelberg.de}
   }
   \date{\today}
   \logo{\includegraphics[width=9mm]{./EPS/iwrlogo-klein.eps}}
@@ -123,7 +123,7 @@
     Universität Heidelberg\\
     Interdisziplinäres Zentrum für Wissenschaftliches Rechnen\\
     Im Neuenheimer Feld 368, D-69120 Heidelberg\\
-	email: \url{Peter.Bastian@iwr.uni-stuttgart.de}
+	email: \url{Peter.Bastian@iwr.uni-heidelberg.de}
   }
   \date{\today}
   \publishers{%
@@ -412,8 +412,9 @@ by the mesh.
 Now take $w_h\in U_h^k$ with ``$w_h(x) = g(x)$'' (sample at vertices)
 on $\Gamma_D$ and find $u_h\in w_h+\tilde{U}_h^k$ s.t.  
 \begin{equation}
-\underbrace{\int_\Omega \nabla u_h \cdot \nabla v \diffd x
-+ \int_{\Gamma_N} j v \diffd s - \int_\Omega f v \,dx}_{= r^\text{FE}_h(u,v)}
+\underbrace{\sum_{e\in E_h^0}\int_{\Omega_e} \nabla u_h \cdot \nabla v \diffd x
+ + \sum_{\substack{b\in B^1_h\\ \Omega_b\subseteq\Gamma_N}} 
+\int_{\Omega_b} j v \diffd s - \sum_{e\in E_h^0} \int_{\Omega_e} f v \,dx}_{= r^\text{FE}_h(u,v)}
  = 0 \qquad \forall v\in \tilde{U}^k_h.
 \end{equation}
 Obviously, we have $r^\text{FE}_h(u_h,v) = r(u_h,v)$.
@@ -553,11 +554,11 @@ where
 \begin{equation*}
 \begin{split}
 r_h^\text{CC}(u,v) &= \sum_{f\in E^1_h} \int_{\Omega_f}
-\frac{u(x_{l(f)}-u(x_{r(f)}))}{\|x_{r(f)}-x_{l(f)}
+\frac{u(x_{l(f)})-u(x_{r(f)})}{\|x_{r(f)}-x_{l(f)}
 \|}\,[v]\diffd s
 + \sum_{\substack{b\in B^1_h\\ \Omega_b\subseteq\Gamma_D}} \int_{\Omega_b}
-\frac{u(x_{l(b)}-g(x_b))}{\|x_{b}-x_{l(b)}\|}\, v \diffd s \\
-& \qquad - \int_\Omega fv \diffd x -
+\frac{u(x_{l(b)})-g(x_b)}{\|x_{b}-x_{l(b)}\|}\, v \diffd s \\
+& \qquad - \sum_{e\in E_h^0} \int_{\Omega_e} fv \diffd x -
 \sum_{\substack{b\in B^1_h\\ \Omega_b\subseteq\Gamma_N}}
 \int_{\Omega_b} j v \diffd s .
 \end{split}
@@ -641,9 +642,9 @@ u_h \in w_h+\tilde{X}_h \quad : \quad r_h^\text{CR}(u_h,v) = 0 \qquad \forall v\
 where
 \begin{equation*}
 \begin{split}
-r_h^\text{CR}(u &,v) = \sum_{e\in E_h^0} \int_{\Omega_e} \nabla u\cdot \nabla v
- - fv \, dx + \sum_{\substack{b\in
-B^1_h\\\Omega_b\subseteq\Gamma_N}} \int_{\Omega_b} j v \,ds .
+r_h^\text{CR}(u &,v) = \sum_{e\in E_h^0} \int_{\Omega_e} \nabla u\cdot \nabla v \, dx
++ \sum_{\substack{b\in
+B^1_h\\\Omega_b\subseteq\Gamma_N}} \int_{\Omega_b} j v \,ds  - \sum_{e\in E_h^0} \int_{\Omega_e} fv \, dx .
 \end{split}
 \end{equation*}
 Again $w_h\in X_h$ such that ``$w_h=g$'' on $\Gamma_D$.
@@ -792,9 +793,6 @@ What about time-dependent problems?
 
 \begin{frame}
 \frametitle<presentation>{Time-dependent problems}
-Consider time-dependent problems (first order here). We illustrate
-only the principal idea.
-
 After semidiscretization in space we obtain a problem of the form
 \begin{equation*}
 u_h(t)\in U_h : \quad \frac{\partial}{\partial t} m_h(u_h(t),v;t) + q_h(u_h(t),v;t)
@@ -886,7 +884,7 @@ finite element spaces $\pi_e$ is just the identity and we have $m'=m$.
 \frametitle<presentation>{Global Basis}
 For $j\in \mathcal{I}_{U_h}$ we define the \textit{global basis function}
 \begin{equation*}
-U_h \ni \phi_j(x) = \sum_{(e,i)\in l(j)} \pi_e(\hat{\mu_e^{-1}(x)}) \,
+U_h \ni \phi_j(x) = \sum_{(e,i)\in l(j)} \pi_e(\mu_e^{-1}(x)) \,
 \hat\phi_{e,i}(\mu_e^{-1}(x)) \, \chi_e(x)
 \end{equation*} 
 and $l(j) = \left\{ (e,i)\in L \,|\, g(e,i)=j \right\}$.
@@ -1402,7 +1400,7 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localinterpolation.hh}
 \end{Lst}}
 
 \begin{frame}
-\frametitle<presentation>{$Q_1$ Local Interpolation Finite Element}
+\frametitle<presentation>{$Q_1$ Local Finite Element}
 Finally, we need to collect local basis, local coefficients and local
 interpolation in a local finite element.
 
@@ -1441,15 +1439,15 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelement.hh}
 \subsection{Unconstrained Global Finite Element Space}
 
 \begin{frame}
-\frametitle<presentation>{Finite Element Map}
+\frametitle<presentation>{Local Finite Element Map}
 A global finite element space is made up from a collection of local
 finite element spaces. 
 
 So we need a map that delivers for each element (codim 0 entity) $e\in E_h^0$ a
 local finite element.
 
-But there is only one \textit{type} for all the local finite elements
-which then has to be polymorphic.
+But there is only one \textit{type} for all the local finite elements in the map.
+This type may be polymorphic if needed.
 
 For multi-element type meshes and $hp$-refinement this map may be
 rather complicated.
@@ -1478,7 +1476,7 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelementmap.hh}
 
 \begin{frame}
 \frametitle<presentation>{$Q_1$ Grid Function Space}
-Now use $Q_1$ local finite element to build
+Now we use the $Q_1$ local finite element map to build
 a global finite element space.
 
 The main class is \lstinline{GridFunctionSpace} which 
@@ -1493,7 +1491,7 @@ The type \lstinline{X} is derived from \lstinline{std::vector<R>} here
 but his will be changed later.
 
 The remaining lines construct a function object that can be evaluated
-in local coordinates on the reference element.
+in local coordinates on the reference element (explained below).
 
 \lstinline{Dune::SubsamplingVTKWriter} allows the output of
 nonconforming and higher order functions.
@@ -1583,7 +1581,7 @@ $$u : E_h^0 \times \mathbb{D}^n \to \mathbb{K}^m, \qquad
 $\hat{x}$ is on the \textit{reference element}.
 \item \lstinline{Dune::PDELab::BoundaryGridFunctionInterface} is the
 interface for \textit{grid functions} living on the boundary:
-$$u : (E_h^1\cap\partial\Omega) \times \mathbb{D}^{n'} \to \mathbb{K}^m, \qquad
+$$u : (E_h^1\text{``$\cap\partial\Omega$''}) \times \mathbb{D}^{n'} \to \mathbb{K}^m, \qquad
 (f,\hat{x}) \mapsto y.$$
 \item Functions offer the same \lstinline{Traits} as the local basis.
 \end{itemize}
@@ -1608,7 +1606,7 @@ This class will be used shortly.
 
 \end{frame}
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Less Useful Adapters}
 \lstinline{Dune::PDELab::FunctionToGridFunctionAdapter}: Takes a global
 function and makes a grid function out of it.
