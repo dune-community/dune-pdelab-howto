@@ -71,22 +71,22 @@ class UGUnitSquare : public Dune::UGGrid<2>
 public:
   UGUnitSquare (unsigned int heapSize=100) : Dune::UGGrid<2>(heapSize)
   {
-	this->createBegin();
+    Dune::GridFactory<Dune::UGGrid<2> > factory(this);
 	Dune::FieldVector<double,2> pos;
 	pos[0] = 0;  pos[1] = 0;
-	this->insertVertex(pos);
+	factory.insertVertex(pos);
 	pos[0] = 1;  pos[1] = 0;
-	this->insertVertex(pos);
+	factory.insertVertex(pos);
 	pos[0] = 0;  pos[1] = 1;
-	this->insertVertex(pos);
+	factory.insertVertex(pos);
 	pos[0] = 1;  pos[1] = 1;
-	this->insertVertex(pos);
+	factory.insertVertex(pos);
 	std::vector<unsigned int> cornerIDs(3);
 	cornerIDs[0] = 1;  cornerIDs[1] = 3;  cornerIDs[2] = 0;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
+	factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
 	cornerIDs[0] = 2;  cornerIDs[1] = 0;  cornerIDs[2] = 3;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
-	this->createEnd();
+	factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
+	factory.createGrid();
   }
 };
 
@@ -95,20 +95,20 @@ class UGUnitSquareQ : public Dune::UGGrid<2>
 public:
   UGUnitSquareQ (unsigned int heapSize=100) : Dune::UGGrid<2>(heapSize)
   {
-	this->createBegin();
+    Dune::GridFactory<Dune::UGGrid<2> > factory(this);
 	Dune::FieldVector<double,2> pos;
 	pos[0] = 0;  pos[1] = 0;
-	this->insertVertex(pos);
+	factory.insertVertex(pos);
 	pos[0] = 1;  pos[1] = 0;
-	this->insertVertex(pos);
+	factory.insertVertex(pos);
 	pos[0] = 0;  pos[1] = 1;
-	this->insertVertex(pos);
+	factory.insertVertex(pos);
 	pos[0] = 1;  pos[1] = 1;
-	this->insertVertex(pos);
+	factory.insertVertex(pos);
 	std::vector<unsigned int> cornerIDs(4);
 	cornerIDs[0] = 0;  cornerIDs[1] = 1;  cornerIDs[2] = 2;  cornerIDs[3] = 3;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::cube,2), cornerIDs);
-	this->createEnd();
+	factory.insertElement(Dune::GeometryType(Dune::GeometryType::cube,2), cornerIDs);
+	factory.createGrid();
   }
 };
 
@@ -118,18 +118,18 @@ class UGUnitTriangle : public Dune::UGGrid<2>
 public:
   UGUnitTriangle (unsigned int heapSize=100) : Dune::UGGrid<2>(heapSize)
   {
-	this->createBegin();
+    Dune::GridFactory<Dune::UGGrid<2> > factory(this);
 	Dune::FieldVector<double,2> pos;
 	pos[0] = 0;  pos[1] = 0;
-	this->insertVertex(pos);
+	factory.insertVertex(pos);
 	pos[0] = 1;  pos[1] = 0;
-	this->insertVertex(pos);
+	factory.insertVertex(pos);
 	pos[0] = 0;  pos[1] = 1;
-	this->insertVertex(pos);
+	factory.insertVertex(pos);
 	std::vector<unsigned int> cornerIDs(3);
 	cornerIDs[0] = 0;  cornerIDs[1] = 1;  cornerIDs[2] = 2;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
-	this->createEnd();
+	factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
+	factory.createGrid();
   }
 };
 
@@ -138,30 +138,30 @@ class UGLDomain : public Dune::UGGrid<2>
 public:
   UGLDomain (unsigned int heapSize=100) : Dune::UGGrid<2>(heapSize)
   {
-	this->createBegin();
+    Dune::GridFactory<Dune::UGGrid<2> > factory(this);
 	Dune::FieldVector<double,2> pos;
-	pos[0] =-1.0;  pos[1] =-1.0; this->insertVertex(pos);
-	pos[0] = 0.0;  pos[1] =-1.0; this->insertVertex(pos);
-	pos[0] =-1.0;  pos[1] = 0.0; this->insertVertex(pos);
-	pos[0] = 0.0;  pos[1] = 0.0; this->insertVertex(pos);
-	pos[0] = 1.0;  pos[1] = 0.0; this->insertVertex(pos);
-	pos[0] =-1.0;  pos[1] = 1.0; this->insertVertex(pos);
-	pos[0] = 0.0;  pos[1] = 1.0; this->insertVertex(pos);
-	pos[0] = 1.0;  pos[1] = 1.0; this->insertVertex(pos);
+	pos[0] =-1.0;  pos[1] =-1.0; factory.insertVertex(pos);
+	pos[0] = 0.0;  pos[1] =-1.0; factory.insertVertex(pos);
+	pos[0] =-1.0;  pos[1] = 0.0; factory.insertVertex(pos);
+	pos[0] = 0.0;  pos[1] = 0.0; factory.insertVertex(pos);
+	pos[0] = 1.0;  pos[1] = 0.0; factory.insertVertex(pos);
+	pos[0] =-1.0;  pos[1] = 1.0; factory.insertVertex(pos);
+	pos[0] = 0.0;  pos[1] = 1.0; factory.insertVertex(pos);
+	pos[0] = 1.0;  pos[1] = 1.0; factory.insertVertex(pos);
 	std::vector<unsigned int> cornerIDs(3);
 	cornerIDs[0] = 0;  cornerIDs[1] = 1;  cornerIDs[2] = 2;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
+	factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
 	cornerIDs[0] = 2;  cornerIDs[1] = 1;  cornerIDs[2] = 3;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
+	factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
 	cornerIDs[0] = 2;  cornerIDs[1] = 3;  cornerIDs[2] = 5;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
+	factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
 	cornerIDs[0] = 5;  cornerIDs[1] = 3;  cornerIDs[2] = 6;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
+	factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
 	cornerIDs[0] = 3;  cornerIDs[1] = 4;  cornerIDs[2] = 6;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
+	factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
 	cornerIDs[0] = 6;  cornerIDs[1] = 4;  cornerIDs[2] = 7;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
-	this->createEnd();
+	factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
+	factory.createGrid();
   }
 };
 
