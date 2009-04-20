@@ -8,7 +8,6 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/common/geometrytype.hh>
-#include<dune/grid/common/referenceelements.hh>
 #include<dune/grid/common/quadraturerules.hh>
 
 #include<dune/pdelab/common/geometrywrapper.hh>
@@ -215,7 +214,7 @@ namespace Dune {
         RF det = ig.inside()->geometry().integrationElement(pos);
 
         // select quadrature rule
-        Dune::GeometryType gtface = ig.intersectionSelfLocal().type();
+        Dune::GeometryType gtface = ig.geometryInInside().type();
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder_v);
 
         // loop over quadrature points and integrate normal flux
@@ -229,7 +228,7 @@ namespace Dune {
             if (bctype<=0) continue;
 
             // position of quadrature point in local coordinates of element 
-            Dune::FieldVector<DF,dim> local = ig.intersectionSelfLocal().global(it->position());
+            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
 
             // evaluate test shape functions 
             std::vector<VelocityRangeType> vbasis(velocityspace.size());
@@ -248,7 +247,7 @@ namespace Dune {
             g.evaluate(*(ig.inside()),local,y);
             
             // integrate g v*normal
-            RF factor = it->weight()*ig.intersectionGlobal().integrationElement(it->position())/det;
+            RF factor = it->weight()*ig.geometry().integrationElement(it->position())/det;
             for (int i=0; i<velocityspace.size(); i++)
               r[velocityspace.localIndex(i)] += y*(vtransformedbasis[i]*ig.unitOuterNormal(it->position()))*factor;
           }

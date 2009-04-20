@@ -20,7 +20,7 @@ public:
 						const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const {  
     Dune::FieldVector<typename GV::Grid::ctype,GV::dimension> 
-      xg = ig.intersectionGlobal().global(x);
+      xg = ig.geometry().global(x);
 
 	y = 0; // no Dirichlet
     if (xg[0]<1E-6 && xg[1]>0.25 && xg[1]<0.75 ) return;
