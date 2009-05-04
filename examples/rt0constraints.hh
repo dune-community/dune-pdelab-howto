@@ -12,6 +12,6 @@ public:
 	if (bctype>0) return;                   // done
 
 	typename T::RowType empty;              // need not interpolate
-	trafo[ig.numberInSelf()]=empty;
+	trafo[ig.indexInInside()]=empty;
   }
 };

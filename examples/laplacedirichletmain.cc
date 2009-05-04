@@ -177,11 +177,11 @@ int main(int argc, char** argv)
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(1);
       Dune::FieldVector<bool,2> B(false);
-      Dune::YaspGrid<2,2> grid(L,N,B,0);
+      Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(10);
 
       // get view
-      typedef Dune::YaspGrid<2,2>::LeafGridView GV;
+      typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView(); 
 
       // make finite element map
@@ -220,11 +220,11 @@ int main(int argc, char** argv)
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(1);
       Dune::FieldVector<bool,2> B(false);
-      Dune::YaspGrid<2,2> grid(L,N,B,0);
+      Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(2);
 
       // get view
-      typedef Dune::YaspGrid<2,2>::LeafGridView GV;
+      typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView(); 
 
       // make finite element map
@@ -386,11 +386,11 @@ int main(int argc, char** argv)
       Dune::FieldVector<double,3> L(1.0);
       Dune::FieldVector<int,3> N(1);
       Dune::FieldVector<bool,3> B(false);
-      Dune::YaspGrid<3,3> grid(L,N,B,0);
+      Dune::YaspGrid<3> grid(L,N,B,0);
       grid.globalRefine(3);
 
       // get view
-      typedef Dune::YaspGrid<3,3>::LeafGridView GV;
+      typedef Dune::YaspGrid<3>::LeafGridView GV;
       const GV& gv=grid.leafView(); 
 
       // make finite element map

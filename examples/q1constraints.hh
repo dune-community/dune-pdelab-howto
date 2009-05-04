@@ -12,9 +12,9 @@ public:
 	if (bctype<=0) return;                  // done
 
 	typename T::RowType empty;              // need not interpolate
-	if (ig.numberInSelf()==0) { trafo[0]=empty; trafo[2]=empty; }
-	if (ig.numberInSelf()==1) { trafo[1]=empty; trafo[3]=empty; }
-	if (ig.numberInSelf()==2) { trafo[0]=empty; trafo[1]=empty; }
-	if (ig.numberInSelf()==3) { trafo[2]=empty; trafo[3]=empty; }
+	if (ig.indexInInside()==0) { trafo[0]=empty; trafo[2]=empty; }
+	if (ig.indexInInside()==1) { trafo[1]=empty; trafo[3]=empty; }
+	if (ig.indexInInside()==2) { trafo[0]=empty; trafo[1]=empty; }
+	if (ig.indexInInside()==3) { trafo[2]=empty; trafo[3]=empty; }
   }
 };
