@@ -121,7 +121,7 @@ public:
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
-    typename Traits::DomainFieldType rho = std::sqrt(x[0]*x[0]+x[1]*x[1]);
+    //typename Traits::DomainFieldType rho = std::sqrt(x[0]*x[0]+x[1]*x[1]);
     typename Traits::DomainFieldType theta = std::atan2(x[1], x[0]);
     if(theta < 0.0) theta += 2*M_PI;
     // how much pacman opens its mouth
@@ -266,7 +266,7 @@ int main(int argc, char** argv)
 {
   try{
     //Maybe initialize Mpi
-    Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
+    Dune::MPIHelper::instance(argc, argv);
 
 #if HAVE_ALBERTA
     {
