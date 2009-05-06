@@ -446,19 +446,19 @@ namespace Dune {
       }
       double phi1 (const Dune::FieldVector<double,2>& local) const
       {
-        local[0]*(gamma*local[0]-(sqrt2-gamma-sqrt2*alpha)*local[1]-alpha*gamma)/(gamma*(1-alpha));
+        return local[0]*(gamma*local[0]-(sqrt2-gamma-sqrt2*alpha)*local[1]-alpha*gamma)/(gamma*(1-alpha));
       }
       double phi5 (const Dune::FieldVector<double,2>& local) const
       {
-        local[1]*(1-local[0]-local[1])/(beta*(1-beta));
+        return local[1]*(1-local[0]-local[1])/(beta*(1-beta));
       }
       double phi4 (const Dune::FieldVector<double,2>& local) const
       {
-        local[0]*local[1]/((1-gamma/sqrt2)*gamma/sqrt2);
+        return local[0]*local[1]/((1-gamma/sqrt2)*gamma/sqrt2);
       }
       double phi2 (const Dune::FieldVector<double,2>& local) const
       {
-        local[1]*(beta*(1-gamma/sqrt2)-local[0]*(beta-gamma/sqrt2)-local[1]*(1-gamma/sqrt2))/((1-gamma/sqrt2)*(beta-1));
+        return local[1]*(beta*(1-gamma/sqrt2)-local[0]*(beta-gamma/sqrt2)-local[1]*(1-gamma/sqrt2))/((1-gamma/sqrt2)*(beta-1));
       }
 
       Dune::FieldVector<double,3> p0,p1,p2,p3,p4,p5;
