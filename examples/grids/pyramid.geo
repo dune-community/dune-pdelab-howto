@@ -1,5 +1,5 @@
 // mesh width associated with points
-lc = 0.1;
+lc = 1;
 
 // vertices of the pyramid
 Point(1) = {0, 0, 0, lc};

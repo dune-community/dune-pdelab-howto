@@ -5,6 +5,7 @@
 
 #include<dune/common/mpihelper.hh>
 #include<dune/grid/yaspgrid.hh>
+#include<dune/grid/io/file/gmsh/gmshreader.hh>
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/p12dfem.hh>
@@ -25,20 +26,41 @@
 #include"laplacedirichlet.hh"
 #include"gridexamples.hh"
 
-#include"gmshreader.hh"
-
 int main(int argc, char** argv)
 {
   try{
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
+    // Yasp 2D example
+    {
+      // make grid
+      Dune::FieldVector<double,2> L(1.0);
+      Dune::FieldVector<int,2> N(1);
+      Dune::FieldVector<bool,2> B(false);
+      Dune::YaspGrid<2> grid(L,N,B,0);
+      grid.globalRefine(5);
+
+      // get view
+      typedef Dune::YaspGrid<2>::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef Q1LocalFiniteElementMap<DF,double> FEM;
+      FEM fem;
+
+      laplacedirichlet<GV,FEM,Q1Constraints>(gv,fem,3,"laplace_yasp_Q1_2d");
+    }
+
+    return 0;
+
     // UG P1 3D test
 #if HAVE_UG
     {
       Dune::UGGrid<3> grid(1000);
-      Dune::GmshReader<Dune::UGGrid<3> >::read(grid,"grids/telescope1storder.msh");
-      grid.globalRefine(1);
+      Dune::GmshReader<Dune::UGGrid<3> >::read(grid,"grids/telescope2ndorder.msh");
+      grid.globalRefine(2);
 
       // make grid
 
@@ -54,7 +76,7 @@ int main(int argc, char** argv)
   
       // solve problem
       laplacedirichlet<GV,FEM,Dune::PDELab::
-        ConformingDirichletConstraints>(gv,fem,2,"laplace_UG_Telescope_P1_3d");
+        ConformingDirichletConstraints>(gv,fem,2,"laplace_UG_telescope_P1_3d");
     }
 #endif
 
@@ -170,27 +192,6 @@ int main(int argc, char** argv)
 #endif
 
     return 0;
-
-    // Yasp 2D example
-    {
-      // make grid
-      Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
-      grid.globalRefine(10);
-
-      // get view
-      typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
-
-      // make finite element map
-      typedef GV::Grid::ctype DF;
-      typedef Q1LocalFiniteElementMap<DF,double> FEM;
-      FEM fem;
-
-      laplacedirichlet<GV,FEM,Q1Constraints>(gv,fem,3,"laplace_yasp_Q1_2d");
-    }
 
     // UG Q1 2D test
 #if HAVE_UG
