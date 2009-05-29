@@ -9,10 +9,6 @@ class HangingNodeManager
 {
 private:
   enum{ verbosity = 3 };
-  // This will hold the information on whether a vertex is hanging. Is
-  // is accessed via the local index of the vertex in the reference
-  // element. 
-  std::vector<bool> is_hanging;
 
   // Codim 0 Mapper
   template<int dim>
@@ -157,41 +153,45 @@ public:
       vertex_mapper(grid.leafView())
   { analyzeView(); }
 
-  const std::vector<bool> & hangingNodes(CellEntityPointer & e)
+  const std::vector<bool> hangingNodes(CellEntityPointer & e) const
   {
-      const Dune::GenericReferenceElement<double,dim> & 
-	reference_element = 
-	Dune::GenericReferenceElements<double,dim>::general(e->geometry().type()); 
+    std::vector<bool> is_hanging;
+    
+    const Dune::GenericReferenceElement<double,dim> & 
+      reference_element = 
+      Dune::GenericReferenceElements<double,dim>::general(e->geometry().type()); 
 
-      // number of vertices in this element
-      const size_t v_size = reference_element.size(dim);
+    // number of vertices in this element
+    const size_t v_size = reference_element.size(dim);
 
-      // make sure the return array is big enough
-      is_hanging.resize(v_size);
+    // make sure the return array is big enough
+    is_hanging.resize(v_size);
 
-      // update minimum_level and maximum_level for vertices in this
-      // cell
-      for(size_t i=0; i<v_size; ++i){
-	const VertexEntityPointer & vertex = e->template subEntity<dim>(i);
-	const size_t v_globalindex = vertex_mapper.map( *vertex );
+    // update minimum_level and maximum_level for vertices in this
+    // cell
+    for(size_t i=0; i<v_size; ++i){
+      const VertexEntityPointer & vertex = e->template subEntity<dim>(i);
+      const size_t v_globalindex = vertex_mapper.map( *vertex );
 
-	// here we make use of the fact that a node is hanging if and
-	// only if it touches a cell of a level smaller than the
-	// smallest level of all element containing the node
-	const NodeInfo & v_info = node_info[v_globalindex];
-	if(v_info.minimum_touching_level < v_info.minimum_level){
-	  is_hanging[i] = true;
+      // here we make use of the fact that a node is hanging if and
+      // only if it touches a cell of a level smaller than the
+      // smallest level of all element containing the node
+      const NodeInfo & v_info = node_info[v_globalindex];
+      if(v_info.minimum_touching_level < v_info.minimum_level){
+	is_hanging[i] = true;
 #ifndef NDEBUG
-	  if(verbosity){
-	    const Point & local  = reference_element.position(i,dim);
-	    const Point global = e->geometry().global(local);
-	    cout << "Found hanging node with id " << v_globalindex << " at " << global << endl;
-	  }
-#endif
+	if(verbosity){
+	  const Point & local  = reference_element.position(i,dim);
+	  const Point global = e->geometry().global(local);
+	  cout << "Found hanging node with id " << v_globalindex << " at " << global << endl;
 	}
-	else
-	  is_hanging[i] = false;
+#endif
       }
+      else
+	is_hanging[i] = false;
+    }
+    
+    return is_hanging;
   }
 
   void adaptToIsolatedHangingNodes()
@@ -230,7 +230,7 @@ public:
 	    grid.mark(1, *it);
 	    reiterate = true;
 	    if(verbosity){
-	      cout << "Refining element nr " << element_mapper.map(*it) 
+	      cout << "Refining element nr " << cell_mapper.map(*it) 
 		   << " to isolate hanging nodes " << endl;
 	    }
 	    break;
