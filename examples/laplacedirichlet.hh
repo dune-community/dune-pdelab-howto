@@ -63,6 +63,16 @@ void laplacedirichlet (const GV& gv, const FEM& fem,
   solver.apply(z,r,stat);             // solve for update            /*@\label{lapdriver:UpdateEq}@*/
   x -= z;                             // apply update                /*@\label{lapdriver:Update}@*/
 
+  // show result
+  typedef Dune::PDELab::DiscreteGridFunction<GFS,X> DGF;             /*@\label{lapdriver:VTKFirst}@*/
+  DGF dgf(gfs,x);                     // make a grid function
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);    // standard writer
+  //Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);                  // subsampling writer
+  vtkwriter.addVertexData(new Dune::PDELab::
+						  VTKGridFunctionAdapter<DGF>(dgf,"u"));
+  vtkwriter.write(filename,Dune::VTKOptions::ascii);                 /*@\label{lapdriver:VTKLast}@*/
+  return;
+
   // solve problem without matrix ("on the fly")
   Dune::PDELab::OnTheFlyOperator<X,X,GOS> opb(gos);// operator apply /*@\label{lapdriver:OnTheFlyOp}@*/
   Dune::Richardson<X,X> richardson(1.0);           // no precond.    /*@\label{lapdriver:Richardson}@*/
@@ -76,13 +86,5 @@ void laplacedirichlet (const GV& gv, const FEM& fem,
   solverb.apply(z,r,stat);            // solve for update 
   x -= z;                             // apply update                /*@\label{lapdriver:AltSolverLast}@*/
 
-  // show result
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,X> DGF;             /*@\label{lapdriver:VTKFirst}@*/
-  DGF dgf(gfs,x);                     // make a grid function
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);    // standard writer
-  //Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);                  // subsampling writer
-  vtkwriter.addVertexData(new Dune::PDELab::
-						  VTKGridFunctionAdapter<DGF>(dgf,"u"));
-  vtkwriter.write(filename,Dune::VTKOptions::ascii);                 /*@\label{lapdriver:VTKLast}@*/
   return;
 }

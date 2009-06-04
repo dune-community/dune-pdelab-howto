@@ -13,8 +13,11 @@ public:
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
-	typename Traits::DomainType center(0.5);
+	typename Traits::DomainType center(0.0);
+	center[0] = -80.0;
+	center[0] = 20.0;
+	center[0] = 0.0;
 	center -= x;
-	y = exp(-3.0*center.two_norm2());
+	y = exp((-1.0/(25*25))*center.two_norm2());
   }
 };

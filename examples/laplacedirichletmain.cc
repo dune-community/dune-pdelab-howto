@@ -3,9 +3,11 @@
 #include "config.h"     
 #endif
 
+#include<vector>
+
 #include<dune/common/mpihelper.hh>
 #include<dune/grid/yaspgrid.hh>
-#include<dune/grid/io/file/gmsh/gmshreader.hh>
+#include<dune/grid/io/file/gmeshreader.hh>
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/p12dfem.hh>
@@ -32,6 +34,34 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
+    // UG P1 3D test
+#if HAVE_UG
+    {
+      Dune::UGGrid<3> grid(1000);
+      //     Dune::GmeshReader<Dune::UGGrid<3> >::read(grid,"grids/telescope2ndorder.msh");
+      std::vector<int> a,b;
+      Dune::GmeshReader<Dune::UGGrid<3> >::read(grid,"grids/LeverArm.msh",a,b);
+      grid.globalRefine(2);
+
+      // make grid
+
+      // get view
+      typedef Dune::UGGrid<3>::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+ 
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      typedef Dune::PDELab::P1LocalFiniteElementMap<DF,double,3> FEM;
+      FEM fem;
+  
+      // solve problem
+      //      laplacedirichlet<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,2,"laplace_UG_telescope_P1_3d");
+      laplacedirichlet<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,2,"LeverArm1st");
+    }
+#endif
+
+    return 0;
     // Yasp 2D example
     {
       // make grid
@@ -55,39 +85,13 @@ int main(int argc, char** argv)
 
     return 0;
 
-    // UG P1 3D test
-#if HAVE_UG
-    {
-      Dune::UGGrid<3> grid(1000);
-      Dune::GmshReader<Dune::UGGrid<3> >::read(grid,"grids/telescope2ndorder.msh");
-      grid.globalRefine(2);
-
-      // make grid
-
-      // get view
-      typedef Dune::UGGrid<3>::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
- 
-      // make finite element map
-      typedef GV::Grid::ctype DF;
-      typedef double R;
-      typedef Dune::PDELab::P1LocalFiniteElementMap<DF,double,3> FEM;
-      FEM fem;
-  
-      // solve problem
-      laplacedirichlet<GV,FEM,Dune::PDELab::
-        ConformingDirichletConstraints>(gv,fem,2,"laplace_UG_telescope_P1_3d");
-    }
-#endif
-
-    return 0;
 
     // UG P1 spline bounded domain with *second order* boundary approximation
 #if HAVE_UG
     {
       // make grid 
       Dune::UGGrid<2> grid(1000);
-      Dune::GmshReader<Dune::UGGrid<2> >::read(grid,"grids/curved2d2ndorder.msh");
+      Dune::GmeshReader<Dune::UGGrid<2> >::read(grid,"grids/curved2d2ndorder.msh");
       grid.globalRefine(3);
 
       // get view
@@ -115,7 +119,7 @@ int main(int argc, char** argv)
     {
       // make grid 
       Dune::UGGrid<2> grid(1000);
-      Dune::GmshReader<Dune::UGGrid<2> >::read(grid,"grids/circle1storder.msh");
+      Dune::GmeshReader<Dune::UGGrid<2> >::read(grid,"grids/circle1storder.msh");
       grid.globalRefine(4);
 
       // get view
@@ -140,7 +144,7 @@ int main(int argc, char** argv)
     {
       // make grid 
       Dune::UGGrid<2> grid(1000);
-      Dune::GmshReader<Dune::UGGrid<2> >::read(grid,"grids/circle2ndorder.msh");
+      Dune::GmeshReader<Dune::UGGrid<2> >::read(grid,"grids/circle2ndorder.msh");
       grid.globalRefine(4);
 
       // get view
@@ -170,7 +174,7 @@ int main(int argc, char** argv)
 #if HAVE_UG
     {
       Dune::UGGrid<3> grid(1000);
-      Dune::GmshReader<Dune::UGGrid<3> >::read(grid,"grids/pyramid.msh");
+      Dune::GmeshReader<Dune::UGGrid<3> >::read(grid,"grids/pyramid.msh");
 
       // make grid
       //pg->globalRefine(1);
