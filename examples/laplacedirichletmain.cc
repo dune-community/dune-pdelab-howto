@@ -7,7 +7,7 @@
 
 #include<dune/common/mpihelper.hh>
 #include<dune/grid/yaspgrid.hh>
-#include<dune/grid/io/file/gmeshreader.hh>
+#include<dune/grid/io/file/gmshreader.hh>
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/p12dfem.hh>
@@ -38,10 +38,10 @@ int main(int argc, char** argv)
 #if HAVE_UG
     {
       Dune::UGGrid<3> grid(1000);
-      //     Dune::GmeshReader<Dune::UGGrid<3> >::read(grid,"grids/telescope2ndorder.msh");
       std::vector<int> a,b;
-      Dune::GmeshReader<Dune::UGGrid<3> >::read(grid,"grids/LeverArm.msh",a,b);
-      grid.globalRefine(2);
+      //Dune::GmshReader<Dune::UGGrid<3> >::read(grid,"grids/LeverArm.msh",a,b);
+      Dune::GmshReader<Dune::UGGrid<3> >::read(grid,"grids/telescope2ndorder.msh",a,b);
+      grid.globalRefine(3);
 
       // make grid
 
@@ -56,8 +56,8 @@ int main(int argc, char** argv)
       FEM fem;
   
       // solve problem
-      //      laplacedirichlet<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,2,"laplace_UG_telescope_P1_3d");
-      laplacedirichlet<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,2,"LeverArm1st");
+      laplacedirichlet<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,2,"laplace_UG_telescope_P1_3d");
+      //laplacedirichlet<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,2,"LeverArm1st");
     }
 #endif
 
@@ -91,7 +91,7 @@ int main(int argc, char** argv)
     {
       // make grid 
       Dune::UGGrid<2> grid(1000);
-      Dune::GmeshReader<Dune::UGGrid<2> >::read(grid,"grids/curved2d2ndorder.msh");
+      Dune::GmshReader<Dune::UGGrid<2> >::read(grid,"grids/curved2d2ndorder.msh");
       grid.globalRefine(3);
 
       // get view
@@ -119,7 +119,7 @@ int main(int argc, char** argv)
     {
       // make grid 
       Dune::UGGrid<2> grid(1000);
-      Dune::GmeshReader<Dune::UGGrid<2> >::read(grid,"grids/circle1storder.msh");
+      Dune::GmshReader<Dune::UGGrid<2> >::read(grid,"grids/circle1storder.msh");
       grid.globalRefine(4);
 
       // get view
@@ -144,7 +144,7 @@ int main(int argc, char** argv)
     {
       // make grid 
       Dune::UGGrid<2> grid(1000);
-      Dune::GmeshReader<Dune::UGGrid<2> >::read(grid,"grids/circle2ndorder.msh");
+      Dune::GmshReader<Dune::UGGrid<2> >::read(grid,"grids/circle2ndorder.msh");
       grid.globalRefine(4);
 
       // get view
@@ -174,7 +174,7 @@ int main(int argc, char** argv)
 #if HAVE_UG
     {
       Dune::UGGrid<3> grid(1000);
-      Dune::GmeshReader<Dune::UGGrid<3> >::read(grid,"grids/pyramid.msh");
+      Dune::GmshReader<Dune::UGGrid<3> >::read(grid,"grids/pyramid.msh");
 
       // make grid
       //pg->globalRefine(1);
