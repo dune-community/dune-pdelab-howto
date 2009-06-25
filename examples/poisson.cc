@@ -3,7 +3,7 @@
 #include "config.h"     
 #endif
 
-#undef HAVE_UG
+//#undef HAVE_UG
 
 #include<iostream>
 #include<vector>
@@ -12,6 +12,7 @@
 #include<dune/common/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
+#include<dune/common/float_cmp.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/grid/yaspgrid.hh>
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
@@ -28,6 +29,7 @@
 #include<dune/pdelab/finiteelementmap/q22dfem.hh>
 #include<dune/pdelab/finiteelementmap/q1fem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
+#include<dune/pdelab/finiteelementmap/hangingnodeconstraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -41,7 +43,7 @@
 #include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include<dune/pdelab/localoperator/poisson.hh>
 
-#include"gridexamples.hh"
+#include "gridexamples.hh"
 
 //===============================================================
 //===============================================================
@@ -74,6 +76,7 @@ public:
       y = 50.0;
     else
       y = 0.0;
+    y=0;
   }
 };
 
@@ -175,7 +178,7 @@ public:
 
 // generate a P1 function and output it
 template<typename GV, typename FEM, typename CON, int q> 
-void poisson (const GV& gv, const FEM& fem, std::string filename)
+void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con = CON())
 {
   // constants and types
   typedef typename GV::Grid::ctype DF;
@@ -185,7 +188,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
     Dune::PDELab::ISTLVectorBackend<1> > GFS; 
-  GFS gfs(gv,fem);
+  GFS gfs(gv,fem,con);
 
   // make constraints map and initialize it from a function
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
@@ -202,7 +205,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   typedef G<GV,R> GType;
   GType g(gv);
   Dune::PDELab::interpolate(g,gfs,x0);
-  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
+  Dune::PDELab::set_shifted_dofs(cg,0.0,x0);
 
   // make grid function operator
   typedef F<GV,R> FType;
@@ -215,16 +218,23 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
     LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
 
+
   // represent operator as a matrix
   typedef typename GOS::template MatrixContainer<R>::Type M;
   M m(gos);
   m = 0.0;
+
+  // For hangingnodes: Interpolate hangingnodes adajcent to dirichlet
+  // nodes
+  gos.backtransform(x0);
+  
   gos.jacobian(x0,m);
   //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // evaluate residual w.r.t initial guess
   V r(gfs);
   r = 0.0;
+
   gos.residual(x0,r);
 
   // make ISTL solver
@@ -237,23 +247,32 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 
   Dune::CGSolver<V> solvera(opa,ilu0,1E-10,5000,2);
   Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
+  Dune::BiCGSTABSolver<V> solverc(opa,ilu0,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
   // solve the jacobian system
   r *= -1.0; // need -residual
   V x(gfs,0.0);
-  solvera.apply(x,r,stat);
-  x += x0;
+  solverc.apply(x,r,stat);
+
+  // For hangingnodes: Set values of hangingnodes to zero
+  Dune::PDELab::set_shifted_dofs(cg,0.0,x0);
+
+  x += x0; //affine shift
+
+  // Transform solution into standard basis
+  gos.backtransform(x);
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   DGF dgf(gfs,x);
-  
+
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
   vtkwriter.write(filename,Dune::VTKOptions::ascii);
 }
+
 
 //===============================================================
 // Main program with grid setup
@@ -333,6 +352,7 @@ int main(int argc, char** argv)
 
     // UG Pk 2D test
 #if HAVE_UG
+
     {
       // make grid 
       UGUnitSquare grid;
@@ -353,7 +373,75 @@ int main(int argc, char** argv)
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"poisson_UG_Pk_2d");
     }
+
+    {
+      // get grid and do a single global refine
+      UGUnitCube<3,1> ugunitcube;
+      typedef UGUnitCube<3,1>::GridType Grid;
+      Grid & grid = ugunitcube.grid();
+      grid.setRefinementType(Grid::LOCAL);
+      grid.setClosureType(Grid::NONE);
+      grid.globalRefine(1);
+
+      typedef Grid::Codim<0>::Partition<Dune::All_Partition>::LeafIterator 
+        Iterator;
+      typedef Grid::LeafIntersectionIterator IntersectionIterator;
+      typedef Grid::LeafGridView GV;
+      typedef Grid::ctype ctype;
+      
+      // get view
+      const GV& gv=grid.leafView(); 
+      const int dim = GV::dimension;
+      
+
+      // Do some random refinement. The result is a grid that may
+      // contain multiple hanging nodes per edge.
+      for(int i=0; i<4;++i){
+        Iterator it = grid.leafbegin<0,Dune::All_Partition>();
+        Iterator eit = grid.leafend<0,Dune::All_Partition>();
+
+        for(;it!=eit;++it){
+          if((double)rand()/(double)RAND_MAX > 0.6)
+            grid.mark(1,*(it));
+        }
+        grid.preAdapt();
+        grid.adapt();
+        grid.postAdapt();
+      }
+ 
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      const int k=3;
+      const int q=2;
+      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,R,3> FEM;
+      FEM fem;
+
+      // We need the boundary function for the hanging nodes
+      // constraints engine as we have to distinguish between hanging
+      // nodes on dirichlet and on neumann boundaries
+      typedef B<GV> BType;
+      BType b(gv);
+
+      // This is the type of the local constraints assembler that has
+      // to be adapted for different local basis spaces and grid types
+      typedef Dune::PDELab::HangingNodesConstraintsAssemblers::CubeGridQ1Assembler ConstraintsAssembler;
+
+      // The type of the constraints engine
+      typedef Dune::PDELab::HangingNodesDirichletConstraints
+        <GV::Grid,ConstraintsAssembler,BType> Constraints;
+
+      // Get constraints engine. We set adaptToIsolateHangingNodes =
+      // true and therefore the constructor refines the grid until
+      // there are fewer than one hanging node per edge.
+      Constraints constraints(grid,true,b);
+
+      // solve problem
+      poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_UG_Q1_3d",constraints);
+      
+    }
 #endif
+
 
 #if HAVE_ALBERTA
     {
@@ -379,6 +467,7 @@ int main(int argc, char** argv)
 #endif
 
 #if HAVE_ALUGRID
+    // unit square with uniform refinement
     {
       // make grid 
       ALUUnitSquare grid;
@@ -399,6 +488,69 @@ int main(int argc, char** argv)
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"poisson_ALU_Pk_2d");
     }
+
+    // unit square with hanging node refinement
+    {
+      // make grid 
+      ALUCubeUnitSquare grid;
+      grid.globalRefine(1);
+      
+      typedef ALUCubeUnitSquare::Codim<0>::Partition<Dune::All_Partition>::LeafIterator 
+        Iterator;
+      typedef ALUCubeUnitSquare::LeafIntersectionIterator IntersectionIterator;
+      typedef ALUCubeUnitSquare::LeafGridView GV;
+      typedef ALUCubeUnitSquare::ctype ctype;
+
+      // get view
+      const GV& gv=grid.leafView(); 
+      const int dim = GV::dimension;
+      
+      // Do some random refinement. The result is a grid that may
+      // contain multiple hanging nodes per edge.
+      for(int i=0; i<4;++i){
+        Iterator it = grid.leafbegin<0,Dune::All_Partition>();
+        Iterator eit = grid.leafend<0,Dune::All_Partition>();
+
+        for(;it!=eit;++it){
+          if((double)rand()/(double)RAND_MAX > 0.6)
+            grid.mark(1,*(it));
+        }
+        grid.preAdapt();
+        grid.adapt();
+        grid.postAdapt();
+      }
+
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      const int k=3;
+      const int q=2;
+      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,R,3> FEM;
+      FEM fem;
+
+      // We need the boundary function for the hanging nodes
+      // constraints engine as we have to distinguish between hanging
+      // nodes on dirichlet and on neumann boundaries
+      typedef B<GV> BType;
+      BType b(gv);
+
+      // This is the type of the local constraints assembler that has
+      // to be adapted for different local basis spaces and grid types
+      typedef Dune::PDELab::HangingNodesConstraintsAssemblers::CubeGridQ1Assembler ConstraintsAssembler;
+
+      // The type of the constraints engine
+      typedef Dune::PDELab::HangingNodesDirichletConstraints
+        <GV::Grid,ConstraintsAssembler,BType> Constraints;
+
+      // Get constraints engine. We set adaptToIsolateHangingNodes =
+      // false as ALU Grid refinement prevents the appearance of
+      // multiple hanging nodes per edge.
+      Constraints constraints(grid,false,b);
+      
+      // solve problem
+      poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_ALU_Q1_3d",constraints);
+    }
+
 #endif
 
 	// test passed
