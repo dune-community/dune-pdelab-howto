@@ -12,6 +12,8 @@
 #endif
 #if HAVE_ALUGRID
 #include<dune/grid/alugrid.hh>
+#include<dune/grid/io/file/dgfparser/dgfalu.hh>
+#include<dune/grid/io/file/dgfparser/dgfparser.hh>
 #endif
 #include "basicunitcube.hh"
 
@@ -29,6 +31,12 @@ class ALUUnitSquare : public Dune::ALUSimplexGrid<2,2>
 {
 public:
   ALUUnitSquare () : Dune::ALUSimplexGrid<2,2>("grids/2dsimplex.alu") {}
+};
+
+class ALUCubeUnitSquare : public Dune::ALUCubeGrid<3,3> 
+{
+public:
+  ALUCubeUnitSquare () : Dune::ALUCubeGrid<3,3>("grids/3drefinedcube.alu") {}
 };
 
 // class ALUReentrantCorner : public Dune::GridPtr<Dune::ALUSimplexGrid<2,2> >
