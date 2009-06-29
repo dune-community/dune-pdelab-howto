@@ -245,7 +245,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
 
   Dune::CGSolver<V> solvera(opa,ssor,1E-10,5000,2);
 //   Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
-  Dune::BiCGSTABSolver<V> solverc(opa,ilu0,1E-10,5000,2);
+  Dune::BiCGSTABSolver<V> solverc(opa,ssor,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
   // solve the jacobian system
