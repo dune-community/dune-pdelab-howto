@@ -46,6 +46,36 @@ public:
 //     : Dune::GridPtr<Dune::ALUSimplexGrid<2,2> >("grids/2dreentrantcorner.dgf")
 //   { }
 // };
+
+template<int dim>
+class ALUUnitCube : public BasicUnitCube< dim >
+{
+public:
+    typedef Dune::ALUSimplexGrid<dim,dim> GridType;
+
+private:  
+    GridType* grid_;
+
+public:
+    ALUUnitCube ()
+    {
+        Dune::GridFactory< GridType > factory;
+        BasicUnitCube< dim >::insertVertices( factory );
+        BasicUnitCube< dim >::insertSimplices( factory );
+        grid_ = factory.createGrid();
+    }
+
+    ~ALUUnitCube ()
+    {
+        delete grid_;
+    }
+
+    GridType &grid ()
+    {
+        return *grid_;
+    }
+};
+
 #endif //HAVE_ALUGRID
 
 

@@ -2,9 +2,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
-
-//#undef HAVE_UG
-
 #include<iostream>
 #include<vector>
 #include<map>
@@ -25,6 +22,7 @@
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/p12dfem.hh>
 #include<dune/pdelab/finiteelementmap/pk2dfem.hh>
+#include<dune/pdelab/finiteelementmap/pk3dfem.hh>
 #include<dune/pdelab/finiteelementmap/q12dfem.hh>
 #include<dune/pdelab/finiteelementmap/q22dfem.hh>
 #include<dune/pdelab/finiteelementmap/q1fem.hh>
@@ -239,14 +237,14 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
 
   // make ISTL solver
   Dune::MatrixAdapter<M,V,V> opa(m);
-  typedef Dune::PDELab::OnTheFlyOperator<V,V,GOS> ISTLOnTheFlyOperator;
-  ISTLOnTheFlyOperator opb(gos);
+//   typedef Dune::PDELab::OnTheFlyOperator<V,V,GOS> ISTLOnTheFlyOperator;
+//   ISTLOnTheFlyOperator opb(gos);
   Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
-  Dune::SeqILU0<M,V,V> ilu0(m,1.0);
-  Dune::Richardson<V,V> richardson(1.0);
+//   Dune::SeqILU0<M,V,V> ilu0(m,1.0);
+//   Dune::Richardson<V,V> richardson(1.0);
 
-  Dune::CGSolver<V> solvera(opa,ilu0,1E-10,5000,2);
-  Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
+  Dune::CGSolver<V> solvera(opa,ssor,1E-10,5000,2);
+//   Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
   Dune::BiCGSTABSolver<V> solverc(opa,ilu0,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
@@ -551,6 +549,31 @@ int main(int argc, char** argv)
       poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_ALU_Q1_3d",constraints);
     }
 
+#endif
+
+    // ALU Pk 3D test
+#if HAVE_ALUGRID
+    {
+      // make grid
+      typedef ALUUnitCube<3> UnitCube;
+      UnitCube unitcube;
+      unitcube.grid().globalRefine(2);
+
+      // get view
+      typedef UnitCube::GridType::LeafGridView GV;
+      const GV& gv=unitcube.grid().leafView(); 
+ 
+      // make finite element map
+      typedef UnitCube::GridType::ctype DF;
+      typedef double R;
+      const int k=4;
+      const int q=2*k;
+      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> FEM;
+      FEM fem(gv);
+  
+      // solve problem
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"poisson_ALU_Pk_3d");
+    }
 #endif
 
 	// test passed
