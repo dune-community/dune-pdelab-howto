@@ -5,13 +5,19 @@
 #AM_CPPFLAGS = $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS)
 dist_noinst_DATA = poisson laplacedirichletccfv
 
-noinst_PROGRAMS = poisson laplacedirichletccfv reentrantcorner q1gridfunctionspacemain q1interpolatemain q1interpolationerrormain q2interpolationerrormain q1constrainedinterpolatemain thinterpolatemain laplacedirichletmain rt0main
+noinst_PROGRAMS = poisson mimetic laplacedirichletccfv reentrantcorner q1gridfunctionspacemain q1interpolatemain q1interpolationerrormain q2interpolationerrormain q1constrainedinterpolatemain thinterpolatemain laplacedirichletmain rt0main
 
 poisson_SOURCES = poisson.cc
 poisson_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 poisson_LDADD = $(MPI_LDFLAGS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 poisson_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 poisson_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
+
+mimetic_SOURCES = mimetic.cc
+mimetic_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
+mimetic_LDADD = $(MPI_LDFLAGS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+mimetic_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
+mimetic_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
 laplacedirichletccfv_SOURCES = laplacedirichletccfv.cc
 laplacedirichletccfv_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
