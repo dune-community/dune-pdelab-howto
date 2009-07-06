@@ -39,8 +39,17 @@ int main(int argc, char** argv)
     {
       Dune::UGGrid<3> grid(1000);
       std::vector<int> a,b;
-      //Dune::GmshReader<Dune::UGGrid<3> >::read(grid,"grids/LeverArm.msh",a,b);
-      Dune::GmshReader<Dune::UGGrid<3> >::read(grid,"grids/telescope2ndorder.msh",a,b);
+      Dune::GmshReader<Dune::UGGrid<3> >::read(grid,"grids/CuKav.msh",a,b);
+      //Dune::GmshReader<Dune::UGGrid<3> >::read(grid,"grids/LeverArm-2ndorder.msh",a,b);
+      //Dune::GmshReader<Dune::UGGrid<3> >::read(grid,"grids/telescope2ndorder.msh",a,b);
+
+//       for (int i=0; i<a.size(); i++)
+//         std::cout << a[i] << " ";
+//       std::cout << std::endl;
+//       for (int i=0; i<b.size(); i++)
+//         std::cout << b[i] << " ";
+//       std::cout << std::endl;
+
       grid.globalRefine(3);
 
       // make grid
@@ -56,8 +65,9 @@ int main(int argc, char** argv)
       FEM fem;
   
       // solve problem
-      laplacedirichlet<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,2,"laplace_UG_telescope_P1_3d");
-      //laplacedirichlet<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,2,"LeverArm1st");
+      //laplacedirichlet<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,2,"laplace_UG_telescope_P1_3d");
+      //laplacedirichlet<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,2,"LeverArm2nd");
+      laplacedirichlet<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,2,"CuKav");
     }
 #endif
 

@@ -14,10 +14,7 @@ public:
 							  typename Traits::RangeType& y) const
   {
 	typename Traits::DomainType center(0.0);
-	center[0] = -80.0;
-	center[0] = 20.0;
-	center[0] = 0.0;
 	center -= x;
-	y = exp((-1.0/(25*25))*center.two_norm2());
+	y = exp((-1.0/(1500*1500))*center.two_norm2());
   }
 };

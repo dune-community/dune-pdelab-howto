@@ -102,7 +102,8 @@ void test (const GV& gv)
   
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::NoConstraints,Dune::PDELab::ISTLVectorBackend<1> > GFS; 
+    Dune::PDELab::NoConstraints,Dune::PDELab::ISTLVectorBackend<1>,
+    Dune::PDELab::SimpleGridFunctionStaticSize> GFS; 
   watch.reset();
   GFS gfs(gv,fem);
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;

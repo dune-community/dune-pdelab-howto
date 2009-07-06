@@ -244,14 +244,14 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
 //   Dune::Richardson<V,V> richardson(1.0);
 
   Dune::CGSolver<V> solvera(opa,ssor,1E-10,5000,2);
-//   Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
+  //  Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
   Dune::BiCGSTABSolver<V> solverc(opa,ssor,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
   // solve the jacobian system
   r *= -1.0; // need -residual
   V x(gfs,0.0);
-  solverc.apply(x,r,stat);
+  solvera.apply(x,r,stat);
 
   // For hangingnodes: Set values of hangingnodes to zero
   Dune::PDELab::set_shifted_dofs(cg,0.0,x0);
@@ -487,7 +487,7 @@ int main(int argc, char** argv)
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"poisson_ALU_Pk_2d");
     }
 
-    // unit square with hanging node refinement
+    // unit cube with hanging node refinement
     {
       // make grid 
       ALUCubeUnitSquare grid;
