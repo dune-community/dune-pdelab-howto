@@ -369,7 +369,7 @@ void test (const GV& gv)
   typedef Dune::PDELab::TwoPhaseTwoPointFluxOperator<TP,V> LOP;
   LOP lop(tp,pold);
   lop.set_time(0.0);
-  lop.set_timestep(0.001);
+  lop.set_timestep(0.1);
 
   // make grid operator space
   typedef typename TPGFS::template ConstraintsContainer<RF>::Type ET;
@@ -385,11 +385,30 @@ void test (const GV& gv)
   watch.reset();
   tpgos.jacobian(pnew,m);
   std::cout << "=== jacobian assembly " <<  watch.elapsed() << " s" << std::endl;
-  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
+  //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // compute residual
   V r(tpgfs,0.0);
   tpgos.residual(pnew,r);
+
+  // make ISTL solver
+  Dune::MatrixAdapter<M,V,V> op(m);
+  Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
+  Dune::SeqILU0<M,V,V> ilu0(m,1.0);
+  Dune::BiCGSTABSolver<V> solver(op,ilu0,1E-10,5000,1);
+  Dune::InverseOperatorResult stat;
+
+  // Newton iteration
+  V v(tpgfs);
+  for (int i=1; i<10; i++)
+    {
+      v = 0.0;
+      solver.apply(v,r,stat);
+      pnew -= v;
+      tpgos.residual(pnew,r);
+      tpgos.jacobian(pnew,m);
+    }
+
 
   // make subspaces
   typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,0> P_lSUB;
@@ -430,7 +449,7 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(3);
+      Dune::FieldVector<int,2> N(50);
       Dune::FieldVector<bool,2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       //grid.globalRefine(1);
