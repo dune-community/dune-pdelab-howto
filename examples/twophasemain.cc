@@ -38,6 +38,15 @@
 // Problem definition
 //==============================================================================
 
+const double height = 0.6;
+const double width = 1.0;
+const double pentry = 755.0;
+const double pentry_lense = 1163.0;
+const double lense_width_min = 0.3;
+const double lense_width_max = 0.7;
+const double lense_height_min = 0.2;
+const double lense_height_max = 0.3;
+
 // initial conditions for phase pressures
 template<typename GV, typename RF>
 class P_l
@@ -47,12 +56,13 @@ class P_l
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,P_l<GV,RF> > BaseT;
+  enum {dim=Traits::DomainType::dimension};
 
   P_l (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
- 	y = x[0];
+ 	y = (height-x[dim-1])*9810;
   }
 };
 template<typename GV, typename RF>
@@ -63,12 +73,25 @@ class P_g
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,P_g<GV,RF> > BaseT;
+  enum {dim=Traits::DomainType::dimension};
 
   P_g (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
- 	y = x[1];
+ 	y = (height-x[dim-1])*9810;
+    for (int i=0; i<dim-1; i++)
+      if (x[i]<lense_width_min || x[i]>lense_width_max)
+        {
+          y += pentry;
+          return;
+        }
+    if (x[dim-1]<lense_height_min || x[dim-1]>lense_height_max)
+      {
+        y += pentry;
+        return;
+      }
+    y += pentry_lense;
   }
 };
 
@@ -78,20 +101,24 @@ class TwoPhaseParameter
   : public Dune::PDELab::TwoPhaseParameterInterface<Dune::PDELab::TwoPhaseParameterTraits<GV,RF>, 
                                                     TwoPhaseParameter<GV,RF> >
 {
+  static const RF eps1 = 1E-6;
+  static const RF eps2 = 1E-5;
+  
 public:
   typedef Dune::PDELab::TwoPhaseParameterTraits<GV,RF> Traits;
+  enum {dim=GV::Grid::dimension};
 
   //! constructor
   TwoPhaseParameter ()
   {
-    gvector = 0.0; // no gravity
+    gvector=0; gvector[dim-1]=-9.81;
   }
 
   //! porosity
   typename Traits::RangeFieldType 
   phi (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    return 0.2;
+    return 0.4;
   }
 
   //! inverse capillary pressure function
@@ -99,7 +126,18 @@ public:
   s_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
        typename Traits::RangeFieldType pc) const
   {
-    return 1.0-0.001*pc;
+    Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,Traits::GridViewType::Grid::dimension> 
+      global = e.geometry().global(x);
+    for (int i=0; i<dim-1; i++)
+      if (global[i]<lense_width_min || global[i]>lense_width_max)
+        {
+          return pow(pentry/pc,2.7);
+        }
+    if (global[dim-1]<lense_height_min || global[dim-1]>lense_height_max)
+      {
+        return pow(pentry/pc,2.7);
+      }
+    return pow(pentry_lense/pc,2.0);
   }
 	  
   //! liquid phase relative permeability
@@ -107,7 +145,7 @@ public:
   kr_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
         typename Traits::RangeFieldType s_l) const
   {
-    if (s_l<=0) return 0.0; else return s_l*s_l;
+    if (s_l<=eps1) return 0.0; else return (s_l-eps1)*(s_l-eps1);
   }
 
   //! gas phase relative permeability
@@ -115,7 +153,7 @@ public:
   kr_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
         typename Traits::RangeFieldType s_g) const
   {
-    if (s_g<=0) return 0.0; else return s_g*s_g;
+    if (s_g<=eps1) return 0.0; else return (s_g-eps1)*(s_g-eps1);
   }
 
   //! liquid phase viscosity
@@ -131,14 +169,25 @@ public:
   mu_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
         typename Traits::RangeFieldType p_g) const
   {
-    return 1E-5;
+    return 0.9E-3;
   }
 	  
   //! absolute permeability (scalar!)
   typename Traits::RangeFieldType 
   k_abs (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    return 1E-10;
+    Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,Traits::GridViewType::Grid::dimension> 
+      global = e.geometry().global(x);
+    for (int i=0; i<dim-1; i++)
+      if (global[i]<lense_width_min || global[i]>lense_width_max)
+        {
+          return 6.64E-11;
+        }
+    if (global[dim-1]<lense_height_min || global[dim-1]>lense_height_max)
+      {
+        return 6.64E-11;
+      }
+    return 3.32E-11;
   }
 
   //! gravity vector
@@ -160,7 +209,7 @@ public:
   nu_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
         typename Traits::RangeFieldType p_g) const
   {
-    return 1.0;
+    return 1460.0;
   }
 
   //! liquid phase mass density
@@ -176,35 +225,63 @@ public:
   rho_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
          typename Traits::RangeFieldType p_g) const
   {
-    return 1.0;
+    return 1460.0;
   }
 	  
   //! liquid phase boundary condition type
   int
   bc_l (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
   {
-    return 1;
+    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
+      global = is.geometry().global(x);
+
+    for (int i=0; i<dim-1; i++)
+      if (global[i]<eps2 || global[i]>width-eps2)
+        return 1; // left & right boundary Dirichlet
+
+    if (global[dim-1]>height-eps2)
+      return 0; // top boundary Neumann
+    if (global[dim-1]<eps2)
+      return 0; // bottom boundary Neumann
+
+    return -1; // unknown
   }
 
   //! gas phase boundary condition type
   int
   bc_g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
   {
-    return 1;
+    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
+      global = is.geometry().global(x);
+
+    for (int i=0; i<dim-1; i++)
+      if (global[i]<eps2 || global[i]>width-eps2)
+        return 1; // left & right boundary Dirichlet
+
+    if (global[dim-1]>height-eps2)
+      return 0; // top boundary Neumann
+    if (global[dim-1]<eps2)
+      return 0; // bottom boundary Neumann
+
+    return -1; // unknown
   }
 
   //! liquid phase Dirichlet boundary condition
   typename Traits::RangeFieldType 
   g_l (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
   {
-    return 1.0;
+    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
+      global = is.geometry().global(x);
+    return (height-global[dim-1])*9810.0;
   }
 
   //! gas phase Dirichlet boundary condition
   typename Traits::RangeFieldType 
   g_g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
   {
-    return 1.0;
+    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
+      global = is.geometry().global(x);
+    return (height-global[dim-1])*9810.0+pentry;
   }
 
   //! liquid phase Neumann boundary condition
@@ -218,7 +295,17 @@ public:
   typename Traits::RangeFieldType 
   j_g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
   {
-    return 0.0;
+    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
+      global = is.geometry().global(x);
+
+    if (global[dim-1]<height-eps2)
+      return 0.0;
+
+    for (int i=0; i<dim-1; i++)
+      if (global[i]<0.4 || global[i]>0.6)
+        return 0.0;
+
+    return -0.075;
   }
 
   //! liquid phase source term
@@ -346,6 +433,12 @@ void test (const GV& gv)
   TPGFS tpgfs(gfs);
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
+  // make subspaces (needed for VTK output)
+  typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,0> P_lSUB;
+  P_lSUB p_lsub(tpgfs);
+  typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,1> P_gSUB;
+  P_gSUB p_gsub(tpgfs);
+
   // initial value function
   typedef P_l<GV,RF> P_lType;
   P_lType p_l_initial(gv);
@@ -368,8 +461,32 @@ void test (const GV& gv)
   TP tp;
   typedef Dune::PDELab::TwoPhaseTwoPointFluxOperator<TP,V> LOP;
   LOP lop(tp,pold);
-  lop.set_time(0.0);
-  lop.set_timestep(0.1);
+
+  // make discrete function objects for pnew and saturations
+  typedef Dune::PDELab::DiscreteGridFunction<P_lSUB,V> P_lDGF;
+  P_lDGF p_ldgf(p_lsub,pnew);
+  typedef Dune::PDELab::DiscreteGridFunction<P_gSUB,V> P_gDGF;
+  P_gDGF p_gdgf(p_gsub,pnew);
+  typedef S_l<TP,P_lDGF,P_gDGF> S_lDGF; 
+  S_lDGF s_ldgf(tp,p_ldgf,p_gdgf);
+  typedef S_g<TP,P_lDGF,P_gDGF> S_gDGF; 
+  S_gDGF s_gdgf(tp,p_ldgf,p_gdgf);
+
+  // output of timesteps
+  int filecounter = 0;
+  char basename[255];
+  sprintf(basename,"dnapl-%01dd",dim);
+  {
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_lDGF>(p_ldgf,"p_l"));
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
+    char fname[255];
+    sprintf(fname,"%s-%05d",basename,filecounter);
+    vtkwriter.write(fname,Dune::VTKOptions::ascii);
+    filecounter++;
+  }
 
   // make grid operator space
   typedef typename TPGFS::template ConstraintsContainer<RF>::Type ET;
@@ -381,58 +498,54 @@ void test (const GV& gv)
   // represent operator as a matrix
   typedef typename TPGOS::template MatrixContainer<RF>::Type M;
   M m(tpgos);
-  m = 0.0;
-  watch.reset();
-  tpgos.jacobian(pnew,m);
-  std::cout << "=== jacobian assembly " <<  watch.elapsed() << " s" << std::endl;
   //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
-  // compute residual
-  V r(tpgfs,0.0);
-  tpgos.residual(pnew,r);
-
-  // make ISTL solver
-  Dune::MatrixAdapter<M,V,V> op(m);
-  Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
-  Dune::SeqILU0<M,V,V> ilu0(m,1.0);
-  Dune::BiCGSTABSolver<V> solver(op,ilu0,1E-10,5000,1);
-  Dune::InverseOperatorResult stat;
-
-  // Newton iteration
-  V v(tpgfs);
-  for (int i=1; i<10; i++)
+  // time loop
+  RF time = 0.0;
+  RF timestep = 60.0;
+  for (int k=1; k<=75; k++)
     {
-      v = 0.0;
-      solver.apply(v,r,stat);
-      pnew -= v;
+      // prepare new time step
+      std::cout << "+++ TIME STEP " << k << " tnew=" << time+timestep << " dt=" << timestep << std::endl;
+      lop.set_time(time+timestep);
+      lop.set_timestep(timestep);
+
+      // Newton iteration
+      V r(tpgfs,0.0);
       tpgos.residual(pnew,r);
-      tpgos.jacobian(pnew,m);
+      RF d0 = r.two_norm();
+      std::cout << "+++ NEWTON STEP " << 0 << " res=" << d0 << std::endl;
+      for (int i=1; i<=10; i++)
+        {
+          m = 0.0;
+          tpgos.jacobian(pnew,m);
+          Dune::MatrixAdapter<M,V,V> op(m);
+          Dune::SeqILU0<M,V,V> ilu0(m,1.0);
+          Dune::BiCGSTABSolver<V> solver(op,ilu0,1E-8,5000,1);
+          Dune::InverseOperatorResult stat;
+          V v(tpgfs,0.0);
+          solver.apply(v,r,stat);
+          pnew -= v;
+          tpgos.residual(pnew,r);
+          RF d = r.two_norm();
+          std::cout << "+++ NEWTON STEP " << i << " res=" << d << std::endl;
+          if (d<1E-6*d0) break;
+       }
+
+      // accept time step
+      time += timestep;
+      pold = pnew;
+
+      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+      vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_lDGF>(p_ldgf,"p_l"));
+      vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
+      vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
+      vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
+      char fname[255];
+      sprintf(fname,"%s-%05d",basename,filecounter);
+      vtkwriter.write(fname,Dune::VTKOptions::ascii);
+      filecounter++;
     }
-
-
-  // make subspaces
-  typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,0> P_lSUB;
-  P_lSUB p_lsub(tpgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,1> P_gSUB;
-  P_gSUB p_gsub(tpgfs);
- 
-  // make discrete function object
-  typedef Dune::PDELab::DiscreteGridFunction<P_lSUB,V> P_lDGF;
-  P_lDGF p_ldgf(p_lsub,pnew);
-  typedef Dune::PDELab::DiscreteGridFunction<P_gSUB,V> P_gDGF;
-  P_gDGF p_gdgf(p_gsub,pnew);
-  typedef S_l<TP,P_lDGF,P_gDGF> S_lDGF; 
-  S_lDGF s_ldgf(tp,p_ldgf,p_gdgf);
-  typedef S_g<TP,P_lDGF,P_gDGF> S_gDGF; 
-  S_gDGF s_gdgf(tp,p_ldgf,p_gdgf);
-
-  // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_lDGF>(p_ldgf,"p_l"));
-  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
-  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
-  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
-  vtkwriter.write("twophase",Dune::VTKOptions::ascii);
 }
 
 //==============================================================================
@@ -446,13 +559,28 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc, argv);
 
     // 2D
+    if (false)
     {
       // make grid
-      Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(50);
+      Dune::FieldVector<double,2> L; L[0] = width; L[1] = height;
+      Dune::FieldVector<int,2> N;    N[0] = 10;   N[1] = 6;
       Dune::FieldVector<bool,2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
-      //grid.globalRefine(1);
+      grid.globalRefine(4);
+      
+      // solve problem :)
+      test(grid.leafView());
+    }
+
+    // 3D
+    if (true)
+    {
+      // make grid
+      Dune::FieldVector<double,3> L; L[0] = width; L[1] = width; L[2] = height;
+      Dune::FieldVector<int,3> N;    N[0] = 10;    N[1] = 10;    N[2] = 6;
+      Dune::FieldVector<bool,3> B(false);
+      Dune::YaspGrid<3> grid(L,N,B,0);
+      grid.globalRefine(3);
       
       // solve problem :)
       test(grid.leafView());
