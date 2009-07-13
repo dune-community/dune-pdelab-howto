@@ -1,6 +1,7 @@
 class RT0Constraints {
 public:
-  enum{doBoundary=true};enum{doSkeleton=false};enum{doVolume=false};
+  enum{doBoundary=true};enum{doProcessor=false};
+  enum{doSkeleton=false};enum{doVolume=false};
 
   template<typename B, typename I, typename LFS, typename T>
   void boundary (const B& b, const I& ig, const LFS& lfs, T& trafo) const
