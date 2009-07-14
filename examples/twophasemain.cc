@@ -33,6 +33,7 @@
 
 #include"gridexamples.hh"
 #include"twophaseop.hh"
+#include"parallelstuff.hh"
 
 //==============================================================================
 // Problem definition
@@ -408,6 +409,7 @@ public:
 //==============================================================================
 // driver
 //==============================================================================
+int rank;
 
 template<class GV> 
 void test (const GV& gv)
@@ -424,12 +426,13 @@ void test (const GV& gv)
   
   // make grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::NoConstraints,Dune::PDELab::ISTLVectorBackend<2>,
+    Dune::PDELab::P0ParallelConstraints,Dune::PDELab::ISTLVectorBackend<2>,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
   typedef Dune::PDELab::PowerGridFunctionSpace<GFS,2,
     Dune::PDELab::GridFunctionSpaceBlockwiseMapper> TPGFS;
   watch.reset();
-  GFS gfs(gv,fem);
+  Dune::PDELab::P0ParallelConstraints con(rank);
+  GFS gfs(gv,fem,con);
   TPGFS tpgfs(gfs);
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
@@ -473,10 +476,13 @@ void test (const GV& gv)
   S_gDGF s_gdgf(tp,p_ldgf,p_gdgf);
 
   // output of timesteps
+  bool graphics = true;
   int filecounter = 0;
   char basename[255];
   sprintf(basename,"dnapl-%01dd",dim);
+  if (graphics)
   {
+    if (rank==0) std::cout << "writing output file " << filecounter << std::endl;
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_lDGF>(p_ldgf,"p_l"));
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
@@ -484,51 +490,78 @@ void test (const GV& gv)
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
     char fname[255];
     sprintf(fname,"%s-%05d",basename,filecounter);
-    vtkwriter.write(fname,Dune::VTKOptions::ascii);
+    vtkwriter.pwrite(fname,"vtk","",Dune::VTKOptions::binaryappended);
     filecounter++;
   }
 
+  // make constraints map and initialize it from a function
+  typedef typename TPGFS::template ConstraintsContainer<RF>::Type C;
+  C cg;
+  cg.clear();
+  Dune::PDELab::constraints(p_initial,tpgfs,cg,false);
+
   // make grid operator space
-  typedef typename TPGFS::template ConstraintsContainer<RF>::Type ET;
-  ET et;
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MB;
-  typedef Dune::PDELab::GridOperatorSpace<TPGFS,TPGFS,LOP,ET,ET,MB> TPGOS;
-  TPGOS tpgos(tpgfs,et,tpgfs,et,lop);
+  typedef Dune::PDELab::GridOperatorSpace<TPGFS,TPGFS,LOP,C,C,MB> TPGOS;
+  TPGOS tpgos(tpgfs,cg,tpgfs,cg,lop);
 
   // represent operator as a matrix
   typedef typename TPGOS::template MatrixContainer<RF>::Type M;
   M m(tpgos);
   //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
+  // solver stuff
+  SimpleNonoverlappingScalarProduct<GV,0,V> psp(gv);
+  SimpleNonoverlappingOperator<GV,0,M,V,V> pop(gv,m);
+  int rank = gv.comm().rank();
+
   // time loop
   RF time = 0.0;
   RF timestep = 60.0;
-  for (int k=1; k<=75; k++)
+  for (int k=1; k<=1; k++)
     {
       // prepare new time step
-      std::cout << "+++ TIME STEP " << k << " tnew=" << time+timestep << " dt=" << timestep << std::endl;
+      if (rank==0) std::cout << "+++ TIME STEP " << k << " tnew=" << time+timestep << " dt=" << timestep << std::endl;
       lop.set_time(time+timestep);
       lop.set_timestep(timestep);
 
       // Newton iteration
       V r(tpgfs,0.0);
       tpgos.residual(pnew,r);
-      RF d0 = r.two_norm();
-      std::cout << "+++ NEWTON STEP " << 0 << " res=" << d0 << std::endl;
-      for (int i=1; i<=10; i++)
+      char buf[64];
+      sprintf(buf,"[%02d] ",gv.comm().rank());
+      int cols = 14;
+      //Dune::printvector(std::cout,r.base(),"initial residual after computation",buf,cols,9,1);
+      RF d0 = psp.norm(r);
+      RF lastd=d0;
+      RF red = 1.0;
+      if (rank==0) std::cout << "+++ NEWTON STEP " << 0 << " res=" << d0 << std::endl;
+      for (int i=1; i<=25; i++)
         {
           m = 0.0;
+          watch.reset();
           tpgos.jacobian(pnew,m);
-          Dune::MatrixAdapter<M,V,V> op(m);
-          Dune::SeqILU0<M,V,V> ilu0(m,1.0);
-          Dune::BiCGSTABSolver<V> solver(op,ilu0,1E-8,5000,1);
+          if (rank==0) std::cout << "=== jacobian assembly " <<  watch.elapsed() << " s" << std::endl;
+          //          Dune::MatrixAdapter<M,V,V> op(m);
+          typedef Dune::SeqSSOR<M,V,V> Prec;
+          Prec prec(m,3,1.0);
+          NonoverlappingBlockJacobi<GV,0,Prec,C> bjac(gv,prec,cg);
+          int verbose=1;
+          if (rank>0) verbose=0;
+          Dune::BiCGSTABSolver<V> solver(pop,psp,bjac,std::max(std::min(1E-3,red*red),1E-10),5000,verbose);
           Dune::InverseOperatorResult stat;
           V v(tpgfs,0.0);
           solver.apply(v,r,stat);
+          //Dune::printvector(std::cout,v.base(),"correction computed in solver",buf,cols,9,1);
           pnew -= v;
+          r = 0.0;
           tpgos.residual(pnew,r);
-          RF d = r.two_norm();
-          std::cout << "+++ NEWTON STEP " << i << " res=" << d << std::endl;
+          //Dune::printvector(std::cout,r.base(),"new residual",buf,cols,9,1);
+          RF d = psp.norm(r);
+          red = d/lastd;
+          lastd = d;
+          //Dune::printvector(std::cout,r.base(),"r","row",4,9,1);
+          if (rank==0) std::cout << "+++ NEWTON STEP " << i << " res=" << d << std::endl;
           if (d<1E-6*d0) break;
        }
 
@@ -536,15 +569,19 @@ void test (const GV& gv)
       time += timestep;
       pold = pnew;
 
-      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-      vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_lDGF>(p_ldgf,"p_l"));
-      vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
-      vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
-      vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
-      char fname[255];
-      sprintf(fname,"%s-%05d",basename,filecounter);
-      vtkwriter.write(fname,Dune::VTKOptions::ascii);
-      filecounter++;
+      if (graphics)
+        {
+          if (rank==0) std::cout << "writing output file " << filecounter << std::endl;
+          Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+          vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_lDGF>(p_ldgf,"p_l"));
+          vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
+          vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
+          vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
+          char fname[255];
+          sprintf(fname,"%s-%05d",basename,filecounter);
+          vtkwriter.pwrite(fname,"vtk","",Dune::VTKOptions::binaryappended);
+          filecounter++;
+        }
     }
 }
 
@@ -556,35 +593,47 @@ int main(int argc, char** argv)
 {
   try{
     //Maybe initialize Mpi
-    Dune::MPIHelper::instance(argc, argv);
+    Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
+    if(Dune::MPIHelper::isFake)
+      std::cout<< "This is a sequential program." << std::endl;
+    else
+	  {
+		if(helper.rank()==0)
+		  std::cout << "parallel run on " << helper.size() << " processes" << std::endl;
+	  }
+    rank = helper.rank();
 
+#if HAVE_MPI
     // 2D
-    if (false)
+    if (true)
     {
       // make grid
+      int l=4;
       Dune::FieldVector<double,2> L; L[0] = width; L[1] = height;
-      Dune::FieldVector<int,2> N;    N[0] = 10;   N[1] = 6;
+      Dune::FieldVector<int,2> N;    N[0] = 10*(1<<l);   N[1] = 6*(1<<l);
       Dune::FieldVector<bool,2> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
-      grid.globalRefine(4);
-      
+      int overlap=3;
+      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
+ 
       // solve problem :)
       test(grid.leafView());
     }
 
     // 3D
-    if (true)
+    if (false)
     {
       // make grid
+      int l=3;
       Dune::FieldVector<double,3> L; L[0] = width; L[1] = width; L[2] = height;
-      Dune::FieldVector<int,3> N;    N[0] = 10;    N[1] = 10;    N[2] = 6;
+      Dune::FieldVector<int,3> N;    N[0] = 10*(1<<l);    N[1] = 10*(1<<l);    N[2] = 6*(1<<l);
       Dune::FieldVector<bool,3> B(false);
-      Dune::YaspGrid<3> grid(L,N,B,0);
-      grid.globalRefine(3);
+      int overlap=2;
+      Dune::YaspGrid<3> grid(helper.getCommunicator(),L,N,B,overlap);
       
       // solve problem :)
       test(grid.leafView());
     }
+#endif
 
     // UG Q1 2D test
 #if HAVE_UG
