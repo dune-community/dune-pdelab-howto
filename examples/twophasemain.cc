@@ -603,12 +603,22 @@ int main(int argc, char** argv)
 	  }
     rank = helper.rank();
 
+	if (argc!=2)
+	  {
+		if(helper.rank()==0)
+		  std::cout << "usage: ./twophasemain <level>" << std::endl;
+		return 1;
+	  }
+
+	int maxlevel;
+	sscanf(argv[1],"%d",&maxlevel);
+
 #if HAVE_MPI
     // 2D
     if (true)
     {
       // make grid
-      int l=4;
+      int l=maxlevel;
       Dune::FieldVector<double,2> L; L[0] = width; L[1] = height;
       Dune::FieldVector<int,2> N;    N[0] = 10*(1<<l);   N[1] = 6*(1<<l);
       Dune::FieldVector<bool,2> B(false);
@@ -623,7 +633,7 @@ int main(int argc, char** argv)
     if (false)
     {
       // make grid
-      int l=3;
+      int l=maxlevel;
       Dune::FieldVector<double,3> L; L[0] = width; L[1] = width; L[2] = height;
       Dune::FieldVector<int,3> N;    N[0] = 10*(1<<l);    N[1] = 10*(1<<l);    N[2] = 6*(1<<l);
       Dune::FieldVector<bool,3> B(false);
