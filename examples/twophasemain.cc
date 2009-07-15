@@ -415,7 +415,7 @@ public:
 int rank;
 
 template<class GV> 
-void test (const GV& gv)
+void test (const GV& gv, int timesteps, double timestep)
 {
   // some types
   typedef typename GV::Grid::ctype DF;
@@ -520,8 +520,7 @@ void test (const GV& gv)
 
   // time loop
   RF time = 0.0;
-  RF timestep = 60.0;
-  for (int k=1; k<=1; k++)
+  for (int k=1; k<=timesteps; k++)
     {
       // prepare new time step
       if (rank==0) std::cout << "+++ TIME STEP " << k << " tnew=" << time+timestep << " dt=" << timestep << std::endl;
@@ -606,15 +605,21 @@ int main(int argc, char** argv)
 	  }
     rank = helper.rank();
 
-	if (argc!=2)
+	if (argc!=4)
 	  {
 		if(helper.rank()==0)
-		  std::cout << "usage: ./twophasemain <level>" << std::endl;
+		  std::cout << "usage: ./twophasemain <level> <timesteps> <timestep>" << std::endl;
 		return 1;
 	  }
 
 	int maxlevel;
 	sscanf(argv[1],"%d",&maxlevel);
+
+	int timesteps;
+	sscanf(argv[2],"%d",&timesteps);
+
+	double timestep;
+	sscanf(argv[3],"%lg",&timestep);
 
 #if HAVE_MPI
     // 2D
@@ -629,7 +634,7 @@ int main(int argc, char** argv)
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
  
       // solve problem :)
-      test(grid.leafView());
+      test(grid.leafView(),timesteps,timestep);
     }
 
     // 3D
@@ -644,7 +649,7 @@ int main(int argc, char** argv)
       Dune::YaspGrid<3> grid(helper.getCommunicator(),L,N,B,overlap);
       
       // solve problem :)
-      test(grid.leafView());
+      test(grid.leafView(),timesteps,timestep);
     }
 #endif
 
