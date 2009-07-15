@@ -132,13 +132,16 @@ public:
     for (int i=0; i<dim-1; i++)
       if (global[i]<lense_width_min || global[i]>lense_width_max)
         {
-          return pow(pentry/pc,2.7);
+          //return pow(pentry/pc,2.7);
+          return (pentry/pc)*(pentry/pc)*sqrt(pentry/pc);
         }
     if (global[dim-1]<lense_height_min || global[dim-1]>lense_height_max)
       {
-        return pow(pentry/pc,2.7);
+        //return pow(pentry/pc,2.7);
+        return (pentry/pc)*(pentry/pc)*sqrt(pentry/pc);
       }
-    return pow(pentry_lense/pc,2.0);
+    //return pow(pentry_lense/pc,2.0);
+    return (pentry_lense/pc)*(pentry_lense/pc);
   }
 	  
   //! liquid phase relative permeability
@@ -476,7 +479,7 @@ void test (const GV& gv)
   S_gDGF s_gdgf(tp,p_ldgf,p_gdgf);
 
   // output of timesteps
-  bool graphics = true;
+  bool graphics = false;
   int filecounter = 0;
   char basename[255];
   sprintf(basename,"dnapl-%01dd",dim);
