@@ -90,6 +90,14 @@ namespace Dune {
 		return asImp().phi(e,x);
 	  }
 
+	  //! capillary pressure function
+	  typename Traits::RangeFieldType 
+	  pc (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+		   typename Traits::RangeFieldType s_l) const
+	  {
+		return asImp().pc(e,x,s_l);
+	  }
+	  
 	  //! inverse capillary pressure function
 	  typename Traits::RangeFieldType 
 	  s_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
