@@ -83,10 +83,10 @@ public:
       global = e.geometry().global(x);
     for (int i=0; i<dim-1; i++)
       if (global[i]<lense_width_min || global[i]>lense_width_max)
-        return pentry*(1.0/(s_l*s_l*sqrt(s_l)));
+        return pentry/pow(s_l,1/2.5);
     if (global[dim-1]<lense_height_min || global[dim-1]>lense_height_max)
-      return pentry*(1.0/(s_l*s_l*sqrt(s_l)));
-    return pentry_lense*(1.0/(s_l*s_l));
+      return pentry/pow(s_l,1/2.5);
+    return pentry_lense/sqrt(s_l);
   }
 	  
   //! inverse capillary pressure function

@@ -34,19 +34,19 @@
 #include"gridexamples.hh"
 #include"twophaseop.hh"
 #include"parallelstuff.hh"
+#include"permeability_generator.hh"
 
 //==============================================================================
 // Problem definition
 //==============================================================================
 
 const double height = 0.6;
-const double width = 1.0;
-const double pentry = 755.0;
-const double pentry_lense = 1163.0;
-const double lense_width_min = 0.3;
-const double lense_width_max = 0.7;
-const double lense_height_min = 0.2;
-const double lense_height_max = 0.3;
+const double heightw = 0.3; // initial height of water
+const double width = 0.4;
+const double depth = 0.02;
+const double pentry = 1000.0;
+const double patm = 1e5;
+const double sltop = 0.2;
 
 // parameter class for local operator
 template<typename GV, typename RF>
@@ -62,9 +62,30 @@ public:
   enum {dim=GV::Grid::dimension};
 
   //! constructor
-  TwoPhaseParameter ()
+  TwoPhaseParameter(const GV& gv_) : gv(gv_), is(gv.indexSet()), perm(is.size(0))
   {
     gvector=0; gvector[dim-1]=-9.81;
+
+	typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
+	typedef typename Traits::DomainFieldType DF;
+	double mink=1E100;
+	double maxk=-1E100;
+
+    Dune::FieldVector<double,dim> correlation_length(0.4/10.0);
+  
+	EberhardPermeabilityGenerator<GV::dimension> field(correlation_length,0.1,0.0,5000,-1083);
+	for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
+	  {
+		int id = is.index(*it);
+        Dune::GeometryType gt = it->geometry().type();
+        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> globalcenter = it->geometry().global(localcenter);
+		perm[id]=field.eval(globalcenter);
+		mink = std::min(mink,perm[id]);
+		maxk = std::max(maxk,perm[id]);
+	  }
+	std::cout << "       mink=" << mink << "               maxk=" << maxk << std::endl;
+	std::cout << "log10(mink)=" << log10(mink) << " log10(maxk)=" << log10(maxk) << std::endl;
   }
 
   //! porosity
@@ -79,14 +100,7 @@ public:
   pc (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
        typename Traits::RangeFieldType s_l) const
   {
-    Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,Traits::GridViewType::Grid::dimension> 
-      global = e.geometry().global(x);
-    for (int i=0; i<dim-1; i++)
-      if (global[i]<lense_width_min || global[i]>lense_width_max)
-        return pentry*(1.0/(s_l*s_l*sqrt(s_l)));
-    if (global[dim-1]<lense_height_min || global[dim-1]>lense_height_max)
-      return pentry*(1.0/(s_l*s_l*sqrt(s_l)));
-    return pentry_lense*(1.0/(s_l*s_l));
+    return pentry/sqrt(s_l);
   }
 	  
   //! inverse capillary pressure function
@@ -94,14 +108,8 @@ public:
   s_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
        typename Traits::RangeFieldType pc) const
   {
-    Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,Traits::GridViewType::Grid::dimension> 
-      global = e.geometry().global(x);
-    for (int i=0; i<dim-1; i++)
-      if (global[i]<lense_width_min || global[i]>lense_width_max)
-        return (pentry/pc)*(pentry/pc)*sqrt(pentry/pc);
-    if (global[dim-1]<lense_height_min || global[dim-1]>lense_height_max)
-      return (pentry/pc)*(pentry/pc)*sqrt(pentry/pc);
-    return (pentry_lense/pc)*(pentry_lense/pc);
+    typename Traits::RangeFieldType ratio=pentry/pc;
+    return ratio*ratio;
   }
 	  
   //! liquid phase relative permeability
@@ -133,25 +141,15 @@ public:
   mu_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
         typename Traits::RangeFieldType p_g) const
   {
-    return 0.9E-3;
+    return 4.65E-5;
   }
 	  
   //! absolute permeability (scalar!)
   typename Traits::RangeFieldType 
   k_abs (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,Traits::GridViewType::Grid::dimension> 
-      global = e.geometry().global(x);
-    for (int i=0; i<dim-1; i++)
-      if (global[i]<lense_width_min || global[i]>lense_width_max)
-        {
-          return 6.64E-11;
-        }
-    if (global[dim-1]<lense_height_min || global[dim-1]>lense_height_max)
-      {
-        return 6.64E-11;
-      }
-    return 3.32E-11;
+    int id = is.index(e);
+    return perm[id]*6.64E-11;
   }
 
   //! gravity vector
@@ -173,7 +171,7 @@ public:
   nu_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
         typename Traits::RangeFieldType p_g) const
   {
-    return 1460.0;
+    return p_g/(287.2*300.0);
   }
 
   //! liquid phase mass density
@@ -189,7 +187,7 @@ public:
   rho_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
          typename Traits::RangeFieldType p_g) const
   {
-    return 1460.0;
+    return p_g/(287.2*300.0);
   }
 	  
   //! liquid phase boundary condition type
@@ -199,14 +197,22 @@ public:
     Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
       global = is.geometry().global(x);
 
-    for (int i=0; i<dim-1; i++)
-      if (global[i]<eps2 || global[i]>width-eps2)
-        return 1; // left & right boundary Dirichlet
+    // left / right
+    if (global[0]<eps2 || global[0]>width-eps2)
+      return 0; // left & right boundary: Neumann
 
+    // top / bottom
     if (global[dim-1]>height-eps2)
       return 0; // top boundary Neumann
     if (global[dim-1]<eps2)
-      return 0; // bottom boundary Neumann
+      return 1; // bottom boundary Dirichlet
+
+    // front / back
+    if (dim==3)
+      {
+        if (global[1]<eps2 || global[1]>depth-eps2)
+          return 0; // left & right boundary: Neumann
+     }
 
     return -1; // unknown
   }
@@ -218,14 +224,22 @@ public:
     Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
       global = is.geometry().global(x);
 
-    for (int i=0; i<dim-1; i++)
-      if (global[i]<eps2 || global[i]>width-eps2)
-        return 1; // left & right boundary Dirichlet
+    // left / right
+    if (global[0]<eps2 || global[0]>width-eps2)
+      return 0; // left & right boundary: Neumann
 
+    // top / bottom
     if (global[dim-1]>height-eps2)
-      return 0; // top boundary Neumann
+      return 1; // top boundary Dirichlet
     if (global[dim-1]<eps2)
       return 0; // bottom boundary Neumann
+
+    // front / back
+    if (dim==3)
+      {
+        if (global[1]<eps2 || global[1]>depth-eps2)
+          return 0; // left & right boundary: Neumann
+     }
 
     return -1; // unknown
   }
@@ -236,7 +250,19 @@ public:
   {
     Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
       global = is.geometry().global(x);
-    return (height-global[dim-1])*9810.0;
+
+    if (global[dim-1]<eps2)
+      {
+        //        std::cout << "Bingo " << global << std::endl;
+        if (time<200.0)
+          return patm + heightw*9810.0;
+        if (fmod(time-200.0,400.0)/400.0<=0.5)
+          return patm + (heightw-0.1)*9810.0;
+        else
+          return patm + (heightw+0.1)*9810.0;
+      }
+
+    return -1; // unknown
   }
 
   //! gas phase Dirichlet boundary condition
@@ -245,7 +271,11 @@ public:
   {
     Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
       global = is.geometry().global(x);
-    return (height-global[dim-1])*9810.0+pentry;
+
+    if (global[dim-1]>height-eps2)
+      return patm + pc(*(is.inside()),global,sltop);
+
+    return -1; // unknown
   }
 
   //! liquid phase Neumann boundary condition
@@ -259,17 +289,7 @@ public:
   typename Traits::RangeFieldType 
   j_g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
   {
-    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
-      global = is.geometry().global(x);
-
-    if (global[dim-1]<height-eps2)
-      return 0.0;
-
-    for (int i=0; i<dim-1; i++)
-      if (global[i]<0.4 || global[i]>0.6)
-        return 0.0;
-
-    return -0.075;
+    return 0.0;
   }
 
   //! liquid phase source term
@@ -290,6 +310,9 @@ public:
 
 private:
   typename Traits::RangeType gvector;
+  const GV& gv;
+  const typename GV::IndexSet& is;
+  std::vector<RF> perm;
 };
 
 // initial conditions for phase pressures
@@ -310,37 +333,7 @@ public:
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
- 	y = (height-x[dim-1])*9810;
-  }
-};
-template<typename GV, typename RF>
-class P_g_alt
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  P_g_alt<GV,RF> >
-{
-  const TwoPhaseParameter<GV,RF>& tp;
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,P_g_alt<GV,RF> > BaseT;
-  enum {dim=Traits::DomainType::dimension};
-
-  P_g_alt (const GV& gv, const TwoPhaseParameter<GV,RF>& tp_) : BaseT(gv), tp(tp_) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
-							  typename Traits::RangeType& y) const
-  {
- 	y = (height-x[dim-1])*9810;
-    for (int i=0; i<dim-1; i++)
-      if (x[i]<lense_width_min || x[i]>lense_width_max)
-        {
-          y += pentry;
-          return;
-        }
-    if (x[dim-1]<lense_height_min || x[dim-1]>lense_height_max)
-      {
-        y += pentry;
-        return;
-      }
-    y += pentry_lense;
+      y = patm;
   }
 };
 
@@ -358,13 +351,14 @@ public:
   P_g (const GV& gv_, const TwoPhaseParameter<GV,RF>& tp_) : gv(gv_), tp(tp_) {}
 
   inline void evaluate (const typename Traits::ElementType& e, 
-                        const typename Traits::DomainType& x,
+                        const typename Traits::DomainType& xlocal,
                         typename Traits::RangeType& y) const
   {  
     const int dim = Traits::GridViewType::Grid::dimension;
     Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,dim> 
-      global = e.geometry().global(x);
- 	y = (height-global[dim-1])*9810 + tp.pc(e,x,1.0-1E-9);
+      x = e.geometry().global(xlocal);
+
+      y = patm + tp.pc(e,xlocal,sltop);
   }
   
   inline const typename Traits::GridViewType& getGridView ()
@@ -458,7 +452,7 @@ public:
 int rank;
 
 template<class GV> 
-void test (const GV& gv, int timesteps, double timestep)
+void test (const GV& gv, int timesteps, double timestep, double maxtimestep)
 {
   // some types
   typedef typename GV::Grid::ctype DF;
@@ -490,7 +484,7 @@ void test (const GV& gv, int timesteps, double timestep)
 
   // make parameter object
   typedef TwoPhaseParameter<GV,RF> TP;
-  TP tp;
+  TP tp(gv);
 
   // initial value function
   typedef P_l<GV,RF> P_lType;
@@ -527,7 +521,7 @@ void test (const GV& gv, int timesteps, double timestep)
   bool graphics = true;
   int filecounter = 0;
   char basename[255];
-  sprintf(basename,"dnapl-%01dd",dim);
+  sprintf(basename,"heleshaw-%01dd",dim);
   if (graphics)
   {
     if (rank==0) std::cout << "writing output file " << filecounter << std::endl;
@@ -565,6 +559,8 @@ void test (const GV& gv, int timesteps, double timestep)
 
   // time loop
   RF time = 0.0;
+  RF timestepmax=maxtimestep;
+  RF timestepscale=1.5;
   for (int k=1; k<=timesteps; k++)
     {
       // prepare new time step
@@ -600,20 +596,42 @@ void test (const GV& gv, int timesteps, double timestep)
           V v(tpgfs,0.0);
           solver.apply(v,r,stat);
           //Dune::printvector(std::cout,v.base(),"correction computed in solver",buf,cols,9,1);
-          pnew -= v;
-          r = 0.0;
-          tpgos.residual(pnew,r);
-          //Dune::printvector(std::cout,r.base(),"new residual",buf,cols,9,1);
-          RF d = psp.norm(r);
-          red = d/lastd;
-          lastd = d;
-          //Dune::printvector(std::cout,r.base(),"r","row",4,9,1);
+
+          // line search
+          bool accept=false;
+          RF d;
+          for (RF lambda=1.0; lambda>=1E-3; lambda*=0.5)
+            {
+              V z(tpgfs);
+              z = pnew;
+              z.axpy(-lambda,v);
+              r = 0.0;
+              tpgos.residual(z,r);
+              d = psp.norm(r);
+              if (rank==0) std::cout << "+++ NEWTON line search lambda=" << lambda << " res=" << d << std::endl;
+              if (d/lastd<=1-0.25*lambda)
+                {
+                  pnew = z;
+                  red = d/lastd;
+                  lastd = d;
+                  accept = true;
+                  break;
+                }
+            }
+
+          if (!accept)
+            {
+              std::cout << "no convergence in line search, exiting" << std::endl;
+              exit(1);
+            }
+
           if (rank==0) std::cout << "+++ NEWTON STEP " << i << " res=" << d << std::endl;
           if (d<1E-6*d0) break;
        }
 
       // accept time step
       time += timestep;
+      if (timestep*timestepscale<=timestepmax) timestep*=timestepscale;
       pold = pnew;
 
       if (graphics)
@@ -650,10 +668,10 @@ int main(int argc, char** argv)
 	  }
     rank = helper.rank();
 
-	if (argc!=4)
+	if (argc!=5)
 	  {
 		if(helper.rank()==0)
-		  std::cout << "usage: ./twophasemain <level> <timesteps> <timestep>" << std::endl;
+		  std::cout << "usage: ./twophasemain <level> <timesteps> <firsttimestep> <maxtimestep>" << std::endl;
 		return 1;
 	  }
 
@@ -666,47 +684,38 @@ int main(int argc, char** argv)
 	double timestep;
 	sscanf(argv[3],"%lg",&timestep);
 
+	double maxtimestep;
+	sscanf(argv[4],"%lg",&maxtimestep);
+
 #if HAVE_MPI
     // 2D
-    if (true)
-    {
-      // make grid
-      int l=maxlevel;
-      Dune::FieldVector<double,2> L; L[0] = width; L[1] = height;
-      Dune::FieldVector<int,2> N;    N[0] = 10*(1<<l);   N[1] = 6*(1<<l);
-      Dune::FieldVector<bool,2> B(false);
-      int overlap=3;
-      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
- 
-      // solve problem :)
-      test(grid.leafView(),timesteps,timestep);
-    }
-
-    // 3D
     if (false)
     {
       // make grid
       int l=maxlevel;
-      Dune::FieldVector<double,3> L; L[0] = width; L[1] = width; L[2] = height;
-      Dune::FieldVector<int,3> N;    N[0] = 10*(1<<l);    N[1] = 10*(1<<l);    N[2] = 6*(1<<l);
+      Dune::FieldVector<double,2> L; L[0] = width; L[1] = height;
+      Dune::FieldVector<int,2> N;    N[0] = 40*(1<<l);   N[1] = 60*(1<<l);
+      Dune::FieldVector<bool,2> B(false);
+      int overlap=3;
+      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
+ 
+      // solve problem :
+      test(grid.leafView(),timesteps,timestep,maxtimestep);
+    }
+
+    // 3D
+    if (true)
+    {
+      // make grid
+      int l=maxlevel;
+      Dune::FieldVector<double,3> L; L[0] = width; L[1] = depth; L[2] = height;
+      Dune::FieldVector<int,3> N;    N[0] = 40*(1<<l);    N[1] = 2*(1<<l);    N[2] = 60*(1<<l);
       Dune::FieldVector<bool,3> B(false);
       int overlap=2;
       Dune::YaspGrid<3> grid(helper.getCommunicator(),L,N,B,overlap);
       
       // solve problem :)
-      test(grid.leafView(),timesteps,timestep);
-    }
-#endif
-
-    // UG Q1 2D test
-#if HAVE_UG
-    if (false)
-    {
-      // make grid 
-      UGUnitSquareQ grid(1000);
-      grid.globalRefine(6);
-
-      test(grid.leafView());
+      test(grid.leafView(),timesteps,timestep,maxtimestep);
     }
 #endif
 
