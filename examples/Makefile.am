@@ -5,7 +5,13 @@
 #AM_CPPFLAGS = $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS)
 dist_noinst_DATA = poisson laplacedirichletccfv
 
-noinst_PROGRAMS = parallelgfs dnapl heleshaw poisson mimetic laplacedirichletccfv reentrantcorner q1gridfunctionspacemain q1interpolatemain q1interpolationerrormain q2interpolationerrormain q1constrainedinterpolatemain thinterpolatemain laplacedirichletmain rt0main
+noinst_PROGRAMS = nonoverlappingsinglephaseflow parallelgfs dnapl heleshaw poisson mimetic laplacedirichletccfv reentrantcorner q1gridfunctionspacemain q1interpolatemain q1interpolationerrormain q2interpolationerrormain q1constrainedinterpolatemain thinterpolatemain laplacedirichletmain rt0main
+
+nonoverlappingsinglephaseflow_SOURCES = nonoverlappingsinglephaseflow.cc
+nonoverlappingsinglephaseflow_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
+nonoverlappingsinglephaseflow_LDADD = $(MPI_LDFLAGS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+nonoverlappingsinglephaseflow_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
+nonoverlappingsinglephaseflow_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
 parallelgfs_SOURCES = parallelgfs.cc
 parallelgfs_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
