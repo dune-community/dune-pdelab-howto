@@ -5,24 +5,20 @@
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
+#include<dune/pdelab/localoperator/flags.hh>
 
 class LaplaceDirichlet
 : public Dune::PDELab::NumericalJacobianApplyVolume<LaplaceDirichlet>, /*@\label{laplace:JacApply}@*/
   public Dune::PDELab::NumericalJacobianVolume<LaplaceDirichlet>,      /*@\label{laplace:Jac}@*/
-  public Dune::PDELab::FullVolumePattern                               /*@\label{laplace:Pattern}@*/
+  public Dune::PDELab::FullVolumePattern,                              /*@\label{laplace:Pattern}@*/
+  public Dune::PDELab::LocalOperatorDefaultFlags
 {
 public:
   // pattern assembly flags
   enum { doPatternVolume = true };    /*@\label{laplace:FirstFlag}@*/
-  enum { doPatternSkeleton = false };
 
   // residual assembly flags
-  enum { doAlphaVolume = true };
-  enum { doAlphaSkeleton = false };
-  enum { doAlphaBoundary = false };
-  enum { doLambdaVolume = false };
-  enum { doLambdaSkeleton = false };
-  enum { doLambdaBoundary = false };  /*@\label{laplace:LastFlag}@*/
+  enum { doAlphaVolume = true };     /*@\label{laplace:LastFlag}@*/
 
   LaplaceDirichlet (int qorder_) : qorder(qorder_) {}
 

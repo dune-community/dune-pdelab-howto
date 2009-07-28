@@ -14,6 +14,7 @@
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
+#include<dune/pdelab/localoperator/flags.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -28,20 +29,17 @@ namespace Dune {
     // G : grid function type giving g
     template<typename F, typename B, typename G, int qorder_v=2, int qorder_p=1>
 	class PoissonHDivConforming : public NumericalJacobianApplyVolume<PoissonHDivConforming<F,B,G,qorder_v,qorder_p> >,
-                    public NumericalJacobianVolume<PoissonHDivConforming<F,B,G,qorder_v,qorder_p> >,
-                    public FullVolumePattern
+                                  public NumericalJacobianVolume<PoissonHDivConforming<F,B,G,qorder_v,qorder_p> >,
+                                  public FullVolumePattern,
+                                  public LocalOperatorDefaultFlags
 	{
 	public:
       // pattern assembly flags
       enum { doPatternVolume = true };
-      enum { doPatternSkeleton = false };
 
 	  // residual assembly flags
       enum { doAlphaVolume = true };
-      enum { doAlphaSkeleton = false };
-      enum { doAlphaBoundary = false };
       enum { doLambdaVolume = true };
-      enum { doLambdaSkeleton = false };
       enum { doLambdaBoundary = true };
 
       PoissonHDivConforming (const F& f_, const B& b_, const G& g_)

@@ -11,7 +11,7 @@
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
-
+#include<dune/pdelab/localoperator/flags.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -235,7 +235,8 @@ namespace Dune {
 										 public NumericalJacobianApplyBoundary<TwoPhaseTwoPointFluxOperator<TP,V> >,
 
 										 public FullSkeletonPattern, 
-										 public FullVolumePattern
+										 public FullVolumePattern,
+                                         public LocalOperatorDefaultFlags
 	{
       enum { dim = TP::Traits::GridViewType::dimension };
       enum { liquid = 0 };
@@ -251,7 +252,6 @@ namespace Dune {
       enum { doAlphaSkeleton  = true };
       enum { doAlphaBoundary  = true };
       enum { doLambdaVolume   = true };
-      enum { doLambdaSkeleton = false };
       enum { doLambdaBoundary = true };
 
       TwoPhaseTwoPointFluxOperator (const TP& tp_, const V& pold_) : tp(tp_), pold(pold_) {}
