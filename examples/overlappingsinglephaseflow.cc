@@ -277,28 +277,31 @@ void driver (const BType& b, const GType& g,
   Dune::Timer watch;
 
   // make function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
-    Dune::PDELab::ISTLVectorBackend<1> > GFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
+    Dune::PDELab::OverlappingConformingDirichletConstraints,
+    Dune::PDELab::ISTLVectorBackend<1>,
+    Dune::PDELab::SimpleGridFunctionStaticSize
+    > GFS; 
   GFS gfs(gv,fem);
 
   // make constraints map and initialize it from a function
-  typedef typename GFS::template ConstraintsContainer<R>::Type C;
-  C cg;
-  cg.clear();
-  Dune::PDELab::constraints(b,gfs,cg);
+  typedef typename GFS::template ConstraintsContainer<R>::Type CC;
+  CC cc;
+  cc.clear();
+  Dune::PDELab::constraints(b,gfs,cc);
 
   // make coefficent Vector and initialize it from a function
   typedef typename GFS::template VectorContainer<R>::Type V;
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
-  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
+  Dune::PDELab::set_nonconstrained_dofs(cc,0.0,x);
 
   // make grid function operator
   typedef Dune::PDELab::Diffusion<KType,A0Type,FType,BType,JType,2> LOP; 
   LOP lop(k,a0,f,b,j);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
-    LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
-  GOS gos(gfs,cg,gfs,cg,lop);
+    LOP,CC,CC,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
+  GOS gos(gfs,cc,gfs,cc,lop);
 
   // represent operator as a matrix
   typedef typename GOS::template MatrixContainer<R>::Type M;
@@ -318,15 +321,19 @@ void driver (const BType& b, const GType& g,
   // set up parallel solver
   typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
   PHELPER phelper(gfs);
-  typedef Dune::PDELab::NonoverlappingOperator<GFS,M,V,V> POP;
-  POP pop(gfs,m,phelper);
-  typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
+  typedef Dune::PDELab::OverlappingOperator<CC,M,V,V> POP;
+  POP pop(cc,m);
+  typedef Dune::PDELab::OverlappingScalarProduct<GFS,V> PSP;
   PSP psp(gfs,phelper);
-  typedef Dune::PDELab::NonoverlappingRichardson<GFS,V,V> PRICH;
-  PRICH prich(gfs,phelper);
+  typedef Dune::PDELab::SuperLUSubdomainSolver<GFS,M,V,V> PSUBSOLVE;
+  PSUBSOLVE psubsolve(gfs,m);
+  typedef Dune::SeqSSOR<M,V,V> SeqPrec;
+  SeqPrec seqprec(m,10,1.0);
+  typedef Dune::PDELab::OverlappingWrappedPreconditioner<CC,GFS,SeqPrec> WPREC;
+  WPREC  wprec(gfs,seqprec,cc,phelper);
   int verbose;
   if (gv.comm().rank()==0) verbose=1; else verbose=0;
-  Dune::CGSolver<V> solver(pop,psp,prich,1E-8,40000,verbose);
+  Dune::CGSolver<V> solver(pop,psp,wprec,1E-8,40000,verbose);
   Dune::InverseOperatorResult stat;  
   solver.apply(z,r,stat);
   x -= z;
@@ -360,15 +367,15 @@ int main(int argc, char** argv)
     
 #if HAVE_MPI
     // Q1, 2d
-    if (false)
+    if (true)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(4);
+      Dune::FieldVector<int,2> N(128);
       Dune::FieldVector<bool,2> B(false);
-      int overlap=0;
+      int overlap=4;
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
-      grid.globalRefine(4);
+      //grid.globalRefine(4);
       
       typedef Dune::YaspGrid<2>::ctype DF;
       typedef Dune::PDELab::Q12DLocalFiniteElementMap<DF,double> FEM;
@@ -379,7 +386,7 @@ int main(int argc, char** argv)
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
       driver(B_D<GV>(gv), G_D<GV,double>(gv),
-             K_D<GV,double>(gv,correlation_length,1.0,0.0,5000,-1083),
+             K_D<GV,double>(gv,correlation_length,0.5,0.0,5000,-1083),
              A0_D<GV,double>(gv),F_D<GV,double>(gv),J_D<GV,double>(gv),
              gv,fem,"single_phase_yasp2d_Q1");
     }
@@ -387,7 +394,7 @@ int main(int argc, char** argv)
 
 #if HAVE_MPI
     // Q1, 3d
-    if (true)
+    if (false)
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
