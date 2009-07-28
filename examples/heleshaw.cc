@@ -19,6 +19,7 @@
 #include<dune/istl/paamg/amg.hh>
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
+#include<dune/pdelab/finiteelementmap/p0constraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -33,7 +34,6 @@
 
 #include"gridexamples.hh"
 #include"twophaseop.hh"
-#include"parallelstuff.hh"
 #include"permeability_generator.hh"
 
 //==============================================================================
@@ -466,12 +466,13 @@ void test (const GV& gv, int timesteps, double timestep, double maxtimestep)
   
   // make grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::P0ParallelConstraints,Dune::PDELab::ISTLVectorBackend<2>,
+    Dune::PDELab::P0ParallelConstraints,
+    Dune::PDELab::ISTLVectorBackend<2>,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
   typedef Dune::PDELab::PowerGridFunctionSpace<GFS,2,
     Dune::PDELab::GridFunctionSpaceBlockwiseMapper> TPGFS;
   watch.reset();
-  Dune::PDELab::P0ParallelConstraints con(rank);
+  Dune::PDELab::P0ParallelConstraints con;
   GFS gfs(gv,fem,con);
   TPGFS tpgfs(gfs);
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
@@ -553,8 +554,12 @@ void test (const GV& gv, int timesteps, double timestep, double maxtimestep)
   //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // solver stuff
-  SimpleNonoverlappingScalarProduct<GV,0,V> psp(gv);
-  SimpleNonoverlappingOperator<GV,0,M,V,V> pop(gv,m);
+  typedef Dune::PDELab::ParallelISTLHelper<TPGFS> PHELPER;
+  PHELPER phelper(tpgfs);
+  typedef Dune::PDELab::OverlappingOperator<C,M,V,V> POP;
+  POP pop(cg,m);
+  typedef Dune::PDELab::OverlappingScalarProduct<TPGFS,V> PSP;
+  PSP psp(tpgfs,phelper);
   int rank = gv.comm().rank();
 
   // time loop
@@ -585,14 +590,19 @@ void test (const GV& gv, int timesteps, double timestep, double maxtimestep)
           watch.reset();
           tpgos.jacobian(pnew,m);
           if (rank==0) std::cout << "=== jacobian assembly " <<  watch.elapsed() << " s" << std::endl;
-          //          Dune::MatrixAdapter<M,V,V> op(m);
-          typedef Dune::SeqSSOR<M,V,V> Prec;
-          Prec prec(m,3,1.0);
-          NonoverlappingBlockJacobi<GV,0,Prec,C> bjac(gv,prec,cg);
+
+          typedef Dune::SeqSSOR<M,V,V> SeqPrec;
+          SeqPrec seqprec(m,5,1.0);
+          typedef Dune::PDELab::OverlappingWrappedPreconditioner<C,TPGFS,SeqPrec> WPREC;
+          WPREC  wprec(tpgfs,seqprec,cg,phelper);
+          typedef Dune::PDELab::SuperLUSubdomainSolver<TPGFS,M,V,V> PSUBSOLVE;
+//           PSUBSOLVE psubsolve(tpgfs,m);
           int verbose=1;
           if (rank>0) verbose=0;
-          Dune::BiCGSTABSolver<V> solver(pop,psp,bjac,std::max(std::min(1E-3,red*red),1E-10),5000,verbose);
-          Dune::InverseOperatorResult stat;
+          Dune::BiCGSTABSolver<V> solver(pop,psp,wprec,
+                                         std::max(std::min(1E-3,red*red),1E-10),5000,verbose);
+          Dune::InverseOperatorResult stat;  
+
           V v(tpgfs,0.0);
           solver.apply(v,r,stat);
           //Dune::printvector(std::cout,v.base(),"correction computed in solver",buf,cols,9,1);
@@ -671,7 +681,7 @@ int main(int argc, char** argv)
 	if (argc!=5)
 	  {
 		if(helper.rank()==0)
-		  std::cout << "usage: ./twophasemain <level> <timesteps> <firsttimestep> <maxtimestep>" << std::endl;
+		  std::cout << "usage: ./heleshaw <level> <timesteps> <firsttimestep> <maxtimestep>" << std::endl;
 		return 1;
 	  }
 

@@ -16,34 +16,6 @@
 namespace Dune {
   namespace PDELab {
 
-    // extend constraints class by processor boundary 
-    class P0ParallelConstraints
-    {
-    public:
-      enum{doBoundary=false};
-      enum{doProcessor=true};
-      enum{doSkeleton=false};
-      enum{doVolume=false};
-
-      P0ParallelConstraints (int rank_) : rank(rank_) {}
-      
-      // boundary constraints
-      // IG : intersection geometry
-      // LFS : local function space
-      // T : TransformationType
-      template<typename I, typename LFS, typename T>
-      void processor (const Dune::PDELab::IntersectionGeometry<I>& ig, 
-                      const LFS& lfs, T& trafo) const
-      {
-        //std::cout << rank << ": setting constraint on dof " << lfs.globalIndex(0) << std::endl;
-        typename T::RowType empty;
-        trafo[0] = empty;
-      }
-    private:
-      int rank;
-    };
-
-
 	//! traits class for two phase parameter class
 	template<typename GV, typename RF>
 	struct TwoPhaseParameterTraits

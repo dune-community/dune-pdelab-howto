@@ -19,6 +19,7 @@
 #include<dune/istl/paamg/amg.hh>
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
+#include<dune/pdelab/finiteelementmap/p0constraints.hh>
 #include<dune/pdelab/finiteelementmap/q1fem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
@@ -33,9 +34,6 @@
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
-
-#include "twophaseop.hh"
-
 
 //==============================================================================
 // driver
@@ -88,13 +86,14 @@ void testp0 (const GV& gv)
   
   // make grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::P0ParallelConstraints,Dune::PDELab::ISTLVectorBackend<1>,
+    Dune::PDELab::P0ParallelConstraints,
+    Dune::PDELab::ISTLVectorBackend<1>,
     // Dune::PDELab::SimpleGridFunctionStaticSize
     Dune::PDELab::GridFunctionRestrictedMapper
     // Dune::PDELab::GridFunctionGeneralMapper
     > GFS;
   watch.reset();
-  Dune::PDELab::P0ParallelConstraints con(rank);
+  Dune::PDELab::P0ParallelConstraints con;
   GFS gfs(gv,fem,con);
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
