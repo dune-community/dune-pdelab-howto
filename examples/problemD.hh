@@ -59,11 +59,6 @@ public:
   {
     return gv;
   }
-
-//   inline const RF& getElementPermeability(const typename GV::template Codim<0>::EntityPointer& e) const
-//   {
-//     return perm[is.index(*e)];
-//   }
   
 private:
   const GV& gv;
@@ -127,7 +122,7 @@ public:
     for (int i=0; i<GV::dimension; i++)
       for (int j=0; j<GV::dimension; j++)
         if (i==j)
-          y[i][i] = perm[is.index(e)];
+		  y[i][i] = perm[is.index(e)];
         else
           y[i][j] = 0.0;
   }
