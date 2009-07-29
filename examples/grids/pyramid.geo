@@ -24,8 +24,8 @@ Plane Surface(200) = {100};
 Physical Surface(300) = {200};
 
 Line Loop(101) = {5,-8,4};    
-Plane Surface(201) = {101};  Physical 
-Surface(301) = {201};
+Plane Surface(201) = {101};  
+Physical Surface(301) = {201};
 
 Line Loop(102) = {1,6,-5};    
 Plane Surface(202) = {102};  
