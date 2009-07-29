@@ -66,7 +66,7 @@ template<typename BType, typename GType, typename KType, typename A0Type, typena
          typename GV, typename FEM> 
 void driver (const BType& b, const GType& g, 
              const KType& k, const A0Type& a0, const FType& f, const JType& j,
-             const GV& gv, const FEM& fem, std::string filename)
+             const GV& gv, const FEM& fem, std::string filename, int intorder=1)
 {
   // constants and types and global variables
   typedef typename GV::Grid::ctype DF;
@@ -95,8 +95,8 @@ void driver (const BType& b, const GType& g,
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
   // make grid function operator
-  typedef Dune::PDELab::Diffusion<KType,A0Type,FType,BType,JType,2> LOP; 
-  LOP lop(k,a0,f,b,j);
+  typedef Dune::PDELab::Diffusion<KType,A0Type,FType,BType,JType> LOP; 
+  LOP lop(k,a0,f,b,j,intorder);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
     LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
@@ -222,7 +222,46 @@ int main(int argc, char** argv)
     {
       typedef Dune::ALUSimplexGrid<3,3> GridType;
 
-      // make grid factory
+      // read gmsh file
+      Dune::GridFactory<GridType> factory(helper.getCommunicator());
+      std::vector<int> boundary_id_to_physical_entity;
+      std::vector<int> element_index_to_physical_entity;
+      if (helper.rank()==0)
+        Dune::GmshReader<GridType>::read(factory,"grids/cube1045.msh",true,false);
+      GridType *grid=factory.createGrid();
+      grid->loadBalance();
+      std::cout << " after load balance /" << helper.rank() << "/ " << grid->size(0) << std::endl;
+      grid->globalRefine(1);
+      std::cout << " after refinement /" << helper.rank() << "/ " << grid->size(0) << std::endl;
+
+      // get view
+      typedef GridType::LeafGridView GV;
+      const GV& gv=grid->leafView(); 
+ 
+      // make finite element map
+      typedef GridType::ctype DF;
+      typedef double R;
+      const int k=1;
+      const int q=2*k;
+      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> FEM;
+      FEM fem(gv);
+      //typedef Dune::PDELab::P1LocalFiniteElementMap<DF,R,GridType::dimension> FEM;
+      //FEM fem;
+
+      Dune::FieldVector<double,3> correlation_length;
+      correlation_length = 1.0/64.0;
+
+      driver(B_D<GV>(gv), G_D<GV,double>(gv),
+             K_D<GV,double>(gv,correlation_length,1.0,0.0,5000,-1083),
+             A0_D<GV,double>(gv),F_D<GV,double>(gv),J_D<GV,double>(gv),
+             gv,fem,"single_phase_ALU3d_P1",q);
+    }
+
+    // ALU Q1 3D test
+    if (false)
+    {
+      // make grid
+      typedef Dune::ALUCubeGrid<3,3> GridType;
       Dune::GridFactory<GridType> factory(helper.getCommunicator());
 
       if (helper.rank()==0)
@@ -236,75 +275,19 @@ int main(int argc, char** argv)
           pos[0] = 1;  pos[1] = 0;  pos[2] = 1;    factory.insertVertex(pos);
           pos[0] = 0;  pos[1] = 1;  pos[2] = 1;    factory.insertVertex(pos);
           pos[0] = 1;  pos[1] = 1;  pos[2] = 1;    factory.insertVertex(pos);
-          
-          const Dune::GeometryType type( Dune::GeometryType::simplex, 3 );
-          std::vector< unsigned int > cornerIDs( 4 );
-          
-          cornerIDs[0] = 0;  cornerIDs[1] = 1;  cornerIDs[2] = 2;  cornerIDs[3] = 4;
-          factory.insertElement( type, cornerIDs );
-          cornerIDs[0] = 1;  cornerIDs[1] = 3;  cornerIDs[2] = 2;  cornerIDs[3] = 7;
-          factory.insertElement( type, cornerIDs );
-          cornerIDs[0] = 1;  cornerIDs[1] = 7;  cornerIDs[2] = 2;  cornerIDs[3] = 4;
-          factory.insertElement( type, cornerIDs );
-          cornerIDs[0] = 1;  cornerIDs[1] = 7;  cornerIDs[2] = 4;  cornerIDs[3] = 5;
-          factory.insertElement( type, cornerIDs );
-          cornerIDs[0] = 4;  cornerIDs[1] = 7;  cornerIDs[2] = 2;  cornerIDs[3] = 6;
+
+          const Dune::GeometryType type( Dune::GeometryType::cube, 3 );
+          std::vector< unsigned int > cornerIDs( 8 );
+          for( int i = 0; i < 8; ++i )
+            cornerIDs[ i ] = i;
           factory.insertElement( type, cornerIDs );
         }
+
       GridType *grid=factory.createGrid();
+
       std::cout << " after reading /" << helper.rank() << "/ " << grid->size(0) << std::endl;
-      grid->globalRefine(4);
-      std::cout << " after refinement /" << helper.rank() << "/ " << grid->size(0) << std::endl;
       grid->loadBalance();
       std::cout << " after load balance /" << helper.rank() << "/ " << grid->size(0) << std::endl;
-
-      // get view
-      typedef GridType::LeafGridView GV;
-      const GV& gv=grid->leafView(); 
- 
-      // make finite element map
-      typedef GridType::ctype DF;
-      typedef double R;
-      const int k=1;
-      const int q=2*k;
-      //typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> FEM;
-      //FEM fem(gv);
-      typedef Dune::PDELab::P1LocalFiniteElementMap<DF,R,GridType::dimension> FEM;
-      FEM fem;
-
-      Dune::FieldVector<double,3> correlation_length;
-      correlation_length = 1.0/64.0;
-
-      driver(B_D<GV>(gv), G_D<GV,double>(gv),
-             K_D<GV,double>(gv,correlation_length,1.0,0.0,5000,-1083),
-             A0_D<GV,double>(gv),F_D<GV,double>(gv),J_D<GV,double>(gv),
-             gv,fem,"single_phase_ALU3d_P1");
-    }
-
-    // ALU Q1 3D test
-    if (true)
-    {
-      // make grid
-      typedef Dune::ALUCubeGrid<3,3> GridType;
-      Dune::GridFactory<GridType> factory;
-
-      Dune::FieldVector< double, 3 > pos;
-      pos[0] = 0;  pos[1] = 0;  pos[2] = 0;    factory.insertVertex(pos);
-      pos[0] = 1;  pos[1] = 0;  pos[2] = 0;    factory.insertVertex(pos);
-      pos[0] = 0;  pos[1] = 1;  pos[2] = 0;    factory.insertVertex(pos);
-      pos[0] = 1;  pos[1] = 1;  pos[2] = 0;    factory.insertVertex(pos);
-      pos[0] = 0;  pos[1] = 0;  pos[2] = 1;    factory.insertVertex(pos);
-      pos[0] = 1;  pos[1] = 0;  pos[2] = 1;    factory.insertVertex(pos);
-      pos[0] = 0;  pos[1] = 1;  pos[2] = 1;    factory.insertVertex(pos);
-      pos[0] = 1;  pos[1] = 1;  pos[2] = 1;    factory.insertVertex(pos);
-
-      const Dune::GeometryType type( Dune::GeometryType::cube, 3 );
-      std::vector< unsigned int > cornerIDs( 8 );
-      for( int i = 0; i < 8; ++i )
-        cornerIDs[ i ] = i;
-      factory.insertElement( type, cornerIDs );
-
-      GridType *grid=factory.createGrid();
 
       grid->globalRefine(4);
 

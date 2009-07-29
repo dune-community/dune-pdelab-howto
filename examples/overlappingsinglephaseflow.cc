@@ -81,7 +81,7 @@ void driver (const BType& b, const GType& g,
   Dune::PDELab::set_nonconstrained_dofs(cc,0.0,x);
 
   // make grid function operator
-  typedef Dune::PDELab::Diffusion<KType,A0Type,FType,BType,JType,2> LOP; 
+  typedef Dune::PDELab::Diffusion<KType,A0Type,FType,BType,JType> LOP; 
   LOP lop(k,a0,f,b,j);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
     LOP,CC,CC,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
