@@ -52,7 +52,7 @@
 #define MAKE_VTK_OUTPUT
 #define CALCULATE_L2_ERROR
 #define CALCULATE_ABSOLUTE_ERROR
-#define USE_SUPER_LU
+//#define USE_SUPER_LU
 //#define REFINE_STEPWISE
 
 // Solve the given problem with OBB, NIPG or SIPG

@@ -140,6 +140,7 @@ void driver (BType& b, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
 
   // set up solver
   typedef typename M::BaseT ISTLM;
+#ifdef HAVE_SUPERLU
   Dune::SuperLU<ISTLM> solver(m, true);
   Dune::InverseOperatorResult stat;
 
@@ -148,6 +149,7 @@ void driver (BType& b, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   X z(mgfs,0.0);
   solver.apply(z,r,stat);
   x -= z;
+#endif
 
   // select subspaces
   typedef Dune::PDELab::GridFunctionSubSpace<MGFS,0> VSUB;

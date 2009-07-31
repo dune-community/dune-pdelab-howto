@@ -42,6 +42,7 @@
 #include<dune/pdelab/finiteelementmap/q22dfem.hh>
 #include<dune/pdelab/finiteelementmap/q1fem.hh>
 #include<dune/pdelab/finiteelementmap/p1fem.hh>
+#include<dune/pdelab/finiteelementmap/rannacher_turek2dfem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
@@ -93,9 +94,10 @@ void driver (const BType& b, const GType& g,
 
   // compute ghosts dofs
   typedef typename GFS::template VectorContainer<R>::Type V;
-  V ghost(gfs);
+  V ghost(gfs,0.0);
   Dune::PDELab::GhostDataHandle<GFS,V> gdh(gfs,ghost);
-  gfs.gridview().communicate(gdh,Dune::All_All_Interface,Dune::ForwardCommunication);
+  if (gfs.gridview().comm().size()>1)
+    gfs.gridview().communicate(gdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
   ghost.std_copy_to(intghost); // copy to std::vector as Constraints object is allocated before
 
   // make constraints map and initialize it from a function and ghost
@@ -161,12 +163,13 @@ void driver (const BType& b, const GType& g,
   typedef typename GFS0::template VectorContainer<R>::Type V0;
   V0 partition(gfs0,0.0);
   Dune::PDELab::PartitionDataHandle<GFS0,V0> pdh(gfs0,partition);
-  gfs0.gridview().communicate(pdh,Dune::All_All_Interface,Dune::ForwardCommunication);
+  if (gfs.gridview().comm().size()>1)
+    gfs0.gridview().communicate(pdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
   typedef Dune::PDELab::DiscreteGridFunction<GFS0,V0> DGF0;
   DGF0 pdgf(gfs0,partition);
 
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,4);
-  //Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  //Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,4);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
   vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(pdgf,"decomposition"));
   vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
@@ -240,7 +243,7 @@ int main(int argc, char** argv)
 		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
 	  }
     
-    std::string problem="C";
+    std::string problem="A";
 
 #if HAVE_MPI
     // Q1, 2d
@@ -292,9 +295,72 @@ int main(int argc, char** argv)
     }
 #endif
 
+#if HAVE_MPI
+    // Rannacher Turek, 2d
+    if (false)
+    {
+      // make grid
+      Dune::FieldVector<double,2> L(1.0);
+      Dune::FieldVector<int,2> N(1);
+      Dune::FieldVector<bool,2> B(false);
+      int overlap=0;
+      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
+      grid.globalRefine(4);
+      
+      typedef Dune::YaspGrid<2>::ctype DF;
+      typedef Dune::PDELab::RannacherTurek2DLocalFiniteElementMap<DF,double> FEM;
+      FEM fem;
+      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,2> FEM0;
+      FEM0 fem0(Dune::GeometryType::cube);
+
+      typedef Dune::YaspGrid<2>::LeafGridView GV;
+      const GV& gv=grid.leafView();
+
+      dispatcher(problem,gv,fem,fem0,"yasp2d_rannacher_turek",2);
+    }
+#endif
+
+#if HAVE_UG
+    if (false)
+    {
+      typedef Dune::UGGrid<3> GridType;
+      GridType grid;
+
+      // read gmsh file
+      Dune::GridFactory<GridType> factory(&grid);
+      std::vector<int> boundary_id_to_physical_entity;
+      std::vector<int> element_index_to_physical_entity;
+      Dune::GmshReader<GridType>::read(factory,"grids/cube1045.msh",true,true);
+      factory.createGrid();
+      grid.loadBalance();
+
+      std::cout << " after load balance /" << helper.rank() << "/ " << grid.size(0) << std::endl;
+      //grid.globalRefine(1);
+      // std::cout << " after refinement /" << helper.rank() << "/ " << grid.size(0) << std::endl;
+
+      // get view
+      typedef GridType::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+ 
+      // make finite element map
+      typedef GridType::ctype DF;
+      typedef double R;
+      const int k=1;
+      const int q=2*k;
+      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> FEM;
+      FEM fem(gv);
+      //typedef Dune::PDELab::P1LocalFiniteElementMap<DF,R,GridType::dimension> FEM;
+      //FEM fem;
+      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,GridType::dimension> FEM0;
+      FEM0 fem0(Dune::GeometryType::simplex);
+
+      dispatcher(problem,gv,fem,fem0,"UG3d_P1",q);
+    }
+#endif
+
 #if HAVE_ALUGRID
     // ALU Pk 3D test
-    if (false)
+    if (true)
     {
       typedef Dune::ALUSimplexGrid<3,3> GridType;
 
@@ -307,7 +373,7 @@ int main(int argc, char** argv)
       GridType *grid=factory.createGrid();
       grid->loadBalance();
       std::cout << " after load balance /" << helper.rank() << "/ " << grid->size(0) << std::endl;
-      //      grid->globalRefine(1);
+      grid->globalRefine(1);
       std::cout << " after refinement /" << helper.rank() << "/ " << grid->size(0) << std::endl;
 
       // get view
@@ -380,7 +446,7 @@ int main(int argc, char** argv)
 #endif
 
 #if HAVE_ALBERTA
-    if (true)
+    if (false)
     {
       typedef AlbertaUnitSquare GridType;
       GridType grid;

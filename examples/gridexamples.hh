@@ -17,6 +17,75 @@
 #endif
 #include "basicunitcube.hh"
 
+// unit cubes/squares from test-parallel-ug
+template <class Grid>
+void insertVertices(int n, Dune::GridFactory<Grid> &factory, int coordIdx=0)
+{
+  Dune::FieldVector<double,Grid::dimension> pos;
+    if (coordIdx == Grid::dimension) {
+        factory.insertVertex(pos);
+        return;
+    }
+    
+    for (int i=0; i < n; ++i) {
+        pos[coordIdx] = double(i)/(n-1);
+        insertVertices(n, factory, coordIdx + 1);
+    }
+}
+
+template <class GridType>
+void insertElements(int n, Dune::GridFactory<GridType> &factory, unsigned coordIdx=0)
+{
+    const int dim = GridType::dimension;
+    
+    if (dim == 3) {
+        for (int i=0; i<n-1; i++) {
+            for (int j=0; j<n-1; j++) {
+                for (int k=0; k<n-1; k++) {
+                    std::vector<unsigned int> v(8);
+                    v[0] = k*n*n + i*n + j;
+                    v[1] = k*n*n + i*n + j+1;
+                    v[2] = k*n*n + (i+1)*n + j;
+                    v[3] = k*n*n + (i+1)*n + j+1;
+                    
+                    v[4] = (k+1)*n*n + i*n + j;
+                    v[5] = (k+1)*n*n + i*n + j+1;
+                    v[6] = (k+1)*n*n + (i+1)*n + j;
+                    v[7] = (k+1)*n*n + (i+1)*n + j+1;
+                    
+                    factory.insertElement(Dune::GeometryType(Dune::GeometryType::cube,dim), v);
+                }
+            }
+        }
+    }
+    else if (dim == 2) {
+        for (int i=0; i<n-1; i++) {
+            for (int j=0; j<n-1; j++) {
+                std::vector<unsigned int> v(4);
+                v[0] = i*n + j;
+                v[1] = i*n + j+1;
+                v[2] = (i+1)*n + j;
+                v[3] = (i+1)*n + j+1;
+                
+                factory.insertElement(Dune::GeometryType(Dune::GeometryType::cube,dim), v);
+            }
+        }
+    }
+};
+
+template <class GridType>
+void createGrid(GridType &grid, int n)
+{
+    typedef Dune::GridFactory<GridType> GridFactory;
+    
+    GridFactory factory(&grid);
+
+    insertVertices<GridType>(n, factory);
+    insertElements<GridType>(n, factory);
+
+    factory.createGrid();
+}
+
 class YaspUnitSquare : public Dune::YaspGrid<2>
 {
 public:
