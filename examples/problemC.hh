@@ -209,4 +209,23 @@ public:
   }
 };
 
+// flux as velocity field for the mixed method
+template<typename GV, typename RF>
+class V_C
+  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,GV::dimension>,
+													  V_C<GV,RF> >
+{
+public:
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,2> Traits;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,V_C<GV,RF> > BaseT;
+
+  V_C (const GV& gv) : BaseT(gv) {}
+  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+							  typename Traits::RangeType& y) const
+  {  
+    y = 0.0;
+  }
+};
+
+
 #endif

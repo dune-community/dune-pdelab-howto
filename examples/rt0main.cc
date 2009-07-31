@@ -17,6 +17,7 @@
 #include<dune/istl/superlu.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/rt02dfem.hh>
+#include<dune/pdelab/finiteelementmap/rt0constraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -26,95 +27,25 @@
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
+#include<dune/pdelab/localoperator/diffusionmixed.hh>
 
 #include"gridexamples.hh"
-#include"rt0constraints.hh"
-#include"poissonhdivconforming.hh"
+#include"problemA.hh"
+#include"problemB.hh"
+#include"problemC.hh"
+#include"problemD.hh"
+#include"problemE.hh"
+#include"problemF.hh"
 
 //===============================================================
+// dummy boundary condition function for the pressure component
 //===============================================================
-// Solve the Poisson equation
-//           - \Delta u = f         in \Omega, 
-//                    u = g         on \partial\Omega_D
-//  -\nabla u \cdot \nu = v\cdot\nu on \partial\Omega_N
-//===============================================================
-//===============================================================
-
-//===============================================================
-// Define parameter functions f,g,j and \partial\Omega_D/N
-//===============================================================
-
-// function for defining the source term
-template<typename GV, typename RF>
-class F
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  F<GV,RF> >
-{
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,F<GV,RF> > BaseT;
-
-  F (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
-							  typename Traits::RangeType& y) const
-  {
-    if (x[0]>0.25 && x[0]<0.375 && x[1]>0.25 && x[1]<0.375)
-      y = 50.0;
-    else
-      y = 0.0;
-  }
-};
-
-// boundary grid function selecting boundary conditions 
-template<typename GV>
-class B
-  : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::
-                                                  BoundaryGridFunctionTraits<GV,int,1,
-                                                                             Dune::FieldVector<int,1> >,
-                                                  B<GV> >
-{
-  const GV& gv;
-
-public:
-  typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
-  typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,B<GV> > BaseT;
-
-  B (const GV& gv_) : gv(gv_) {}
-
-  template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
-                        const typename Traits::DomainType& x,
-                        typename Traits::RangeType& y) const
-  {  
-    Dune::FieldVector<typename GV::Grid::ctype,GV::dimension> 
-      xg = ig.geometry().global(x);
-
-    if (xg[1]<1E-6 || xg[1]>1.0-1E-6)
-      {
-        y = 0; // Neumann
-        return;
-      }
-    if (xg[0]>1.0-1E-6 && xg[1]>0.5+1E-6)
-      {
-        y = 0; // Neumann
-        return;
-      }
-    y = 1; // Dirichlet
-  }
-
-  //! get a reference to the GridView
-  inline const GV& getGridView ()
-  {
-    return gv;
-  }
-};
 
 template<typename GV>
 class Dummy
   : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::
-                                                  BoundaryGridFunctionTraits<GV,int,1,
-                                                                             Dune::FieldVector<int,1> >,
-                                                  Dummy<GV> >
+               BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> >,
+               Dummy<GV> >
 {
   const GV& gv;
 
@@ -137,60 +68,13 @@ public:
   }
 };
 
-// function for Dirichlet boundary conditions and initialization
-template<typename GV, typename RF>
-class G
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  G<GV,RF> >
-{
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G<GV,RF> > BaseT;
-
-  G (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
-							  typename Traits::RangeType& y) const
-  {
-    typename Traits::DomainType center;
-    for (int i=0; i<GV::dimension; i++) center[i] = 0.5;
-    center -= x;
-	y = exp(-center.two_norm2());
-  }
-};
-
-template<typename GV, typename RF>
-class V 
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,2>,
-													  V<GV,RF> >
-{
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,2> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,V<GV,RF> > BaseT;
-
-  V (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
-							  typename Traits::RangeType& y) const
-  {  
-    if (x[1]<1E-6 || x[1]>1.0-1E-6)
-      {
-        y[0] = 0; y[1] = 0;
-        return;
-      }
-    if (x[0]>1.0-1E-6 && x[1]>0.5+1E-6)
-      {
-        y[0] = -5.0; y[1] = 0.0;
-        return;
-      }
-    y = 0.0;
-  }
-};
-
 //===============================================================
 // Problem setup and solution 
 //===============================================================
 
-template<class GV> 
-void testrt0 (const GV& gv, std::string filename)
+template<typename BType, typename GType, typename KType, typename A0Type, typename FType, typename VType, typename GV> 
+void driver (BType& b, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
+             const GV& gv, std::string filename)
 {
   // types and constants
   typedef typename GV::Grid::ctype DF;
@@ -207,7 +91,7 @@ void testrt0 (const GV& gv, std::string filename)
   typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,Dune::PDELab::NoConstraints,
     Dune::PDELab::ISTLVectorBackend<1> > P0GFS; 
   P0GFS p0gfs(gv,p0fem);
-  typedef Dune::PDELab::GridFunctionSpace<GV,RT0FEM,RT0Constraints,
+  typedef Dune::PDELab::GridFunctionSpace<GV,RT0FEM,Dune::PDELab::RT0Constraints,
     Dune::PDELab::ISTLVectorBackend<1> > RT0GFS; 
   RT0GFS rt0gfs(gv,rt0fem);
   typedef Dune::PDELab::CompositeGridFunctionSpace<
@@ -216,8 +100,6 @@ void testrt0 (const GV& gv, std::string filename)
   MGFS mgfs(rt0gfs,p0gfs); // the mixed grid function space
 
   // construct a composite boundary condition type function
-  typedef B<GV> BType;
-  BType b(gv);
   typedef Dummy<GV> DType;
   DType d(gv);
   typedef Dune::PDELab::CompositeGridFunction<BType,DType> BCT;
@@ -229,12 +111,8 @@ void testrt0 (const GV& gv, std::string filename)
   Dune::PDELab::constraints(bct,mgfs,t); // fill container
 
   // construct a composite grid function
-  typedef V<GV,R> VType;
-  VType v(gv);
   typedef Dune::PDELab::PiolaBackwardAdapter<VType> RVType;
   RVType rv(v);
-  typedef G<GV,R> GType;
-  GType g(gv);
   typedef Dune::PDELab::CompositeGridFunction<RVType,GType> UType;
   UType u(rv,g);
 
@@ -247,10 +125,8 @@ void testrt0 (const GV& gv, std::string filename)
   Dune::PDELab::set_nonconstrained_dofs(t,0.0,x);  // clear interior
 
   // make grid operator space
-  typedef F<GV,R> FType;
-  FType f(gv);
-  typedef Dune::PDELab::PoissonHDivConforming<FType,BType,GType> LOP; 
-  LOP lop(f,b,g);
+  typedef Dune::PDELab::DiffusionMixed<KType,A0Type,FType,BType,GType> LOP; 
+  LOP lop(k,a0,f,b,g);
   typedef Dune::PDELab::GridOperatorSpace<MGFS,MGFS,
     LOP,T,T,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(mgfs,t,mgfs,t,lop);
@@ -286,11 +162,85 @@ void testrt0 (const GV& gv, std::string filename)
   P0DGF p0dgf(psub,x);
 
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-  //Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,4); // plot result
+  //Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,1); // plot result
   vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P0DGF>(p0dgf,"pressure"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<RT0DGF>(rt0dgf,"velocity"));
   vtkwriter.write(filename,Dune::VTKOptions::ascii);
+}
+
+template<typename GV> 
+void dispatcher (std::string problem, const GV& gv, std::string gridname)
+{
+  std::string A("A"), B("B"), C("C"), D("D"), E("E"), F("F");
+  std::string filename(""), underscore("_");
+  filename = problem+underscore+gridname;
+
+  typedef double RF;
+
+  if (problem==A) 
+    {
+      B_A<GV> b(gv); 
+      G_A<GV,RF> g(gv);
+      K_A<GV,RF> k(gv);
+      A0_A<GV,RF> a0(gv);
+      F_A<GV,RF> f(gv);
+      V_A<GV,RF> v(gv);
+      driver(b,g,k,a0,f,v,gv,filename);
+    }
+  if (problem==B) 
+    {
+      B_B<GV> b(gv); 
+      G_B<GV,RF> g(gv);
+      K_B<GV,RF> k(gv);
+      A0_B<GV,RF> a0(gv);
+      F_B<GV,RF> f(gv);
+      V_B<GV,RF> v(gv);
+      driver(b,g,k,a0,f,v,gv,filename);
+    }
+  if (problem==C) 
+    {
+      B_C<GV> b(gv); 
+      G_C<GV,RF> g(gv);
+      K_C<GV,RF> k(gv);
+      A0_C<GV,RF> a0(gv);
+      F_C<GV,RF> f(gv);
+      V_C<GV,RF> v(gv);
+      driver(b,g,k,a0,f,v,gv,filename);
+    }
+  if (problem==D) 
+    {
+      Dune::FieldVector<RF,GV::Grid::dimension> correlation_length;
+      correlation_length = 1.0/64.0;
+
+      B_D<GV> b(gv); 
+      G_D<GV,RF> g(gv);
+      K_D<GV,RF> k(gv,correlation_length,1.0,0.0,5000,-1083);
+      A0_D<GV,RF> a0(gv);
+      F_D<GV,RF> f(gv);
+      V_D<GV,RF> v(gv);
+      driver(b,g,k,a0,f,v,gv,filename);
+    }
+  if (problem==E) 
+    {
+      B_E<GV> b(gv); 
+      G_E<GV,RF> g(gv);
+      K_E<GV,RF> k(gv);
+      A0_E<GV,RF> a0(gv);
+      F_E<GV,RF> f(gv);
+      V_E<GV,RF> v(gv);
+      driver(b,g,k,a0,f,v,gv,filename);
+    }
+  if (problem==F) 
+    {
+      B_F<GV> b(gv); 
+      G_F<GV,RF> g(gv);
+      K_F<GV,RF> k(gv);
+      A0_F<GV,RF> a0(gv);
+      F_F<GV,RF> f(gv);
+      V_F<GV,RF> v(gv);
+      driver(b,g,k,a0,f,v,gv,filename);
+    }
 }
 
 int main(int argc, char** argv)
@@ -299,27 +249,32 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
+    std::string problem="C";
+
 #if HAVE_ALUGRID
+    if (false)
     {
       ALUUnitSquare grid;
       grid.globalRefine(6);
-      testrt0(grid.leafView(),"rt0_ALU");
+      dispatcher(problem,grid.leafView(),"ALU2d_rt0");
     }
 #endif
 
 #if HAVE_UG
+    if (false)
     {
       UGUnitSquare grid;
       grid.globalRefine(6);
-      testrt0(grid.leafView(),"rt0_UG");
+      dispatcher(problem,grid.leafView(),"UG2d_rt0");
     }
 #endif
 
 #if HAVE_ALBERTA
+    if (true)
     {
       AlbertaUnitSquare grid;
-      grid.globalRefine(12);
-      testrt0(grid.leafView(),"rt0_Alberta");
+      grid.globalRefine(8);
+      dispatcher(problem,grid.leafView(),"Alberta2d_rt0");
     }
 #endif
 

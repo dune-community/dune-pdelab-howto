@@ -57,6 +57,7 @@
 #include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include<dune/pdelab/localoperator/diffusion.hh>
 
+#include"gridexamples.hh"
 #include"problemA.hh"
 #include"problemB.hh"
 #include"problemC.hh"
@@ -164,7 +165,8 @@ void driver (const BType& b, const GType& g,
   typedef Dune::PDELab::DiscreteGridFunction<GFS0,V0> DGF0;
   DGF0 pdgf(gfs0,partition);
 
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,4);
+  //Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
   vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(pdgf,"decomposition"));
   vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
@@ -238,7 +240,7 @@ int main(int argc, char** argv)
 		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
 	  }
     
-    std::string problem="F";
+    std::string problem="C";
 
 #if HAVE_MPI
     // Q1, 2d
@@ -292,7 +294,7 @@ int main(int argc, char** argv)
 
 #if HAVE_ALUGRID
     // ALU Pk 3D test
-    if (true)
+    if (false)
     {
       typedef Dune::ALUSimplexGrid<3,3> GridType;
 
@@ -374,6 +376,31 @@ int main(int argc, char** argv)
       FEM0 fem0(Dune::GeometryType::cube);
  
       dispatcher(problem,gv,fem,fem0,"ALU3d_Q1",2);
+    }
+#endif
+
+#if HAVE_ALBERTA
+    if (true)
+    {
+      typedef AlbertaUnitSquare GridType;
+      GridType grid;
+      grid.globalRefine(6);
+
+      // get view
+      typedef GridType::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
+ 
+      // make finite element map
+      typedef GridType::ctype DF;
+      typedef double R;
+      const int k=2;
+      const int q=2*k;
+      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k> FEM;
+      FEM fem(gv);
+      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,GridType::dimension> FEM0;
+      FEM0 fem0(Dune::GeometryType::simplex);
+
+      dispatcher(problem,gv,fem,fem0,"Alberta_P1",q);
     }
 #endif
 
