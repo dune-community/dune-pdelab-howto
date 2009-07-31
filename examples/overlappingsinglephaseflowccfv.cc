@@ -115,12 +115,6 @@ void test (const GV& gv)
   gos.residual(x0,r);
   std::cout << "=== residual evaluation " <<  watch.elapsed() << " s" << std::endl;
 
-  // make ISTL solver
-//   Dune::MatrixAdapter<M,V,V> op(m);
-//   Dune::SeqSSOR<M,V,V> ssor(m,10,1.0);
-//   Dune::CGSolver<V> solver(op,ssor,1E-8,5000,1);
-//   Dune::InverseOperatorResult stat;
-
   // set up parallel solver
   typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
   PHELPER phelper(gfs);

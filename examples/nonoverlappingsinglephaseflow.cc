@@ -45,6 +45,7 @@
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
+#include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/gridfunctionspace/constraints.hh>
 #include<dune/pdelab/common/function.hh>
@@ -56,17 +57,22 @@
 #include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include<dune/pdelab/localoperator/diffusion.hh>
 
+#include"problemA.hh"
+#include"problemB.hh"
+#include"problemC.hh"
 #include"problemD.hh"
+#include"problemE.hh"
+#include"problemF.hh"
 
 //===============================================================
 // set up diffusion problem and solve it
 //===============================================================
 
 template<typename BType, typename GType, typename KType, typename A0Type, typename FType, typename JType,
-         typename GV, typename FEM> 
+         typename GV, typename FEM, typename FEM0> 
 void driver (const BType& b, const GType& g, 
              const KType& k, const A0Type& a0, const FType& f, const JType& j,
-             const GV& gv, const FEM& fem, std::string filename, int intorder=1)
+             const GV& gv, const FEM& fem, const FEM0& fem0, std::string filename, int intorder=1)
 {
   // constants and types and global variables
   typedef typename GV::Grid::ctype DF;
@@ -76,20 +82,29 @@ void driver (const BType& b, const GType& g,
 
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::ConformingDirichletConstraints,
+    Dune::PDELab::NonoverlappingConformingDirichletConstraints,
+    //Dune::PDELab::ConformingDirichletConstraints,
     Dune::PDELab::ISTLVectorBackend<1>,
-    Dune::PDELab::SimpleGridFunctionStaticSize
-    > GFS; 
-  GFS gfs(gv,fem);
+    Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+  std::vector<int> intghost; 
+  Dune::PDELab::NonoverlappingConformingDirichletConstraints cn(intghost);
+  GFS gfs(gv,fem,cn);
 
-  // make constraints map and initialize it from a function
+  // compute ghosts dofs
+  typedef typename GFS::template VectorContainer<R>::Type V;
+  V ghost(gfs);
+  Dune::PDELab::GhostDataHandle<GFS,V> gdh(gfs,ghost);
+  gfs.gridview().communicate(gdh,Dune::All_All_Interface,Dune::ForwardCommunication);
+  ghost.std_copy_to(intghost); // copy to std::vector as Constraints object is allocated before
+
+  // make constraints map and initialize it from a function and ghost
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
   C cg;
   cg.clear();
   Dune::PDELab::constraints(b,gfs,cg);
+  std::cout << "/" << gv.comm().rank() << "/ " << "constrained dofs=" << cg.size() << std::endl;
 
   // make coefficent Vector and initialize it from a function
-  typedef typename GFS::template VectorContainer<R>::Type V;
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
@@ -98,7 +113,7 @@ void driver (const BType& b, const GType& g,
   typedef Dune::PDELab::Diffusion<KType,A0Type,FType,BType,JType> LOP; 
   LOP lop(k,a0,f,b,j,intorder);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
-    LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
+    LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1>,true> GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
 
   // represent operator as a matrix
@@ -125,22 +140,85 @@ void driver (const BType& b, const GType& g,
   PSP psp(gfs,phelper);
   typedef Dune::PDELab::NonoverlappingRichardson<GFS,V,V> PRICH;
   PRICH prich(gfs,phelper);
-  int verbose;
-  if (gv.comm().rank()==0) verbose=1; else verbose=0;
-  Dune::CGSolver<V> solver(pop,psp,prich,1E-8,40000,verbose);
+  int verbose=0;
+  if (gv.comm().rank()==0) verbose=1;
+  Dune::CGSolver<V> solver(pop,psp,prich,1E-8,25000,verbose);
   Dune::InverseOperatorResult stat;  
   solver.apply(z,r,stat);
   x -= z;
 
-  // make discrete function object
+  // output solution and data decomposition with VTKWriter
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  DGF dgf(gfs,x);
-  
-  // output grid function with VTKWriter
+  DGF xdgf(gfs,x);
+
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM0,
+    Dune::PDELab::NoConstraints,
+    Dune::PDELab::ISTLVectorBackend<1>,
+    Dune::PDELab::SimpleGridFunctionStaticSize
+    > GFS0; 
+  GFS0 gfs0(gv,fem0);
+  typedef typename GFS0::template VectorContainer<R>::Type V0;
+  V0 partition(gfs0,0.0);
+  Dune::PDELab::PartitionDataHandle<GFS0,V0> pdh(gfs0,partition);
+  gfs0.gridview().communicate(pdh,Dune::All_All_Interface,Dune::ForwardCommunication);
+  typedef Dune::PDELab::DiscreteGridFunction<GFS0,V0> DGF0;
+  DGF0 pdgf(gfs0,partition);
+
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  //vtkwriter.pwrite(filename.c_str(),"vtk","",Dune::VTKOptions::binaryappended);
-  vtkwriter.write(filename,Dune::VTKOptions::ascii);
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
+  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(pdgf,"decomposition"));
+  vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
+}
+
+template<typename GV, typename FEM, typename FEM0> 
+void dispatcher (std::string problem, const GV& gv, const FEM& fem, const FEM0& fem0, 
+                 std::string gridname, int intorder=1)
+{
+  std::string A("A"), B("B"), C("C"), D("D"), E("E"), F("F");
+  std::string filename(""), underscore("_");
+  filename = problem+underscore+gridname;
+
+  typedef double RF;
+
+  if (problem==A) 
+    {
+      driver(B_A<GV>(gv), G_A<GV,RF>(gv),K_A<GV,RF>(gv),
+             A0_A<GV,RF>(gv),F_A<GV,RF>(gv),J_A<GV,RF>(gv),
+             gv,fem,fem0,filename,intorder);
+    }
+  if (problem==B) 
+    {
+      driver(B_B<GV>(gv), G_B<GV,RF>(gv),K_B<GV,RF>(gv),
+             A0_B<GV,RF>(gv),F_B<GV,RF>(gv),J_B<GV,RF>(gv),
+             gv,fem,fem0,filename,intorder);
+    }
+  if (problem==C) 
+    {
+      driver(B_C<GV>(gv), G_C<GV,RF>(gv),K_C<GV,RF>(gv),
+             A0_C<GV,RF>(gv),F_C<GV,RF>(gv),J_C<GV,RF>(gv),
+             gv,fem,fem0,filename,intorder);
+    }
+  if (problem==D) 
+    {
+      Dune::FieldVector<RF,GV::Grid::dimension> correlation_length;
+      correlation_length = 1.0/64.0;
+      driver(B_D<GV>(gv), G_D<GV,RF>(gv),
+             K_D<GV,RF>(gv,correlation_length,1.0,0.0,5000,-1083),
+             A0_D<GV,RF>(gv),F_D<GV,RF>(gv),J_D<GV,RF>(gv),
+             gv,fem,fem0,filename,intorder);
+    }
+  if (problem==E) 
+    {
+      driver(B_E<GV>(gv), G_E<GV,RF>(gv),K_E<GV,RF>(gv),
+             A0_E<GV,RF>(gv),F_E<GV,RF>(gv),J_E<GV,RF>(gv),
+             gv,fem,fem0,filename,intorder);
+    }
+  if (problem==F) 
+    {
+      driver(B_F<GV>(gv), G_F<GV,RF>(gv), K_F<GV,RF>(gv),
+             A0_F<GV,RF>(gv), F_F<GV,RF>(gv), J_F<GV,RF>(gv),
+             gv,fem,fem0,filename,intorder);
+    }
 }
 
 //===============================================================
@@ -160,31 +238,30 @@ int main(int argc, char** argv)
 		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
 	  }
     
+    std::string problem="F";
+
 #if HAVE_MPI
     // Q1, 2d
     if (false)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(4);
+      Dune::FieldVector<int,2> N(40);
       Dune::FieldVector<bool,2> B(false);
       int overlap=0;
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
-      grid.globalRefine(4);
+      //grid.globalRefine(4);
       
       typedef Dune::YaspGrid<2>::ctype DF;
       typedef Dune::PDELab::Q12DLocalFiniteElementMap<DF,double> FEM;
       FEM fem;
+      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,2> FEM0;
+      FEM0 fem0(Dune::GeometryType::cube);
 
-      Dune::FieldVector<double,2> correlation_length;
-      correlation_length = 1.0/64.0;
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
 
-      driver(B_D<GV>(gv), G_D<GV,double>(gv),
-             K_D<GV,double>(gv,correlation_length,1.0,0.0,5000,-1083),
-             A0_D<GV,double>(gv),F_D<GV,double>(gv),J_D<GV,double>(gv),
-             gv,fem,"single_phase_yasp2d_Q1");
+      dispatcher(problem,gv,fem,fem0,"yasp2d_Q1",2);
     }
 #endif
 
@@ -194,25 +271,22 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(1);
+      Dune::FieldVector<int,3> N(8);
       Dune::FieldVector<bool,3> B(false);
       int overlap=0;
       Dune::YaspGrid<3> grid(helper.getCommunicator(),L,N,B,overlap);
-      grid.globalRefine(2);
+      //grid.globalRefine(3);
 
       typedef Dune::YaspGrid<3>::ctype DF;
       typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double,3> FEM;
       FEM fem;
+      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,3> FEM0;
+      FEM0 fem0(Dune::GeometryType::cube);
 
-      Dune::FieldVector<double,3> correlation_length;
-      correlation_length = 1.0/64.0;
       typedef Dune::YaspGrid<3>::LeafGridView GV;
       const GV& gv=grid.leafView();
 
-      driver(B_D<GV>(gv), G_D<GV,double>(gv),
-             K_D<GV,double>(gv,correlation_length,1.0,0.0,5000,-1083),
-             A0_D<GV,double>(gv),F_D<GV,double>(gv),J_D<GV,double>(gv),
-             gv,fem,"single_phase_yasp3d_Q1");
+      dispatcher(problem,gv,fem,fem0,"yasp3d_Q1",2);
     }
 #endif
 
@@ -231,7 +305,7 @@ int main(int argc, char** argv)
       GridType *grid=factory.createGrid();
       grid->loadBalance();
       std::cout << " after load balance /" << helper.rank() << "/ " << grid->size(0) << std::endl;
-      grid->globalRefine(1);
+      //      grid->globalRefine(1);
       std::cout << " after refinement /" << helper.rank() << "/ " << grid->size(0) << std::endl;
 
       // get view
@@ -241,20 +315,16 @@ int main(int argc, char** argv)
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
-      const int k=1;
+      const int k=2;
       const int q=2*k;
       typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
       //typedef Dune::PDELab::P1LocalFiniteElementMap<DF,R,GridType::dimension> FEM;
       //FEM fem;
+      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,GridType::dimension> FEM0;
+      FEM0 fem0(Dune::GeometryType::simplex);
 
-      Dune::FieldVector<double,3> correlation_length;
-      correlation_length = 1.0/64.0;
-
-      driver(B_D<GV>(gv), G_D<GV,double>(gv),
-             K_D<GV,double>(gv,correlation_length,1.0,0.0,5000,-1083),
-             A0_D<GV,double>(gv),F_D<GV,double>(gv),J_D<GV,double>(gv),
-             gv,fem,"single_phase_ALU3d_P1",q);
+      dispatcher(problem,gv,fem,fem0,"ALU3d_P2",q);
     }
 
     // ALU Q1 3D test
@@ -300,14 +370,10 @@ int main(int argc, char** argv)
       typedef double R;
       typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,R,GridType::dimension> FEM;
       FEM fem;
-
-      Dune::FieldVector<double,3> correlation_length;
-      correlation_length = 1.0/64.0;
-
-      driver(B_D<GV>(gv), G_D<GV,double>(gv),
-             K_D<GV,double>(gv,correlation_length,1.0,0.0,5000,-1083),
-             A0_D<GV,double>(gv),F_D<GV,double>(gv),J_D<GV,double>(gv),
-             gv,fem,"single_phase_ALU3d_Q1");
+      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,GridType::dimension> FEM0;
+      FEM0 fem0(Dune::GeometryType::cube);
+ 
+      dispatcher(problem,gv,fem,fem0,"ALU3d_Q1",2);
     }
 #endif
 

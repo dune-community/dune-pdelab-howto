@@ -1,57 +1,65 @@
-#ifndef DUNE_PARSOLVE_PROBLEMD_HH
-#define DUNE_PARSOLVE_PROBLEMD_HH
+#ifndef DUNE_PARSOLVE_PROBLEMF_HH
+#define DUNE_PARSOLVE_PROBLEMF_HH
 
 #include<math.h>
-#include"permeability_generator.hh"
+
+static char DurlofskyField[401] = 
+"\
+X..XX....XX....X.X..\
+....X...XXX.........\
+.....X..............\
+.........X.....X...X\
+......X....X......X.\
+...X...X.....X......\
+........X....XX..X..\
+.................XX.\
+X.X....XXX..X.......\
+.........X.X.....X..\
+X.........X....X....\
+....X.XX.X.........X\
+..X..XXX..X...X...X.\
+X.X..X.XX...........\
+.........X.....XX...\
+.XX..XX....X......X.\
+.XX....X......X...X.\
+....X.............X.\
+.........XX..X...X.X\
+...........X.X.X....\
+";
 
 // function for defining the diffusion tensor
 template<typename GV, typename RF>
-class k_D
+class k_F
   : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<GV,RF,
       1,Dune::FieldVector<RF,1> >,
-      k_D<GV,RF> >
+      k_F<GV,RF> >
 {
 public:
   typedef RF RFType;
   typedef Dune::PDELab::GridFunctionTraits<GV,RF,
       1,Dune::FieldVector<RF,1> > Traits;
-  typedef Dune::PDELab::GridFunctionBase<Traits,k_D<GV,RF> > BaseT;
+  typedef Dune::PDELab::GridFunctionBase<Traits,k_F<GV,RF> > BaseT;
 
-  k_D (const GV& gv_, Dune::FieldVector<double,GV::dimension> correlation_length,
-	   double variance = 1.0, double mean = 0.0, long modes = 1000, long seed = -1083) 
-	: gv(gv_), is(gv.indexSet()), perm(is.size(0))
-  {
-	typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-	typedef typename Traits::DomainFieldType DF;
-	const int dim = GV::dimension;
-	double mink=1E100;
-	double maxk=-1E100;
+  k_F (const GV& gv_) : gv(gv_)
+  { }
 
-	
-	EberhardPermeabilityGenerator<GV::dimension> field(correlation_length,variance,mean,modes,seed);
-
-	for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
-	  {
-		int id = is.index(*it);
-        Dune::GeometryType gt = it->geometry().type();
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
-        Dune::FieldVector<DF,dim> globalcenter = it->geometry().global(localcenter);
-		perm[id]=field.eval(globalcenter);
-		mink = std::min(mink,log10(perm[id]));
-		maxk = std::max(maxk,log10(perm[id]));
-	  }
-	std::cout << "log10(mink)=" << mink << " log10(maxk)=" << maxk << std::endl;
-  }
-
-  k_D ( const GV& gv_, const std::vector<RF>& perm_)
-    : gv(gv_), is(gv.indexSet()), perm(perm_)
-  {}
-    
   inline void evaluate (const typename Traits::ElementType& e, 
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
   { 
-	y = perm[is.index(e)];
+	Dune::FieldVector<typename GV::Grid::ctype,GV::dimension> 
+      xg = e.geometry().global(x);
+
+	int X,Y,N;
+
+	X = (int) (xg[0]*20); X = std::max(X,0); X = std::min(X,19);
+	Y = (int) (xg[1]*20); Y = std::max(Y,0); Y = std::min(Y,19);
+	N = (19-Y)*20+X;
+
+	if (DurlofskyField[N]=='X')
+	  y = 1E-6;
+	else
+	  y = 1.0;
   }
   
   inline const typename Traits::GridViewType& getGridView () const
@@ -61,16 +69,14 @@ public:
   
 private:
   const GV& gv;
-  const typename GV::IndexSet& is;
-  std::vector<RF> perm;
 };
 
 // function for defining the diffusion tensor
 template<typename GV, typename RF>
-class K_D
+class K_F
   : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<GV,RF,
       GV::dimension*GV::dimension,Dune::FieldMatrix<RF,GV::dimension,GV::dimension> >,
-      K_D<GV,RF> >
+      K_F<GV,RF> >
 {
 public:
   typedef RF RFType;
@@ -78,47 +84,34 @@ public:
       GV::dimension*GV::dimension,Dune::FieldMatrix<RF,GV::dimension,GV::dimension> > Traits;
   typedef Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<GV,RF,
       GV::dimension*GV::dimension,Dune::FieldMatrix<RF,GV::dimension,GV::dimension> >,
-      K_D<GV,RF> > BaseT;
+      K_F<GV,RF> > BaseT;
 
-  K_D (const GV& gv_, Dune::FieldVector<double,GV::dimension> correlation_length,
-	   double variance = 1.0, double mean = 0.0, long modes = 1000, long seed = -1083) 
-	: gv(gv_), is(gv.indexSet()), perm(is.size(0))
-  {
-	typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-	typedef typename Traits::DomainFieldType DF;
-	const int dim = GV::dimension;
-	double mink=1E100;
-	double maxk=-1E100;
-
-	
-	EberhardPermeabilityGenerator<GV::dimension> field(correlation_length,variance,mean,modes,seed);
-
-	for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
-	  {
-		int id = is.index(*it);
-        Dune::GeometryType gt = it->geometry().type();
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
-        Dune::FieldVector<DF,dim> globalcenter = it->geometry().global(localcenter);
-		perm[id]=field.eval(globalcenter);
-		perm[id]=1.0;
-		mink = std::min(mink,log10(perm[id]));
-		maxk = std::max(maxk,log10(perm[id]));
-	  }
-	std::cout << "log10(mink)=" << mink << " log10(maxk)=" << maxk << std::endl;
-  }
-
-  K_D ( const GV& gv_, const std::vector<RF>& perm_)
-    : gv(gv_), is(gv.indexSet()), perm(perm_)
+  K_F (const GV& gv_) : gv(gv_)
   {}
     
   inline void evaluate (const typename Traits::ElementType& e, 
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
   { 
+	Dune::FieldVector<typename GV::Grid::ctype,GV::dimension> 
+      xg = e.geometry().global(x);
+
+	int X,Y,N;
+
+	X = (int) (xg[0]*20); X = std::max(X,0); X = std::min(X,19);
+	Y = (int) (xg[1]*20); Y = std::max(Y,0); Y = std::min(Y,19);
+	N = (19-Y)*20+X;
+
+	RF k;
+	if (DurlofskyField[N]=='X')
+	  k = 1E-6;
+	else
+	  k = 1.0;
+
     for (int i=0; i<GV::dimension; i++)
       for (int j=0; j<GV::dimension; j++)
         if (i==j)
-		  y[i][i] = perm[is.index(e)];
+		  y[i][i] = k;
         else
           y[i][j] = 0.0;
   }
@@ -128,28 +121,21 @@ public:
     return gv;
   }
 
-  inline const RF& getElementPermeability(const typename GV::template Codim<0>::EntityPointer& e) const
-  {
-    return perm[is.index(*e)];
-  }
-  
 private:
   const GV& gv;
-  const typename GV::IndexSet& is;
-  std::vector<RF> perm;
 };
 
 // function for defining the source term
 template<typename GV, typename RF>
-class A0_D
+class A0_F
   : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  A0_D<GV,RF> >
+                                                  A0_F<GV,RF> >
 {
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,A0_D<GV,RF> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,A0_F<GV,RF> > BaseT;
 
-  A0_D (const GV& gv) : BaseT(gv) {}
+  A0_F (const GV& gv) : BaseT(gv) {}
 
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
@@ -160,15 +146,15 @@ public:
 
 // function for defining the source term
 template<typename GV, typename RF>
-class F_D
+class F_F
   : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  F_D<GV,RF> >
+                                                  F_F<GV,RF> >
 {
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,F_D<GV,RF> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,F_F<GV,RF> > BaseT;
 
-  F_D (const GV& gv) : BaseT(gv) {}
+  F_F (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
@@ -178,19 +164,19 @@ public:
 
 // boundary grid function selecting boundary conditions 
 template<typename GV>
-class B_D
+class B_F
   : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::
                                                   BoundaryGridFunctionTraits<GV,int,1,
                                                                              Dune::FieldVector<int,1> >,
-                                                  B_D<GV> >
+                                                  B_F<GV> >
 {
   const GV& gv;
 
 public:
   typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
-  typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,B_D<GV> > BaseT;
+  typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,B_F<GV> > BaseT;
 
-  B_D (const GV& gv_) : gv(gv_) {}
+  B_F (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
   inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
@@ -215,15 +201,15 @@ public:
 
 // function for Dirichlet boundary conditions and initialization
 template<typename GV, typename RF>
-class G_D
+class G_F
   : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  G_D<GV,RF> >
+                                                  G_F<GV,RF> >
 {
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G_D<GV,RF> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G_F<GV,RF> > BaseT;
 
-  G_D (const GV& gv) : BaseT(gv) {}
+  G_F (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
@@ -235,15 +221,15 @@ public:
 
 // function for defining the flux boundary condition
 template<typename GV, typename RF>
-class J_D
+class J_F
   : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  J_D<GV,RF> >
+                                                  J_F<GV,RF> >
 {
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,J_D<GV,RF> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,J_F<GV,RF> > BaseT;
 
-  J_D (const GV& gv) : BaseT(gv) {}
+  J_F (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
