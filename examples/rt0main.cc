@@ -149,6 +149,8 @@ void driver (BType& b, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   X z(mgfs,0.0);
   solver.apply(z,r,stat);
   x -= z;
+#else
+#error No superLU support, please install and configure it.
 #endif
 
   // select subspaces

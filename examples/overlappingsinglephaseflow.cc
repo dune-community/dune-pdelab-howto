@@ -110,8 +110,8 @@ void driver (const BType& b, const GType& g,
   typedef Dune::PDELab::OverlappingScalarProduct<GFS,V> PSP;
   PSP psp(gfs,phelper);
 #ifdef HAVE_SUPERLU
-  typedef Dune::PDELab::SuperLUSubdomainSolver<GFS,M,V,V> PSUBSOLVE;
-  PSUBSOLVE psubsolve(gfs,m);
+//   typedef Dune::PDELab::SuperLUSubdomainSolver<GFS,M,V,V> PSUBSOLVE;
+//   PSUBSOLVE psubsolve(gfs,m);
 #endif
   typedef Dune::SeqSSOR<M,V,V> SeqPrec;
   SeqPrec seqprec(m,10,1.0);

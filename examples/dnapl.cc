@@ -600,7 +600,7 @@ void test (const GV& gv, int timesteps, double timestep)
           SeqPrec seqprec(m,5,1.0);
           typedef Dune::PDELab::OverlappingWrappedPreconditioner<C,TPGFS,SeqPrec> WPREC;
           WPREC  wprec(tpgfs,seqprec,cg,phelper);
-          typedef Dune::PDELab::SuperLUSubdomainSolver<TPGFS,M,V,V> PSUBSOLVE;
+//           typedef Dune::PDELab::SuperLUSubdomainSolver<TPGFS,M,V,V> PSUBSOLVE;
 //           PSUBSOLVE psubsolve(tpgfs,m);
           int verbose=1;
           if (rank>0) verbose=0;
@@ -706,18 +706,6 @@ int main(int argc, char** argv)
       
       // solve problem :)
       test(grid.leafView(),timesteps,timestep);
-    }
-#endif
-
-    // UG Q1 2D test
-#if HAVE_UG
-    if (false)
-    {
-      // make grid 
-      UGUnitSquareQ grid(1000);
-      grid.globalRefine(6);
-
-      test(grid.leafView());
     }
 #endif
 

@@ -595,7 +595,7 @@ void test (const GV& gv, int timesteps, double timestep, double maxtimestep)
           SeqPrec seqprec(m,5,1.0);
           typedef Dune::PDELab::OverlappingWrappedPreconditioner<C,TPGFS,SeqPrec> WPREC;
           WPREC  wprec(tpgfs,seqprec,cg,phelper);
-          typedef Dune::PDELab::SuperLUSubdomainSolver<TPGFS,M,V,V> PSUBSOLVE;
+//           typedef Dune::PDELab::SuperLUSubdomainSolver<TPGFS,M,V,V> PSUBSOLVE;
 //           PSUBSOLVE psubsolve(tpgfs,m);
           int verbose=1;
           if (rank>0) verbose=0;
