@@ -24,7 +24,7 @@ CURDIR=doc/pdelab-howto
 
 docdir=$(datadir)/doc/dune-pdelab-howto
 
-doc_DATA = pdelab-howto-article.pdf pdelab-howto-beamer.pdf
+doc_DATA = $(DOCS)
 
 EXTRAINSTALL = pdelab-howto-article.pdf
 
