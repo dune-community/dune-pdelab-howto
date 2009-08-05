@@ -5,6 +5,79 @@
 
 // function for defining the diffusion tensor
 template<typename GV, typename RF>
+class k_C
+  : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<GV,RF,
+      1,Dune::FieldVector<RF,1> >,
+      k_C<GV,RF> >
+{
+  RF K000;
+  RF K001;
+  RF K010;
+  RF K011;
+  RF K100;
+  RF K101;
+  RF K110;
+  RF K111;
+  RF width;
+
+public:
+  typedef RF RFType;
+  typedef Dune::PDELab::GridFunctionTraits<GV,RF,
+      1,Dune::FieldVector<RF,1> > Traits;
+  typedef Dune::PDELab::GridFunctionBase<Traits,k_C<GV,RF> > BaseT;
+
+  k_C (const GV& gv_) : gv(gv_)
+  { 
+	K000=20.0;
+	K001=0.002;
+	K010=0.2;
+	K011=2000.0;
+	K100=1000.0;
+	K101=0.001;
+	K110=0.1;
+	K111=10.0;
+	width=1.0/8.0;
+  }
+
+  inline void evaluate (const typename Traits::ElementType& e, 
+                        const typename Traits::DomainType& x,
+                        typename Traits::RangeType& y) const
+  { 
+	typename Dune::FieldVector<typename Traits::DomainFieldType,GV::dimension> xglobal;
+	xglobal = e.geometry().global(x);
+
+    int ix,iy,iz;
+
+    ix=((int)floor(xglobal[0]/width))%2;
+    iy=((int)floor(xglobal[1]/width))%2;
+	if (GV::dimension>2)
+	  iz=((int)floor(xglobal[2]/width))%2;
+	else
+	  iz=0;
+
+	RF k;
+    if ( iz==0 && iy==0 && ix==0 ) k=K000;
+    if ( iz==0 && iy==0 && ix==1 ) k=K001;
+    if ( iz==0 && iy==1 && ix==0 ) k=K010;
+    if ( iz==0 && iy==1 && ix==1 ) k=K011;
+    if ( iz==1 && iy==0 && ix==0 ) k=K100;
+    if ( iz==1 && iy==0 && ix==1 ) k=K101;
+    if ( iz==1 && iy==1 && ix==0 ) k=K110;
+    if ( iz==1 && iy==1 && ix==1 ) k=K111;
+	y = k;
+  }
+  
+  inline const typename Traits::GridViewType& getGridView () const
+  {
+    return gv;
+  }
+  
+private:
+  const GV& gv;
+};
+
+// function for defining the diffusion tensor
+template<typename GV, typename RF>
 class K_C
   : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<GV,RF,
       GV::dimension*GV::dimension,Dune::FieldMatrix<RF,GV::dimension,GV::dimension> >,
@@ -79,29 +152,6 @@ public:
   {
     return gv;
   }
-  
-  inline void fillPermArray(std::vector<RF>& perm) const
-  {
-    // This is not really congruent to evaluate as there
-    // the permeability at the dixretization point is taken
-    // in contrast here the value in the element center is taken.
-    perm.resize(gv.indexSet().size(0));
-    
-    typename Traits::RangeType y;
-    typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-
-    for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
-      {
-	int id = gv.indexSet().index(*it);
-        Dune::GeometryType gt = it->geometry().type();
-	typedef typename Traits::DomainFieldType DF;
-	const int dim = GV::dimension;
-        typename Traits::DomainType localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
-	evaluate(*it, localcenter,y);
-	perm[id]=y[0][0];
-      }
-    
-  }
 };
 
 // function for defining the source term
@@ -137,7 +187,7 @@ public:
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
-	y = 1; 
+	y = 0; 
   }
 };
 
@@ -162,7 +212,15 @@ public:
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
   {  
-    y = 1; // Dirichlet
+	Dune::FieldVector<typename GV::Grid::ctype,GV::dimension> 
+      xg = ig.geometry().global(x);
+
+    if (xg[0]<1E-6 || xg[0]>1.0-1E-6)
+	  y = 1; // Dirichlet
+	else
+	  y = 0;
+
+	//    y = 1; // Dirichlet
   }
 
   //! get a reference to the GridView
@@ -186,7 +244,9 @@ public:
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
-	y = 0.0; 
+	y = 0;
+    if (x[0]<1E-6)
+	  y = 1;
   }
 };
 

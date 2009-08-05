@@ -243,15 +243,15 @@ int main(int argc, char** argv)
 		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
 	  }
     
-    std::string problem="A";
+    std::string problem="C";
 
 #if HAVE_MPI
     // Q1, 2d
-    if (false)
+    if (true)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(40);
+      Dune::FieldVector<int,2> N(256);
       Dune::FieldVector<bool,2> B(false);
       int overlap=0;
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
@@ -360,7 +360,7 @@ int main(int argc, char** argv)
 
 #if HAVE_ALUGRID
     // ALU Pk 3D test
-    if (true)
+    if (false)
     {
       typedef Dune::ALUSimplexGrid<3,3> GridType;
 
@@ -369,11 +369,15 @@ int main(int argc, char** argv)
       std::vector<int> boundary_id_to_physical_entity;
       std::vector<int> element_index_to_physical_entity;
       if (helper.rank()==0)
-        Dune::GmshReader<GridType>::read(factory,"grids/cube1045.msh",true,false);
+        {
+          //Dune::GmshReader<GridType>::read(factory,"grids/cube1045.msh",true,false);
+          //Dune::GmshReader<GridType>::read(factory,"grids/rad.msh",true,false);
+          Dune::GmshReader<GridType>::read(factory,"grids/plastik-doeddel.msh",true,false);
+        }
       GridType *grid=factory.createGrid();
       grid->loadBalance();
       std::cout << " after load balance /" << helper.rank() << "/ " << grid->size(0) << std::endl;
-      grid->globalRefine(1);
+      //grid->globalRefine(1);
       std::cout << " after refinement /" << helper.rank() << "/ " << grid->size(0) << std::endl;
 
       // get view
@@ -392,7 +396,7 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,GridType::dimension> FEM0;
       FEM0 fem0(Dune::GeometryType::simplex);
 
-      dispatcher(problem,gv,fem,fem0,"ALU3d_P2",q);
+      dispatcher(problem,gv,fem,fem0,"ALU3d_P1_PlastkDoeddel",q);
     }
 
     // ALU Q1 3D test
