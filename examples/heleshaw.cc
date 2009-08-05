@@ -71,9 +71,9 @@ public:
 	double mink=1E100;
 	double maxk=-1E100;
 
-    Dune::FieldVector<double,dim> correlation_length(0.4/10.0);
+    Dune::FieldVector<double,dim> correlation_length(0.4/25.0);
   
-	EberhardPermeabilityGenerator<GV::dimension> field(correlation_length,0.1,0.0,5000,-1083);
+	EberhardPermeabilityGenerator<GV::dimension> field(correlation_length,1,0.0,5000,-1083);
 	for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
 	  {
 		int id = is.index(*it);
@@ -525,12 +525,21 @@ void test (const GV& gv, int timesteps, double timestep, double maxtimestep)
   sprintf(basename,"heleshaw-%01dd",dim);
   if (graphics)
   {
+    typedef typename GFS::template VectorContainer<RF>::Type V0;
+    V0 partition(gfs,0.0);
+    Dune::PDELab::PartitionDataHandle<GFS,V0> pdh(gfs,partition);
+    if (gfs.gridview().comm().size()>1)
+      gfs.gridview().communicate(pdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+    typedef Dune::PDELab::DiscreteGridFunction<GFS,V0> DGF0;
+    DGF0 pdgf(gfs,partition);
+
     if (rank==0) std::cout << "writing output file " << filecounter << std::endl;
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_lDGF>(p_ldgf,"p_l"));
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(pdgf,"decomposition"));
     char fname[255];
     sprintf(fname,"%s-%05d",basename,filecounter);
     vtkwriter.pwrite(fname,"vtk","",Dune::VTKOptions::binaryappended);
