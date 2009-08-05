@@ -47,6 +47,8 @@ const double depth = 0.02;
 const double pentry = 1000.0;
 const double patm = 1e5;
 const double sltop = 0.2;
+const double onset = 60.0;
+const double period = 60.0;
 
 // parameter class for local operator
 template<typename GV, typename RF>
@@ -254,9 +256,9 @@ public:
     if (global[dim-1]<eps2)
       {
         //        std::cout << "Bingo " << global << std::endl;
-        if (time<200.0)
+        if (time<onset)
           return patm + heightw*9810.0;
-        if (fmod(time-200.0,400.0)/400.0<=0.5)
+        if (fmod(time-onset,period)/period<=0.5)
           return patm + (heightw-0.1)*9810.0;
         else
           return patm + (heightw+0.1)*9810.0;
