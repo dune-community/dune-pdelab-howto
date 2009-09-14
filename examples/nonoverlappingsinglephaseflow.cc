@@ -145,7 +145,7 @@ void driver (const BType& b, const GType& g,
   PRICH prich(gfs,phelper);
   int verbose=0;
   if (gv.comm().rank()==0) verbose=1;
-  Dune::CGSolver<V> solver(pop,psp,prich,1E-8,25000,verbose);
+  Dune::CGSolver<V> solver(pop,psp,prich,1E-6,250000,verbose);
   Dune::InverseOperatorResult stat;  
   solver.apply(z,r,stat);
   x -= z;
@@ -168,8 +168,8 @@ void driver (const BType& b, const GType& g,
   typedef Dune::PDELab::DiscreteGridFunction<GFS0,V0> DGF0;
   DGF0 pdgf(gfs0,partition);
 
-  //Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,4);
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
+  //Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
   vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(pdgf,"decomposition"));
   vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
@@ -247,7 +247,7 @@ int main(int argc, char** argv)
 
 #if HAVE_MPI
     // Q1, 2d
-    if (true)
+    if (false)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
@@ -297,7 +297,7 @@ int main(int argc, char** argv)
 
 #if HAVE_MPI
     // Rannacher Turek, 2d
-    if (false)
+    if (true)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
@@ -305,7 +305,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<bool,2> B(false);
       int overlap=0;
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
-      grid.globalRefine(4);
+      grid.globalRefine(5);
       
       typedef Dune::YaspGrid<2>::ctype DF;
       typedef Dune::PDELab::RannacherTurek2DLocalFiniteElementMap<DF,double> FEM;
@@ -450,11 +450,11 @@ int main(int argc, char** argv)
 #endif
 
 #if HAVE_ALBERTA
-    if (false)
+    if (true)
     {
       typedef AlbertaUnitSquare GridType;
       GridType grid;
-      grid.globalRefine(6);
+      grid.globalRefine(8);
 
       // get view
       typedef GridType::LeafGridView GV;
@@ -463,14 +463,14 @@ int main(int argc, char** argv)
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
-      const int k=2;
+      const int k=4;
       const int q=2*k;
       typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,GridType::dimension> FEM0;
       FEM0 fem0(Dune::GeometryType::simplex);
 
-      dispatcher(problem,gv,fem,fem0,"Alberta_P1",q);
+      dispatcher(problem,gv,fem,fem0,"Alberta_Pk",q);
     }
 #endif
 

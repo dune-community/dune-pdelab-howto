@@ -17,6 +17,7 @@
 #include<dune/istl/superlu.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/rt02dfem.hh>
+#include<dune/pdelab/finiteelementmap/rt0qfem.hh>
 #include<dune/pdelab/finiteelementmap/rt0constraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
@@ -72,28 +73,23 @@ public:
 // Problem setup and solution 
 //===============================================================
 
-template<typename BType, typename GType, typename KType, typename A0Type, typename FType, typename VType, typename GV> 
+template<typename BType, typename GType, typename KType, typename A0Type, typename FType, typename VType, 
+         typename GV, typename PFEM, typename VFEM> 
 void driver (BType& b, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
-             const GV& gv, std::string filename)
+             const GV& gv, const PFEM& pfem, const VFEM& vfem, std::string filename)
 {
   // types and constants
   typedef typename GV::Grid::ctype DF;
   const int dim = GV::dimension;
   typedef double R;
 
-  // instantiate finite element maps
-  typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
-  P0FEM p0fem(Dune::GeometryType::simplex);
-  typedef Dune::PDELab::RT02DLocalFiniteElementMap<GV,DF,R> RT0FEM;
-  RT0FEM rt0fem(gv);
-  
   // make a grid function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,Dune::PDELab::NoConstraints,
+  typedef Dune::PDELab::GridFunctionSpace<GV,PFEM,Dune::PDELab::NoConstraints,
     Dune::PDELab::ISTLVectorBackend<1> > P0GFS; 
-  P0GFS p0gfs(gv,p0fem);
-  typedef Dune::PDELab::GridFunctionSpace<GV,RT0FEM,Dune::PDELab::RT0Constraints,
+  P0GFS p0gfs(gv,pfem);
+  typedef Dune::PDELab::GridFunctionSpace<GV,VFEM,Dune::PDELab::RT0Constraints,
     Dune::PDELab::ISTLVectorBackend<1> > RT0GFS; 
-  RT0GFS rt0gfs(gv,rt0fem);
+  RT0GFS rt0gfs(gv,vfem);
   typedef Dune::PDELab::CompositeGridFunctionSpace<
     Dune::PDELab::GridFunctionSpaceLexicographicMapper,
 	  RT0GFS,P0GFS> MGFS;              
@@ -126,7 +122,7 @@ void driver (BType& b, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
 
   // make grid operator space
   typedef Dune::PDELab::DiffusionMixed<KType,A0Type,FType,BType,GType> LOP; 
-  LOP lop(k,a0,f,b,g);
+  LOP lop(k,a0,f,b,g,4,2);
   typedef Dune::PDELab::GridOperatorSpace<MGFS,MGFS,
     LOP,T,T,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(mgfs,t,mgfs,t,lop);
@@ -173,8 +169,8 @@ void driver (BType& b, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   vtkwriter.write(filename,Dune::VTKOptions::ascii);
 }
 
-template<typename GV> 
-void dispatcher (std::string problem, const GV& gv, std::string gridname)
+template<typename GV, typename PFEM, typename VFEM> 
+void dispatcher (std::string problem, const GV& gv, const PFEM& pfem, const VFEM& vfem, std::string gridname)
 {
   std::string A("A"), B("B"), C("C"), D("D"), E("E"), F("F");
   std::string filename(""), underscore("_");
@@ -190,7 +186,7 @@ void dispatcher (std::string problem, const GV& gv, std::string gridname)
       A0_A<GV,RF> a0(gv);
       F_A<GV,RF> f(gv);
       V_A<GV,RF> v(gv);
-      driver(b,g,k,a0,f,v,gv,filename);
+      driver(b,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
   if (problem==B) 
     {
@@ -200,7 +196,7 @@ void dispatcher (std::string problem, const GV& gv, std::string gridname)
       A0_B<GV,RF> a0(gv);
       F_B<GV,RF> f(gv);
       V_B<GV,RF> v(gv);
-      driver(b,g,k,a0,f,v,gv,filename);
+      driver(b,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
   if (problem==C) 
     {
@@ -210,7 +206,7 @@ void dispatcher (std::string problem, const GV& gv, std::string gridname)
       A0_C<GV,RF> a0(gv);
       F_C<GV,RF> f(gv);
       V_C<GV,RF> v(gv);
-      driver(b,g,k,a0,f,v,gv,filename);
+      driver(b,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
   if (problem==D) 
     {
@@ -223,7 +219,7 @@ void dispatcher (std::string problem, const GV& gv, std::string gridname)
       A0_D<GV,RF> a0(gv);
       F_D<GV,RF> f(gv);
       V_D<GV,RF> v(gv);
-      driver(b,g,k,a0,f,v,gv,filename);
+      driver(b,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
   if (problem==E) 
     {
@@ -233,7 +229,7 @@ void dispatcher (std::string problem, const GV& gv, std::string gridname)
       A0_E<GV,RF> a0(gv);
       F_E<GV,RF> f(gv);
       V_E<GV,RF> v(gv);
-      driver(b,g,k,a0,f,v,gv,filename);
+      driver(b,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
   if (problem==F) 
     {
@@ -243,7 +239,7 @@ void dispatcher (std::string problem, const GV& gv, std::string gridname)
       A0_F<GV,RF> a0(gv);
       F_F<GV,RF> f(gv);
       V_F<GV,RF> v(gv);
-      driver(b,g,k,a0,f,v,gv,filename);
+      driver(b,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
 }
 
@@ -253,23 +249,89 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
-    std::string problem="C";
+    std::string problem="A";
+
+    // YaspGrid 2D test
+    if (true)
+    {  
+      Dune::FieldVector<double,2> L(1.0);
+      Dune::FieldVector<int,2> N(1);
+      Dune::FieldVector<bool,2> B(false);
+      Dune::YaspGrid<2> grid(L,N,B,0);
+      grid.globalRefine(7);
+
+      // instantiate finite element maps
+      typedef Dune::YaspGrid<2>::ctype DF;
+      typedef Dune::YaspGrid<2>::LeafGridView GV;
+      const int dim = 2;
+      typedef double R;
+      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
+      P0FEM p0fem(Dune::GeometryType::cube);
+      typedef Dune::PDELab::RT0QLocalFiniteElementMap<GV,DF,R,dim> RT0FEM;
+      RT0FEM rt0fem(grid.leafView());
+
+      dispatcher(problem,grid.leafView(),p0fem,rt0fem,"Yasp2d_rt0q");
+    }
+
+    // YaspGrid 3D test
+    if (true)
+    {
+      Dune::FieldVector<double,3> L(1.0);
+      Dune::FieldVector<int,3> N(1);
+      Dune::FieldVector<bool,3> B(false);
+      Dune::YaspGrid<3> grid(L,N,B,0);
+      grid.globalRefine(4);
+ 
+      // instantiate finite element maps
+      typedef Dune::YaspGrid<3>::ctype DF;
+      typedef Dune::YaspGrid<3>::LeafGridView GV;
+      const int dim = 3;
+      typedef double R;
+      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
+      P0FEM p0fem(Dune::GeometryType::cube);
+      typedef Dune::PDELab::RT0QLocalFiniteElementMap<GV,DF,R,dim> RT0FEM;
+      RT0FEM rt0fem(grid.leafView());
+
+      dispatcher(problem,grid.leafView(),p0fem,rt0fem,"Yasp3d_rt0q");
+    }
 
 #if HAVE_ALUGRID
-    if (false)
+    if (true)
     {
       ALUUnitSquare grid;
-      grid.globalRefine(6);
-      dispatcher(problem,grid.leafView(),"ALU2d_rt0");
+      grid.globalRefine(7);
+
+      // instantiate finite element maps
+      typedef ALUUnitSquare::ctype DF;
+      typedef ALUUnitSquare::LeafGridView GV;
+      const int dim = 2;
+      typedef double R;
+      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
+      P0FEM p0fem(Dune::GeometryType::simplex);
+      typedef Dune::PDELab::RT02DLocalFiniteElementMap<GV,DF,R> RT0FEM;
+      RT0FEM rt0fem(grid.leafView());
+
+      dispatcher(problem,grid.leafView(),p0fem,rt0fem,"ALU2d_rt0");
     }
 #endif
 
 #if HAVE_UG
-    if (false)
+    if (true)
     {
       UGUnitSquare grid;
       grid.globalRefine(6);
-      dispatcher(problem,grid.leafView(),"UG2d_rt0");
+
+      // instantiate finite element maps
+      typedef UGUnitSquare::ctype DF;
+      typedef UGUnitSquare::LeafGridView GV;
+      const int dim = 2;
+      typedef double R;
+      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
+      P0FEM p0fem(Dune::GeometryType::simplex);
+      typedef Dune::PDELab::RT02DLocalFiniteElementMap<GV,DF,R> RT0FEM;
+      RT0FEM rt0fem(grid.leafView());
+
+      dispatcher(problem,grid.leafView(),p0fem,rt0fem,"UG2d_rt0");
     }
 #endif
 
@@ -278,7 +340,18 @@ int main(int argc, char** argv)
     {
       AlbertaUnitSquare grid;
       grid.globalRefine(8);
-      dispatcher(problem,grid.leafView(),"Alberta2d_rt0");
+
+      // instantiate finite element maps
+      typedef AlbertaUnitSquare::ctype DF;
+      typedef AlbertaUnitSquare::LeafGridView GV;
+      const int dim = 2;
+      typedef double R;
+      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
+      P0FEM p0fem(Dune::GeometryType::simplex);
+      typedef Dune::PDELab::RT02DLocalFiniteElementMap<GV,DF,R> RT0FEM;
+      RT0FEM rt0fem(grid.leafView());
+
+      dispatcher(problem,grid.leafView(),p0fem,rt0fem,"Alberta2d_rt0");
     }
 #endif
 

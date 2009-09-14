@@ -276,7 +276,7 @@ class V_C
 													  V_C<GV,RF> >
 {
 public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,2> Traits;
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,GV::dimension> Traits;
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,V_C<GV,RF> > BaseT;
 
   V_C (const GV& gv) : BaseT(gv) {}

@@ -44,9 +44,9 @@
 #include"problemF.hh"  // Constant flow with constant permeability with is 1E-6 in x direction
 
 // Define most changed values
-#define QUADRATURE_RULE_ORDER 4
-#define MONOM_BASIS_ORDER 2
-#define BLOCK_SIZE 6
+#define QUADRATURE_RULE_ORDER 8
+#define MONOM_BASIS_ORDER 4
+#define BLOCK_SIZE 15
 #define GRID_REFINE 0
 #define DG_METHOD 0  // OBB: 0, NIPG: 1, SIPG: 2
 #define MAKE_VTK_OUTPUT
@@ -218,7 +218,7 @@ int main(int argc, char** argv)
         {
             // make grid
             Dune::FieldVector<double,2> L(1.0);  // L[0]=2.0; L[1]=1.0;
-            Dune::FieldVector<int,2> N(128);       // N[0]=2; N[1]=2;
+            Dune::FieldVector<int,2> N(64);       // N[0]=2; N[1]=2;
             Dune::FieldVector<bool,2> B(false);
             Dune::YaspGrid<2> grid(L,N,B,0);
             #ifdef REFINE_STEPWISE
@@ -244,7 +244,7 @@ int main(int argc, char** argv)
         {
           typedef AlbertaUnitSquare GridType;
           GridType grid;
-          grid.globalRefine(12);
+          grid.globalRefine(10);
           
           // get view
           typedef GridType::LeafGridView GV;

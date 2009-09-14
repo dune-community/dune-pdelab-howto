@@ -153,7 +153,7 @@ class V_E
 													  V_E<GV,RF> >
 {
 public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,2> Traits;
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,GV::dimension> Traits;
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,V_E<GV,RF> > BaseT;
 
   V_E (const GV& gv) : BaseT(gv) {}
