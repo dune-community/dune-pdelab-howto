@@ -139,6 +139,8 @@ namespace Dune {
 	  {
 		time = 0;
         zero_saturation = 1E-7;
+        min_snew, min_sold, min_local_flux_sum = 0;
+        cellno = -1;
 	  }
 
 	  // set time where operator is to be evaluated (i.e. end of the time intervall)
@@ -150,6 +152,10 @@ namespace Dune {
 	  // get maximum allowable time step computed while assembling residual
 	  typename TP::Traits::RangeFieldType get_max_timestep () const
 	  {
+            std::cout << "minimum time step info: cell No. " << cellno
+                      << " sold=" << min_sold
+                      << " snew=" << min_snew
+                      << " local_flux_sum=" << min_local_flux_sum << std::endl;
 		return max_timestep;
 	  } 
 
@@ -192,6 +198,11 @@ namespace Dune {
 		snew = tp.snew(eg.entity(),cell_center_local);
 		sold = tp.sold(eg.entity(),cell_center_local);
 
+        if (snew>zero_saturation && sold>zero_saturation)
+          activecell = true;
+        else
+          activecell = false;
+
 //         std::cout << "cell No. " << lfsu.globalIndex(0) 
 //                   << " porosity=" << porosity 
 //                   << " cell_volume=" << cell_volume 
@@ -200,7 +211,7 @@ namespace Dune {
 		// scale value of concentration at old time level
 		typedef typename LFSU::Traits::GridFunctionSpaceType::Traits::BackendType B;
         RF q = tp.q(eg.entity(),cell_center_local,time); // can not eval at new time because timestep is not known
-        if (snew>zero_saturation)
+        if (activecell)
           {
             B::access(scaling,lfsu.globalIndex(0)) = sold/snew;
             r[0] -= q/(porosity*snew);
@@ -221,10 +232,15 @@ namespace Dune {
 		typedef typename LFSU::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
         RF local_timestep = sold/(std::abs(local_flux_sum)+1E-30);
-        if (local_timestep<max_timestep && sold>zero_saturation) max_timestep = local_timestep;
+        if (activecell && local_timestep<max_timestep) 
+          {
+            max_timestep = local_timestep;
+            min_sold = sold;
+            min_snew = snew;
+            min_local_flux_sum = local_flux_sum;
+            cellno = lfsu.globalIndex(0);
+          }
 
-//         std::cout << "cell No. " << lfsu.globalIndex(0) 
-//                   << " local_flux_sum=" << local_flux_sum << std::endl;
       }
 
 	  // skeleton integral depending on test and ansatz functions
@@ -274,7 +290,7 @@ namespace Dune {
 
         // residual updates (use asymetric flux evaluation, may result in nonconservation of stuff
         // note. we do only one-sided evaluation here
-        if (snew>zero_saturation)
+        if (activecell)
           {
             r_s[0] += c_upwind*wn*face_volume/(cell_volume*porosity*snew);
             if (wn>0) local_flux_sum += wn*face_volume/(cell_volume*porosity);
@@ -297,7 +313,7 @@ namespace Dune {
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 		typedef typename LFSU::Traits::GridFunctionSpaceType::Traits::BackendType B;
 
-        if (snew<=zero_saturation) return; // empty cell; nothing to do
+        if (!activecell) return; // empty cell; nothing to do
     
         // face geometry
         const Dune::FieldVector<DF,IG::dimension-1>& 
@@ -343,6 +359,9 @@ namespace Dune {
       mutable typename TP::Traits::RangeFieldType snew,sold;
       typename TP::Traits::RangeFieldType zero_saturation;
       mutable int emptycells;
+      mutable bool activecell;
+      mutable int cellno;
+      mutable typename TP::Traits::RangeFieldType min_snew, min_sold, min_local_flux_sum;
 	};
 
   }

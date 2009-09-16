@@ -635,22 +635,16 @@ void test (const GV& gv, int timesteps, double timestep)
   // make discrete function objects for pressures, saturations
   typedef Dune::PDELab::DiscreteGridFunction<P_lSUB,V> P_lDGF;
   P_lDGF p_ldgf(p_lsub,pnew);
-  typedef Dune::PDELab::DiscreteGridFunction<P_gSUB,V> P_gDGF;
-  P_gDGF p_gdgf(p_gsub,pnew);
-
-  typedef Dune::PDELab::DiscreteGridFunction<P_lSUB,V> P_lDGF;
   P_lDGF pold_ldgf(p_lsub,pold);
   typedef Dune::PDELab::DiscreteGridFunction<P_gSUB,V> P_gDGF;
+  P_gDGF p_gdgf(p_gsub,pnew);
   P_gDGF pold_gdgf(p_gsub,pold);
 
   typedef S_l<TP,P_lDGF,P_gDGF> S_lDGF; 
   S_lDGF s_ldgf(tp,p_ldgf,p_gdgf);
-  typedef S_g<TP,P_lDGF,P_gDGF> S_gDGF; 
-  S_gDGF s_gdgf(tp,p_ldgf,p_gdgf);
-
-  typedef S_l<TP,P_lDGF,P_gDGF> S_lDGF; 
   S_lDGF sold_ldgf(tp,pold_ldgf,pold_gdgf);
   typedef S_g<TP,P_lDGF,P_gDGF> S_gDGF; 
+  S_gDGF s_gdgf(tp,p_ldgf,p_gdgf);
   S_gDGF sold_gdgf(tp,pold_ldgf,pold_gdgf);
 
   // velocity grid functions
