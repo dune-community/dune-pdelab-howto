@@ -651,9 +651,13 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef Dune::PDELab::V_l<TP,P_lDGF,P_gDGF> VliquidDGF;
   VliquidDGF vliquiddgf(tp,p_ldgf,p_gdgf);
   vliquiddgf.set_time(0);
+  VliquidDGF vliquidolddgf(tp,pold_ldgf,pold_gdgf);
+  vliquidolddgf.set_time(0);
   typedef Dune::PDELab::V_g<TP,P_lDGF,P_gDGF> VgasDGF;
   VgasDGF vgasdgf(tp,p_ldgf,p_gdgf);
   vgasdgf.set_time(0);
+  VgasDGF vgasolddgf(tp,pold_ldgf,pold_gdgf);
+  vgasolddgf.set_time(0);
 
   // all for concentrations
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
@@ -670,7 +674,7 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef Dune::PDELab::DiscreteGridFunction<CGFS,CV> ConcDGF;
   ConcDGF concdgf(cgfs,cv);
   typedef ComponentTransportParameter<GV,RF,S_gDGF,S_gDGF,VgasDGF> CTP;
-  CTP ctp(tp,sold_gdgf,s_gdgf,vgasdgf);
+  CTP ctp(tp,sold_gdgf,s_gdgf,vgasolddgf);
   typedef Dune::PDELab::EEComponentTransportOperator<CTP,CV> CLOP;
   CLOP clop(ctp,scaling);
 
@@ -810,6 +814,8 @@ void test (const GV& gv, int timesteps, double timestep)
 
           // advance timestep, sets snew=sold
           pold = pnew;
+          vliquidolddgf.set_time(time);
+          vgasolddgf.set_time(time);
 
           for (int count=0; count<n; count++)
             {

@@ -138,7 +138,7 @@ namespace Dune {
 		: tp(tp_), scaling(scaling_)
 	  {
 		time = 0;
-        zero_saturation = 1E-7;
+        zero_saturation = 1E-8;
         min_snew, min_sold, min_local_flux_sum = 0;
         cellno = -1;
 	  }
