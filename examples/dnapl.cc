@@ -5,6 +5,7 @@
 #include<iostream>
 #include<vector>
 #include<map>
+#include<math.h>
 #include<dune/common/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
@@ -20,6 +21,8 @@
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/p0constraints.hh>
+#include<dune/pdelab/finiteelementmap/rt0qfem.hh>
+#include<dune/pdelab/finiteelementmap/rt0constraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -34,10 +37,10 @@
 
 #include"gridexamples.hh"
 #include"twophaseop.hh"
-//#include"parallelstuff.hh"
+#include"componenttransportop.hh"
 
 //==============================================================================
-// Problem definition
+// Problem definition : two phase flow
 //==============================================================================
 
 const double height = 0.6;
@@ -314,6 +317,7 @@ public:
  	y = (height-x[dim-1])*9810;
   }
 };
+
 template<typename GV, typename RF>
 class P_g_alt
   : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
@@ -375,6 +379,114 @@ public:
 };
 
 
+//==============================================================================
+// Problem definition : component transport
+//==============================================================================
+
+// parameter class for component transport
+template<typename GV, typename RF, typename SOLDDGF, typename SNEWDGF, typename UDGF>
+class ComponentTransportParameter
+  : public Dune::PDELab::ComponentTransportParameterInterface<Dune::PDELab::ComponentTransportParameterTraits<GV,RF>, 
+                                                              ComponentTransportParameter<GV,RF,SOLDDGF,SNEWDGF,UDGF> >
+{
+  typedef TwoPhaseParameter<GV,RF> TP;
+
+public:
+  typedef Dune::PDELab::ComponentTransportParameterTraits<GV,RF> Traits;
+  enum {dim=GV::Grid::dimension};
+
+  ComponentTransportParameter (const TP& tp_, const SOLDDGF& solddgf_, const SNEWDGF& snewdgf_, const UDGF& udgf_)
+    : tp(tp_), solddgf(solddgf_), snewdgf(snewdgf_), udgf(udgf_)
+  {}
+
+  //! porosity
+  typename Traits::RangeFieldType 
+  phi (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    return tp.phi(e,x);
+  }
+
+  //! saturation at new time level
+  typename Traits::RangeFieldType 
+  snew (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename SNEWDGF::Traits::RangeType y;
+    snewdgf.evaluate(e,x,y);
+    return y;
+  }
+
+  //! saturation at old time level
+  typename Traits::RangeFieldType 
+  sold (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename SOLDDGF::Traits::RangeType y;
+    solddgf.evaluate(e,x,y);
+    return y;
+  }
+
+  //! velocity field (at new time level)
+  typename Traits::RangeType
+  u (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename UDGF::Traits::RangeType velo;
+    udgf.evaluate(e,x,velo);
+    return velo;
+  }
+
+  //! Dirichlet boundary condition on inflow
+  typename Traits::RangeFieldType 
+  g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, 
+     typename Traits::RangeFieldType time) const
+  {
+    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
+      global = is.geometry().global(x);
+
+    if (time<5*60 || time>14*60) return 0;
+    if (global[dim-1]<height-1E-7) return 0;
+    for (int i=0; i<dim-1; i++)
+      if (global[i]<0.45 || global[i]>0.55)
+        return 0.0;
+
+    return 1.0;
+  }
+
+  //! source term
+  typename Traits::RangeFieldType 
+  q (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+     typename Traits::RangeFieldType time) const
+  {
+    return 0;
+  }
+
+private:
+  const TP& tp; // store access to two phase parameters
+  const SOLDDGF& solddgf;
+  const SNEWDGF& snewdgf;
+  const UDGF& udgf;
+};
+
+// initial conditions for component concentration
+template<typename GV, typename RF>
+class Conc
+  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
+                                                  Conc<GV,RF> >
+{
+public:
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,Conc<GV,RF> > BaseT;
+  enum {dim=Traits::DomainType::dimension};
+
+  Conc (const GV& gv) : BaseT(gv) {}
+
+  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+							  typename Traits::RangeType& y) const
+  {
+ 	y = 0;
+    //    if (x[0]>0.4 && x[0]<0.6 && x[1]>0.5) y = 1;
+    //if (x[0]>0.5 && x[0]<0.7 && x[1]>0.2 && x[1]<0.3) y = 1;
+  }
+};
+
 
 //==============================================================================
 // saturation output
@@ -388,8 +500,8 @@ class S_l
                                           S_l<T,PL,PG> >
 {
   const T& t;
-  const PL pl;
-  const PG pg;
+  const PL& pl;
+  const PG& pg;
 
 public:
   typedef Dune::PDELab::GridFunctionTraits<typename PL::Traits::GridViewType,
@@ -424,8 +536,8 @@ class S_g
                                           S_g<T,PL,PG> >
 {
   const T& t;
-  const PL pl;
-  const PG pg;
+  const PL& pl;
+  const PG& pg;
 
 public:
   typedef Dune::PDELab::GridFunctionTraits<typename PL::Traits::GridViewType,
@@ -470,6 +582,8 @@ void test (const GV& gv, int timesteps, double timestep)
   // instantiate finite element maps
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
   FEM fem(Dune::GeometryType::cube);
+  typedef Dune::PDELab::RT0QLocalFiniteElementMap<GV,DF,RF,dim> RT0FEM;
+  RT0FEM rt0fem(gv);
   
   // make grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
@@ -478,10 +592,13 @@ void test (const GV& gv, int timesteps, double timestep)
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
   typedef Dune::PDELab::PowerGridFunctionSpace<GFS,2,
     Dune::PDELab::GridFunctionSpaceBlockwiseMapper> TPGFS;
+  typedef Dune::PDELab::GridFunctionSpace<GV,RT0FEM,Dune::PDELab::RT0Constraints,
+    Dune::PDELab::ISTLVectorBackend<1> > RT0GFS; 
   watch.reset();
   Dune::PDELab::P0ParallelConstraints con;
   GFS gfs(gv,fem,con);
   TPGFS tpgfs(gfs);
+  RT0GFS rt0gfs(gv,rt0fem);
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
   // make subspaces (needed for VTK output)
@@ -515,15 +632,53 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef Dune::PDELab::TwoPhaseTwoPointFluxOperator<TP,V> LOP;
   LOP lop(tp,pold);
 
-  // make discrete function objects for pnew and saturations
+  // make discrete function objects for pressures, saturations
   typedef Dune::PDELab::DiscreteGridFunction<P_lSUB,V> P_lDGF;
   P_lDGF p_ldgf(p_lsub,pnew);
   typedef Dune::PDELab::DiscreteGridFunction<P_gSUB,V> P_gDGF;
   P_gDGF p_gdgf(p_gsub,pnew);
+
+  typedef Dune::PDELab::DiscreteGridFunction<P_lSUB,V> P_lDGF;
+  P_lDGF pold_ldgf(p_lsub,pold);
+  typedef Dune::PDELab::DiscreteGridFunction<P_gSUB,V> P_gDGF;
+  P_gDGF pold_gdgf(p_gsub,pold);
+
   typedef S_l<TP,P_lDGF,P_gDGF> S_lDGF; 
   S_lDGF s_ldgf(tp,p_ldgf,p_gdgf);
   typedef S_g<TP,P_lDGF,P_gDGF> S_gDGF; 
   S_gDGF s_gdgf(tp,p_ldgf,p_gdgf);
+
+  typedef S_l<TP,P_lDGF,P_gDGF> S_lDGF; 
+  S_lDGF sold_ldgf(tp,pold_ldgf,pold_gdgf);
+  typedef S_g<TP,P_lDGF,P_gDGF> S_gDGF; 
+  S_gDGF sold_gdgf(tp,pold_ldgf,pold_gdgf);
+
+  // velocity grid functions
+  typedef Dune::PDELab::V_l<TP,P_lDGF,P_gDGF> VliquidDGF;
+  VliquidDGF vliquiddgf(tp,p_ldgf,p_gdgf);
+  vliquiddgf.set_time(0);
+  typedef Dune::PDELab::V_g<TP,P_lDGF,P_gDGF> VgasDGF;
+  VgasDGF vgasdgf(tp,p_ldgf,p_gdgf);
+  vgasdgf.set_time(0);
+
+  // all for concentrations
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
+    Dune::PDELab::P0ParallelConstraints,
+    Dune::PDELab::ISTLVectorBackend<1>,
+    Dune::PDELab::SimpleGridFunctionStaticSize> CGFS;
+  CGFS cgfs(gv,fem); 
+  typedef Conc<GV,RF> ConcType;
+  ConcType conc_initial(gv);
+  typedef typename CGFS::template VectorContainer<RF>::Type CV;
+  CV scaling(cgfs,0.0);
+  CV cv(cgfs,0.0);
+  Dune::PDELab::interpolate(conc_initial,cgfs,cv);
+  typedef Dune::PDELab::DiscreteGridFunction<CGFS,CV> ConcDGF;
+  ConcDGF concdgf(cgfs,cv);
+  typedef ComponentTransportParameter<GV,RF,S_gDGF,S_gDGF,VgasDGF> CTP;
+  CTP ctp(tp,sold_gdgf,s_gdgf,vgasdgf);
+  typedef Dune::PDELab::EEComponentTransportOperator<CTP,CV> CLOP;
+  CLOP clop(ctp,scaling);
 
   // output of timesteps
   bool graphics = true;
@@ -538,6 +693,9 @@ void test (const GV& gv, int timesteps, double timestep)
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<ConcDGF>(concdgf,"concentration"));
+    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VliquidDGF>(vliquiddgf,"liquid velocity"));
+    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VgasDGF>(vgasdgf,"gas velocity"));
     char fname[255];
     sprintf(fname,"%s-%05d",basename,filecounter);
     vtkwriter.pwrite(fname,"vtk","",Dune::VTKOptions::binaryappended);
@@ -554,6 +712,8 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MB;
   typedef Dune::PDELab::GridOperatorSpace<TPGFS,TPGFS,LOP,C,C,MB> TPGOS;
   TPGOS tpgos(tpgfs,cg,tpgfs,cg,lop);
+  typedef Dune::PDELab::GridOperatorSpace<CGFS,CGFS,CLOP> CGOS;
+  CGOS cgos(cgfs,cgfs,clop);
 
   // represent operator as a matrix
   typedef typename TPGOS::template MatrixContainer<RF>::Type M;
@@ -571,10 +731,13 @@ void test (const GV& gv, int timesteps, double timestep)
 
   // time loop
   RF time = 0.0;
+  RF CFL = 0.95;
   for (int k=1; k<=timesteps; k++)
     {
       // prepare new time step
       if (rank==0) std::cout << "+++ TIME STEP " << k << " tnew=" << time+timestep << " dt=" << timestep << std::endl;
+
+      // solve two phase problem
       lop.set_time(time+timestep);
       lop.set_timestep(timestep);
 
@@ -621,11 +784,56 @@ void test (const GV& gv, int timesteps, double timestep)
           //Dune::printvector(std::cout,r.base(),"r","row",4,9,1);
           if (rank==0) std::cout << "+++ NEWTON STEP " << i << " res=" << d << std::endl;
           if (d<1E-6*d0) break;
-       }
+        }
 
-      // accept time step
+      // accept 2phase time step
       time += timestep;
-      pold = pnew;
+      vliquiddgf.set_time(time);
+      vgasdgf.set_time(time);
+
+        {
+          // solve component transport
+          clop.set_time(time);
+          clop.initialize_timestep();
+          CV update(cgfs,0.0);
+          cgos.residual(cv,update);
+          std::cout << "2p timestep " << timestep
+                    << " max transport timestep " << clop.get_max_timestep() << std::endl;
+          int n;
+          RF c_timestep;
+          if (timestep<=CFL*clop.get_max_timestep())
+            {
+              n = 1;
+              c_timestep = timestep;
+              std::cout << "will do one component transport step" << std::endl;
+            }
+          else
+            { 
+              n = (int) ceil(timestep/(CFL*clop.get_max_timestep()));
+              c_timestep = timestep/n;
+              std::cout << "will do " << n << " component transport steps with size " << c_timestep << std::endl;
+            }
+
+          // advance timestep, sets snew=sold
+          pold = pnew;
+
+          for (int count=0; count<n; count++)
+            {
+              if (count>0)
+                {
+                  update = 0;
+                  clop.set_time(time+count*c_timestep);
+                  clop.initialize_timestep();
+                  cgos.residual(cv,update);
+                }
+              std::cout << "component transport substep " << count+1 
+                        << " emptycells=" << clop.get_empty_cells()
+                        << std::endl;
+              for (typename CV::size_type j=0; j<cv.size(); ++j)
+                cv[j] = scaling[j]*cv[j] - c_timestep*update[j];
+            }
+        }
+
 
       if (graphics)
         {
@@ -635,6 +843,9 @@ void test (const GV& gv, int timesteps, double timestep)
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
+          vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<ConcDGF>(concdgf,"concentration"));
+          vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VliquidDGF>(vliquiddgf,"liquid velocity"));
+          vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VgasDGF>(vgasdgf,"gas velocity"));
           char fname[255];
           sprintf(fname,"%s-%05d",basename,filecounter);
           vtkwriter.pwrite(fname,"vtk","",Dune::VTKOptions::binaryappended);

@@ -383,8 +383,8 @@ class S_l
                                           S_l<T,PL,PG> >
 {
   const T& t;
-  const PL pl;
-  const PG pg;
+  const PL& pl;
+  const PG& pg;
 
 public:
   typedef Dune::PDELab::GridFunctionTraits<typename PL::Traits::GridViewType,
@@ -419,8 +419,8 @@ class S_g
                                           S_g<T,PL,PG> >
 {
   const T& t;
-  const PL pl;
-  const PG pg;
+  const PL& pl;
+  const PG& pg;
 
 public:
   typedef Dune::PDELab::GridFunctionTraits<typename PL::Traits::GridViewType,
