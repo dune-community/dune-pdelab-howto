@@ -46,10 +46,23 @@ namespace Dune {
 	  //! \brief range type
 	  typedef Dune::FieldVector<RF,GV::dimensionworld> RangeType;
 
+      //! \brief permeability tensor type
+      typedef RangeFieldType PermTensorType;
+
 	  //! grid types
 	  typedef typename GV::Traits::template Codim<0>::Entity ElementType;
 	  typedef typename GV::Intersection IntersectionType;
 	};
+
+    template<typename GV, typename RF>
+	struct TwoPhaseFullTensorParameterTraits : TwoPhaseParameterTraits<GV, RF>
+	{
+      typedef TwoPhaseParameterTraits<GV, RF> Base;
+      typedef typename Base::RangeFieldType RangeFieldType;
+
+      //! \brief permeability tensor type
+      typedef Dune::FieldMatrix<RangeFieldType,Base::dimDomain,Base::dimDomain> PermTensorType;
+    };
 
     //! base class for parameter class
 	template<class T, class Imp>
@@ -114,7 +127,7 @@ namespace Dune {
 	  }
 	  
 	  //! absolute permeability (scalar!)
-	  typename Traits::RangeFieldType 
+	  typename Traits::PermTensorType
 	  k_abs (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
 	  {
 		return asImp().k_abs(e,x);
@@ -163,14 +176,14 @@ namespace Dune {
 	  int
 	  bc_l (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
 	  {
-		return asImp().bc_l(is,x);
+		return asImp().bc_l(is,x,time);
 	  }
 
 	  //! gas phase boundary condition type
 	  int
 	  bc_g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
 	  {
-		return asImp().bc_g(is,x);
+		return asImp().bc_g(is,x,time);
 	  }
 
 	  //! liquid phase Dirichlet boundary condition
@@ -191,14 +204,14 @@ namespace Dune {
 	  typename Traits::RangeFieldType 
 	  j_l (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
 	  {
-		return asImp().j_l(is,x);
+		return asImp().j_l(is,x,time);
 	  }
 
 	  //! gas phase Neumann boundary condition
 	  typename Traits::RangeFieldType 
 	  j_g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
 	  {
-		return asImp().j_g(is,x);
+		return asImp().j_g(is,x,time);
 	  }
 
 	  //! liquid phase source term
