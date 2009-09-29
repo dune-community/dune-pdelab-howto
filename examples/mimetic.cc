@@ -21,6 +21,7 @@
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/mimeticfem.hh>
+#include<dune/pdelab/finiteelementmap/mfdconstraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -46,9 +47,10 @@
 template<typename K0, typename A0, typename F, typename B, typename J, typename G>
 class DiffusionData
 {
-public:
-    static const unsigned int dimension = K0::Traits::GridViewType::dimension;
     typedef typename K0::Traits::GridViewType GV;
+public:
+    typedef GV GridView;
+    static const unsigned int dimension = GV::dimension;
     typedef typename K0::Traits::DomainFieldType ctype;
     typedef typename K0::Traits::RangeFieldType rtype;
 
@@ -62,8 +64,8 @@ public:
 public:
     enum BCType { bcDirichlet, bcNeumann };
 
-    DiffusionData(const GV& gv)
-        : kfunc(gv), a0func(gv), ffunc(gv), bfunc(gv), jfunc(gv), gfunc(gv)
+    DiffusionData(const GV& gv_)
+        : kfunc(gv_), a0func(gv_), ffunc(gv_), bfunc(gv_), jfunc(gv_), gfunc(gv_), gv(gv_)
     {}
 
     template<class Entity>
@@ -109,12 +111,20 @@ public:
         return y;
     }
 
+    const GV& gridview() const
+    {
+        return gv;
+    }
+
     K0 kfunc;
     A0 a0func;
     F ffunc;
     B bfunc;
     J jfunc;
     G gfunc;
+
+private:
+    const GV& gv;
 };
 
 template<typename GV>
@@ -142,35 +152,60 @@ public:
     }
 };
 
-class MimeticConstraints {
-public:
-    enum{doBoundary=true};
-    enum{doProcessor=false};
-    enum{doSkeleton=false};
-    enum{doVolume=false};
+template<class B, class G, class GFS, class V>
+void mimeticDirichletBoundaryConditions(const B& b, const G& g, const GFS& gfs, V& x)
+{
+    typedef typename GFS::Traits::GridViewType GV;
+    typedef typename GV::template Codim<0>::Iterator ElementIterator;
+    typedef typename GV::IntersectionIterator IntersectionIterator;
+    typedef typename GV::Intersection Intersection;
 
-    template<typename B, typename I, typename LFS, typename T>
-    void boundary(const B& b, const I& ig, const LFS& lfs, T& trafo) const
+    static const unsigned int dimIntersection = B::Traits::dimDomain;
+    typedef typename B::Traits::DomainFieldType ctype;
+
+    const GV& gridview = gfs.gridview();
+
+    // make local function space
+    typedef Dune::PDELab::GridFunctionSubSpace<GFS,1> FaceSpace;
+    FaceSpace fs(gfs);
+    typedef typename FaceSpace::LocalFunctionSpace FaceUnknowns;
+    FaceUnknowns face_space(fs);
+
+    ElementIterator itend = gridview.template end<0>();
+    for (ElementIterator it = gridview.template begin<0>(); it != itend; ++it)
     {
-        typename B::Traits::DomainType ip(0.5); // test edge midpoint
-        typename B::Traits::RangeType bctype;   // return value
-        b.evaluate(ig,ip,bctype);               // eval condition type
+        // bind local function space to element
+        face_space.bind(*it);
 
-        if (bctype > 0)
+        unsigned int face = 0;
+        IntersectionIterator isend = gridview.iend(*it);
+        for (IntersectionIterator is = gridview.ibegin(*it); is != isend; ++is, ++face)
         {
-            typename T::RowType empty;              // need not interpolate
-            trafo[ig.indexInInside()]=empty;
+            Dune::GeometryType gt = is->type();
+            typename B::Traits::DomainType center
+                = Dune::GenericReferenceElements<ctype,dimIntersection>::general(gt).position(0,0);
+            typename B::Traits::RangeType bctype;
+            b.evaluate(Dune::PDELab::IntersectionGeometry<Intersection>(*is, face), center, bctype);
+            if (bctype > 0)
+            {
+                typename G::Traits::DomainType local_face_center
+                    = is->geometryInInside().global(center);
+                g.evaluate(*it, local_face_center, x[face_space.globalIndex(face)]);
+            }
         }
     }
-};
+}
 
 //===============================================================
 // Problem setup and solution
 //===============================================================
 
-template<typename GV, typename Data>
-void mimetictest (const GV& gv, Data& data, std::string filename)
+template<typename Data>
+void mimetictest(Data& data, std::string filename)
 {
+    typedef typename Data::GridView GV;
+    const GV& gv = data.gridview();
+
     const int dim = GV::dimension;
 
     // set up index set for intersections
@@ -188,7 +223,7 @@ void mimetictest (const GV& gv, Data& data, std::string filename)
         Dune::PDELab::NoConstraints,Dune::PDELab::ISTLVectorBackend<1> > CellGFS;
     CellGFS cell_gfs(gv, cell_fem);
     typedef Dune::PDELab::GridFunctionSpace<GV,FaceFEM,
-        MimeticConstraints,Dune::PDELab::ISTLVectorBackend<1>,
+        Dune::PDELab::MimeticConstraints,Dune::PDELab::ISTLVectorBackend<1>,
         Dune::PDELab::GridFunctionStaticSize<IIS> > FaceGFS;
     FaceGFS face_gfs(gv, face_fem, iis);
     typedef Dune::PDELab::CompositeGridFunctionSpace
@@ -200,25 +235,19 @@ void mimetictest (const GV& gv, Data& data, std::string filename)
     DType d(gv);
     typedef typename Data::BType BType;
     typedef Dune::PDELab::CompositeGridFunction<DType,BType> BCT;
-    BCT bct(d,data.bfunc);
+    BCT bct(d, data.bfunc);
 
     // constraints
     typedef typename GFS::template ConstraintsContainer<double>::Type T;
     T t;                               // container for transformation
     Dune::PDELab::constraints(bct,gfs,t); // fill container
 
-//     // construct a composite grid function
-//     typedef typename Data::GType GType;
-//     typedef Dune::PDELab::PowerGridFunction<GType,2> UType;
-//     UType u(data.gfunc);
-
-    // make coefficent Vectors
+    // make coefficent vector
     typedef typename GFS::template VectorContainer<double>::Type V;
     V x(gfs);
 
-//     // do interpolation
-//     Dune::PDELab::interpolate(u,gfs,x);
-//     Dune::PDELab::set_nonconstrained_dofs(t,0.0,x);  // clear interior
+    // set Dirichlet boundary conditions
+    mimeticDirichletBoundaryConditions(data.bfunc, data.gfunc, gfs, x);
 
     typedef Dune::PDELab::DiffusionMFD<Data> LOP;
     LOP lop(data);
@@ -264,6 +293,17 @@ void mimetictest (const GV& gv, Data& data, std::string filename)
 // Main program with grid setup
 //===============================================================
 
+template<class GV>
+struct Data
+{
+    typedef DiffusionData<K_A<GV,double>, A0_A<GV,double>, F_A<GV,double>, B_A<GV>, J_A<GV,double>, G_A<GV,double> > A;
+    typedef DiffusionData<K_B<GV,double>, A0_B<GV,double>, F_B<GV,double>, B_B<GV>, J_B<GV,double>, G_B<GV,double> > B;
+    typedef DiffusionData<K_C<GV,double>, A0_C<GV,double>, F_C<GV,double>, B_C<GV>, J_C<GV,double>, G_C<GV,double> > C;
+    typedef DiffusionData<K_D<GV,double>, A0_D<GV,double>, F_D<GV,double>, B_D<GV>, J_D<GV,double>, G_D<GV,double> > D;
+    typedef DiffusionData<K_E<GV,double>, A0_E<GV,double>, F_E<GV,double>, B_E<GV>, J_E<GV,double>, G_E<GV,double> > E;
+    typedef DiffusionData<K_F<GV,double>, A0_F<GV,double>, F_F<GV,double>, B_F<GV>, J_F<GV,double>, G_F<GV,double> > F;
+};
+
 int main(int argc, char** argv)
 {
     try{
@@ -284,17 +324,62 @@ int main(int argc, char** argv)
             const GV& gv=grid.leafView();
 
             // choose problem data
-            typedef DiffusionData<K_A<GV,double>,
-                                  A0_A<GV,double>,
-                                  F_A<GV,double>,
-                                  B_A<GV>,
-                                  J_A<GV,double>,
-                                  G_A<GV,double> > Data;
-            Data data(gv);
+            Data<GV>::C data(gv);
 
             // solve problem
-            mimetictest(gv,data,"mimetic_yasp_2d");
+            mimetictest(data,"mimetic_yasp_2d");
         }
+
+#if HAVE_UG
+
+        {
+            // make grid
+            typedef UGUnitSquareQ Grid;
+            Grid grid;
+            grid.setClosureType(Grid::NONE);
+            grid.globalRefine(5);
+
+            typedef Grid::Codim<0>::LeafIterator Iterator;
+            typedef Iterator::Entity::Geometry Geometry;
+
+            for(int i = 0; i < 1; ++i)
+            {
+                Iterator itend = grid.leafend<0>();
+                for (Iterator it = grid.leafbegin<0>(); it != itend; ++it)
+                {
+                    const Geometry& geo = it->geometry();
+                    for (int j = 0; j < geo.corners(); ++j)
+                    {
+                        Dune::FieldVector<Geometry::ctype,2> x = geo.corner(j);
+                        double dummy;
+                        if (std::modf(x[0]*8.0+1e-10, &dummy) < 2e-10 &&
+                            std::modf(x[1]*8.0+1e-10, &dummy) < 2e-10)
+                        {
+                            grid.mark(1, *it);
+                            break;
+                        }
+                    }
+                }
+                grid.preAdapt();
+                grid.adapt();
+                grid.postAdapt();
+            }
+
+            // get view
+            typedef Grid::LeafGridView GV;
+            const GV& gv=grid.leafView();
+
+            Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
+            vtkwriter.write("ug",Dune::VTKOptions::ascii);
+
+            // choose problem data
+            Data<GV>::C data(gv);
+
+            // solve problem
+            mimetictest(data,"mimetic_ug_2d");
+        }
+
+#endif
 
 #if HAVE_ALUGRID
         if (false)
