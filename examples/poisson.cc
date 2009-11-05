@@ -20,10 +20,11 @@
 #include<dune/istl/io.hh>
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/p12dfem.hh>
+//#include<dune/pdelab/finiteelementmap/p12dfem.hh>
+#include<dune/pdelab/finiteelementmap/p1fem.hh>
 #include<dune/pdelab/finiteelementmap/pk2dfem.hh>
 #include<dune/pdelab/finiteelementmap/pk3dfem.hh>
-#include<dune/pdelab/finiteelementmap/q12dfem.hh>
+//#include<dune/pdelab/finiteelementmap/q12dfem.hh>
 #include<dune/pdelab/finiteelementmap/q22dfem.hh>
 #include<dune/pdelab/finiteelementmap/q1fem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
@@ -412,7 +413,7 @@ int main(int argc, char** argv)
 
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::Q12DLocalFiniteElementMap<DF,double> FEM;
+      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double,2> FEM;
       FEM fem;
   
       // solve problem
