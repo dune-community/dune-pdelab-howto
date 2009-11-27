@@ -85,20 +85,11 @@ void driver (const BType& b, const GType& g,
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
     Dune::PDELab::NonoverlappingConformingDirichletConstraints,
-    //Dune::PDELab::ConformingDirichletConstraints,
     Dune::PDELab::ISTLVectorBackend<1>,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
-  std::vector<int> intghost; 
-  Dune::PDELab::NonoverlappingConformingDirichletConstraints cn(intghost);
+  Dune::PDELab::NonoverlappingConformingDirichletConstraints cn;
   GFS gfs(gv,fem,cn);
-
-  // compute ghosts dofs
-  typedef typename GFS::template VectorContainer<R>::Type V;
-  V ghost(gfs,0.0);
-  Dune::PDELab::GhostDataHandle<GFS,V> gdh(gfs,ghost);
-  if (gfs.gridview().comm().size()>1)
-    gfs.gridview().communicate(gdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
-  ghost.std_copy_to(intghost); // copy to std::vector as Constraints object is allocated before
+  cn.compute_ghosts(gfs);
 
   // make constraints map and initialize it from a function and ghost
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
@@ -108,6 +99,7 @@ void driver (const BType& b, const GType& g,
   std::cout << "/" << gv.comm().rank() << "/ " << "constrained dofs=" << cg.size() << std::endl;
 
   // make coefficent Vector and initialize it from a function
+  typedef typename GFS::template VectorContainer<R>::Type V; 
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
