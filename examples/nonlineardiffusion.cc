@@ -57,6 +57,7 @@
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include<dune/pdelab/localoperator/diffusion.hh>
+#include<dune/pdelab/localoperator/convectiondiffusion.hh>
 #include<dune/pdelab/newton/newton.hh>
 
 #include"gridexamples.hh"
@@ -66,6 +67,101 @@
 #include"problemD.hh"
 #include"problemE.hh"
 #include"problemF.hh"
+
+//==============================================================================
+// Some linear solver variants to be used in Newton's method
+//==============================================================================
+
+//! base class for parameter class
+template<typename GV, typename RF>
+class ConvectionDiffusionProblem : 
+  public Dune::PDELab::ConvectionDiffusionParameterInterface<Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF>, 
+                                                             ConvectionDiffusionProblem<GV,RF> >
+{
+public:
+  typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
+
+  //! source/reaction term
+  typename Traits::RangeFieldType 
+  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+     typename Traits::RangeFieldType u) const
+  {
+    return 0.0;
+  }
+
+  //! nonlinearity under gradient
+  typename Traits::RangeFieldType 
+  w (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+     typename Traits::RangeFieldType u) const
+  {
+    return u;
+  }
+
+  //! nonlinear scaling of diffusion tensor
+  typename Traits::RangeFieldType 
+  v (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+     typename Traits::RangeFieldType u) const
+  {
+    return 1.0;
+  }
+
+  //! tensor permeability
+  typename Traits::PermTensorType
+  D (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename Traits::PermTensorType kabs;
+    for (std::size_t i=0; i<Traits::dimDomain; i++)
+      for (std::size_t j=0; j<Traits::dimDomain; j++)
+        kabs[i][j] = (i==j) ? 1 : 0;
+    return kabs;
+  }
+
+  //! nonlinear flux vector
+  typename Traits::RangeType
+  q (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+     typename Traits::RangeFieldType u) const
+  {
+    typename Traits::RangeType flux;
+    flux[0] = 10 * 1.0 * u*u;
+    flux[1] = 10 * 0.5 * u*u;
+    return flux;
+  }
+
+  //! boundary condition type function
+  // 0 means Neumann
+  // 1 means Dirichlet
+  // 2 means Outflow (zero diffusive flux)
+  int
+  bc (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
+  {
+    typename Traits::RangeType global = is.geometry().global(x);
+    return 1; 
+    if (global[0]<1E-6 || global[0]>1-1E-6)
+      return 1;
+  }
+
+  //! Dirichlet boundary condition value
+  typename Traits::RangeFieldType 
+  g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename Traits::RangeType global = e.geometry().global(x);
+    if (global[1]>0.25+global[0]*0.5)
+      return 1.0;
+    else
+      return 0.0;
+  }
+
+  //! Neumann boundary condition
+  // Good: The dependence on u allows us to implement Robin type boundary conditions.
+  // Bad: This interface cannot be used for mixed finite elements where the flux is the essential b.c.
+  typename Traits::RangeFieldType 
+  j (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
+     typename Traits::RangeFieldType u) const
+  {
+    return 0.0;
+  }
+};
+
 
 //==============================================================================
 // Some linear solver variants to be used in Newton's method
@@ -279,6 +375,47 @@ private:
 //===============================================================
 
 template<class GOS, class LS, class V> 
+class LinearSolver
+{
+    typedef typename V::ElementType Real;
+    typedef typename GOS::template MatrixContainer<Real>::Type M;
+    typedef typename GOS::Traits::TrialGridFunctionSpace::template VectorContainer<Real>::Type W;
+
+public:
+
+  LinearSolver (const GOS& gos_, LS& ls_, V& x_, typename V::ElementType reduction_)
+    : gos(gos_), ls(ls_), x(x_), reduction(reduction_)
+  {
+  }
+
+  void apply ()
+  {
+    // assemble matrix; optional: assemble only on demand!
+    M m(gos); 
+    m = 0.0;
+    gos.jacobian(x,m);
+
+    // assemble residual
+    W r(gos.testGridFunctionSpace(),0.0);
+    gos.residual(x,r);  // residual is additive
+
+    // compute correction
+    V z(gos.trialGridFunctionSpace(),0.0);
+    ls.apply(m,z,r,1E-6); // solver makes right hand side consistent
+
+    // and update
+    x -= z;
+  }
+
+private:
+  const GOS& gos;
+  LS& ls;
+  V& x
+  typename V::ElementType reduction;
+};
+
+
+template<class GOS, class LS, class V> 
 void driver (const GOS& gos, LS& ls, V& x)
 {
   Dune::Timer watch;
@@ -327,11 +464,17 @@ void sequential_Q1 (const GV& gv)
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
   GFS gfs(gv,fem);
 
+  // <<<2b>>> define problem parameters
+  typedef ConvectionDiffusionProblem<GV,Real> Param;
+  Param param;
+  typedef Dune::PDELab::BoundaryConditionType_CD<Param> B;
+  B b(gv,param);
+  typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
+  G g(gv,param);
+
   // <<<3>>> Compute constrained space
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
-  typedef B_A<GV> B;
-  B b(gv);
   Dune::PDELab::constraints(b,gfs,cg);
   std::cout << "constrained dofs=" << cg.size() 
             << " of " << gfs.globalSize() << std::endl;
@@ -339,22 +482,12 @@ void sequential_Q1 (const GV& gv)
   // <<<4>>> Compute affine shift
   typedef typename GFS::template VectorContainer<Real>::Type V;
   V x(gfs,0.0);
-  typedef G_A<GV,Real> G;
-  G g(gv);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
   // <<<5>>> Make grid operator space
-  typedef K_A<GV,Real> K;
-  K k(gv);
-  typedef A0_A<GV,Real> A0;
-  A0 a0(gv);
-  typedef F_A<GV,Real> F;
-  F f(gv);
-  typedef J_A<GV,Real> J;
-  J j(gv);
-  typedef Dune::PDELab::Diffusion<K,A0,F,B,J> LOP; 
-  LOP lop(k,a0,f,b,j,2);
+  typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
+  LOP lop(param,2);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
@@ -365,6 +498,8 @@ void sequential_Q1 (const GV& gv)
 
   // <<<7>>> solve nonlinear problem
   Dune::PDELab::Newton<GOS,LS,V> newton(gos,x,ls);
+  newton.setReassembleThreshold(0.0);
+  newton.setVerbosityLevel(1);
   newton.apply();
 
   // <<<8>>> graphical output
@@ -539,7 +674,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<bool,2> periodic(false);
       int overlap=0;
       Dune::YaspGrid<2> grid(L,N,periodic,overlap);
-      //grid.globalRefine(1);
+      grid.globalRefine(2);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
       sequential_Q1(gv);
