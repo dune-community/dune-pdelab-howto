@@ -1,6 +1,6 @@
-#include<dune/finiteelements/common/localcoefficients.hh>
+#include<dune/localfunctions/common/localkey.hh>
 class Q1LocalCoefficients 
-  : public Dune::LocalCoefficientsInterface<Q1LocalCoefficients> {
+{
 public:
   Q1LocalCoefficients () : li(4)  {
 	for (int i=0; i<4; i++) li[i] = Dune::LocalKey(i,2,0);

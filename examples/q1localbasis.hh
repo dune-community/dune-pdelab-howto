@@ -1,16 +1,11 @@
 #include<dune/common/fvector.hh>
-#include<dune/finiteelements/common/localbasis.hh>
+#include<dune/localfunctions/common/localbasis.hh>
 template<class D, class R>
-class Q1LocalBasis : 
-  public Dune::C1LocalBasisInterface<
-  Dune::C1LocalBasisTraits<D,2,Dune::FieldVector<D,2>,
-						   R,1,Dune::FieldVector<R,1>,
-        Dune::FieldVector<Dune::FieldVector<R,2>,1> >,
-  Q1LocalBasis<D,R> > {
+class Q1LocalBasis
+{
 public:
-  typedef Dune::C1LocalBasisTraits<D,2,Dune::FieldVector<D,2>,
-								   R,1,Dune::FieldVector<R,1>,
-			    Dune::FieldVector<Dune::FieldVector<R,2>,1> > Traits;
+  typedef Dune::LocalBasisTraits<D,2,Dune::FieldVector<D,2>,R,1,Dune::FieldVector<R,1>,
+			   Dune::FieldMatrix<R,1,2>, 1> Traits;
 
   unsigned int size () const { return 4; }
 

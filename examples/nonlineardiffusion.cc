@@ -410,7 +410,7 @@ public:
 private:
   const GOS& gos;
   LS& ls;
-  V& x
+  V& x;
   typename V::ElementType reduction;
 };
 

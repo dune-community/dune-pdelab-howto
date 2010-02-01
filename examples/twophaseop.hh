@@ -7,7 +7,7 @@
 #include<dune/common/static_assert.hh>
 #include<dune/grid/common/genericreferenceelements.hh>
 
-#include<dune/finiteelements/rt0q.hh>
+#include<dune/localfunctions/raviartthomas/raviartthomas0q.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>

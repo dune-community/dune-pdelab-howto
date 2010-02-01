@@ -1,8 +1,7 @@
-#include<dune/finiteelements/common/localinterpolation.hh>
-
+// interface: <dune/localfunctions/common/interpolation.hh>
 template<class LB>
-class Q1LocalInterpolation : public Dune::
-  LocalInterpolationInterface<Q1LocalInterpolation<LB> > {
+class Q1LocalInterpolation
+{
 public:
 
   //! \brief Local interpolation of a function
