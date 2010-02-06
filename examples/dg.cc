@@ -44,10 +44,10 @@
 #include"problemF.hh"  // Constant flow with constant permeability with is 1E-6 in x direction
 
 // Define most changed values
-#define QUADRATURE_RULE_ORDER 8
-#define MONOM_BASIS_ORDER 4
-#define BLOCK_SIZE 15
-#define GRID_REFINE 0
+#define QUADRATURE_RULE_ORDER 6
+#define MONOM_BASIS_ORDER 2
+#define BLOCK_SIZE 6
+#define GRID_REFINE 2
 #define DG_METHOD 0  // OBB: 0, NIPG: 1, SIPG: 2
 #define MAKE_VTK_OUTPUT
 //#define CALCULATE_L2_ERROR
