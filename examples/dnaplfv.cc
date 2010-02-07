@@ -34,7 +34,6 @@
 
 #include"gridexamples.hh"
 #include"twophaseop.hh"
-//#include"parallelstuff.hh"
 
 //==============================================================================
 // Problem definition
@@ -461,40 +460,36 @@ int rank;
 template<class GV> 
 void test (const GV& gv, int timesteps, double timestep)
 {
-  // some types
+  // <<<1>>> choose some types
   typedef typename GV::Grid::ctype DF;
   typedef double RF;
   const int dim = GV::dimension;
   Dune::Timer watch;
 
-  // instantiate finite element maps
+  // <<<2>>> Make grid function space
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
   FEM fem(Dune::GeometryType::cube);
-  
-  // make grid function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::P0ParallelConstraints,
-    Dune::PDELab::ISTLVectorBackend<2>,
+  typedef Dune::PDELab::P0ParallelConstraints CON;
+  typedef Dune::PDELab::ISTLVectorBackend<2> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
   typedef Dune::PDELab::PowerGridFunctionSpace<GFS,2,
     Dune::PDELab::GridFunctionSpaceBlockwiseMapper> TPGFS;
   watch.reset();
-  Dune::PDELab::P0ParallelConstraints con;
+  CON con;
   GFS gfs(gv,fem,con);
   TPGFS tpgfs(gfs);
-  std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
-
-  // make subspaces (needed for VTK output)
   typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,0> P_lSUB;
   P_lSUB p_lsub(tpgfs);
   typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,1> P_gSUB;
   P_gSUB p_gsub(tpgfs);
+  std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
-  // make parameter object
+  // <<<3>>> make parameter object
   typedef TwoPhaseParameter<GV,RF> TP;
   TP tp;
 
-  // initial value function
+  // <<<4>>> initial value function
   typedef P_l<GV,RF> P_lType;
   P_lType p_l_initial(gv,tp);
   typedef P_g<GV,RF> P_gType;
@@ -502,20 +497,16 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef Dune::PDELab::CompositeGridFunction<P_lType,P_gType> PType;
   PType p_initial(p_l_initial,p_g_initial);
 
-  // make vector for old time step and initialize
+  // <<<5>>> make vector for old time step and initialize
   typedef typename TPGFS::template VectorContainer<RF>::Type V;
   V pold(tpgfs);
   Dune::PDELab::interpolate(p_initial,tpgfs,pold);
 
-  // make vector for new time step and initialize
+  // <<<6>>> make vector for new time step and initialize
   V pnew(tpgfs);
   pnew = pold;
 
-  // make local operator
-  typedef Dune::PDELab::TwoPhaseTwoPointFluxOperator<TP,V> LOP;
-  LOP lop(tp,pold);
-
-  // make discrete function objects for pnew and saturations
+  // <<<7>>> make discrete function objects for pnew and saturations
   typedef Dune::PDELab::DiscreteGridFunction<P_lSUB,V> P_lDGF;
   P_lDGF p_ldgf(p_lsub,pnew);
   typedef Dune::PDELab::DiscreteGridFunction<P_gSUB,V> P_gDGF;
@@ -525,7 +516,7 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef S_g<TP,P_lDGF,P_gDGF> S_gDGF; 
   S_gDGF s_gdgf(tp,p_ldgf,p_gdgf);
 
-  // output of timesteps
+  // <<<8>>> output of timesteps
   bool graphics = true;
   int filecounter = 0;
   char basename[255];
@@ -544,32 +535,23 @@ void test (const GV& gv, int timesteps, double timestep)
     filecounter++;
   }
 
-  // make constraints map and initialize it from a function
+  // <<<9>>> make constraints map and initialize it from a function
   typedef typename TPGFS::template ConstraintsContainer<RF>::Type C;
-  C cg;
-  cg.clear();
+  C cg; cg.clear();
   Dune::PDELab::constraints(p_initial,tpgfs,cg,false);
 
-  // make grid operator space
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MB;
-  typedef Dune::PDELab::GridOperatorSpace<TPGFS,TPGFS,LOP,C,C,MB> TPGOS;
+  // <<<10>>> make grid operator space
+  typedef Dune::PDELab::TwoPhaseTwoPointFluxOperator<TP,V> LOP;
+  LOP lop(tp,pold);
+  typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MBE;
+  typedef Dune::PDELab::GridOperatorSpace<TPGFS,TPGFS,LOP,C,C,MBE> TPGOS;
   TPGOS tpgos(tpgfs,cg,tpgfs,cg,lop);
 
-  // represent operator as a matrix
-  typedef typename TPGOS::template MatrixContainer<RF>::Type M;
-  M m(tpgos);
-  //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
+  // <<<11>>> Make a linear solver 
+  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<TPGFS,C> LS;
+  LS ls(tpgfs,cg,5000,5,1);
 
-  // solver stuff
-  typedef Dune::PDELab::ParallelISTLHelper<TPGFS> PHELPER;
-  PHELPER phelper(tpgfs);
-  typedef Dune::PDELab::OverlappingOperator<C,M,V,V> POP;
-  POP pop(cg,m);
-  typedef Dune::PDELab::OverlappingScalarProduct<TPGFS,V> PSP;
-  PSP psp(tpgfs,phelper);
-  int rank = gv.comm().rank();
-
-  // time loop
+  // <<<12>>> time loop
   RF time = 0.0;
   for (int k=1; k<=timesteps; k++)
     {
@@ -579,49 +561,10 @@ void test (const GV& gv, int timesteps, double timestep)
       lop.set_timestep(timestep);
 
       // Newton iteration
-      V r(tpgfs,0.0);
-      tpgos.residual(pnew,r);
-      char buf[64];
-      sprintf(buf,"[%02d] ",gv.comm().rank());
-      int cols = 14;
-      //Dune::printvector(std::cout,r.base(),"initial residual after computation",buf,cols,9,1);
-      RF d0 = psp.norm(r);
-      RF lastd=d0;
-      RF red = 1.0;
-      if (rank==0) std::cout << "+++ NEWTON STEP " << 0 << " res=" << d0 << std::endl;
-      for (int i=1; i<=25; i++)
-        {
-          m = 0.0;
-          watch.reset();
-          tpgos.jacobian(pnew,m);
-          if (rank==0) std::cout << "=== jacobian assembly " <<  watch.elapsed() << " s" << std::endl;
-
-          typedef Dune::SeqSSOR<M,V,V> SeqPrec;
-          SeqPrec seqprec(m,5,1.0);
-          typedef Dune::PDELab::OverlappingWrappedPreconditioner<C,TPGFS,SeqPrec> WPREC;
-          WPREC  wprec(tpgfs,seqprec,cg,phelper);
-//           typedef Dune::PDELab::SuperLUSubdomainSolver<TPGFS,M,V,V> PSUBSOLVE;
-//           PSUBSOLVE psubsolve(tpgfs,m);
-          int verbose=1;
-          if (rank>0) verbose=0;
-          Dune::BiCGSTABSolver<V> solver(pop,psp,wprec,
-                                         std::max(std::min(1E-3,red*red),1E-10),5000,verbose);
-          Dune::InverseOperatorResult stat;  
-
-          V v(tpgfs,0.0);
-          solver.apply(v,r,stat);
-          //Dune::printvector(std::cout,v.base(),"correction computed in solver",buf,cols,9,1);
-          pnew -= v;
-          r = 0.0;
-          tpgos.residual(pnew,r);
-          //Dune::printvector(std::cout,r.base(),"new residual",buf,cols,9,1);
-          RF d = psp.norm(r);
-          red = d/lastd;
-          lastd = d;
-          //Dune::printvector(std::cout,r.base(),"r","row",4,9,1);
-          if (rank==0) std::cout << "+++ NEWTON STEP " << i << " res=" << d << std::endl;
-          if (d<1E-6*d0) break;
-       }
+      Dune::PDELab::Newton<TPGOS,LS,V> newton(tpgos,pnew,ls);
+      newton.setReassembleThreshold(0.0);
+      newton.setVerbosityLevel(1);
+      newton.apply();
 
       // accept time step
       time += timestep;
