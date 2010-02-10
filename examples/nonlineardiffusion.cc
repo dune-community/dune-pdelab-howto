@@ -53,6 +53,7 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+#include<dune/pdelab/gridoperatorspace/instationarygridoperatorspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
@@ -61,6 +62,8 @@
 #include<dune/pdelab/localoperator/convectiondiffusion.hh>
 #include<dune/pdelab/newton/newton.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
+
+#include<dune/pdelab/instationary/onestep.hh>
 
 #include"gridexamples.hh"
 
@@ -118,8 +121,8 @@ public:
      typename Traits::RangeFieldType u) const
   {
     typename Traits::RangeType flux;
-    flux[0] = 100 * 1.0 * u*u;
-    flux[1] = 100 * 0.5 * u*u;
+    flux[0] = 50 * 1.00 * u*u;
+    flux[1] = 50 * 0.25 * u*u;
     return flux;
   }
 
@@ -143,7 +146,7 @@ public:
     typename Traits::RangeType global = e.geometry().global(x);
     if (global[0]>1E-12 && global[0]<1.0-1E-12 &&           // this is needed for parallel
         global[1]>1E-12 && global[1]<1.0-1E-12) return 0.0; // overlapping version !
-    if (global[1]>0.25+global[0]*0.5)
+    if (global[0]<1E-6 && global[1]>0.25 && global[1]<0.75)
       return 1.0;
     else
       return 0.0;
@@ -167,7 +170,7 @@ public:
 
 // a sequential variant
 template<class GV>
-void sequential_Q1 (const GV& gv)
+void sequential (const GV& gv)
 {
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
@@ -207,7 +210,7 @@ void sequential_Q1 (const GV& gv)
 
   // <<<5>>> Make grid operator space
   typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
-  LOP lop(param,2);
+  LOP lop(param,6);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
@@ -402,10 +405,10 @@ int main(int argc, char** argv)
       Dune::FieldVector<bool,2> periodic(false);
       int overlap=0;
       Dune::YaspGrid<2> grid(L,N,periodic,overlap);
-      grid.globalRefine(2);
+      grid.globalRefine(3);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
-      sequential_Q1(gv);
+      sequential(gv);
     }
 
 #if HAVE_MPI
@@ -413,7 +416,7 @@ int main(int argc, char** argv)
     if (1 && helper.size()>1)
     {
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(8);
+      Dune::FieldVector<int,2> N(16);
       Dune::FieldVector<bool,2> periodic(false);
       int overlap=0; // needs overlap 0 because overlap elements are not assembled anyway
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
@@ -424,14 +427,14 @@ int main(int argc, char** argv)
     }
 
     // overlapping version
-    if (1 && helper.size()>=1)
+    if (1 && helper.size()>1)
     {
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(8);
       Dune::FieldVector<bool,2> periodic(false);
       int overlap=2;
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
-      grid.globalRefine(2);
+      grid.globalRefine(3);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
       parallel_overlapping_Q1(gv);
