@@ -67,10 +67,30 @@
 #include<dune/pdelab/instationary/onestep.hh>
 
 #include"gridexamples.hh"
+#include"l2interpolationerror.hh"
 
 //==============================================================================
 // Parameter class for the convection diffusion problem
 //==============================================================================
+
+const double pi = 3.141592653589793238462643;
+
+// grid function for analytic solution at T=0.125
+template<typename GV, typename RF>
+class U : public Dune::PDELab::AnalyticGridFunctionBase<
+  Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
+  U<GV,RF> > {
+public:
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,U<GV,RF> > B;
+
+  U (const GV& gv) : B(gv) {}
+  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+							  typename Traits::RangeType& y) const
+  {
+	y = sin(2.0*pi*0.125) * sin(3.0*pi*x[0]) * sin(2.0*pi*x[1]);
+  }
+};
 
 //! base class for parameter class
 template<typename GV, typename RF>
@@ -86,7 +106,11 @@ public:
   f (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
      typename Traits::RangeFieldType u) const
   {
-    return 0.0;
+    typename Traits::RangeType global = e.geometry().global(x);
+    typename Traits::RangeFieldType X = sin(3.0*pi*global[0]);
+    typename Traits::RangeFieldType Y = sin(2.0*pi*global[1]);
+    return X*Y*(2.0*pi*cos(2.0*pi*time)+13.0*pi*pi*sin(2.0*pi*time));
+    // exact solution is u(x,y,t) = sin(2*pi*t) * sin(3*pi*x) * sin(2*pi*y)
   }
 
   //! nonlinearity under gradient
@@ -122,8 +146,8 @@ public:
      typename Traits::RangeFieldType u) const
   {
     typename Traits::RangeType flux;
-    flux[0] = 0.0; // 10 * 1.00 * u*u;
-    flux[1] = 0.0; // 10 * 0.25 * u*u;
+    flux[0] = 0.0;
+    flux[1] = 0.0;
     return flux;
   }
 
@@ -134,26 +158,15 @@ public:
   int
   bc (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
+    return 1;
     typename Traits::RangeType global = is.geometry().global(x);
-    if (global[0]<1E-6 && global[1]>0.25 && global[1]<0.75)
-      return 0;
-    return 1; 
-    if (global[0]<1E-6 || global[0]>1-1E-6)
-      return 1;
   }
 
   //! Dirichlet boundary condition value
   typename Traits::RangeFieldType 
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    typename Traits::RangeType global = e.geometry().global(x);
     return 0.0;
-    if (global[0]>1E-12 && global[0]<1.0-1E-12 &&           // this is needed for parallel
-        global[1]>1E-12 && global[1]<1.0-1E-12) return 0.0; // overlapping version !
-    if (global[0]<1E-6 && global[1]>0.25 && global[1]<0.75)
-      return 1.0;
-    else
-      return 0.0;
   }
 
   //! Neumann boundary condition
@@ -163,10 +176,18 @@ public:
   j (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
      typename Traits::RangeFieldType u) const
   {
-    return -1.0;
+    return 0.0;
   }
-};
 
+  //! set time for subsequent evaluation
+  void setTime (RF t)
+  {
+    time = t;
+  }
+
+private:
+  RF time;
+};
 
 //===============================================================
 // Some variants to solve the nonlinear diffusion problem
@@ -174,7 +195,7 @@ public:
 
 // a sequential variant
 template<class GV>
-void sequential (const GV& gv)
+void sequential (const GV& gv, int t_level)
 {
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
@@ -182,8 +203,8 @@ void sequential (const GV& gv)
   const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
-  typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
-  //typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM;
+  //typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
+  typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM;
   FEM fem;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
   CON con;
@@ -207,49 +228,44 @@ void sequential (const GV& gv)
   std::cout << "constrained dofs=" << cg.size() 
             << " of " << gfs.globalSize() << std::endl;
 
-  // <<<4>>> Compute affine shift
-  typedef typename GFS::template VectorContainer<Real>::Type V;
-  V x(gfs,0.0);
-  Dune::PDELab::interpolate(g,gfs,x);
-  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
-
   // <<<5>>> Make grid operator space for time-dependent problem
   typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
   LOP lop(param,6);
   typedef Dune::PDELab::L2 MLOP; 
   MLOP mlop(6);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
-  Dune::PDELab::ImplicitEulerParameter<Real> method;
+  Dune::PDELab::Alexander2Parameter<Real> method;
+  typedef typename GFS::template VectorContainer<Real>::Type V;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,MLOP,C,C,MBE> IGOS;
   IGOS igos(method,gfs,cg,gfs,cg,lop,mlop);
 
   // <<<6>>> Make a linear solver 
-#ifdef HAVE_SUPERLU
-  typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
-  LS ls(false);
-#else
+// #ifdef HAVE_SUPERLU
+//   typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
+//   LS ls(false);
+// #else
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
-  LS ls(5000,true);
-#endif
+  LS ls(5000,false);
+  //#endif
 
   // <<<7>>> make Newton for time-dependent problem
   typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
   PDESOLVER tnewton(igos,ls);
   tnewton.setReassembleThreshold(0.0);
-  tnewton.setVerbosityLevel(2);
+  tnewton.setVerbosityLevel(0);
+  tnewton.setReduction(1e-08);
+  tnewton.setMinLinearReduction(1e-12);
 
   // <<<8>>> time-stepper
   Dune::PDELab::OneStepMethod<Real,IGOS,PDESOLVER,V,V> osm(method,igos,tnewton);
-  osm.setVerbosityLevel(2);
+  osm.setVerbosityLevel(1);
 
   // <<<9>>> initial value and initial value for first time step with b.c. set
-  V xold(gfs);
+  V xold(gfs,0.0);
   xold = 0.0;
-  Dune::PDELab::interpolate(g,gfs,x);
-  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
   // <<<10>>> graphics for initial guess
-  Dune::PDELab::FilenameHelper fn("inldiff");
+  Dune::PDELab::FilenameHelper fn("instationarytest_Q1");
   {
     typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
     DGF xdgf(gfs,xold);
@@ -261,8 +277,13 @@ void sequential (const GV& gv)
 
   // <<<11>>> time loop
   Real time = 0.0;
-  Real dt = 0.0001;
-  for (int i=1; i<=200; i++)
+  int N=1; for (int i=0; i<t_level; i++) N *= 2;
+  Real dt = 0.125/N;
+  V x(gfs,0.0);
+  param.setTime(dt);
+  Dune::PDELab::interpolate(g,gfs,x);
+  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
+  for (int i=1; i<=N; i++)
     {
       // do time step
       osm.apply(time,dt,xold,x);
@@ -276,9 +297,24 @@ void sequential (const GV& gv)
       fn.increment();
 
       // advance time step
+//       std::cout.precision(8);
+//       std::cout << "solution maximum: " 
+//                 << std::scientific << x.infinity_norm() << std::endl;
       xold = x;
       time += dt;
     }
+
+  // evaluate discretization error
+  U<GV,Real> u(gv);
+  std::cout.precision(8);
+  std::cout << "space time discretization error: " 
+			<< std::setw(8) << gv.size(0) << " elements " 
+			<< std::scientific << l2interpolationerror(u,gfs,x,4) << std::endl;
+  {
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U<GV,Real> >(u,"exact solution"));
+    vtkwriter.write("instationarytest_exact",Dune::VTKOptions::binaryappended);
+  }
 }
 
 //===============================================================
@@ -298,17 +334,30 @@ int main(int argc, char** argv)
 		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
 	  }
 
+	if (argc!=3)
+	  {
+		if(helper.rank()==0)
+		  std::cout << "usage: ./instationarytest <t_level> <x_level>" << std::endl;
+		return 1;
+	  }
+
+	int t_level;
+	sscanf(argv[1],"%d",&t_level);
+
+	int x_level;
+	sscanf(argv[2],"%d",&x_level);
+
     // sequential version
     {
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(8);
+      Dune::FieldVector<int,2> N(16);
       Dune::FieldVector<bool,2> periodic(false);
       int overlap=0;
       Dune::YaspGrid<2> grid(L,N,periodic,overlap);
-      grid.globalRefine(2);
+      grid.globalRefine(x_level);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
-      sequential(gv);
+      sequential(gv,t_level);
     }
   }
 

@@ -85,7 +85,7 @@ public:
   f (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
      typename Traits::RangeFieldType u) const
   {
-    return 0.0;
+    return -1.0;
   }
 
   //! nonlinearity under gradient
@@ -161,6 +161,10 @@ public:
   {
     return 0.0;
   }
+
+  //! set time for subsequent evaluation
+  void setTime (RF t)
+  {}
 };
 
 
@@ -178,7 +182,8 @@ void sequential (const GV& gv)
   const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
-  typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
+  //typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
+  typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM;
   FEM fem;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
   CON con;
@@ -207,10 +212,17 @@ void sequential (const GV& gv)
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
+  {
+    typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+    DGF xdgf(gfs,x);
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
+    vtkwriter.write("nonlineardiffusion_initial_guess_Q2",Dune::VTKOptions::ascii);
+  }
 
   // <<<5>>> Make grid operator space
   typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
-  LOP lop(param,6);
+  LOP lop(param,8);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
@@ -235,11 +247,13 @@ void sequential (const GV& gv)
   //lp.apply();
 
   // <<<8>>> graphical output
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  DGF xdgf(gfs,x);
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-  vtkwriter.write("nonlineardiffusion_sequential_Q1",Dune::VTKOptions::ascii);
+  {
+    typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+    DGF xdgf(gfs,x);
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
+    vtkwriter.write("nonlineardiffusion_sequential_Q2",Dune::VTKOptions::ascii);
+  }
 }
 
 // a parallel variant for nonoverlapping grids
@@ -397,15 +411,25 @@ int main(int argc, char** argv)
 		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
 	  }
 
+	if (argc!=2)
+	  {
+		if(helper.rank()==0)
+		  std::cout << "usage: ./nonlineardiffusion <level>" << std::endl;
+		return 1;
+	  }
+
+	int level;
+	sscanf(argv[1],"%d",&level);
+
     // sequential version
     if (1 && helper.size()==1)
     {
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(8);
+      Dune::FieldVector<int,2> N(16);
       Dune::FieldVector<bool,2> periodic(false);
       int overlap=0;
       Dune::YaspGrid<2> grid(L,N,periodic,overlap);
-      grid.globalRefine(3);
+      grid.globalRefine(level);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
       sequential(gv);
@@ -420,7 +444,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<bool,2> periodic(false);
       int overlap=0; // needs overlap 0 because overlap elements are not assembled anyway
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
-      grid.globalRefine(2);
+      grid.globalRefine(level);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
       parallel_nonoverlapping_Q1(gv);
@@ -430,11 +454,11 @@ int main(int argc, char** argv)
     if (1 && helper.size()>1)
     {
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(8);
+      Dune::FieldVector<int,2> N(16);
       Dune::FieldVector<bool,2> periodic(false);
       int overlap=2;
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
-      grid.globalRefine(3);
+      grid.globalRefine(level);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
       parallel_overlapping_Q1(gv);
