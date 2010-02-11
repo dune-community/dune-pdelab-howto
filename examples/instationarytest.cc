@@ -230,11 +230,11 @@ void sequential (const GV& gv, int t_level)
 
   // <<<5>>> Make grid operator space for time-dependent problem
   typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
-  LOP lop(param,6);
+  LOP lop(param,4);
   typedef Dune::PDELab::L2 MLOP; 
-  MLOP mlop(6);
+  MLOP mlop(4);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
-  Dune::PDELab::Alexander2Parameter<Real> method;
+  Dune::PDELab::FractionalStepParameter<Real> method;
   typedef typename GFS::template VectorContainer<Real>::Type V;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,MLOP,C,C,MBE> IGOS;
   IGOS igos(method,gfs,cg,gfs,cg,lop,mlop);
@@ -253,12 +253,12 @@ void sequential (const GV& gv, int t_level)
   PDESOLVER tnewton(igos,ls);
   tnewton.setReassembleThreshold(0.0);
   tnewton.setVerbosityLevel(0);
-  tnewton.setReduction(1e-08);
-  tnewton.setMinLinearReduction(1e-12);
+  tnewton.setReduction(0.9);
+  tnewton.setMinLinearReduction(1e-9);
 
   // <<<8>>> time-stepper
   Dune::PDELab::OneStepMethod<Real,IGOS,PDESOLVER,V,V> osm(method,igos,tnewton);
-  osm.setVerbosityLevel(1);
+  osm.setVerbosityLevel(2);
 
   // <<<9>>> initial value and initial value for first time step with b.c. set
   V xold(gfs,0.0);
@@ -309,7 +309,7 @@ void sequential (const GV& gv, int t_level)
   std::cout.precision(8);
   std::cout << "space time discretization error: " 
 			<< std::setw(8) << gv.size(0) << " elements " 
-			<< std::scientific << l2interpolationerror(u,gfs,x,4) << std::endl;
+			<< std::scientific << l2interpolationerror(u,gfs,x,8) << std::endl;
   {
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U<GV,Real> >(u,"exact solution"));
