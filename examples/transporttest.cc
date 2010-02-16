@@ -92,7 +92,7 @@ public:
   typename Traits::RangeFieldType
   D (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    return 1E-4;
+    return 1E-10;
   }
 
   //! source/reaction term
@@ -138,20 +138,6 @@ public:
     return 0.0;
   }
 
-  //! set time for subsequent evaluation
-  void setTime (RF t)
-  {}
-};
-
-//! base class for parameter class
-template<typename GV, typename RF>
-class StorageTerm : 
-  public Dune::PDELab::TransportTemporalParameterInterface<Dune::PDELab::TransportParameterTraits<GV,RF>, 
-                                                           StorageTerm<GV,RF> >
-{
-public:
-  typedef Dune::PDELab::TransportParameterTraits<GV,RF> Traits;
-
   //! capacity function
   typename Traits::RangeFieldType 
   c (const typename Traits::ElementType& e, const typename Traits::DomainType& ) const
@@ -164,11 +150,12 @@ public:
   {}
 };
 
+
 //===============================================================
 // Some variants to solve the nonlinear diffusion problem
 //===============================================================
 
-// solve stationary transport problem
+// example solving stationary transport problem
 template<class GV>
 void stationary (const GV& gv)
 {
@@ -243,9 +230,9 @@ void stationary (const GV& gv)
 }
 
 
-// a sequential variant
+// example using implicit time-stepping
 template<class GV>
-void implicit (const GV& gv, int N)
+void implicit_scheme (const GV& gv, double Tend, double timestep)
 {
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
@@ -286,20 +273,18 @@ void implicit (const GV& gv, int N)
   // <<<5>>> Make grid operator space
   typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP; 
   LOP lop(param);
-  typedef StorageTerm<GV,Real> SParam;
-  SParam sparam;
-  typedef Dune::PDELab::CCFVTemporalOperator<SParam> SLOP; 
-  SLOP slop(sparam);
+  typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP; 
+  SLOP slop(param);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
-  Dune::PDELab::Alexander2Parameter<Real> method;
+  Dune::PDELab::ImplicitEulerParameter<Real> method;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,SLOP,C,C,MBE> IGOS;
   IGOS igos(method,gfs,cg,gfs,cg,lop,slop);
 
   // <<<6>>> Make a linear solver 
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
-  LS ls(5000,true);
+  LS ls(5000,false);
 
   // <<<7>>> make Newton for time-dependent problem
   typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
@@ -318,7 +303,7 @@ void implicit (const GV& gv, int N)
   xold = 0.0;
 
   // <<<10>>> graphics for initial guess
-  Dune::PDELab::FilenameHelper fn("transporttest_implicit_alexander2");
+  Dune::PDELab::FilenameHelper fn("transporttest_implicit_euler");
   {
     typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
     DGF xdgf(gfs,xold);
@@ -330,12 +315,112 @@ void implicit (const GV& gv, int N)
 
   // <<<11>>> time loop
   Real time = 0.0;
-  Real dt = 1.0/N;
+  Real dt = timestep;
   x = 0;
-  for (int i=1; i<=N; i++)
+  while (time < Tend)
     {
       // do time step
       osm.apply(time,dt,xold,x);
+
+      // graphics
+      typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+      DGF xdgf(gfs,x);
+      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+      vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
+      vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+      fn.increment();
+
+      xold = x;
+      time += dt;
+    }
+}
+
+
+// example using explicit time-stepping
+template<class GV>
+void explicit_scheme (const GV& gv, double Tend, double timestep)
+{
+  // <<<1>>> Choose domain and range field type
+  typedef typename GV::Grid::ctype Coord;
+  typedef double Real;
+  const int dim = GV::dimension;
+
+  // <<<2>>> Make grid function space
+  typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
+  FEM fem(Dune::GeometryType::cube); // works only for cubes
+  typedef Dune::PDELab::P0ParallelConstraints CON;
+  CON con;
+  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
+    Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+  GFS gfs(gv,fem);
+
+  // <<<2b>>> define problem parameters
+  typedef TransportProblem<GV,Real> Param;
+  Param param;
+  typedef Dune::PDELab::BoundaryConditionType_Transport<Param> B;
+  B b(gv,param);
+  typedef Dune::PDELab::DirichletBoundaryCondition_Transport<Param> G;
+  G g(gv,param);
+
+  // <<<3>>> Compute constrained space
+  typedef typename GFS::template ConstraintsContainer<Real>::Type C;
+  C cg;
+  Dune::PDELab::constraints(b,gfs,cg);
+  std::cout << "constrained dofs=" << cg.size() 
+            << " of " << gfs.globalSize() << std::endl;
+
+  // <<<4>>> Compute affine shift
+  typedef typename GFS::template VectorContainer<Real>::Type V;
+  V x(gfs,0.0);
+  Dune::PDELab::interpolate(g,gfs,x);
+  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
+
+  // <<<5>>> Make grid operator space
+  typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP; 
+  LOP lop(param);
+  typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP; 
+  SLOP slop(param);
+  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
+  GOS gos(gfs,cg,gfs,cg,lop);
+  Dune::PDELab::ExplicitEulerParameter<Real> method;
+  typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,SLOP,C,C,MBE> IGOS;
+  IGOS igos(method,gfs,cg,gfs,cg,lop,slop);
+
+  // <<<6>>> Make a linear solver backend
+  typedef Dune::PDELab::ISTLBackend_SEQ_ExplicitDiagonal LS;
+  LS ls;
+
+  // <<<8>>> time-stepper
+  typedef Dune::PDELab::CFLTimeController<Real,IGOS> TC;
+  TC tc(0.999,igos);
+  Dune::PDELab::ExplicitOneStepMethod<Real,IGOS,LS,V,V,TC> osm(method,igos,ls,tc);
+  osm.setVerbosityLevel(2);
+
+  // <<<9>>> initial value and initial value for first time step with b.c. set
+  V xold(gfs,0.0);
+  xold = 0.0;
+
+  // <<<10>>> graphics for initial guess
+  Dune::PDELab::FilenameHelper fn("transporttest_explicit_euler");
+  {
+    typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+    DGF xdgf(gfs,xold);
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
+    vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+    fn.increment();
+  }
+
+  // <<<11>>> time loop
+  Real time = 0.0;
+  Real dt = timestep;
+  x = 0;
+  while (time < Tend)
+    {
+      // do time step
+      dt = osm.apply(time,dt,xold,x);
 
       // graphics
       typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
@@ -367,18 +452,21 @@ int main(int argc, char** argv)
 		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
 	  }
 
-	if (argc!=3)
+	if (argc!=4)
 	  {
 		if(helper.rank()==0)
-		  std::cout << "usage: ./transporttest <time steps> <level>" << std::endl;
+		  std::cout << "usage: ./transporttest <end time> <time step> <level>" << std::endl;
 		return 1;
 	  }
 
-	int NT;
-	sscanf(argv[1],"%d",&NT);
+	double Tend;
+	sscanf(argv[1],"%lg",&Tend);
+
+	double timestep;
+	sscanf(argv[2],"%lg",&timestep);
 
 	int level;
-	sscanf(argv[2],"%d",&level);
+	sscanf(argv[3],"%d",&level);
 
     // sequential version
     if (1 && helper.size()==1)
@@ -392,7 +480,8 @@ int main(int argc, char** argv)
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
       stationary(gv);
-      implicit(gv,NT);
+      implicit_scheme(gv,Tend,timestep);
+      explicit_scheme(gv,Tend,timestep);
     }
   }
   catch (Dune::Exception &e){
