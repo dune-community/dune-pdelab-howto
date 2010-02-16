@@ -278,13 +278,13 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
-  Dune::PDELab::ImplicitEulerParameter<Real> method;
+  Dune::PDELab::FractionalStepParameter<Real> method;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,SLOP,C,C,MBE> IGOS;
   IGOS igos(method,gfs,cg,gfs,cg,lop,slop);
 
-  // <<<6>>> Make a linear solver 
-  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
-  LS ls(5000,false);
+  // <<<6>>> Make a linear solver
+  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,C> LS;
+  LS ls(gfs,cg,5000,1,1); 
 
   // <<<7>>> make Newton for time-dependent problem
   typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
@@ -303,13 +303,13 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   xold = 0.0;
 
   // <<<10>>> graphics for initial guess
-  Dune::PDELab::FilenameHelper fn("transporttest_implicit_euler");
+  Dune::PDELab::FilenameHelper fn("transporttest_implicit_fs");
   {
     typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
     DGF xdgf(gfs,xold);
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-    vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
     fn.increment();
   }
 
@@ -327,7 +327,7 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
       DGF xdgf(gfs,x);
       Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
       vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-      vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+      vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
       fn.increment();
 
       xold = x;
@@ -389,8 +389,8 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   IGOS igos(method,gfs,cg,gfs,cg,lop,slop);
 
   // <<<6>>> Make a linear solver backend
-  typedef Dune::PDELab::ISTLBackend_SEQ_ExplicitDiagonal LS;
-  LS ls;
+  typedef Dune::PDELab::ISTLBackend_OVLP_ExplicitDiagonal<GFS> LS;
+  LS ls(gfs);
 
   // <<<8>>> time-stepper
   typedef Dune::PDELab::CFLTimeController<Real,IGOS> TC;
@@ -409,7 +409,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
     DGF xdgf(gfs,xold);
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-    vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
     fn.increment();
   }
 
@@ -427,7 +427,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
       DGF xdgf(gfs,x);
       Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
       vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-      vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+      vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
       fn.increment();
 
       xold = x;
@@ -452,10 +452,10 @@ int main(int argc, char** argv)
 		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
 	  }
 
-	if (argc!=4)
+	if (argc!=5)
 	  {
 		if(helper.rank()==0)
-		  std::cout << "usage: ./transporttest <end time> <time step> <level>" << std::endl;
+		  std::cout << "usage: ./transporttest <end time> <time step> <elements on a side> <overlap>" << std::endl;
 		return 1;
 	  }
 
@@ -465,24 +465,29 @@ int main(int argc, char** argv)
 	double timestep;
 	sscanf(argv[2],"%lg",&timestep);
 
-	int level;
-	sscanf(argv[3],"%d",&level);
+	int n;
+	sscanf(argv[3],"%d",&n);
 
-    // sequential version
-    if (1 && helper.size()==1)
+	int o;
+	sscanf(argv[4],"%d",&o);
+
+#if HAVE_MPI
+    // parallel overlapping version
+    if (1)
     {
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
+      Dune::FieldVector<int,2> N(n);
       Dune::FieldVector<bool,2> periodic(false);
-      int overlap=0;
-      Dune::YaspGrid<2> grid(L,N,periodic,overlap);
-      grid.globalRefine(level);
+      int overlap=o;
+      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
-      stationary(gv);
-      implicit_scheme(gv,Tend,timestep);
+      //stationary(gv);
+      //implicit_scheme(gv,Tend,timestep);
       explicit_scheme(gv,Tend,timestep);
     }
+#endif
+
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
