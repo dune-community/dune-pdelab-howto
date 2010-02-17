@@ -27,14 +27,19 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
-#include<dune/pdelab/localoperator/laplacedirichletccfv.hh>
+#include<dune/pdelab/localoperator/twophaseccfv.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
+#include<dune/pdelab/newton/newton.hh>
+#include<dune/pdelab/instationary/onestep.hh>
 
 #include"gridexamples.hh"
-#include"twophaseop.hh"
+
+#undef RANDOMPERM
+#ifdef RANDOMPERM
 #include"permeability_generator.hh"
+#endif
 
 //==============================================================================
 // Problem definition
@@ -47,7 +52,7 @@ const double depth = 0.02;
 const double pentry = 1000.0;
 const double patm = 1e5;
 const double sltop = 0.2;
-const double onset = 60.0;
+const double onset = 6000000.0;
 const double period = 60.0;
 
 // parameter class for local operator
@@ -70,11 +75,11 @@ public:
 
 	typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 	typedef typename Traits::DomainFieldType DF;
+  
+#ifdef RANDOMPERM
 	double mink=1E100;
 	double maxk=-1E100;
-
     Dune::FieldVector<double,dim> correlation_length(0.4/25.0);
-  
 	EberhardPermeabilityGenerator<GV::dimension> field(correlation_length,1,0.0,5000,-1083);
 	for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
 	  {
@@ -88,6 +93,13 @@ public:
 	  }
 	std::cout << "       mink=" << mink << "               maxk=" << maxk << std::endl;
 	std::cout << "log10(mink)=" << log10(mink) << " log10(maxk)=" << log10(maxk) << std::endl;
+#else
+	for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
+	  {
+		int id = is.index(*it);
+		perm[id]=1.0;
+	  }
+#endif
   }
 
   //! porosity
@@ -259,9 +271,9 @@ public:
         if (time<onset)
           return patm + heightw*9810.0;
         if (fmod(time-onset,period)/period<=0.5)
-          return patm + (heightw-0.1)*9810.0;
-        else
           return patm + (heightw+0.1)*9810.0;
+        else
+          return patm + (heightw-0.1)*9810.0;
       }
 
     return -1; // unknown
@@ -456,30 +468,28 @@ int rank;
 template<class GV> 
 void test (const GV& gv, int timesteps, double timestep, double maxtimestep)
 {
-  // some types
+  // <<<1>>> choose some types
   typedef typename GV::Grid::ctype DF;
   typedef double RF;
   const int dim = GV::dimension;
   Dune::Timer watch;
 
-  // instantiate finite element maps
+  // <<<2>>> Make grid function space
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
   FEM fem(Dune::GeometryType::cube);
-  
-  // make grid function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::P0ParallelConstraints,
-    Dune::PDELab::ISTLVectorBackend<2>,
+  typedef Dune::PDELab::P0ParallelConstraints CON;
+  typedef Dune::PDELab::ISTLVectorBackend<2> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
   typedef Dune::PDELab::PowerGridFunctionSpace<GFS,2,
     Dune::PDELab::GridFunctionSpaceBlockwiseMapper> TPGFS;
   watch.reset();
-  Dune::PDELab::P0ParallelConstraints con;
+  CON con;
   GFS gfs(gv,fem,con);
   TPGFS tpgfs(gfs);
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
-  // make subspaces (needed for VTK output)
+  // <<<2b>>> make subspaces for visualization
   typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,0> P_lSUB;
   P_lSUB p_lsub(tpgfs);
   typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,1> P_gSUB;
@@ -489,7 +499,7 @@ void test (const GV& gv, int timesteps, double timestep, double maxtimestep)
   typedef TwoPhaseParameter<GV,RF> TP;
   TP tp(gv);
 
-  // initial value function
+  // <<<4>>> initial value function
   typedef P_l<GV,RF> P_lType;
   P_lType p_l_initial(gv,tp);
   typedef P_g<GV,RF> P_gType;
@@ -497,20 +507,16 @@ void test (const GV& gv, int timesteps, double timestep, double maxtimestep)
   typedef Dune::PDELab::CompositeGridFunction<P_lType,P_gType> PType;
   PType p_initial(p_l_initial,p_g_initial);
 
-  // make vector for old time step and initialize
+  // <<<5>>> make vector for old time step and initialize
   typedef typename TPGFS::template VectorContainer<RF>::Type V;
   V pold(tpgfs);
   Dune::PDELab::interpolate(p_initial,tpgfs,pold);
 
-  // make vector for new time step and initialize
+  // <<<6>>> make vector for new time step and initialize
   V pnew(tpgfs);
   pnew = pold;
 
-  // make local operator
-  typedef Dune::PDELab::TwoPhaseTwoPointFluxOperator<TP,V> LOP;
-  LOP lop(tp,pold);
-
-  // make discrete function objects for pnew and saturations
+  // <<<7>>> make discrete function objects for pnew and saturations
   typedef Dune::PDELab::DiscreteGridFunction<P_lSUB,V> P_lDGF;
   P_lDGF p_ldgf(p_lsub,pnew);
   typedef Dune::PDELab::DiscreteGridFunction<P_gSUB,V> P_gDGF;
@@ -520,154 +526,94 @@ void test (const GV& gv, int timesteps, double timestep, double maxtimestep)
   typedef S_g<TP,P_lDGF,P_gDGF> S_gDGF; 
   S_gDGF s_gdgf(tp,p_ldgf,p_gdgf);
 
-  // output of timesteps
-  bool graphics = true;
-  int filecounter = 0;
-  char basename[255];
-  sprintf(basename,"heleshaw-%01dd",dim);
-  if (graphics)
-  {
-    typedef typename GFS::template VectorContainer<RF>::Type V0;
-    V0 partition(gfs,0.0);
-    Dune::PDELab::PartitionDataHandle<GFS,V0> pdh(gfs,partition);
-    if (gfs.gridview().comm().size()>1)
-      gfs.gridview().communicate(pdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
-    typedef Dune::PDELab::DiscreteGridFunction<GFS,V0> DGF0;
-    DGF0 pdgf(gfs,partition);
-
-    if (rank==0) std::cout << "writing output file " << filecounter << std::endl;
-    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_lDGF>(p_ldgf,"p_l"));
-    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
-    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
-    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
-    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(pdgf,"decomposition"));
-    char fname[255];
-    sprintf(fname,"%s-%05d",basename,filecounter);
-    vtkwriter.pwrite(fname,"vtk","",Dune::VTKOptions::binaryappended);
-    filecounter++;
-  }
-
-  // make constraints map and initialize it from a function
+  // <<<8>>> make constraints map and initialize it from a function
   typedef typename TPGFS::template ConstraintsContainer<RF>::Type C;
   C cg;
   cg.clear();
   Dune::PDELab::constraints(p_initial,tpgfs,cg,false);
 
-  // make grid operator space
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MB;
-  typedef Dune::PDELab::GridOperatorSpace<TPGFS,TPGFS,LOP,C,C,MB> TPGOS;
-  TPGOS tpgos(tpgfs,cg,tpgfs,cg,lop);
+  // <<<9>>> make grid operator space
+  typedef Dune::PDELab::TwoPhaseTwoPointFluxOperator<TP> LOP;
+  LOP lop(tp);
+  typedef Dune::PDELab::TwoPhaseOnePointTemporalOperator<TP> MLOP;
+  MLOP mlop(tp);
+  typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MBE;
+  Dune::PDELab::ImplicitEulerParameter<RF> method;
+  typedef Dune::PDELab::InstationaryGridOperatorSpace<RF,V,TPGFS,TPGFS,LOP,MLOP,C,C,MBE> IGOS;
+  IGOS igos(method,tpgfs,cg,tpgfs,cg,lop,mlop);
 
-  // represent operator as a matrix
-  typedef typename TPGOS::template MatrixContainer<RF>::Type M;
-  M m(tpgos);
-  //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
+  // <<<10>>> Make a linear solver 
 
-  // solver stuff
-  typedef Dune::PDELab::ParallelISTLHelper<TPGFS> PHELPER;
-  PHELPER phelper(tpgfs);
-  typedef Dune::PDELab::OverlappingOperator<C,M,V,V> POP;
-  POP pop(cg,m);
-  typedef Dune::PDELab::OverlappingScalarProduct<TPGFS,V> PSP;
-  PSP psp(tpgfs,phelper);
-  int rank = gv.comm().rank();
+//   typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<TPGFS,C> LS;
+//   LS ls(tpgfs,cg,5000,5,1);
+  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SuperLU<TPGFS,C> LS;
+  LS ls(tpgfs,cg,5000,1);
 
-  // time loop
+  // <<<11>>> make Newton for time-dependent problem
+  typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
+  PDESOLVER tnewton(igos,ls);
+  tnewton.setReassembleThreshold(0.0);
+  tnewton.setVerbosityLevel(3);
+  tnewton.setReduction(1e-6);
+  tnewton.setMinLinearReduction(1e-3);
+
+  // <<<12>>> time-stepper
+  Dune::PDELab::OneStepMethod<RF,IGOS,PDESOLVER,V,V> osm(method,igos,tnewton);
+  osm.setVerbosityLevel(2);
+
+  // <<<13>>> graphics for initial value
+  bool graphics = true;
+  char basename[255];
+  sprintf(basename,"heleshaw-%01dd",dim);
+  Dune::PDELab::FilenameHelper fn(basename);
+  if (graphics)
+  {
+//     typedef typename GFS::template VectorContainer<RF>::Type V0;
+//     V0 partition(gfs,0.0);
+//     Dune::PDELab::PartitionDataHandle<GFS,V0> pdh(gfs,partition);
+//     if (gfs.gridview().comm().size()>1)
+//       gfs.gridview().communicate(pdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+//     typedef Dune::PDELab::DiscreteGridFunction<GFS,V0> DGF0;
+//     DGF0 pdgf(gfs,partition);
+
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_lDGF>(p_ldgf,"p_l"));
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
+    //    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(pdgf,"decomposition"));
+    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
+    fn.increment();
+  }
+
+  // <<<14>>> time loop
   RF time = 0.0;
   RF timestepmax=maxtimestep;
   RF timestepscale=1.5;
   for (int k=1; k<=timesteps; k++)
     {
-      // prepare new time step
-      if (rank==0) std::cout << "+++ TIME STEP " << k << " tnew=" << time+timestep << " dt=" << timestep << std::endl;
-      lop.set_time(time+timestep);
-      lop.set_timestep(timestep);
+      // do time step
+      osm.apply(time,timestep,pold,pnew);
 
-      // Newton iteration
-      V r(tpgfs,0.0);
-      tpgos.residual(pnew,r);
-      char buf[64];
-      sprintf(buf,"[%02d] ",gv.comm().rank());
-      int cols = 14;
-      //Dune::printvector(std::cout,r.base(),"initial residual after computation",buf,cols,9,1);
-      RF d0 = psp.norm(r);
-      RF lastd=d0;
-      RF red = 1.0;
-      if (rank==0) std::cout << "+++ NEWTON STEP " << 0 << " res=" << d0 << std::endl;
-      for (int i=1; i<=25; i++)
-        {
-          m = 0.0;
-          watch.reset();
-          tpgos.jacobian(pnew,m);
-          if (rank==0) std::cout << "=== jacobian assembly " <<  watch.elapsed() << " s" << std::endl;
-
-          typedef Dune::SeqSSOR<M,V,V> SeqPrec;
-          SeqPrec seqprec(m,5,1.0);
-          typedef Dune::PDELab::OverlappingWrappedPreconditioner<C,TPGFS,SeqPrec> WPREC;
-          WPREC  wprec(tpgfs,seqprec,cg,phelper);
-//           typedef Dune::PDELab::SuperLUSubdomainSolver<TPGFS,M,V,V> PSUBSOLVE;
-//           PSUBSOLVE psubsolve(tpgfs,m);
-          int verbose=1;
-          if (rank>0) verbose=0;
-          Dune::BiCGSTABSolver<V> solver(pop,psp,wprec,
-                                         std::max(std::min(1E-3,red*red),1E-10),5000,verbose);
-          Dune::InverseOperatorResult stat;  
-
-          V v(tpgfs,0.0);
-          solver.apply(v,r,stat);
-          //Dune::printvector(std::cout,v.base(),"correction computed in solver",buf,cols,9,1);
-
-          // line search
-          bool accept=false;
-          RF d;
-          for (RF lambda=1.0; lambda>=1E-3; lambda*=0.5)
-            {
-              V z(tpgfs);
-              z = pnew;
-              z.axpy(-lambda,v);
-              r = 0.0;
-              tpgos.residual(z,r);
-              d = psp.norm(r);
-              if (rank==0) std::cout << "+++ NEWTON line search lambda=" << lambda << " res=" << d << std::endl;
-              if (d/lastd<=1-0.25*lambda)
-                {
-                  pnew = z;
-                  red = d/lastd;
-                  lastd = d;
-                  accept = true;
-                  break;
-                }
-            }
-
-          if (!accept)
-            {
-              std::cout << "no convergence in line search, exiting" << std::endl;
-              exit(1);
-            }
-
-          if (rank==0) std::cout << "+++ NEWTON STEP " << i << " res=" << d << std::endl;
-          if (d<1E-6*d0) break;
-       }
-
-      // accept time step
-      time += timestep;
-      if (timestep*timestepscale<=timestepmax) timestep*=timestepscale;
-      pold = pnew;
-
+      // graphical output
       if (graphics)
         {
-          if (rank==0) std::cout << "writing output file " << filecounter << std::endl;
           Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_lDGF>(p_ldgf,"p_l"));
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
-          char fname[255];
-          sprintf(fname,"%s-%05d",basename,filecounter);
-          vtkwriter.pwrite(fname,"vtk","",Dune::VTKOptions::binaryappended);
-          filecounter++;
+          vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
+          fn.increment();
         }
+
+      // accept time step
+      pold = pnew;
+      time += timestep;
+      if (timestep*timestepscale<=timestepmax) 
+        timestep*=timestepscale;
+      else
+        timestep = timestepmax;
     }
 }
 
@@ -710,7 +656,7 @@ int main(int argc, char** argv)
 
 #if HAVE_MPI
     // 2D
-    if (false)
+    if (true)
     {
       // make grid
       int l=maxlevel;
@@ -725,7 +671,7 @@ int main(int argc, char** argv)
     }
 
     // 3D
-    if (true)
+    if (false)
     {
       // make grid
       int l=maxlevel;
