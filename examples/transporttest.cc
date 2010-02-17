@@ -276,8 +276,6 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP; 
   SLOP slop(param);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
-  GOS gos(gfs,cg,gfs,cg,lop);
   Dune::PDELab::FractionalStepParameter<Real> method;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,SLOP,C,C,MBE> IGOS;
   IGOS igos(method,gfs,cg,gfs,cg,lop,slop);
@@ -482,8 +480,8 @@ int main(int argc, char** argv)
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
-      //stationary(gv);
-      //implicit_scheme(gv,Tend,timestep);
+      stationary(gv);
+      implicit_scheme(gv,Tend,timestep);
       explicit_scheme(gv,Tend,timestep);
     }
 #endif
