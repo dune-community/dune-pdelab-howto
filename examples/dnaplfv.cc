@@ -27,13 +27,14 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
-#include<dune/pdelab/localoperator/laplacedirichletccfv.hh>
+#include<dune/pdelab/localoperator/twophaseccfv.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
+#include<dune/pdelab/newton/newton.hh>
+#include<dune/pdelab/instationary/onestep.hh>
 
 #include"gridexamples.hh"
-#include"twophaseop.hh"
 
 //==============================================================================
 // Problem definition
@@ -479,6 +480,8 @@ void test (const GV& gv, int timesteps, double timestep)
   CON con;
   GFS gfs(gv,fem,con);
   TPGFS tpgfs(gfs);
+
+  // <<<2b>>> make subspaces for visualization
   typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,0> P_lSUB;
   P_lSUB p_lsub(tpgfs);
   typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,1> P_gSUB;
@@ -516,73 +519,76 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef S_g<TP,P_lDGF,P_gDGF> S_gDGF; 
   S_gDGF s_gdgf(tp,p_ldgf,p_gdgf);
 
-  // <<<8>>> output of timesteps
+  // <<<8>>> make constraints map and initialize it from a function
+  typedef typename TPGFS::template ConstraintsContainer<RF>::Type C;
+  C cg; cg.clear();
+  Dune::PDELab::constraints(p_initial,tpgfs,cg,false);
+
+  // <<<9>>> make grid operator space
+  typedef Dune::PDELab::TwoPhaseTwoPointFluxOperator<TP> LOP;
+  LOP lop(tp);
+  typedef Dune::PDELab::TwoPhaseOnePointTemporalOperator<TP> MLOP;
+  MLOP mlop(tp);
+  typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MBE;
+  Dune::PDELab::Alexander2Parameter<RF> method;
+  typedef Dune::PDELab::InstationaryGridOperatorSpace<RF,V,TPGFS,TPGFS,LOP,MLOP,C,C,MBE> IGOS;
+  IGOS igos(method,tpgfs,cg,tpgfs,cg,lop,mlop);
+
+  // <<<10>>> Make a linear solver 
+  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<TPGFS,C> LS;
+  LS ls(tpgfs,cg,5000,5,1);
+
+  // <<<11>>> make Newton for time-dependent problem
+  typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
+  PDESOLVER tnewton(igos,ls);
+  tnewton.setReassembleThreshold(0.0);
+  tnewton.setVerbosityLevel(2);
+  tnewton.setReduction(1e-8);
+  tnewton.setMinLinearReduction(1e-3);
+
+  // <<<12>>> time-stepper
+  Dune::PDELab::OneStepMethod<RF,IGOS,PDESOLVER,V,V> osm(method,igos,tnewton);
+  osm.setVerbosityLevel(2);
+
+  // <<<13>>> graphics for initial value
   bool graphics = true;
-  int filecounter = 0;
   char basename[255];
-  sprintf(basename,"dnapl-%01dd",dim);
+  sprintf(basename,"dnapl-alex2-%01dd",dim);
+  Dune::PDELab::FilenameHelper fn(basename);
   if (graphics)
   {
-    if (rank==0) std::cout << "writing output file " << filecounter << std::endl;
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_lDGF>(p_ldgf,"p_l"));
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
-    char fname[255];
-    sprintf(fname,"%s-%05d",basename,filecounter);
-    vtkwriter.pwrite(fname,"vtk","",Dune::VTKOptions::binaryappended);
-    filecounter++;
+    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
+    fn.increment();
   }
 
-  // <<<9>>> make constraints map and initialize it from a function
-  typedef typename TPGFS::template ConstraintsContainer<RF>::Type C;
-  C cg; cg.clear();
-  Dune::PDELab::constraints(p_initial,tpgfs,cg,false);
-
-  // <<<10>>> make grid operator space
-  typedef Dune::PDELab::TwoPhaseTwoPointFluxOperator<TP,V> LOP;
-  LOP lop(tp,pold);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MBE;
-  typedef Dune::PDELab::GridOperatorSpace<TPGFS,TPGFS,LOP,C,C,MBE> TPGOS;
-  TPGOS tpgos(tpgfs,cg,tpgfs,cg,lop);
-
-  // <<<11>>> Make a linear solver 
-  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<TPGFS,C> LS;
-  LS ls(tpgfs,cg,5000,5,1);
-
-  // <<<12>>> time loop
+  // <<<14>>> time loop
   RF time = 0.0;
+  RF dt = timestep;
   for (int k=1; k<=timesteps; k++)
     {
-      // prepare new time step
-      if (rank==0) std::cout << "+++ TIME STEP " << k << " tnew=" << time+timestep << " dt=" << timestep << std::endl;
-      lop.set_time(time+timestep);
-      lop.set_timestep(timestep);
+      // do time step
+      osm.apply(time,dt,pold,pnew);
 
-      // Newton iteration
-      Dune::PDELab::Newton<TPGOS,LS,V> newton(tpgos,pnew,ls);
-      newton.setReassembleThreshold(0.0);
-      newton.setVerbosityLevel(1);
-      newton.apply();
-
-      // accept time step
-      time += timestep;
-      pold = pnew;
-
+      // graphical output
       if (graphics)
         {
-          if (rank==0) std::cout << "writing output file " << filecounter << std::endl;
           Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_lDGF>(p_ldgf,"p_l"));
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
-          char fname[255];
-          sprintf(fname,"%s-%05d",basename,filecounter);
-          vtkwriter.pwrite(fname,"vtk","",Dune::VTKOptions::binaryappended);
-          filecounter++;
+          vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
+          fn.increment();
         }
+
+      // accept time step
+      pold = pnew;
+      time += dt;
     }
 }
 
