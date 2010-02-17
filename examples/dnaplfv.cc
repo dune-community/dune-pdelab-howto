@@ -480,13 +480,13 @@ void test (const GV& gv, int timesteps, double timestep)
   CON con;
   GFS gfs(gv,fem,con);
   TPGFS tpgfs(gfs);
+  std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
   // <<<2b>>> make subspaces for visualization
   typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,0> P_lSUB;
   P_lSUB p_lsub(tpgfs);
   typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,1> P_gSUB;
   P_gSUB p_gsub(tpgfs);
-  std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
   // <<<3>>> make parameter object
   typedef TwoPhaseParameter<GV,RF> TP;
@@ -568,11 +568,10 @@ void test (const GV& gv, int timesteps, double timestep)
 
   // <<<14>>> time loop
   RF time = 0.0;
-  RF dt = timestep;
   for (int k=1; k<=timesteps; k++)
     {
       // do time step
-      osm.apply(time,dt,pold,pnew);
+      osm.apply(time,timestep,pold,pnew);
 
       // graphical output
       if (graphics)
@@ -588,7 +587,7 @@ void test (const GV& gv, int timesteps, double timestep)
 
       // accept time step
       pold = pnew;
-      time += dt;
+      time += timestep;
     }
 }
 
