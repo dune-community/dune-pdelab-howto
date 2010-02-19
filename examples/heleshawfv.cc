@@ -35,7 +35,6 @@
 #include<dune/pdelab/instationary/onestep.hh>
 
 #include"gridexamples.hh"
-#include"componenttransportop.hh"
 
 #undef RANDOMPERM
 #ifdef RANDOMPERM
@@ -493,169 +492,12 @@ public:
 
 
 //==============================================================================
-// Problem definition : component transport
-//==============================================================================
-
-
-//! base class for parameter class
-template<typename GV, typename RF, typename SOLDDGF, typename SNEWDGF, typename UDGF>
-class Transport1 : 
-  public Dune::PDELab::ModifiedTransportSpatialParameterInterface<Dune::PDELab::TransportParameterTraits<GV,RF>, 
-                                                                  Transport1<GV,RF,SOLDDGF,SNEWDGF,UDGF> >,
-  public Dune::PDELab::ModifiedTransportTemporalParameterInterface<Dune::PDELab::TransportParameterTraits<GV,RF>, 
-                                                                  Transport1<GV,RF,SOLDDGF,SNEWDGF,UDGF> >
-{
-  typedef TwoPhaseParameter<GV,RF> TP;
-  enum {dim=GV::Grid::dimension};
-
-public:
-  typedef Dune::PDELab::TransportParameterTraits<GV,RF> Traits;
-
-  Transport1 (const TP& tp_, const SOLDDGF& solddgf_, const SNEWDGF& snewdgf_, const UDGF& udgf_)
-    : tp(tp_), solddgf(solddgf_), snewdgf(snewdgf_), udgf(udgf_)
-  {}
-
-  //! capacity function
-  typename Traits::RangeFieldType 
-  c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename SNEWDGF::Traits::RangeType s_new;
-    typename SOLDDGF::Traits::RangeType s_old;
-    snewdgf.evaluate(e,x,s_new);
-    solddgf.evaluate(e,x,s_old);
-    RF factor = (time-t0)/dt;
-
-    //    return 1.0;
-
-    return tp.phi(e,x)*( (1.0-factor)*s_old + factor*s_new );
-  }
-
-  //! saturation at new time level
-  typename Traits::RangeFieldType 
-  snew (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename SNEWDGF::Traits::RangeType y;
-    snewdgf.evaluate(e,x,y);
-    return y;
-  }
-
-  //! saturation at old time level
-  typename Traits::RangeFieldType 
-  sold (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename SOLDDGF::Traits::RangeType y;
-    solddgf.evaluate(e,x,y);
-    return y;
-  }
-
-  //! velocityvector
-  typename Traits::RangeType
-  v (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::RangeType velo;
-    udgf.evaluate(e,x,velo);
-    return velo;
-  }
-
-  //! tensor permeability
-  typename Traits::RangeFieldType
-  D (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    return 0.0;
-  }
-
-  //! source/reaction term
-  typename Traits::RangeFieldType 
-  q (const typename Traits::ElementType& e, const typename Traits::DomainType& ) const
-  {
-    return 0.0;
-  }
-
-  //! boundary condition type function
-  // 0 means Neumann
-  // 1 means Dirichlet
-  // 2 means Outflow (zero diffusive flux)
-  int
-  bc (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    typename Traits::RangeType global = is.geometry().global(x);
-    return 1;
-  }
-
-  //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType 
-  g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::RangeType global = e.geometry().global(x);
-
-    if (time<500 || time>600) return 0;
-    if (global[dim-1]<height-1E-7) return 0;
-
-    if (global[0]>=0.19 && global[0]<=0.21)
-        return 1.0;
-
-    return 0.0;
-  }
-
-  //! Neumann boundary condition
-  // Good: The dependence on u allows us to implement Robin type boundary conditions.
-  // Bad: This interface cannot be used for mixed finite elements where the flux is the essential b.c.
-  typename Traits::RangeFieldType 
-  j (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    return 0.0;
-  }
-
-  //! set time for subsequent evaluation
-  void setTime (RF t)
-  {
-    time = t;
-  }
-
-  //! to be called once before each time step
-  void preStep (RF time_, RF dt_, int stages)
-  {
-    t0 = time_;
-    dt = dt_;
-  }
-      
-private:
-  const TP& tp; // store access to two phase parameters
-  const SOLDDGF& solddgf;
-  const SNEWDGF& snewdgf;
-  const UDGF& udgf;
-  RF time, t0, dt;
-};
-
-
-// initial conditions for component concentration
-template<typename GV, typename RF>
-class Conc
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  Conc<GV,RF> >
-{
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,Conc<GV,RF> > BaseT;
-  enum {dim=Traits::DomainType::dimension};
-
-  Conc (const GV& gv) : BaseT(gv) {}
-
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
-							  typename Traits::RangeType& y) const
-  {
- 	y = 0;
-  }
-};
-
-
-//==============================================================================
 // driver
 //==============================================================================
 int rank;
 
 template<class GV> 
-void test (const GV& gv, double Tend, double timestep, double maxtimestep, int level)
+void test (const GV& gv, double Tend, double timestep, double maxtimestep)
 {
   // <<<1>>> choose some types
   typedef typename GV::Grid::ctype DF;
@@ -667,8 +509,8 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
   FEM fem(Dune::GeometryType::cube);
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<2> VBE2;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE2,
+  typedef Dune::PDELab::ISTLVectorBackend<2> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
   typedef Dune::PDELab::PowerGridFunctionSpace<GFS,2,
     Dune::PDELab::GridFunctionSpaceBlockwiseMapper> TPGFS;
@@ -762,63 +604,16 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
   tnewton.setVerbosityLevel(3);
   tnewton.setReduction(1e-6);
   tnewton.setMinLinearReduction(1e-3);
-  tnewton.setAbsoluteLimit(1e-7);
+  tnewton.setAbsoluteLimit(1e-8);
 
   // <<<12>>> time-stepper
   Dune::PDELab::OneStepMethod<RF,IGOS,PDESOLVER,V,V> osm(method,igos,tnewton);
   osm.setVerbosityLevel(2);
 
-  //========================
-  // transport related stuff
-  //========================
-
-  // grid function space
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE1;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
-    VBE1,Dune::PDELab::SimpleGridFunctionStaticSize> CGFS;
-  CGFS cgfs(gv,fem); 
-
-  // initial value function
-  typedef Conc<GV,RF> ConcType;
-  ConcType conc_initial(gv);
-
-  // vectors and initialization
-  typedef typename CGFS::template VectorContainer<RF>::Type CV;
-  CV cold(cgfs); 
-  Dune::PDELab::interpolate(conc_initial,cgfs,cold);
-  CV cnew(cgfs);
-  cnew = cold;
-  
-  // concentration grid functions
-  typedef Dune::PDELab::DiscreteGridFunction<CGFS,CV> ConcDGF;
-  ConcDGF concdgf(cgfs,cnew);
-
-  // concentration constraints
-  typedef typename CGFS::template ConstraintsContainer<RF>::Type CC;
-  CC ccg;
-  ccg.clear();
-  Dune::PDELab::constraints(conc_initial,cgfs,ccg,false);
-
-  //  make grid operator space for transport problem
-  typedef Transport1<GV,RF,S_lDGF,S_lDGF,VliquidDGF> CTP;
-  CTP ctp(tp,sold_ldgf,s_ldgf,vliquidolddgf);
-  typedef Dune::PDELab::ModifiedCCFVSpatialTransportOperator<CTP> CLOP; 
-  CLOP clop(ctp);
-  typedef Dune::PDELab::ModifiedCCFVTemporalOperator<CTP> CSLOP; 
-  CSLOP cslop(ctp);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE1;
-  Dune::PDELab::ExplicitEulerParameter<RF> cmethod;
-  typedef Dune::PDELab::InstationaryGridOperatorSpace<RF,CV,CGFS,CGFS,CLOP,CSLOP,CC,CC,MBE1> CIGOS;
-  CIGOS cigos(cmethod,cgfs,ccg,cgfs,ccg,clop,cslop);
-
-  // concentration linear solver
-  typedef Dune::PDELab::ISTLBackend_OVLP_ExplicitDiagonal<CGFS> CLS;
-  CLS cls(cgfs);
-
   // <<<13>>> graphics for initial value
   bool graphics = true;
   char basename[255];
-  sprintf(basename,"heleshaw-infiltration-%01dl%01dd",level,dim);
+  sprintf(basename,"heleshaw-infiltration-%01dd",dim);
   Dune::PDELab::FilenameHelper fn(basename);
   if (graphics)
   {
@@ -836,7 +631,6 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VliquidDGF>(vliquiddgf,"liquid velocity"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VgasDGF>(vgasdgf,"gas velocity"));
-    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<ConcDGF>(concdgf,"concentration"));
     //    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(pdgf,"decomposition"));
     vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
     fn.increment();
@@ -850,40 +644,16 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
   while (time<Tend)
     {
       // do time step
-      if (time<500.0) // assume it is stationary ...
-        {
-          try {
-            osm.apply(time,timestep,pold,pnew);
-          }
-          catch (Dune::PDELab::NewtonLineSearchError) {
-            timestep *= 0.5;
-            if (timestep<dtmin) throw;
-            continue;
-          }
-        }
-      else timestep = timestepmax;
+      try {
+        osm.apply(time,timestep,pold,pnew);
+      }
+      catch (Dune::PDELab::NewtonLineSearchError) {
+        timestep *= 0.5;
+        if (timestep<dtmin) throw;
+      }
 
       vliquiddgf.set_time(time+timestep);
       vgasdgf.set_time(time+timestep);
-
-      if (time>=500.0)
-        {
-          // concentration time stepper
-          typedef Dune::PDELab::CFLTimeController<RF,CIGOS> TC;
-          TC tc(0.999,time+timestep,cigos);
-          Dune::PDELab::ExplicitOneStepMethod<RF,CIGOS,CLS,CV,CV,TC> cosm(cmethod,cigos,cls,tc);
-          cosm.setVerbosityLevel(2);
-          
-          // transport time stepping
-          RF ctime = time;
-          RF ctimestep = timestep;
-          while (ctime<time+timestep-1e-8)
-            {
-              ctimestep = cosm.apply(ctime,ctimestep,cold,cnew);
-              ctime += ctimestep;
-              cold = cnew;
-            }
-        }
 
       // graphical output
       if (graphics)
@@ -895,20 +665,17 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
           vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VliquidDGF>(vliquiddgf,"liquid velocity"));
           vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VgasDGF>(vgasdgf,"gas velocity"));
-          vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<ConcDGF>(concdgf,"concentration"));
           vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
           fn.increment();
         }
 
       // accept time step
-      vliquidolddgf.set_time(time);
-      vgasolddgf.set_time(time);
+      pold = pnew;
       time += timestep;
       if (timestep*timestepscale<=timestepmax) 
         timestep*=timestepscale;
       else
         timestep = timestepmax;
-      pold = pnew;
     }
 }
 
@@ -962,7 +729,7 @@ int main(int argc, char** argv)
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
  
       // solve problem :
-      test(grid.leafView(),Tend,timestep,maxtimestep,l);
+      test(grid.leafView(),Tend,timestep,maxtimestep);
     }
 
     // 3D
@@ -977,7 +744,7 @@ int main(int argc, char** argv)
       Dune::YaspGrid<3> grid(helper.getCommunicator(),L,N,B,overlap);
       
       // solve problem :)
-      test(grid.leafView(),Tend,timestep,maxtimestep,l);
+      test(grid.leafView(),Tend,timestep,maxtimestep);
     }
 #endif
 
