@@ -14,92 +14,32 @@
 #include<dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
 #include<dune/pdelab/localoperator/flags.hh>
+#include<dune/pdelab/localoperator/idefault.hh>
+#include<dune/pdelab/localoperator/transportccfv.hh>
 
 namespace Dune {
   namespace PDELab {
 
-	//! traits class for two phase parameter class
-	template<typename GV, typename RF>
-	struct ComponentTransportParameterTraits
-	{
-	  //! \brief the grid view
-	  typedef GV GridViewType;
-
-	  //! \brief Enum for domain dimension
-	  enum { 
-		//! \brief dimension of the domain
-		dimDomain = GV::dimension
-	  }; 
-
-	  //! \brief Export type for domain field
-	  typedef typename GV::Grid::ctype DomainFieldType;
-
-	  //! \brief domain type
-	  typedef Dune::FieldVector<DomainFieldType,dimDomain> DomainType;
-
-	  //! \brief domain type
-	  typedef Dune::FieldVector<DomainFieldType,dimDomain-1> IntersectionDomainType;
-
-	  //! \brief Export type for range field
-	  typedef RF RangeFieldType;
-
-	  //! \brief range type
-	  typedef Dune::FieldVector<RF,GV::dimensionworld> RangeType;
-
-	  //! grid types
-	  typedef typename GV::Traits::template Codim<0>::Entity ElementType;
-	  typedef typename GV::Intersection IntersectionType;
-	};
-
     //! base class for parameter class
 	template<class T, class Imp>
-	class ComponentTransportParameterInterface
+	class ModifiedTransportSpatialParameterInterface 
+      : public TransportSpatialParameterInterface<T,Imp>
 	{
 	public:
 	  typedef T Traits;
 
-	  //! porosity
-	  typename Traits::RangeFieldType 
-	  phi (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-	  {
-		return asImp().phi(e,x);
-	  }
-
-	  //! saturation at new time level
+	  //! saturation at end of big step
 	  typename Traits::RangeFieldType 
 	  snew (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
 	  {
 		return asImp().snew(e,x);
 	  }
 
-	  //! saturation at old time level
+	  //! saturation at end of big step
 	  typename Traits::RangeFieldType 
 	  sold (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
 	  {
 		return asImp().sold(e,x);
-	  }
-
-	  //! velocity field (at new time level)
-	  typename Traits::RangeType
-	  u (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-	  {
-		return asImp().u(e,x);
-	  }
-
-	  //! Dirichlet boundary condition on inflow
-	  typename Traits::RangeFieldType 
-	  g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, 
-         typename Traits::RangeFieldType time) const
-	  {
-		return asImp().g(is,x,time);
-	  }
-
-	  //! source term
-	  typename Traits::RangeFieldType 
-	  q (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
-         typename Traits::RangeFieldType time) const
-	  {
-		return asImp().q(e,x,time);
 	  }
 
 	private:
@@ -107,70 +47,58 @@ namespace Dune {
 	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
 	};
 
-	/** a local operator for an explicit finite volume scheme
-		to compute transport of a dissolved component in a phase
+
+	/** a local operator for a cell-centered finite folume scheme for
+        the transport equation
 	  
-		\partial_t (\phi s c) + \nabla \cdot \{c u} - q = 0 in \Omega \times I 
+		\nabla \cdot \{v u - D \nabla u \} = q in \Omega
+                                         u = g on \Gamma_D
+           \{v u - D \nabla u \} \cdot \nu = j on \Gamma_N
+                                       outflow on \Gamma_O        
 
-		- c is the unknown concentration
-		- Implements explicit Euler scheme with full upwinding. 
-		- Saturation s may become zero
-		- Provides CFL condition, actual update is done externally.
-		- We use only residual evaluation, no matrix can be assembled
+        Modified version for the case
 
-		TP : parameter class implementing ComponentTransportParameterInterface
-		V  : Vector holding last time step
+		 d_t (c(x,t)u(x,t)) + \nabla \cdot \{v u - D \nabla u \} = q in \Omega
+
+        where c(x,t) may become zero. We assume that the following holds:
+
+        c(x,t+dt) <= eps  ==>  c(x,t) <= eps
+
+		\tparam TP  parameter class implementing ComponentTransportParameterInterface
 	*/
-    template<typename TP, typename V>
-	class EEComponentTransportOperator : public LocalOperatorDefaultFlags
+    template<typename TP>
+	class ModifiedCCFVSpatialTransportOperator : 
+      public NumericalJacobianApplySkeleton<CCFVSpatialTransportOperator<TP> >,
+      public NumericalJacobianSkeleton<CCFVSpatialTransportOperator<TP> >,
+      public NumericalJacobianApplyBoundary<CCFVSpatialTransportOperator<TP> >,
+      public NumericalJacobianBoundary<CCFVSpatialTransportOperator<TP> >,
+      public NumericalJacobianApplyVolumePostSkeleton<CCFVSpatialTransportOperator<TP> >,
+      public NumericalJacobianVolumePostSkeleton<CCFVSpatialTransportOperator<TP> >,
+      public FullSkeletonPattern,
+      public FullVolumePattern,
+      public LocalOperatorDefaultFlags,
+      public InstationaryLocalOperatorDefaultMethods<typename TP::Traits::RangeFieldType>
 	{
       enum { dim = TP::Traits::GridViewType::dimension };
 
 	public:
+      // pattern assembly flags
+      enum { doPatternVolume = true };
+      enum { doPatternSkeleton = true };
+
 	  // residual assembly flags
-      enum { doAlphaVolume    = true };
-	  enum { doAlphaVolumePostSkeleton = true };
+      enum { doAlphaVolume  = true };
       enum { doAlphaSkeleton  = true };
+	  enum { doAlphaVolumePostSkeleton = true };
       enum { doAlphaBoundary  = true };
+      enum { doLambdaVolume    = true };
+
       enum { doSkeletonTwoSided = true }; // need to see face from both sides for CFL calculation
 
-      EEComponentTransportOperator (const TP& tp_, V& scaling_) 
-		: tp(tp_), scaling(scaling_)
+      ModifiedCCFVSpatialTransportOperator (TP& tp_) 
+		: tp(tp_), zero(1e-8)
 	  {
-		time = 0;
-        zero_saturation = 1E-8;
-        min_snew, min_sold, min_local_flux_sum = 0;
-        cellno = -1;
 	  }
-
-	  // set time where operator is to be evaluated (i.e. end of the time intervall)
-	  void set_time (typename TP::Traits::RangeFieldType time_)
-	  {
-		time = time_;
-	  } 
-
-	  // get maximum allowable time step computed while assembling residual
-	  typename TP::Traits::RangeFieldType get_max_timestep () const
-	  {
-            std::cout << "minimum time step info: cell No. " << cellno
-                      << " sold=" << min_sold
-                      << " snew=" << min_snew
-                      << " local_flux_sum=" << min_local_flux_sum << std::endl;
-		return max_timestep;
-	  } 
-
-	  // get number of cells where saturation is zero
-	  int get_empty_cells () const
-	  {
-		return emptycells;
-	  } 
-
-	  // to be called before assembling residual
-	  void initialize_timestep ()
-	  {
-		max_timestep = 1E100;
-        emptycells = 0;
-	  } 
 
 	  // volume integral depending on test and ansatz functions
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
@@ -184,63 +112,28 @@ namespace Dune {
 		typedef typename LFSU::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 
-        // initialize local time step calculation
-        local_flux_sum = 0;
+        // dimensions
+        const int dim = EG::Geometry::dimension;
+        const int dimw = EG::Geometry::dimensionworld;
 
-        // cell geometry
+        // cell center
         const Dune::FieldVector<DF,dim>& 
-          cell_center_local = Dune::GenericReferenceElements<DF,dim>::general(eg.geometry().type()).position(0,0);
-        cell_volume = eg.geometry().integrationElement(cell_center_local)
-          *Dune::GenericReferenceElements<DF,dim>::general(eg.geometry().type()).volume();
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+        
+        // evaluate saturation at end of big step for cell activity
+        snew = tp.snew(eg.entity(),inside_local);
+        active_cell = snew>zero;
+        if (active_cell) active_cell_count++;
 
-        // porosity and saturation
-		porosity = tp.phi(eg.entity(),cell_center_local);
-		snew = tp.snew(eg.entity(),cell_center_local);
-		sold = tp.sold(eg.entity(),cell_center_local);
+        celloutflux = 0.0; // prepare dt computation
+	  }
 
-        if (snew>zero_saturation && sold>zero_saturation)
-          activecell = true;
-        else
-          activecell = false;
-
-//         std::cout << "cell No. " << lfsu.globalIndex(0) 
-//                   << " porosity=" << porosity 
-//                   << " cell_volume=" << cell_volume 
-//                   << std::endl;
-
-		// scale value of concentration at old time level
-		typedef typename LFSU::Traits::GridFunctionSpaceType::Traits::BackendType B;
-        RF q = tp.q(eg.entity(),cell_center_local,time); // can not eval at new time because timestep is not known
-        if (activecell)
-          {
-            B::access(scaling,lfsu.globalIndex(0)) = sold/snew;
-            r[0] -= q/(porosity*snew);
-          }
-        else
-          {
-            //           std::cout << "Bingo ! cell " << lfsu.globalIndex(0) << std::endl;
-            B::access(scaling,lfsu.globalIndex(0)) = 0;
-            emptycells++;
-          }
-      }
-
-      // post skeleton: compute time step allowable for cell
+      // jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-      void alpha_volume_post_skeleton(const EG& eg, const LFSU& lfsu, const X& x,
-                                      const LFSV& lfsv, R& r) const
+	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+                            LocalMatrix<R>& mat) const
       {
-		typedef typename LFSU::Traits::LocalFiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-        RF local_timestep = sold/(std::abs(local_flux_sum)+1E-30);
-        if (activecell && local_timestep<max_timestep) 
-          {
-            max_timestep = local_timestep;
-            min_sold = sold;
-            min_snew = snew;
-            min_local_flux_sum = local_flux_sum;
-            cellno = lfsu.globalIndex(0);
-          }
-
+        // do nothing; alpha_volume only needed for dt computations
       }
 
 	  // skeleton integral depending on test and ansatz functions
@@ -260,41 +153,52 @@ namespace Dune {
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 		typedef typename LFSU::Traits::GridFunctionSpaceType::Traits::BackendType B;
 
+        // no fluxes if cell is not active !
+        if (!active_cell) return;
+
         // face geometry
         const Dune::FieldVector<DF,IG::dimension-1>& 
           face_local = Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
-        RF face_volume = ig.geometry().integrationElement(face_local)*
-          Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
+        RF face_volume = ig.geometry().volume();
 
         // face center in element coordinates
-        Dune::FieldVector<DF,dim> face_center_in_element = ig.geometryInInside().global(face_local);
+        Dune::FieldVector<DF,IG::dimension> face_center_in_element = ig.geometryInInside().global(face_local);
 
         // evaluate velocity
-        typename TP::Traits::RangeType u(tp.u(*(ig.inside()),face_center_in_element));
+        typename TP::Traits::RangeType v(tp.v(*(ig.inside()),face_center_in_element));
 
         // the normal velocity
-        RF wn = u*ig.unitOuterNormal(face_local);
+        RF vn = v*ig.centerUnitOuterNormal();
 
-//         std::cout << "cell No. " << lfsu_s.globalIndex(0) 
-//                   << " u=" << u 
-//                   << " n=" << ig.unitOuterNormal(face_local)
-//                   << " wn=" << wn 
-//                   << std::endl;
+        // convective flux
+        RF u_upwind=0;
+        if (vn>=0) u_upwind = x_s[0]; else u_upwind = x_n[0];
+        r_s[0] += (u_upwind*vn)*face_volume;
+        if (vn>=0)
+          celloutflux += vn*face_volume; // dt computation
 
-        // upwind
-        RF c_upwind;
-        if (wn>=0)
-          c_upwind = x_s[0];
-        else
-          c_upwind = x_n[0];
+        // evaluate diffusion coefficients
+        const Dune::FieldVector<DF,IG::dimension>&
+          inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+        const Dune::FieldVector<DF,IG::dimension>& 
+          outside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
 
-        // residual updates (use asymetric flux evaluation, may result in nonconservation of stuff
-        // note. we do only one-sided evaluation here
-        if (activecell)
-          {
-            r_s[0] += c_upwind*wn*face_volume/(cell_volume*porosity*snew);
-            if (wn>0) local_flux_sum += wn*face_volume/(cell_volume*porosity);
-          }
+        typename TP::Traits::RangeFieldType D_inside = tp.sold(*(ig.inside()),inside_local)*tp.D(*(ig.inside()),inside_local);
+        typename TP::Traits::RangeFieldType D_outside = tp.sold(*(ig.outside()),outside_local)*tp.D(*(ig.outside()),outside_local);
+        typename TP::Traits::RangeFieldType D_avg = 2.0/(1.0/(D_inside+1E-40) + 1.0/(D_outside+1E-40));
+
+        // distance between cell centers in global coordinates
+        Dune::FieldVector<DF,IG::dimension> 
+          inside_global = ig.inside()->geometry().center();
+        Dune::FieldVector<DF,IG::dimension> 
+          outside_global = ig.outside()->geometry().center();
+        inside_global -= outside_global;
+        RF distance = inside_global.two_norm();
+ 
+        // diffusive flux
+        // note: we do only one-sided evaluation here
+        r_s[0] -= (D_avg*(x_n[0]-x_s[0])/distance)*face_volume;
+        celloutflux += D_avg*face_volume/distance;
       }
 
 	  // skeleton integral depending on test and ansatz functions
@@ -313,55 +217,317 @@ namespace Dune {
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 		typedef typename LFSU::Traits::GridFunctionSpaceType::Traits::BackendType B;
 
-        if (!activecell) return; // empty cell; nothing to do
+        // no fluxes if cell is not active !
+        if (!active_cell) return;
     
         // face geometry
         const Dune::FieldVector<DF,IG::dimension-1>& 
           face_local = Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
-        RF face_volume = ig.geometry().integrationElement(face_local)*
-          Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
-
-        // face center in element coordinates
+        RF face_volume = ig.geometry().volume();
         Dune::FieldVector<DF,dim> face_center_in_element = ig.geometryInInside().global(face_local);
 
+        // evaluate boundary condition type
+        int bc = tp.bc(ig.intersection(),face_local);
+
+        // do things depending on boundary condition type
+        if (bc==0) // Neumann boundary
+          {
+            typename TP::Traits::RangeFieldType j = tp.j(*(ig.inside()),face_center_in_element);
+            r_s[0] += j*face_volume;
+            return;
+         }
+
         // evaluate velocity
-        typename TP::Traits::RangeType u(tp.u(*(ig.inside()),face_center_in_element));
+        typename TP::Traits::RangeType v(tp.v(*(ig.inside()),face_center_in_element));
 
         // the normal velocity
-        RF wn = u*ig.unitOuterNormal(face_local);
+        RF vn = v*ig.centerUnitOuterNormal();
+        if (vn>=0)
+          celloutflux += vn*face_volume; // dt computation
 
-        // evaluate boundary condition
-        RF c_boundary = tp.g(ig.intersection(),face_local,time); // this is incorrect, but we do not know the timestep!!
-
-        // residual updates (use asymetric flux evaluation, may result in nonconservation of stuff
-        // note. we do only one-sided evaluation here
-        if (wn>=0) 
-          { 
-            // outflow boundary
-            r_s[0] += x_s[0]*wn*face_volume/(cell_volume*porosity*snew);
-            local_flux_sum += wn*face_volume/(cell_volume*porosity);
-          }
-        else
+        if (bc==2) // Outflow boundary
           {
-            // inflow boundary
-            r_s[0] += c_boundary*wn*face_volume/(cell_volume*porosity*snew);
+            r_s[0] += vn*x_s[0]*face_volume;
+            return;
+          }
+
+        if (bc==1) // Dirichlet boundary
+          {
+            typename TP::Traits::RangeFieldType g;
+            if (vn>=0) g=x_s[0]; else g=tp.g(*(ig.inside()),face_center_in_element);
+            const Dune::FieldVector<DF,IG::dimension>&
+              inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+            typename TP::Traits::RangeFieldType D_inside = tp.sold(*(ig.inside()),inside_local)*tp.D(*(ig.inside()),inside_local);
+            Dune::FieldVector<DF,IG::dimension> 
+              inside_global = ig.inside()->geometry().center();
+            Dune::FieldVector<DF,IG::dimension> 
+              outside_global = ig.geometry().center();
+            inside_global -= outside_global;
+            RF distance = inside_global.two_norm();
+            r_s[0] += (g*vn - D_inside*(g-x_s[0])/distance)*face_volume;
+            celloutflux += D_inside*face_volume/distance;
+            return;
           }
       }
 
+      // post skeleton: compute time step allowable for cell; to be done later
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume_post_skeleton(const EG& eg, const LFSU& lfsu, const X& x,
+                                      const LFSV& lfsv, R& r) const
+      {
+		// domain and range field type
+		typedef typename LFSU::Traits::LocalFiniteElementType::
+		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+		typedef typename LFSU::Traits::LocalFiniteElementType::
+		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+        const int dim = EG::Geometry::dimension;
+
+        if (!first_stage) return; // time step calculation is only done in first stage
+
+        // cell center
+        const Dune::FieldVector<DF,dim>& 
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+
+        // compute optimal dt for this cell
+        typename TP::Traits::RangeFieldType cellcapacity = tp.c(eg.entity(),inside_local)*eg.geometry().volume();
+        typename TP::Traits::RangeFieldType celldt = cellcapacity/(celloutflux+1E-40);
+
+//         if (active_cell)
+//           std::cout << "A: time=" << time
+//                     << " pos=" << eg.geometry().center()
+//                     << " snew=" << snew
+//                     << " capacityvol=" << cellcapacity
+//                     << " outflux=" << celloutflux
+//                     << " residual=" << r[0]
+//                     << " celldt=" << celldt
+//                     << " x=" << x[0]
+//                     << std::endl;
+
+        if (active_cell)
+          dtmin = std::min(dtmin,celldt);
+      }
+
+
+ 	  // volume integral depending only on test functions
+	  template<typename EG, typename LFSV, typename R>
+      void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
+      {
+		// domain and range field type
+		typedef typename LFSV::Traits::LocalFiniteElementType::
+		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+		typedef typename LFSV::Traits::LocalFiniteElementType::
+		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+        const int dim = EG::Geometry::dimension;
+
+        // no sources if cell is not active !
+        if (!active_cell) return;
+    
+        // cell center
+        const Dune::FieldVector<DF,dim>& 
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+
+        // evaluate source term
+        typename TP::Traits::RangeFieldType q = tp.q(eg.entity(),inside_local);
+
+        r[0] -= q*eg.geometry().volume();
+      }
+
+      //! set time in parameter class
+      void setTime (typename TP::Traits::RangeFieldType t)
+      {
+        time = t;
+        tp.setTime(t);
+      }
+
+      //! to be called once before each time step
+      void preStep (typename TP::Traits::RangeFieldType time, typename TP::Traits::RangeFieldType dt, 
+                    int stages)
+      {
+        tp.preStep(time,dt,stages);
+      }
+      
+      //! to be called once before each stage
+      void preStage (typename TP::Traits::RangeFieldType time, int r)
+      {
+        if (r==1)
+          {
+            first_stage = true;
+            dtmin = 1E100;
+            active_cell_count = 0;
+          }
+        else first_stage = false;
+      }
+
+      //! to be called once at the end of each stage
+      void postStage ()
+      {
+      }
+
+      //! to asked after first stage
+      typename TP::Traits::RangeFieldType suggestTimestep (typename TP::Traits::RangeFieldType dt) const
+      {
+        //        std::cout << "active cells: " << active_cell_count << " dtmin: " << dtmin << std::endl;
+        return dtmin;
+      }
+      
 	private:
-	  const TP& tp;
-	  V& scaling;
-	  typename TP::Traits::RangeFieldType time;
-	  mutable typename TP::Traits::RangeFieldType max_timestep; 
-	  mutable typename TP::Traits::RangeFieldType local_flux_sum;
-      mutable typename TP::Traits::RangeFieldType cell_volume;
-      mutable typename TP::Traits::RangeFieldType porosity;
-      mutable typename TP::Traits::RangeFieldType snew,sold;
-      typename TP::Traits::RangeFieldType zero_saturation;
-      mutable int emptycells;
-      mutable bool activecell;
-      mutable int cellno;
-      mutable typename TP::Traits::RangeFieldType min_snew, min_sold, min_local_flux_sum;
+	  TP& tp;
+      bool first_stage;
+      mutable bool active_cell;
+      mutable typename TP::Traits::RangeFieldType snew;
+      mutable int active_cell_count;
+      typename TP::Traits::RangeFieldType time;
+      mutable typename TP::Traits::RangeFieldType dtmin; // accumulate minimum dt here
+      mutable typename TP::Traits::RangeFieldType celloutflux;
+      typename TP::Traits::RangeFieldType zero;
+	};
+
+
+    //! base class for parameter class
+	template<class T, class Imp>
+	class ModifiedTransportTemporalParameterInterface 
+      : public TransportTemporalParameterInterface<T,Imp>
+	{
+	public:
+	  typedef T Traits;
+
+	  //! saturation at end of big step
+	  typename Traits::RangeFieldType 
+	  snew (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+	  {
+		return asImp().snew(e,x);
+	  }
+
+	private:
+	  Imp& asImp () {return static_cast<Imp &> (*this);}
+	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
+	};
+
+   /** a local operator for the storage operator
+     *
+     * \f{align*}{
+     \int_\Omega c(x,t) uv dx
+     * \f}
+     *
+     * version where c(x,t) may become zero.
+     */
+    template<class TP>
+	class ModifiedCCFVTemporalOperator 
+      : public NumericalJacobianApplyVolume<CCFVTemporalOperator<TP> >,
+        public FullVolumePattern,
+        public LocalOperatorDefaultFlags,
+        public InstationaryLocalOperatorDefaultMethods<typename TP::Traits::RangeFieldType>
+	{
+	public:
+      // pattern assembly flags
+      enum { doPatternVolume = true };
+
+	  // residual assembly flags
+      enum { doAlphaVolume = true };
+
+      ModifiedCCFVTemporalOperator (TP& tp_) 
+		: tp(tp_), zero(1e-8)
+	  {
+	  }
+
+      //! set time in parameter class
+      void setTime (typename TP::Traits::RangeFieldType t)
+      {
+        time = t;
+        tp.setTime(t);
+      }
+
+	  // volume integral depending on test and ansatz functions
+	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+	  {
+		// domain and range field type
+		typedef typename LFSU::Traits::LocalFiniteElementType::
+		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+		typedef typename LFSU::Traits::LocalFiniteElementType::
+		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+		typedef typename LFSU::Traits::LocalFiniteElementType::
+		  Traits::LocalBasisType::Traits::RangeType RangeType;
+
+        // dimensions
+        const int dim = EG::Geometry::dimension;
+        const int dimw = EG::Geometry::dimensionworld;
+
+        // cell center
+        const Dune::FieldVector<DF,dim>& 
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+
+        // evaluate saturation at end of big step for cell activity
+        typename TP::Traits::RangeFieldType snew = tp.snew(eg.entity(),inside_local);
+        bool active_cell = snew>zero;
+
+        // evaluate capacity
+        typename TP::Traits::RangeFieldType c = tp.c(eg.entity(),inside_local);
+
+        if (active_cell)
+          {
+            // residual contribution
+            r[0] += c*x[0]*eg.geometry().volume();
+          }
+
+//         if (active_cell)
+//           std::cout << "M: time=" << time
+//                   << " pos=" << eg.geometry().center()
+//                   << " snew=" << snew
+//                   << " capacityvol=" << c*eg.geometry().volume()
+//                   << " residual=" << r[0]
+//                   << std::endl;
+	  }
+
+      // jacobian of volume term
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+                            LocalMatrix<R>& mat) const
+      {
+		// domain and range field type
+		typedef typename LFSU::Traits::LocalFiniteElementType::
+		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+		typedef typename LFSU::Traits::LocalFiniteElementType::
+		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+		typedef typename LFSU::Traits::LocalFiniteElementType::
+		  Traits::LocalBasisType::Traits::JacobianType JacobianType;
+		typedef typename LFSU::Traits::LocalFiniteElementType::
+		  Traits::LocalBasisType::Traits::RangeType RangeType;
+        typedef typename LFSU::Traits::SizeType size_type;
+
+        // dimensions
+        const int dim = EG::Geometry::dimension;
+        const int dimw = EG::Geometry::dimensionworld;
+
+        // cell center
+        const Dune::FieldVector<DF,dim>& 
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+
+        // evaluate saturation at end of big step for cell activity
+        typename TP::Traits::RangeFieldType snew = tp.snew(eg.entity(),inside_local);
+        bool active_cell = snew>zero;
+
+        // evaluate capacity
+        typename TP::Traits::RangeFieldType c = tp.c(eg.entity(),inside_local);
+        
+        // residual contribution
+        if (active_cell) 
+          mat(0,0) += c*eg.geometry().volume();
+        else
+          mat(0,0) += 1.0; // rhs should be zero so we get zero update
+
+//         if (active_cell)
+//           std::cout << "J: time=" << time
+//                   << " pos=" << eg.geometry().center()
+//                   << " snew=" << snew
+//                   << " mat=" << mat(0,0)
+//                   << std::endl;
+      }
+
+	private:
+	  TP& tp;
+      typename TP::Traits::RangeFieldType time;
+      typename TP::Traits::RangeFieldType zero;
 	};
 
   }
