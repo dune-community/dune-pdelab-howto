@@ -5,7 +5,7 @@
 #AM_CPPFLAGS = $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS)
 dist_noinst_DATA = poisson laplacedirichletccfv
 
-noinst_PROGRAMS = dg overlappingsinglephaseflowccfv overlappingsinglephaseflow nonoverlappingsinglephaseflow parallelgfs dnapl dnaplfv dnaplmfd nonlineardiffusion transporttest instationarytest heleshaw poisson mimetic laplacedirichletccfv reentrantcorner q1gridfunctionspacemain q1interpolatemain q1interpolationerrormain q2interpolationerrormain q1constrainedinterpolatemain thinterpolatemain laplacedirichletmain rt0main
+noinst_PROGRAMS = dg overlappingsinglephaseflowccfv overlappingsinglephaseflow nonoverlappingsinglephaseflow parallelgfs dnapl dnaplfv dnaplmfd nonlineardiffusion transporttest instationarytest heleshaw heleshawfv heleshawreaction poisson mimetic laplacedirichletccfv reentrantcorner q1gridfunctionspacemain q1interpolatemain q1interpolationerrormain q2interpolationerrormain q1constrainedinterpolatemain thinterpolatemain laplacedirichletmain rt0main
 
 dg_SOURCES = dg.cc
 dg_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
@@ -60,6 +60,18 @@ heleshaw_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_C
 heleshaw_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 heleshaw_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 heleshaw_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
+
+heleshawfv_SOURCES = heleshawfv.cc
+heleshawfv_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
+heleshawfv_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+heleshawfv_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
+heleshawfv_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
+
+heleshawreaction_SOURCES = heleshawreaction.cc
+heleshawreaction_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
+heleshawreaction_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+heleshawreaction_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
+heleshawreaction_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
 poisson_SOURCES = poisson.cc
 poisson_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)

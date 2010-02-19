@@ -314,36 +314,6 @@ public:
  	y = (height-x[dim-1])*9810;
   }
 };
-template<typename GV, typename RF>
-class P_g_alt
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  P_g_alt<GV,RF> >
-{
-  const TwoPhaseParameter<GV,RF>& tp;
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,P_g_alt<GV,RF> > BaseT;
-  enum {dim=Traits::DomainType::dimension};
-
-  P_g_alt (const GV& gv, const TwoPhaseParameter<GV,RF>& tp_) : BaseT(gv), tp(tp_) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
-							  typename Traits::RangeType& y) const
-  {
- 	y = (height-x[dim-1])*9810;
-    for (int i=0; i<dim-1; i++)
-      if (x[i]<lense_width_min || x[i]>lense_width_max)
-        {
-          y += pentry;
-          return;
-        }
-    if (x[dim-1]<lense_height_min || x[dim-1]>lense_height_max)
-      {
-        y += pentry;
-        return;
-      }
-    y += pentry_lense;
-  }
-};
 
 template<typename GV, typename RF>
 class P_g

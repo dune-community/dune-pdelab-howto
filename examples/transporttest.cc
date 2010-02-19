@@ -140,7 +140,7 @@ public:
 
   //! capacity function
   typename Traits::RangeFieldType 
-  c (const typename Traits::ElementType& e, const typename Traits::DomainType& ) const
+  c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 1.0;
   }
