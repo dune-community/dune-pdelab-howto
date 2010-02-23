@@ -129,7 +129,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     }
 
     #ifdef USE_SUPER_LU // use lu decomposition as solver
-    #ifdef HAVE_SUPERLU
+    #if HAVE_SUPERLU
     // make ISTL solver
     Dune::MatrixAdapter<M,V,V> opa(m);
     typedef typename M::BaseT ISTLM;

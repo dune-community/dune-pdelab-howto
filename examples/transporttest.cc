@@ -203,7 +203,7 @@ void stationary (const GV& gv)
   GOS gos(gfs,cg,gfs,cg,lop);
 
   // <<<6>>> Make a linear solver 
-#ifdef HAVE_SUPERLU
+#if HAVE_SUPERLU
   typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
   LS ls(false);
 #else

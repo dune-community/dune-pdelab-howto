@@ -228,7 +228,7 @@ void sequential (const GV& gv)
   GOS gos(gfs,cg,gfs,cg,lop);
 
   // <<<6>>> Make a linear solver 
-#ifdef HAVE_SUPERLU
+#if HAVE_SUPERLU
   typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
   LS ls(false);
 #else
@@ -371,7 +371,7 @@ void parallel_overlapping_Q1 (const GV& gv)
   GOS gos(gfs,cg,gfs,cg,lop);
 
   // <<<6>>> Make a linear solver 
-#ifdef HAVE_SUPERLU
+#if HAVE_SUPERLU
   typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SuperLU<GFS,C> LS;
   LS ls(gfs,cg,5000,2);
 #else
