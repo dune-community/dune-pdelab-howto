@@ -47,12 +47,11 @@
 //==============================================================================
 
 const double height = 0.6;
-const double heightw = 0.3; // initial height of water
+const double heightw = 0.2; // initial height of water
 const double width = 0.4;
 const double depth = 0.02;
 const double pentry = 1000.0;
 const double patm = 1e5;
-const double sltop = 0.2;
 const double onset = 6000000.0;
 const double period = 60.0;
 
@@ -62,8 +61,8 @@ class TwoPhaseParameter
   : public Dune::PDELab::TwoPhaseParameterInterface<Dune::PDELab::TwoPhaseParameterTraits<GV,RF>, 
                                                     TwoPhaseParameter<GV,RF> >
 {
-  static const RF eps1 = 1E-6;
-  static const RF eps2 = 1E-5;
+  static const RF eps1 = 1E-4; // regularization in kr
+  static const RF eps2 = 1E-5; // eps in geometry calculations
   
 public:
   typedef Dune::PDELab::TwoPhaseParameterTraits<GV,RF> Traits;
@@ -80,7 +79,7 @@ public:
 #ifdef RANDOMPERM
 	double mink=1E100;
 	double maxk=-1E100;
-    Dune::FieldVector<double,dim> correlation_length(0.4/25.0);
+    Dune::FieldVector<double,dim> correlation_length(0.4/50.0);
 	EberhardPermeabilityGenerator<GV::dimension> field(correlation_length,1,0.0,5000,-1083);
 	for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
 	  {
@@ -115,7 +114,12 @@ public:
   pc (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
        typename Traits::RangeFieldType s_l) const
   {
-    return pentry/sqrt(s_l);
+    const typename Traits::RangeFieldType epsreg=1e-5;
+    const typename Traits::RangeFieldType S0reg=1.0-1e-5;
+    if (s_l>S0reg-epsreg)
+      return (S0reg-s_l)*pentry/epsreg;
+    else
+      return pentry/sqrt(s_l/(S0reg-epsreg));
   }
 	  
   //! inverse capillary pressure function
@@ -124,7 +128,12 @@ public:
        typename Traits::RangeFieldType pc) const
   {
     typename Traits::RangeFieldType ratio=pentry/pc;
-    return ratio*ratio;
+    const typename Traits::RangeFieldType epsreg=1e-5;
+    const typename Traits::RangeFieldType S0reg=1.0-1e-5;
+    if (pc<=pentry)
+      return S0reg-epsreg/ratio;
+    else
+      return (S0reg-epsreg)*ratio*ratio;
   }
 	  
   //! liquid phase relative permeability
@@ -216,9 +225,11 @@ public:
     if (global[0]<eps2 || global[0]>width-eps2)
       return 0; // left & right boundary: Neumann
 
-    // top / bottom
+    // top 
     if (global[dim-1]>height-eps2)
       return 0; // top boundary Neumann
+
+    // bottom
     if (global[dim-1]<eps2)
       return 1; // bottom boundary Dirichlet
 
@@ -243,7 +254,7 @@ public:
     if (global[0]<eps2 || global[0]>width-eps2)
       return 0; // left & right boundary: Neumann
 
-    // top / bottom
+    // top
     if (global[dim-1]>height-eps2)
       {
         // { 17.II.2010: influx at top
@@ -260,6 +271,8 @@ public:
 
         return 1; // top boundary Dirichlet
       }
+
+    // bottom
     if (global[dim-1]<eps2)
       return 0; // bottom boundary Neumann
 
@@ -280,18 +293,7 @@ public:
     Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
       global = is.geometry().global(x);
 
-    if (global[dim-1]<eps2)
-      {
-        //        std::cout << "Bingo " << global << std::endl;
-        if (time<onset)
-          return patm + heightw*9810.0;
-        if (fmod(time-onset,period)/period<=0.5)
-          return patm + (heightw+0.1)*9810.0;
-        else
-          return patm + (heightw-0.1)*9810.0;
-      }
-
-    return -1; // unknown
+    return  patm - pentry + (heightw-global[dim-1])*9810.0;
   }
 
   //! gas phase Dirichlet boundary condition
@@ -301,10 +303,7 @@ public:
     Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
       global = is.geometry().global(x);
 
-    if (global[dim-1]>height-eps2)
-      return patm + pc(*(is.inside()),global,sltop);
-
-    return -1; // unknown
+    return patm + (heightw-global[dim-1])*9.81*patm/(287.2*300.0);
   }
 
   //! liquid phase Neumann boundary condition
@@ -318,6 +317,15 @@ public:
     if (global[dim-1]>height-eps2)
       {
         typename Traits::RangeFieldType flux = -0.075;
+        if (time<1e-6) 
+          flux = 0.0;
+        else
+          {
+            if (time>0.0)
+              flux = -0.075;
+            else
+              flux = -0.075*(time/20.0);
+          }
         typename Traits::RangeFieldType w = 0.03;        
         if (global[0]>0.1-w && global[0]<0.1+w)
           return flux;
@@ -361,27 +369,37 @@ private:
   std::vector<RF> perm;
 };
 
-// initial conditions for phase pressures
+
 template<typename GV, typename RF>
 class P_l
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  P_l<GV,RF> >
+  : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<GV,RF,GV::Grid::dimension,Dune::FieldVector<RF,1> >,
+                                          P_l<GV,RF> >
 {
+  const GV& gv;
   const TwoPhaseParameter<GV,RF>& tp;
 public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,P_l<GV,RF> > BaseT;
-  enum {dim=Traits::DomainType::dimension};
+  typedef Dune::PDELab::GridFunctionTraits<GV,RF,GV::Grid::dimension,Dune::FieldVector<RF,1> > Traits;
+  typedef Dune::PDELab::GridFunctionBase<Traits,P_l<GV,RF> > BaseT;
 
-  P_l (const GV& gv, const TwoPhaseParameter<GV,RF>& tp_) : BaseT(gv), tp(tp_) {}
+  P_l (const GV& gv_, const TwoPhaseParameter<GV,RF>& tp_) : gv(gv_), tp(tp_) {}
 
+  inline void evaluate (const typename Traits::ElementType& e, 
+                        const typename Traits::DomainType& xlocal,
+                        typename Traits::RangeType& y) const
+  {  
+    const int dim = Traits::GridViewType::Grid::dimension;
+    Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,dim> 
+      x = e.geometry().global(xlocal);
 
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
-							  typename Traits::RangeType& y) const
+    y = patm - pentry + (heightw-x[dim-1])*9810.0;
+  }
+  
+  inline const typename Traits::GridViewType& getGridView ()
   {
-      y = patm;
+    return gv;
   }
 };
+
 
 template<typename GV, typename RF>
 class P_g
@@ -404,7 +422,7 @@ public:
     Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,dim> 
       x = e.geometry().global(xlocal);
 
-      y = patm + tp.pc(e,xlocal,sltop);
+    y =  patm + (heightw-x[dim-1])*9.81*patm/(287.2*300.0);
   }
   
   inline const typename Traits::GridViewType& getGridView ()
@@ -524,10 +542,7 @@ public:
     snewdgf.evaluate(e,x,s_new);
     solddgf.evaluate(e,x,s_old);
     RF factor = (time-t0)/dt;
-
-    //    return 1.0;
-
-    return tp.phi(e,x)*( (1.0-factor)*s_old + factor*s_new );
+    return tp.nu_l(e,x,0.0)*tp.phi(e,x)*( (1.0-factor)*s_old + factor*s_new );
   }
 
   //! saturation at new time level
@@ -749,11 +764,8 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
   IGOS igos(method,tpgfs,cg,tpgfs,cg,lop,mlop);
 
   // <<<10>>> Make a linear solver 
-
-   typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<TPGFS,C> LS;
-   LS ls(tpgfs,cg,5000,5,0);
-//  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SuperLU<TPGFS,C> LS;
-//  LS ls(tpgfs,cg,5000,1);
+  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<TPGFS,C> LS;
+  LS ls(tpgfs,cg,5000,5,0);
 
   // <<<11>>> make Newton for time-dependent problem
   typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
@@ -801,7 +813,7 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
 
   //  make grid operator space for transport problem
   typedef Transport1<GV,RF,S_lDGF,S_lDGF,VliquidDGF> CTP;
-  CTP ctp(tp,sold_ldgf,s_ldgf,vliquidolddgf);
+  CTP ctp(tp,sold_ldgf,s_ldgf,vliquiddgf);
   typedef Dune::PDELab::ModifiedCCFVSpatialTransportOperator<CTP> CLOP; 
   CLOP clop(ctp);
   typedef Dune::PDELab::ModifiedCCFVTemporalOperator<CTP> CSLOP; 
@@ -818,7 +830,7 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
   // <<<13>>> graphics for initial value
   bool graphics = true;
   char basename[255];
-  sprintf(basename,"heleshaw-infiltration-%01dl%01dd",level,dim);
+  sprintf(basename,"heleshaw-infiltration-IE-%01dl%01dd",level,dim);
   Dune::PDELab::FilenameHelper fn(basename);
   if (graphics)
   {
@@ -836,7 +848,7 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VliquidDGF>(vliquiddgf,"liquid velocity"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VgasDGF>(vgasdgf,"gas velocity"));
-    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<ConcDGF>(concdgf,"concentration"));
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<ConcDGF>(concdgf,"mass fraction"));
     //    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(pdgf,"decomposition"));
     vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
     fn.increment();
@@ -845,8 +857,9 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
   // <<<14>>> time loop
   RF time = 0.0;
   RF timestepmax=maxtimestep;
-  RF timestepscale=1.2;
+  RF timestepscale=1.1;
   RF dtmin = 1e-6;
+  bool implicit=true;
   while (time<Tend)
     {
       // do time step
@@ -868,20 +881,53 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
 
       if (time>=500.0)
         {
-          // concentration time stepper
-          typedef Dune::PDELab::CFLTimeController<RF,CIGOS> TC;
-          TC tc(0.999,time+timestep,cigos);
-          Dune::PDELab::ExplicitOneStepMethod<RF,CIGOS,CLS,CV,CV,TC> cosm(cmethod,cigos,cls,tc);
-          cosm.setVerbosityLevel(2);
-          
-          // transport time stepping
-          RF ctime = time;
-          RF ctimestep = timestep;
-          while (ctime<time+timestep-1e-8)
+          if (implicit)
             {
-              ctimestep = cosm.apply(ctime,ctimestep,cold,cnew);
-              ctime += ctimestep;
-              cold = cnew;
+              // linear solver for transport problem 
+              typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<CGFS,CC> CLS;
+              CLS cls(cgfs,ccg,5000,5,1);
+              
+              // make Newton for transport problem
+              typedef Dune::PDELab::Newton<CIGOS,CLS,CV,CV> CPDESOLVER;
+              CPDESOLVER ctnewton(cigos,cls);
+              ctnewton.setReassembleThreshold(0.0);
+              ctnewton.setVerbosityLevel(2);
+              ctnewton.setReduction(0.9);
+              ctnewton.setMinLinearReduction(1e-10);
+              
+              // <<<16>>> time-steppers
+              Dune::PDELab::ImplicitEulerParameter<RF> cmethod;
+              cigos.setMethod(cmethod);
+              Dune::PDELab::OneStepMethod<RF,CIGOS,CPDESOLVER,CV,CV> cosm(cmethod,cigos,ctnewton);
+              cosm.setVerbosityLevel(1);
+              
+              // transport time stepping
+              RF ctime = time;
+              RF ctimestep = timestep/1.0;
+              while (ctime<time+timestep-1e-8)
+                {
+                  cosm.apply(ctime,ctimestep,cold,cnew);
+                  ctime += ctimestep;
+                  cold = cnew;
+                }
+            }
+          else
+            {
+              // concentration time stepper
+              typedef Dune::PDELab::CFLTimeController<RF,CIGOS> TC;
+              TC tc(0.999,time+timestep,cigos);
+              Dune::PDELab::ExplicitOneStepMethod<RF,CIGOS,CLS,CV,CV,TC> cosm(cmethod,cigos,cls,tc);
+              cosm.setVerbosityLevel(2);
+              
+              // transport time stepping
+              RF ctime = time;
+              RF ctimestep = timestep;
+              while (ctime<time+timestep-1e-8)
+                {
+                  ctimestep = cosm.apply(ctime,ctimestep,cold,cnew);
+                  ctime += ctimestep;
+                  cold = cnew;
+                }
             }
         }
 
@@ -895,7 +941,7 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
           vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VliquidDGF>(vliquiddgf,"liquid velocity"));
           vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VgasDGF>(vgasdgf,"gas velocity"));
-          vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<ConcDGF>(concdgf,"concentration"));
+          vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<ConcDGF>(concdgf,"mass fraction"));
           vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
           fn.increment();
         }

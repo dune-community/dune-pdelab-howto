@@ -51,6 +51,8 @@ const double lense_width_min = 0.3;
 const double lense_width_max = 0.7;
 const double lense_height_min = 0.2;
 const double lense_height_max = 0.3;
+const double eps1 = 1E-5; // regularization of relative permeability
+const double eps2 = 1E-5; // eps in geometry calculations
 
 // parameter class for local operator
 template<typename GV, typename RF>
@@ -58,8 +60,6 @@ class TwoPhaseParameter
   : public Dune::PDELab::TwoPhaseParameterInterface<Dune::PDELab::TwoPhaseParameterTraits<GV,RF>, 
                                                     TwoPhaseParameter<GV,RF> >
 {
-  static const RF eps1 = 1E-6;
-  static const RF eps2 = 1E-5;
   
 public:
   typedef Dune::PDELab::TwoPhaseParameterTraits<GV,RF> Traits;
@@ -273,6 +273,8 @@ public:
       if (global[i]<0.4 || global[i]>0.6)
         return 0.0;
 
+    if (time<1e-6) return 0.0;
+
     return -0.075;
   }
 
@@ -338,7 +340,7 @@ public:
     const int dim = Traits::GridViewType::Grid::dimension;
     Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,dim> 
       global = e.geometry().global(x);
- 	y = (height-global[dim-1])*9810 + tp.pc(e,x,1.0-1E-9);
+ 	y = (height-global[dim-1])*9810 + tp.pc(e,x,1.0-1e-9);
   }
   
   inline const typename Traits::GridViewType& getGridView ()
@@ -368,7 +370,7 @@ public:
   typedef Dune::PDELab::TransportParameterTraits<GV,RF> Traits;
 
   Transport1 (const TP& tp_, const SOLDDGF& solddgf_, const SNEWDGF& snewdgf_, const UDGF& udgf_)
-    : tp(tp_), solddgf(solddgf_), snewdgf(snewdgf_), udgf(udgf_)
+    : tp(&tp_), solddgf(&solddgf_), snewdgf(&snewdgf_), udgf(&udgf_)
   {}
 
   //! capacity function
@@ -377,10 +379,10 @@ public:
   {
     typename SNEWDGF::Traits::RangeType s_new;
     typename SOLDDGF::Traits::RangeType s_old;
-    snewdgf.evaluate(e,x,s_new);
-    solddgf.evaluate(e,x,s_old);
+    snewdgf->evaluate(e,x,s_new);
+    solddgf->evaluate(e,x,s_old);
     RF factor = (time-t0)/dt;
-    return tp.phi(e,x)*( (1.0-factor)*s_old + factor*s_new );
+    return tp->nu_g(e,x,0.0)*tp->phi(e,x)*( (1.0-factor)*s_old + factor*s_new );
   }
 
   //! saturation at old time level
@@ -388,7 +390,7 @@ public:
   sold (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename SOLDDGF::Traits::RangeType y;
-    solddgf.evaluate(e,x,y);
+    solddgf->evaluate(e,x,y);
     return y;
   }
 
@@ -397,7 +399,7 @@ public:
   snew (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename SNEWDGF::Traits::RangeType y;
-    snewdgf.evaluate(e,x,y);
+    snewdgf->evaluate(e,x,y);
     return y;
   }
 
@@ -406,7 +408,7 @@ public:
   v (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::RangeType velo;
-    udgf.evaluate(e,x,velo);
+    udgf->evaluate(e,x,velo);
     return velo;
   }
 
@@ -414,7 +416,7 @@ public:
   typename Traits::RangeFieldType
   D (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    return 1e-8;
+    return 0.0;
   }
 
   //! source/reaction term
@@ -432,7 +434,22 @@ public:
   bc (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     typename Traits::RangeType global = is.geometry().global(x);
-    return 1;
+
+    for (int i=0; i<dim-1; i++)
+      if (global[i]<eps2 || global[i]>width-eps2)
+        return 1; // left & right boundary Dirichlet
+
+    if (global[dim-1]>height-eps2)
+      {
+        for (int i=0; i<dim-1; i++)
+          if (global[i]<0.4 || global[i]>0.6)
+            return 0;  // top boundary Neumann
+        return 1; // top boundary Dirichlet in the middle
+      }
+    if (global[dim-1]<eps2)
+      return 0; // bottom boundary Neumann
+
+    return -1; // unknown
   }
 
   //! Dirichlet boundary condition value
@@ -447,6 +464,7 @@ public:
     for (int i=0; i<dim-1; i++)
       if (global[i]<0.45 || global[i]>0.55)
         return 0.0;
+
     return 1.0;
   }
 
@@ -473,31 +491,31 @@ public:
   }
       
 private:
-  const TP& tp; // store access to two phase parameters
-  const SOLDDGF& solddgf;
-  const SNEWDGF& snewdgf;
-  const UDGF& udgf;
+  const TP *tp; // store access to two phase parameters
+  const SOLDDGF *solddgf;
+  const SNEWDGF *snewdgf;
+  const UDGF *udgf;
   RF time, t0, dt;
 };
 
 
 // initial conditions for component concentration
 template<typename GV, typename RF>
-class Conc
+class Fraction
   : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  Conc<GV,RF> >
+                                                  Fraction<GV,RF> >
 {
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,Conc<GV,RF> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,Fraction<GV,RF> > BaseT;
   enum {dim=Traits::DomainType::dimension};
 
-  Conc (const GV& gv) : BaseT(gv) {}
+  Fraction (const GV& gv) : BaseT(gv) {}
 
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
- 	y = 0;
+ 	y = 0.0;
   }
 };
 
@@ -578,6 +596,46 @@ public:
   }
 };
 
+template<typename  T, typename PL, typename PG, typename F>
+class MassConcentration
+  : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<typename PL::Traits::GridViewType,
+                                                                           typename PL::Traits::RangeFieldType,PL::Traits::dimRange,
+                                                                           typename PL::Traits::RangeType>,
+                                          MassConcentration<T,PL,PG,F> >
+{
+  const T& t;
+  const PL& pl;
+  const PG& pg;
+  const F& f;
+
+public:
+  typedef Dune::PDELab::GridFunctionTraits<typename PL::Traits::GridViewType,
+                                           typename PL::Traits::RangeFieldType,PL::Traits::dimRange,
+                                           typename PL::Traits::RangeType> Traits;
+
+  typedef Dune::PDELab::GridFunctionBase<Traits,MassConcentration<T,PL,PG,F> > BaseT;
+
+  MassConcentration (const T& t_, const PL& pl_, const PG& pg_, const F& f_) : t(t_), pl(pl_), pg(pg_), f(f_) {}
+
+  inline void evaluate (const typename Traits::ElementType& e, 
+                        const typename Traits::DomainType& x,
+                        typename Traits::RangeType& y) const
+  {  
+    typename PL::Traits::RangeType pl_value,pg_value,f_value;
+    pl.evaluate(e,x,pl_value);
+    pg.evaluate(e,x,pg_value);
+    f.evaluate(e,x,f_value);
+    y = f_value*t.nu_g(e,x,pg_value);
+  }
+  
+  inline const typename Traits::GridViewType& getGridView ()
+  {
+    return pl.getGridView();
+  }
+};
+
+
+
 
 //==============================================================================
 // driver
@@ -585,7 +643,7 @@ public:
 int rank;
 
 template<class GV> 
-void test (const GV& gv, int timesteps, double timestep)
+void test (const GV& gv, int timesteps, double timestep, int level, int implicit)
 {
   // <<<1>>> choose some types
   typedef typename GV::Grid::ctype DF;
@@ -681,7 +739,7 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef Dune::PDELab::TwoPhaseOnePointTemporalOperator<TP> MLOP;
   MLOP mlop(tp);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MBE;
-  Dune::PDELab::ImplicitEulerParameter<RF> method;
+  Dune::PDELab::Alexander2Parameter<RF> method;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<RF,V,TPGFS,TPGFS,LOP,MLOP,C,C,MBE> IGOS;
   IGOS igos(method,tpgfs,cg,tpgfs,cg,lop,mlop);
 
@@ -694,7 +752,7 @@ void test (const GV& gv, int timesteps, double timestep)
   PDESOLVER tnewton(igos,ls);
   tnewton.setReassembleThreshold(0.0);
   tnewton.setVerbosityLevel(2);
-  tnewton.setReduction(1e-9);
+  tnewton.setReduction(1e-11);
   tnewton.setMinLinearReduction(1e-3);
 
   // <<<16>>> time-steppers
@@ -711,29 +769,34 @@ void test (const GV& gv, int timesteps, double timestep)
   CGFS cgfs(gv,fem); 
 
   // initial value function
-  typedef Conc<GV,RF> ConcType;
-  ConcType conc_initial(gv);
+  typedef Fraction<GV,RF> FractionType;
+  FractionType fraction_initial(gv);
 
   // vectors and initialization
   typedef typename CGFS::template VectorContainer<RF>::Type CV;
   CV cold(cgfs); 
-  Dune::PDELab::interpolate(conc_initial,cgfs,cold);
+  Dune::PDELab::interpolate(fraction_initial,cgfs,cold);
   CV cnew(cgfs);
   cnew = cold;
   
-  // concentration grid functions
-  typedef Dune::PDELab::DiscreteGridFunction<CGFS,CV> ConcDGF;
-  ConcDGF concdgf(cgfs,cnew);
+  // grid functions
+  typedef Dune::PDELab::DiscreteGridFunction<CGFS,CV> FracDGF;
+  FracDGF fracdgf(cgfs,cnew);
+  typedef MassConcentration<TP,P_lDGF,P_gDGF,FracDGF> MassConcDGF; 
+  MassConcDGF massconcdgf(tp,p_ldgf,p_gdgf,fracdgf);
 
   // concentration constraints
   typedef typename CGFS::template ConstraintsContainer<RF>::Type CC;
   CC ccg;
   ccg.clear();
-  Dune::PDELab::constraints(conc_initial,cgfs,ccg,false);
+  Dune::PDELab::constraints(fraction_initial,cgfs,ccg,false);
 
   //  make grid operator space for transport problem
   typedef Transport1<GV,RF,S_gDGF,S_gDGF,VgasDGF> CTP;
-  CTP ctp(tp,sold_gdgf,s_gdgf,vgasolddgf);
+  CTP ctp_implicit(tp,sold_gdgf,s_gdgf,vgasdgf);
+  CTP ctp_explicit(tp,sold_gdgf,s_gdgf,vgasolddgf);
+  CTP ctp(ctp_explicit);
+  if (implicit) ctp=ctp_implicit;
   typedef Dune::PDELab::ModifiedCCFVSpatialTransportOperator<CTP> CLOP; 
   CLOP clop(ctp);
   typedef Dune::PDELab::ModifiedCCFVTemporalOperator<CTP> CSLOP; 
@@ -750,7 +813,10 @@ void test (const GV& gv, int timesteps, double timestep)
   // output of timesteps
   bool graphics = true;
   char basename[255];
-  sprintf(basename,"dnapltransport-explicit-%01dd",dim);
+  if (implicit)
+    sprintf(basename,"dnapltransport-test2-Alex2-IE-%01dl%01dd",level,dim);
+  else
+    sprintf(basename,"dnapltransport-test2-Alex2-EE-%01dl%01dd",level,dim);
   Dune::PDELab::FilenameHelper fn(basename);
   if (graphics)
   {
@@ -761,14 +827,14 @@ void test (const GV& gv, int timesteps, double timestep)
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VliquidDGF>(vliquiddgf,"liquid velocity"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VgasDGF>(vgasdgf,"gas velocity"));
-    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<ConcDGF>(concdgf,"concentration"));
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<FracDGF>(fracdgf,"mass fraction"));
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<MassConcDGF>(massconcdgf,"mass concentration"));
     vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
     fn.increment();
   }
 
   // time loop
   RF time = 0.0;
-  bool implicit = false;
   for (int k=1; k<=timesteps; k++)
     {
       // do time step
@@ -787,9 +853,9 @@ void test (const GV& gv, int timesteps, double timestep)
           typedef Dune::PDELab::Newton<CIGOS,CLS,CV,CV> CPDESOLVER;
           CPDESOLVER ctnewton(cigos,cls);
           ctnewton.setReassembleThreshold(0.0);
-          ctnewton.setVerbosityLevel(1);
+          ctnewton.setVerbosityLevel(2);
           ctnewton.setReduction(0.9);
-          ctnewton.setMinLinearReduction(1e-8);
+          ctnewton.setMinLinearReduction(1e-10);
           
           // <<<16>>> time-steppers
           Dune::PDELab::ImplicitEulerParameter<RF> cmethod;
@@ -797,8 +863,15 @@ void test (const GV& gv, int timesteps, double timestep)
           Dune::PDELab::OneStepMethod<RF,CIGOS,CPDESOLVER,CV,CV> cosm(cmethod,cigos,ctnewton);
           cosm.setVerbosityLevel(1);
 
-          cosm.apply(time,timestep,cold,cnew);
-          cold = cnew;
+          // transport time stepping
+          RF ctime = time;
+          RF ctimestep = timestep/1.0;
+          while (ctime<time+timestep-1e-8)
+            {
+              cosm.apply(ctime,ctimestep,cold,cnew);
+              ctime += ctimestep;
+              cold = cnew;
+            }
         }
       else
         {
@@ -833,7 +906,8 @@ void test (const GV& gv, int timesteps, double timestep)
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
           vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VliquidDGF>(vliquiddgf,"liquid velocity"));
           vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VgasDGF>(vgasdgf,"gas velocity"));
-          vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<ConcDGF>(concdgf,"concentration"));
+          vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<FracDGF>(fracdgf,"mass fraction"));
+          vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<MassConcDGF>(massconcdgf,"mass concentration"));
           vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
           fn.increment();
         }
@@ -864,10 +938,10 @@ int main(int argc, char** argv)
 	  }
     rank = helper.rank();
 
-	if (argc!=4)
+	if (argc!=5)
 	  {
 		if(helper.rank()==0)
-		  std::cout << "usage: ./dnapl <level> <timesteps> <timestep>" << std::endl;
+		  std::cout << "usage: ./dnapl <level> <timesteps> <timestep> <implicit>" << std::endl;
 		return 1;
 	  }
 
@@ -879,6 +953,9 @@ int main(int argc, char** argv)
 
 	double timestep;
 	sscanf(argv[3],"%lg",&timestep);
+
+	int implicit;
+	sscanf(argv[4],"%d",&implicit);
 
 #if HAVE_MPI
     // 2D
@@ -893,7 +970,7 @@ int main(int argc, char** argv)
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
  
       // solve problem :)
-      test(grid.leafView(),timesteps,timestep);
+      test(grid.leafView(),timesteps,timestep,l,implicit);
     }
 
     // 3D
@@ -908,7 +985,7 @@ int main(int argc, char** argv)
       Dune::YaspGrid<3> grid(helper.getCommunicator(),L,N,B,overlap);
       
       // solve problem :)
-      test(grid.leafView(),timesteps,timestep);
+      test(grid.leafView(),timesteps,timestep,l,implicit);
     }
 #endif
 
@@ -924,4 +1001,5 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}
+
