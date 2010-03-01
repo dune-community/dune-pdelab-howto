@@ -55,17 +55,22 @@ const double patm = 1e5;
 const double onset = 6000000.0;
 const double period = 60.0;
 
+double iheightw = 0.0;
+double iflux = -0.075;
+
 // parameter class for local operator
 template<typename GV, typename RF>
 class TwoPhaseParameter 
   : public Dune::PDELab::TwoPhaseParameterInterface<Dune::PDELab::TwoPhaseParameterTraits<GV,RF>, 
                                                     TwoPhaseParameter<GV,RF> >
 {
-  static const RF eps1 = 1E-4; // regularization in kr
+  static const RF eps1 = 1E-8; // regularization in kr
   static const RF eps2 = 1E-5; // eps in geometry calculations
+
   
 public:
   typedef Dune::PDELab::TwoPhaseParameterTraits<GV,RF> Traits;
+  typedef typename Traits::RangeFieldType Real;
   enum {dim=GV::Grid::dimension};
 
   //! constructor
@@ -79,8 +84,8 @@ public:
 #ifdef RANDOMPERM
 	double mink=1E100;
 	double maxk=-1E100;
-    Dune::FieldVector<double,dim> correlation_length(0.4/50.0);
-	EberhardPermeabilityGenerator<GV::dimension> field(correlation_length,1,0.0,5000,-1083);
+    Dune::FieldVector<double,dim> correlation_length(0.4/40.0);
+	EberhardPermeabilityGenerator<GV::dimension> field(correlation_length,0.1,0.0,5000,-1083);
 	for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
 	  {
 		int id = is.index(*it);
@@ -127,13 +132,24 @@ public:
   s_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
        typename Traits::RangeFieldType pc) const
   {
-    typename Traits::RangeFieldType ratio=pentry/pc;
-    const typename Traits::RangeFieldType epsreg=1e-5;
-    const typename Traits::RangeFieldType S0reg=1.0-1e-5;
+    Real ratio=pentry/pc;
+    const Real delta = 1e-4;
+    const Real epsilon = 0.1;
+
     if (pc<=pentry)
-      return S0reg-epsreg/ratio;
-    else
-      return (S0reg-epsreg)*ratio*ratio;
+      return 1.0-delta/(1+delta*(pentry-pc));
+
+    if (pc>=pentry+epsilon)
+      return ratio*ratio;
+
+    return (1.0-(pc-pentry)/epsilon)*(1.0-delta/(1+delta*(pentry-pc))) + ratio*ratio*(pc-pentry)/epsilon;
+
+//     const typename Traits::RangeFieldType epsreg=1e-5;
+//     const typename Traits::RangeFieldType S0reg=1.0-1e-5;
+//     if (pc<=pentry)
+//       return S0reg-epsreg/ratio;
+//     else
+//       return (S0reg-epsreg)*ratio*ratio;
   }
 	  
   //! liquid phase relative permeability
@@ -149,7 +165,7 @@ public:
   kr_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
         typename Traits::RangeFieldType s_g) const
   {
-    if (s_g<=eps1) return 0.0; else return (s_g-eps1)*(s_g-eps1);
+    if (s_g<=eps1) return 0.0; else return 2*(s_g-eps1)-(s_g-eps1)*(s_g-eps1);
   }
 
   //! liquid phase viscosity
@@ -195,6 +211,7 @@ public:
   nu_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
         typename Traits::RangeFieldType p_g) const
   {
+    return patm/(287.2*300.0);
     return p_g/(287.2*300.0);
   }
 
@@ -211,6 +228,7 @@ public:
   rho_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
          typename Traits::RangeFieldType p_g) const
   {
+    return patm/(287.2*300.0);
     return p_g/(287.2*300.0);
   }
 	  
@@ -252,21 +270,22 @@ public:
 
     // left / right
     if (global[0]<eps2 || global[0]>width-eps2)
-      return 0; // left & right boundary: Neumann
+      return 1; // left & right boundary: Neumann
+    //      return 0; // left & right boundary: Neumann
 
     // top
     if (global[dim-1]>height-eps2)
       {
+        return 1; // top boundary Dirichlet
+
         // { 17.II.2010: influx at top
-        {
-          typename Traits::RangeFieldType w = 0.03;        
-          if (global[0]>0.1-w && global[0]<0.1+w)
-            return 0;
-          if (global[0]>0.2-w && global[0]<0.2+w)
-            return 0;
-          if (global[0]>0.3-w && global[0]<0.3+w)
-            return 0;
-        }
+        typename Traits::RangeFieldType w = 0.03;        
+        if (global[0]>0.1-w && global[0]<0.1+w)
+          return 0;
+        if (global[0]>0.2-w && global[0]<0.2+w)
+          return 0;
+        if (global[0]>0.3-w && global[0]<0.3+w)
+          return 0;
         // }
 
         return 1; // top boundary Dirichlet
@@ -316,15 +335,15 @@ public:
     // { 17.II.2010: influx at top
     if (global[dim-1]>height-eps2)
       {
-        typename Traits::RangeFieldType flux = -0.075;
+        typename Traits::RangeFieldType flux = iflux;
         if (time<1e-6) 
           flux = 0.0;
         else
           {
             if (time>0.0)
-              flux = -0.075;
+              flux = iflux;
             else
-              flux = -0.075*(time/20.0);
+              flux = iflux*(time/1.0);
           }
         typename Traits::RangeFieldType w = 0.03;        
         if (global[0]>0.1-w && global[0]<0.1+w)
@@ -390,8 +409,7 @@ public:
     const int dim = Traits::GridViewType::Grid::dimension;
     Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,dim> 
       x = e.geometry().global(xlocal);
-
-    y = patm - pentry + (heightw-x[dim-1])*9810.0;
+    y = patm - pentry + (heightw+iheightw-x[dim-1])*9810.0;
   }
   
   inline const typename Traits::GridViewType& getGridView ()
@@ -421,8 +439,7 @@ public:
     const int dim = Traits::GridViewType::Grid::dimension;
     Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,dim> 
       x = e.geometry().global(xlocal);
-
-    y =  patm + (heightw-x[dim-1])*9.81*patm/(287.2*300.0);
+    y =  patm + (heightw+iheightw-x[dim-1])*9.81*patm/(287.2*300.0);
   }
   
   inline const typename Traits::GridViewType& getGridView ()
@@ -755,9 +772,9 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
 
   // <<<9>>> make grid operator space
   typedef Dune::PDELab::TwoPhaseTwoPointFluxOperator<TP> LOP;
-  LOP lop(tp);
+  LOP lop(tp,1.0,1000.0);
   typedef Dune::PDELab::TwoPhaseOnePointTemporalOperator<TP> MLOP;
-  MLOP mlop(tp);
+  MLOP mlop(tp,1.0,1000.0);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MBE;
   Dune::PDELab::ImplicitEulerParameter<RF> method;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<RF,V,TPGFS,TPGFS,LOP,MLOP,C,C,MBE> IGOS;
@@ -771,10 +788,13 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
   typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
   PDESOLVER tnewton(igos,ls);
   tnewton.setReassembleThreshold(0.0);
-  tnewton.setVerbosityLevel(3);
+  tnewton.setVerbosityLevel(4);
   tnewton.setReduction(1e-6);
-  tnewton.setMinLinearReduction(1e-3);
-  tnewton.setAbsoluteLimit(1e-7);
+  tnewton.setMinLinearReduction(1e-4);
+  tnewton.setMaxIterations(25);
+  tnewton.setLineSearchMaxIterations(12);
+  if (dim==2) tnewton.setAbsoluteLimit(1e-9);
+  if (dim==3) tnewton.setAbsoluteLimit(1e-9);
 
   // <<<12>>> time-stepper
   Dune::PDELab::OneStepMethod<RF,IGOS,PDESOLVER,V,V> osm(method,igos,tnewton);
@@ -830,7 +850,7 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
   // <<<13>>> graphics for initial value
   bool graphics = true;
   char basename[255];
-  sprintf(basename,"heleshaw-infiltration-IE-%01dl%01dd",level,dim);
+  sprintf(basename,"heleshaw-infiltration-random-EE-%01dl%01dd",level,dim);
   Dune::PDELab::FilenameHelper fn(basename);
   if (graphics)
   {
@@ -858,76 +878,71 @@ void test (const GV& gv, double Tend, double timestep, double maxtimestep, int l
   RF time = 0.0;
   RF timestepmax=maxtimestep;
   RF timestepscale=1.1;
+  if (dim==2) timestepscale=1.1;
+  if (dim==3) timestepscale=1.3;
   RF dtmin = 1e-6;
-  bool implicit=true;
+  bool implicit=false;
   while (time<Tend)
     {
       // do time step
-      if (time<500.0) // assume it is stationary ...
-        {
-          try {
-            osm.apply(time,timestep,pold,pnew);
-          }
-          catch (Dune::PDELab::NewtonLineSearchError) {
-            timestep *= 0.5;
-            if (timestep<dtmin) throw;
-            continue;
-          }
-        }
-      else timestep = timestepmax;
+      try {
+        osm.apply(time,timestep,pold,pnew);
+      }
+      catch (Dune::PDELab::NewtonLineSearchError) {
+        timestep *= 0.5;
+        if (timestep<dtmin) throw;
+        continue;
+      }
 
       vliquiddgf.set_time(time+timestep);
       vgasdgf.set_time(time+timestep);
 
-      if (time>=500.0)
+      if (implicit)
         {
-          if (implicit)
+          // linear solver for transport problem 
+          typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<CGFS,CC> CLS;
+          CLS cls(cgfs,ccg,5000,5,1);
+              
+          // make Newton for transport problem
+          typedef Dune::PDELab::Newton<CIGOS,CLS,CV,CV> CPDESOLVER;
+          CPDESOLVER ctnewton(cigos,cls);
+          ctnewton.setReassembleThreshold(0.0);
+          ctnewton.setVerbosityLevel(2);
+          ctnewton.setReduction(0.9);
+          ctnewton.setMinLinearReduction(1e-10);
+              
+          // <<<16>>> time-steppers
+          Dune::PDELab::ImplicitEulerParameter<RF> cmethod;
+          cigos.setMethod(cmethod);
+          Dune::PDELab::OneStepMethod<RF,CIGOS,CPDESOLVER,CV,CV> cosm(cmethod,cigos,ctnewton);
+          cosm.setVerbosityLevel(1);
+              
+          // transport time stepping
+          RF ctime = time;
+          RF ctimestep = timestep/1.0;
+          while (ctime<time+timestep-1e-8)
             {
-              // linear solver for transport problem 
-              typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<CGFS,CC> CLS;
-              CLS cls(cgfs,ccg,5000,5,1);
-              
-              // make Newton for transport problem
-              typedef Dune::PDELab::Newton<CIGOS,CLS,CV,CV> CPDESOLVER;
-              CPDESOLVER ctnewton(cigos,cls);
-              ctnewton.setReassembleThreshold(0.0);
-              ctnewton.setVerbosityLevel(2);
-              ctnewton.setReduction(0.9);
-              ctnewton.setMinLinearReduction(1e-10);
-              
-              // <<<16>>> time-steppers
-              Dune::PDELab::ImplicitEulerParameter<RF> cmethod;
-              cigos.setMethod(cmethod);
-              Dune::PDELab::OneStepMethod<RF,CIGOS,CPDESOLVER,CV,CV> cosm(cmethod,cigos,ctnewton);
-              cosm.setVerbosityLevel(1);
-              
-              // transport time stepping
-              RF ctime = time;
-              RF ctimestep = timestep/1.0;
-              while (ctime<time+timestep-1e-8)
-                {
-                  cosm.apply(ctime,ctimestep,cold,cnew);
-                  ctime += ctimestep;
-                  cold = cnew;
-                }
+              cosm.apply(ctime,ctimestep,cold,cnew);
+              ctime += ctimestep;
+              cold = cnew;
             }
-          else
-            {
-              // concentration time stepper
-              typedef Dune::PDELab::CFLTimeController<RF,CIGOS> TC;
-              TC tc(0.999,time+timestep,cigos);
-              Dune::PDELab::ExplicitOneStepMethod<RF,CIGOS,CLS,CV,CV,TC> cosm(cmethod,cigos,cls,tc);
-              cosm.setVerbosityLevel(2);
+        }
+      else
+        {
+          // concentration time stepper
+          typedef Dune::PDELab::CFLTimeController<RF,CIGOS> TC;
+          TC tc(0.999,time+timestep,cigos);
+          Dune::PDELab::ExplicitOneStepMethod<RF,CIGOS,CLS,CV,CV,TC> cosm(cmethod,cigos,cls,tc);
+          cosm.setVerbosityLevel(2);
               
-              // transport time stepping
-              RF ctime = time;
-              RF ctimestep = timestep;
-              while (ctime<time+timestep-1e-8)
-                {
-                  ctimestep = cosm.apply(ctime,ctimestep,cold,cnew);
-                  ctime += ctimestep;
-                  cold = cnew;
-                }
+          // transport time stepping
+          RF ctime = time;
+          RF ctimestep = timestep;
+          while (ctime<time+timestep-1e-8)
+            {
+              ctimestep = cosm.apply(ctime,ctimestep,cold,cnew);
+              ctime += ctimestep;
+              cold = cnew;
             }
         }
 
@@ -976,10 +991,10 @@ int main(int argc, char** argv)
 	  }
     rank = helper.rank();
 
-	if (argc!=5)
+	if (argc!=7)
 	  {
 		if(helper.rank()==0)
-		  std::cout << "usage: ./heleshaw <level> <end time> <firsttimestep> <maxtimestep>" << std::endl;
+		  std::cout << "usage: ./heleshaw <level> <end time> <firsttimestep> <maxtimestep> <initial height> <influx>" << std::endl;
 		return 1;
 	  }
 
@@ -995,9 +1010,12 @@ int main(int argc, char** argv)
 	double maxtimestep;
 	sscanf(argv[4],"%lg",&maxtimestep);
 
+	sscanf(argv[5],"%lg",&iheightw);
+	sscanf(argv[6],"%lg",&iflux);
+
 #if HAVE_MPI
     // 2D
-    if (true)
+    if (false)
     {
       // make grid
       int l=maxlevel;
@@ -1012,7 +1030,7 @@ int main(int argc, char** argv)
     }
 
     // 3D
-    if (false)
+    if (true)
     {
       // make grid
       int l=maxlevel;
