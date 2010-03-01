@@ -543,7 +543,7 @@ namespace Dune {
       typename TP::Traits::RangeFieldType suggestTimestep (typename TP::Traits::RangeFieldType dt) const
       {
 //         std::cout << "active cells: " << active_cell_count << " dtmin: " << dtmin << std::endl;
-        std::cout << "inactive cells: " << inactive_cell_count << " dtmin: " << dtmin << std::endl;
+//        std::cout << "inactive cells: " << inactive_cell_count << " dtmin: " << dtmin << std::endl;
         return dtmin;
       }
 
