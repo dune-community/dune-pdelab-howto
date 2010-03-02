@@ -264,9 +264,9 @@ private:
 // Some variants to solve the nonlinear diffusion problem
 //===============================================================
 
-// a sequential variant
+// Q1 elements
 template<class GV>
-void example01_sequential_Q1 (const GV& gv)
+void example01a_Q1 (const GV& gv)
 {
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
@@ -312,13 +312,13 @@ void example01_sequential_Q1 (const GV& gv)
     DGF xdgf(gfs,x);
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-    vtkwriter.write("example01_sequential_Q1",Dune::VTKOptions::binaryappended);
+    vtkwriter.write("example01_Q1",Dune::VTKOptions::binaryappended);
   }
 }
 
-// a sequential variant
+// Q2 elements
 template<class GV>
-void example01_sequential_Q2 (const GV& gv)
+void example01a_Q2 (const GV& gv)
 {
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
@@ -364,13 +364,13 @@ void example01_sequential_Q2 (const GV& gv)
     DGF xdgf(gfs,x);
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-    vtkwriter.write("example01_sequential_Q2",Dune::VTKOptions::binaryappended);
+    vtkwriter.write("example01_Q2",Dune::VTKOptions::binaryappended);
   }
 }
 
-// a sequential variant
+// Rannacher-Turek elements
 template<class GV>
-void example01_sequential_RT (const GV& gv)
+void example01a_RT (const GV& gv)
 {
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
@@ -416,13 +416,13 @@ void example01_sequential_RT (const GV& gv)
     DGF xdgf(gfs,x);
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-    vtkwriter.write("example01_sequential_RT",Dune::VTKOptions::binaryappended);
+    vtkwriter.write("example01_RT",Dune::VTKOptions::binaryappended);
   }
 }
 
-// a sequential variant
+// Q2 elements for a nonlinear problem
 template<class GV>
-void example01b_sequential_Q2 (const GV& gv)
+void example01b_Q2 (const GV& gv)
 {
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
@@ -474,7 +474,7 @@ void example01b_sequential_Q2 (const GV& gv)
     DGF xdgf(gfs,x);
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-    vtkwriter.write("example01b_sequential_Q2",Dune::VTKOptions::binaryappended);
+    vtkwriter.write("example01b_Q2",Dune::VTKOptions::binaryappended);
   }
 }
 
@@ -516,10 +516,10 @@ int main(int argc, char** argv)
       grid.globalRefine(level);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
-      example01_sequential_Q1(gv);
-      example01_sequential_Q2(gv);
-      example01_sequential_RT(gv);
-      example01b_sequential_Q2(gv);
+      example01a_Q1(gv);
+      example01a_Q2(gv);
+      example01a_RT(gv);
+      example01b_Q2(gv);
     }
   }
   catch (Dune::Exception &e){
