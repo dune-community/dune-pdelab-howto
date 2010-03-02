@@ -62,7 +62,7 @@
 #include"gridexamples.hh"
 
 //===============================================================
-// Local operator
+// Local operators
 //===============================================================
 
 #include<dune/grid/common/genericreferenceelements.hh>
@@ -73,15 +73,15 @@
 
 /** a local operator for solving the equation
  *
- *   - \Delta u + u   = exp(||x||^2)   in \Omega
- *   \nabla u \cdot n = 0              on \partial\Omega
+ *   - \Delta u + u   = min(100*||x||^2,50)   in \Omega
+ *   \nabla u \cdot n = 0                     on \partial\Omega
  *
  * with conforming finite elements on all types of grids in any dimension
  *
  */
-class Example01LocalOperator : 
-  public Dune::PDELab::NumericalJacobianApplyVolume<Example01LocalOperator>,
-  public Dune::PDELab::NumericalJacobianVolume<Example01LocalOperator>,
+class Example01aLocalOperator : 
+  public Dune::PDELab::NumericalJacobianApplyVolume<Example01aLocalOperator>,
+  public Dune::PDELab::NumericalJacobianVolume<Example01aLocalOperator>,
   public Dune::PDELab::FullVolumePattern,
   public Dune::PDELab::LocalOperatorDefaultFlags
 {
@@ -92,7 +92,7 @@ public:
   // residual assembly flags
   enum { doAlphaVolume = true };
 
-  Example01LocalOperator (unsigned int intorder_=2)
+  Example01aLocalOperator (unsigned int intorder_=2)
     : intorder(intorder_)
   {}
 
@@ -151,7 +151,7 @@ public:
         // evaluate parameters; 
         Dune::FieldVector<RF,dim> 
           globalpos = eg.geometry().global(it->position());
-        RF f = exp(globalpos.two_norm2()); 
+        RF f = std::min(100.0*globalpos.two_norm2(),50.0); 
         RF a =  1.0; 
 
         // integrate grad u * grad phi_i + a*u*phi_i - f phi_i
@@ -168,15 +168,15 @@ private:
 
 /** a local operator for solving the equation
  *
- *   - \Delta u + u   = exp(u)   in \Omega
- *   \nabla u \cdot n = 0        on \partial\Omega
+ *   - \Delta u + u   = min(100*||x||^2,50) - u^2   in \Omega
+ *   \nabla u \cdot n = 0                           on \partial\Omega
  *
  * with conforming finite elements on all types of grids in any dimension
  *
  */
 class Example01bLocalOperator : 
-  public Dune::PDELab::NumericalJacobianApplyVolume<Example01LocalOperator>,
-  public Dune::PDELab::NumericalJacobianVolume<Example01LocalOperator>,
+  public Dune::PDELab::NumericalJacobianApplyVolume<Example01bLocalOperator>,
+  public Dune::PDELab::NumericalJacobianVolume<Example01bLocalOperator>,
   public Dune::PDELab::FullVolumePattern,
   public Dune::PDELab::LocalOperatorDefaultFlags
 {
@@ -246,7 +246,7 @@ public:
         // evaluate parameters; 
         Dune::FieldVector<RF,dim> 
           globalpos = eg.geometry().global(it->position());
-        RF f = exp(u); 
+        RF f = std::min(100.0*globalpos.two_norm2(),50.0)-u*u; 
         RF a =  1.0; 
 
         // integrate grad u * grad phi_i + a*u*phi_i - f phi_i
@@ -285,7 +285,7 @@ void example01_sequential_Q1 (const GV& gv)
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
 
   // <<<3>>> Make grid operator space
-  typedef Example01LocalOperator LOP; 
+  typedef Example01aLocalOperator LOP; 
   LOP lop;
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
@@ -337,7 +337,7 @@ void example01_sequential_Q2 (const GV& gv)
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
 
   // <<<3>>> Make grid operator space
-  typedef Example01LocalOperator LOP; 
+  typedef Example01aLocalOperator LOP; 
   LOP lop(4);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
@@ -389,7 +389,7 @@ void example01_sequential_RT (const GV& gv)
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
 
   // <<<3>>> Make grid operator space
-  typedef Example01LocalOperator LOP; 
+  typedef Example01aLocalOperator LOP; 
   LOP lop;
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
@@ -441,7 +441,7 @@ void example01b_sequential_Q2 (const GV& gv)
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
 
   // <<<3>>> Make grid operator space
-  typedef Example01LocalOperator LOP; 
+  typedef Example01bLocalOperator LOP; 
   LOP lop(4);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
