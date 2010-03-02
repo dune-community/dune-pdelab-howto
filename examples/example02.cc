@@ -1,4 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file
+    
+    \brief Solve elliptic problem in constrained spaces with 
+    conforming finite elements
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif

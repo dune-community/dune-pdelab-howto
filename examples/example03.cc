@@ -1,4 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file
+    
+    \brief Solve parabolic problem with conforming finite elements
+    in space and implicit one step methods in time
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
