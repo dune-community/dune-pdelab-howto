@@ -13,7 +13,7 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM0;
   FEM0 fem0;
   typedef Dune::PDELab::NoConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<2> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM0,CON,VBE> GFS0;
   GFS0 gfs0(gv,fem0);
 
@@ -23,7 +23,7 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   GFS1 gfs1(gv,fem1);
 
   typedef Dune::PDELab::CompositeGridFunctionSpace<
-    Dune::PDELab::GridFunctionSpaceLexicographicMapper,
+    Dune::PDELab::GridFunctionSpaceBlockwiseMapper,
 	  GFS0,GFS1> GFS;              
   GFS gfs(gfs0,gfs1);
 
@@ -47,7 +47,7 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   UInitialType uinitial(u0initial,u1initial);
   Dune::PDELab::interpolate(uinitial,gfs,xold);
   for (unsigned i=0; i<gfs.globalSize(); i++)
-    xold[i] = -1.0+2.0*(random()&07)/7.0;
+    xold[i/2][i%2] = -1.0+2.0*(random()&07)/7.0;
 
   // <<<4>>> Make instationary grid operator space
   Real d_0 = 0.00028;
@@ -60,7 +60,7 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   LOP lop(d_0,d_1,lambda,sigma,kappa,4);
   typedef Example05TimeLocalOperator TLOP; 
   TLOP tlop(tau,4);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+  typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MBE;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,TLOP,CC,CC,MBE> IGOS;
   IGOS igos(gfs,gfs,lop,tlop);
 
