@@ -15,13 +15,13 @@ void example01a_RT (const GV& gv)
   GFS gfs(gv,fem);
 
   // <<<2b>>> Constraints (are empty here)
-  typedef typename GFS::template ConstraintsContainer<Real>::Type C;
+  typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
 
   // <<<3>>> Make grid operator space
   typedef Example01aLocalOperator LOP; 
   LOP lop;
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
+  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
   GOS gos(gfs,gfs,lop);
 
   // <<<4>>> Select a linear solver backend
