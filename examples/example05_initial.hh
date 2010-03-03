@@ -20,7 +20,7 @@ public:
     const int dim = Traits::GridViewType::Grid::dimension;
     typedef typename Traits::GridViewType::Grid::ctype ctype;
     Dune::FieldVector<ctype,dim> x = e.geometry().global(xlocal);
-    y = exp(5.0*x.two_norm2());
+    y = exp(x.two_norm());
     return;
   }
   
@@ -50,7 +50,7 @@ public:
     const int dim = Traits::GridViewType::Grid::dimension;
     typedef typename Traits::GridViewType::Grid::ctype ctype;
     Dune::FieldVector<ctype,dim> x = e.geometry().global(xlocal);
-    y = -exp(3.0*(1-x.two_norm2()));
+    y = -exp((1-x.two_norm()));
     return;
   }
   

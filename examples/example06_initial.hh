@@ -15,7 +15,7 @@ public:
 
   //! construct from grid view
   U0Initial (const GV& gv_) 
-    : gv(gv_), correlation_length(2.0/50.0), field(correlation_length,1,0.0,5000,-1083) 
+    : gv(gv_), correlation_length(2.0/100.0), field(correlation_length,1,0.0,5000,-1083) 
   {}
 
   //! evaluate extended function on element
@@ -49,7 +49,7 @@ public:
 
   //! construct from grid view
   U1Initial (const GV& gv_) 
-    : gv(gv_), correlation_length(2.0/50.0), field(correlation_length,1,0.0,5000,-34) 
+    : gv(gv_), correlation_length(2.0/100.0), field(correlation_length,1,0.0,5000,-34) 
   {}
 
   //! evaluate extended function on element

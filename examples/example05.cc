@@ -114,7 +114,7 @@ int main(int argc, char** argv)
     // sequential version
     if (1 && helper.size()==1)
     {
-      Dune::FieldVector<double,2> L(1.0);
+      Dune::FieldVector<double,2> L(2.0);
       Dune::FieldVector<int,2> N(1);
       Dune::FieldVector<bool,2> periodic(false);
       int overlap=0;
