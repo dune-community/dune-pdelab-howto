@@ -1,0 +1,249 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Solving Stationary Problems}\label{Sec:EllipticProblems}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}
+\frametitle<presentation>{Abstraction}
+\begin{itemize}
+\item Code reuse requires abstraction.
+\item Abstractions for function spaces.
+\item Abstractions for PDE discretizations.
+\end{itemize}
+\end{frame}
+
+\subsection{Unconstrained Elliptic Model Problem}
+
+\begin{frame}
+\frametitle{Problem and Weak Formulation}
+Consider the following model problem:
+\begin{subequations}
+\begin{align*}
+-\Delta u + a u &= f &&\text{in $\Omega\subset\mathbb{R}^d$ (open, connected)},\\
+\nabla u \cdot n &= 0 &&\text{on $\partial\Omega$}.
+\end{align*}
+\end{subequations}
+\medskip
+Weak formulation. Set $U = H^1(\Omega)$.
+\begin{equation*}
+u\in U \quad : \quad \underbrace{\int_\Omega \nabla u \cdot \nabla v + 
+a u v - f v \,dx}_{r(u,v)} = 0 \qquad \forall v\in U.
+\end{equation*}
+Has unique solution for $a(x)\geq a_0>0$.
+
+We call $r(u,v)$ residual form.
+
+Other boundary conditions are treated later.
+\end{frame}
+
+\begin{frame}
+\frametitle{Conforming Finite Element Method}
+Needs conforming triangulation $E_h^0 = \{e_o,\ldots,e_{N_h^0-1} \}$ of $\Omega$. 
+
+Define the conforming finite element space
+\begin{equation*}
+U_h^k = \left\{  u\in C^0(\overline{\Omega}) \ : \ u|_{\Omega_e} \in P_{k_e} \forall e\in E_h^0\right\} \subset H^1(\Omega).
+\end{equation*}
+\begin{itemize}
+\item $\Omega_e$: domain of element $e\in E_h^0$.
+\item $P_k$: Polynomials of degree $k$.
+\item $k_e$: Polynomial degree on element $e$.
+\end{itemize}
+Discrete problem then reads:
+\begin{equation*}
+u_h \in U_h^k \quad : \quad r(u_h,v) = 0 \qquad \forall v \in U_h^k.
+\end{equation*}
+\end{frame}
+
+\begin{frame}
+\frametitle{Affine Finite Element Spaces}
+Construct functions in $U_h^k$ from local basis on reference elements:
+\begin{equation*}
+U_h^k\ni u_h(x) = \sum_{e\in E_h^0} \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)}
+\, \hat{\phi}_{e,l}(\mu_e^{-1}(x)) \, \chi_e(x).
+\end{equation*}
+\begin{itemize}
+\item $n(e)$: Number of basis functions on element $e\in E_h^0$.
+\item $\hat\Omega_e$: Reference element of element $e\in E_h^0$.
+\item $\mu_e : \hat\Omega_e \to \Omega_e$: Element transformation.
+\item $\hat\phi_{e,l} : \hat\Omega_e \to \mathbb{R}$: Local basis function.
+\item $\mathcal{I}_{U_h^k} = \{0,\ldots,N_{U_h^k}-1\}$: Global index set.
+\item $g : E_h^0 \times \mathbb{N}_0 \to \mathcal{I}_{U_h^k}$: Local to global index map.
+\item $\mathbf{u} \in \mathbf{U} = \mathbb{R}^{\mathcal{I}_{U_h^k}}$: Global vector of degrees of freedom.
+\item $\chi_e$: Characteristic function of element $e$.
+\end{itemize}
+Note: We might have a different set of basis functions on each element.
+\end{frame}
+
+\begin{frame}
+\frametitle{Global Basis; Finite Element Isomorphism}
+For $j\in \mathcal{I}_{U_h^k}$ set $L(j) = \{ (e,l) \, : \, g(e,l) = j\}$ (all local degrees 
+of freedom associated with global degree of freedom $j$.
+
+Global basis:
+\begin{equation*}
+\Phi_{U_h^k} = \left\{ \phi_j(x) = \sum_{(e,l)\in L(j)} \hat{\phi}_{e,l}(\mu_e^{-1}(x)) \, \chi_e(x) 
+\, : \, j \in \mathcal{I}_{U_h^k} \right\}.
+\end{equation*}
+
+Finite Element Isomorphism:
+\begin{align*}
+\text{FE}_{\Phi_{U_h^k}} : \mathbf{U} &\to U_h^k, &
+\text{FE}_{\Phi_{U_h^k}}(\mathbf{u}) &= \sum_{j\in \mathcal{I}_{U_h^k}} (\mathbf{u})_j \phi_j.
+\end{align*}
+\end{frame}
+
+\begin{frame}
+\frametitle{Algebraic Problem}
+Using the basis the discrete problem can be written equivalently as a (in general nonlinear) algebraic problem:
+\begin{align*}
+&&& u_h \in U_h^k \quad : \quad r(u_h,v) = 0 && \forall v \in U_h^k,\\
+&\Leftrightarrow && \mathbf{u}\in\mathbf{U} \quad : \quad
+r\left(\text{FE}_{\Phi_{U_h^k}}(\mathbf{u}),\phi_i\right) = 0 &&
+i\in\mathcal{I}_{U_h^k}, \\
+&\Leftrightarrow && \mathbf{u}\in\mathbf{U} \quad : \quad
+\mathcal{R}(\mathbf{u}) = \mathbf{0}.
+\end{align*}
+where
+\begin{align*}
+\mathcal{R} &: \mathbf{U} \to \mathbf{U}, &
+\left(\mathcal{R}(\mathbf{u}) \right)_i :=  r\left(\text{FE}_{\Phi_{U_h^k}}(\mathbf{u}),\phi_i\right) .
+\end{align*}
+
+For linear PDEs $\mathcal{R}$ is affine linear: $\mathcal{R}(\mathbf{u}) = \mathbf{A} \mathbf{u} - \mathbf{b}$.
+\end{frame}
+
+\begin{frame}
+\frametitle{Residual Assembly}
+\begin{equation*}
+\begin{split}
+&(\mathcal{R}(\mathbf{u}) )_i  = r\left(\text{FE}(\mathbf{u}),\phi_i\right)
+= \sum_{e\in E_h^0} \int_{\Omega_e} \nabla \text{FE}(\mathbf{u}) \cdot \nabla\phi_i 
++ a \, \text{FE}_{\Phi_{U_h^k}}(\mathbf{u}) \phi_i - f \phi_i \,dx\\
+&= \sum_{e\in E_h^0} \int_{\Omega_e} 
+\left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \nabla_x \hat\phi_{e,l}(\mu_e^{-1}(x))\right]
+\cdot \nabla_x \underbrace{\hat\phi_{e,m}}_{g(e,m)=i}(\mu_e^{-1}(x))\\
+& + a \, \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \hat\phi_{e,l}(\mu_e^{-1}(x)) \right] \hat\phi_{e,m}(\mu_e^{-1}(x))
+- f \hat\phi_{e,m}(\mu_e^{-1}(x)) \, dx\\
+&= \sum_{e\in E_h^0} \int_{\hat\Omega_e} 
+\Biggl\{\left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} (\nabla \mu_e(\hat{x}))^{-T}\nabla_{\hat{x}} \hat\phi_{e,l}(\hat{x})\right]
+\cdot (\nabla \mu_e(\hat{x}))^{-T} \nabla_{\hat{x}} \hat\phi_{e,m}(\hat{x})\\
+& + a \, \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \hat\phi_{e,l}(\hat{x}) \right] \hat\phi_{e,m}(\hat{x})
+- f \hat\phi_{e,m}(\hat{x}) \Biggr\} \text{det} \nabla\mu_e(\hat{x}) \, d\hat{x} .
+\end{split}
+\end{equation*}
+\end{frame}
+
+\begin{frame}
+\frametitle{Local Operator}
+Define restriction to local degrees of freedom
+\begin{align*}
+\mathbf{U}_e &= \mathbb{R}^{n(e)}, &
+\mathbf{R}_e &: \mathbf{U} \to \mathbf{U}_e, &
+\left(\mathbf{U}_e(\mathbf{u})\right)_l &= (\mathbf{u})_{g(e,l)} \quad 0\leq l < n(e).
+\end{align*}
+Define \textit{local operator} $\bm{\alpha}^{\text{vol}}_{h,e} : \mathbf{U}_e \to \mathbf{U}_e$ (user part):
+\begin{equation*}
+\begin{split}
+&\bigl(\bm{\alpha}^{\text{vol}}_{h,e}({\color{cyan}\mathbf{u}})\bigr)_m  = \\
+&\sum_{e\in E_h^0} \int_{\hat\Omega_e} 
+\Biggl\{\left[ \sum_{l=0}^{n(e)-1} ({\color{cyan}\mathbf{u}})_{l} {\color{purple}
+(\nabla \mu_e(\hat{x}))^{-T}} {\color{blue}\nabla_{\hat{x}} \hat\phi_{e,l}(\hat{x})} \right]
+\cdot {\color{purple}(\nabla \mu_e(\hat{x}))^{-T}} {\color{blue}\nabla_{\hat{x}} \hat\phi_{e,m}(\hat{x})}\\
+& + {\color{olive} a} \, \left[ \sum_{l=0}^{n(e)-1} ({\color{cyan}\mathbf{u}})_{l}
+ {\color{blue}\hat\phi_{e,l}(\hat{x})} \right] {\color{blue}\hat\phi_{e,m}(\hat{x})}
+- {\color{olive} f} {\color{blue}\hat\phi_{e,m}(\hat{x})} \Biggr\} {\color{purple}\text{det} \nabla\mu_e(\hat{x})} \, d\hat{x} .
+\end{split}
+\end{equation*}
+Residual assembly is written generically:
+\begin{equation*}
+\mathcal{R}(\mathbf{u}) = \sum_{e\in E_h^0} \mathbf{R}_e^T \bm{\alpha}^{\text{vol}}_{h,e} (\mathbf{R}_e \mathbf{u})
+\end{equation*}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Solving the Algebraic System}
+Use damped Newton method.
+
+Given $\mathbf{u}^0\in\mathbf{U}$. Compute $\mathbf{r}^0 = \mathcal{R}(\mathbf{u}^0)$. Set $k=0$.
+
+Iterate until convergence:
+\begin{enumerate}
+\item Assemble Jacobian System $\mathbf{A}^k = \nabla\mathcal{R}(\mathbf{u}^k)$.
+\item Solve $\mathbf{A}^k \mathbf{z}^k = \mathbf{r}^k$ with some linear solver.
+\item Update $\mathbf{u}^{k+1} = \mathbf{u}^{k} - \sigma^k \mathbf{z}^{k+1}$. $\sigma\in(0,1]$.
+\item Compute new residual $\mathbf{r}^{k+1} = \mathcal{R}(\mathbf{u}^{k+1})$.
+\item Set $k = k +1$.
+\end{enumerate}
+
+We need methods to compute $\mathcal{R}(\mathbf{u})$ and $\nabla\mathcal{R}(\mathbf{u})$.
+\end{frame}
+
+\begin{frame}
+\frametitle{Jacobian}
+The Jacobian matrix is defined as
+\begin{equation*}
+(\mathbf{A}^k)_{i,j} = (\nabla\mathcal{R}(\mathbf{u}^k))_{i,j} 
+= \frac{\partial (\mathcal{R})_i}{\partial (\mathbf{u})_j}(\mathbf{u}^k)
+= \sum_{e\in E_h^0} \frac{\partial (\bm{\alpha}_{h,e}^{\text{vol}})_m }{\partial (\mathbf{u})_l } (\mathbf{R}_e \mathbf{u}),
+\end{equation*}
+where $g(e,m)=l, g(e,l)=j$.
+
+Again, the Jacobian can be computed from local contributions:
+\begin{equation*}
+\mathbf{A}^k = \sum_{e\in E_h^0} \mathbf{R}_e^T \nabla\bm{\alpha}_{h,e}^{\text{vol}}(\mathbf{R}_e \mathbf{u}) \, \mathbf{R}_e.
+\end{equation*}
+
+The local Jacobians can be
+\begin{itemize}
+\item programmed explicitly by the user, or
+\item derived generically through numerical differentiation. This requires only coding
+of the local residual contributions $\bm{\alpha}_{h,e}^{\text{vol}}$.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{The Linear Case}
+is a special case of the nonlinear case \ldots
+\begin{enumerate}
+\item Given $\mathbf{u}^0\in\mathbf{U}$.
+\item Compute $\mathbf{r} = \mathcal{R}(\mathbf{u}^0)$.
+\item Assemble Jacobian System $\mathbf{A} = \nabla\mathcal{R}(\mathbf{u}^0)$.
+\item Solve $\mathbf{A} \mathbf{z} = \mathbf{r}$ with some linear solver.
+\item Update $\mathbf{u} = \mathbf{u}^{0} - \mathbf{z}$.
+\end{enumerate}
+\end{frame}
+
+
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Unconstrained Elliptic Problem with $Q_1$}
+\framesubtitle<presentation>{File \texttt{examples/examples01a\_Q1.hh}}
+\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example01a_Q1.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/example01a\_Q1.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example01a_Q1.hh}
+\end{Lst}}
+
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Local Operator for Unconstrained Elliptic Problem}
+\framesubtitle<presentation>{File \texttt{examples/examples01a\_operator.hh}}
+\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example01a_operator.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/example01a\_operator.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example01a_operator.hh}
+\end{Lst}}
