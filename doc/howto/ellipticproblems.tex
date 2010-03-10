@@ -289,7 +289,7 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/example01_main.hh}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Unconstrained Elliptic Problem with $Q_1$}
-\framesubtitle<presentation>{File \texttt{examples/examples01a\_Q1.hh}}
+\framesubtitle<presentation>{File \texttt{examples/example01a\_Q1.hh}}
 \lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/example01a_Q1.hh}
 \end{frame}
@@ -338,12 +338,14 @@ This method can be provided generically through numerical differentiation.
 The method \lstinline{alpha_volume} has the following signature: 
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
 template<typename EG, typename LFSU, typename X, 
-         typename LFSV, typename R>void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, 
-                   const LFSV& lfsv, R& r) const;\end{lstlisting}
+         typename LFSV, typename R>
+void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, 
+                   const LFSV& lfsv, R& r) const;
+\end{lstlisting}
 Where the arguments are:
 \begin{itemize}
 \item \lstinline{eg} -- a codim 0 entity $e\in E_h^0$.
-\item \lstinline{lfsu} -- local basis functions $\hat\phi_{e,l}$ for trial space.
+\item \lstinline{lfsu} -- local basis $\hat\phi_{e,l}$ for trial space.
 \item \lstinline{x} -- local coefficients $(\mathbf{u})_l$.
 \item \lstinline{lfsv} -- local basis $\hat\psi_{e,l}$ for the test space 
 \item \lstinline{r} -- local contribution to residual (the result).
@@ -353,7 +355,7 @@ Where the arguments are:
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Operator for Unconstrained Elliptic Problem}
-\framesubtitle<presentation>{File \texttt{examples/examples01a\_operator.hh}}
+\framesubtitle<presentation>{File \texttt{examples/example01a\_operator.hh}}
 \lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/example01a_operator.hh}
 \end{frame}
@@ -411,7 +413,7 @@ Explore the Rannacher Turek element in \lstinline{example01a_RT.hh}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Unconstrained Elliptic Problem with $Q_2$}
-\framesubtitle<presentation>{File \texttt{examples/examples01a\_Q2.hh}}
+\framesubtitle<presentation>{File \texttt{examples/example01a\_Q2.hh}}
 \lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/example01a_Q2.hh}
 \end{frame}
@@ -437,7 +439,7 @@ see \lstinline{example01b_operator}.
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Unconstrained Nonlinear Elliptic Problem with $Q_2$}
-\framesubtitle<presentation>{File \texttt{examples/examples01b\_Q2.hh}}
+\framesubtitle<presentation>{File \texttt{examples/example01b\_Q2.hh}}
 \lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/example01b_Q2.hh}
 \end{frame}
@@ -447,6 +449,254 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/example01b_Q2.hh}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/example01b_Q2.hh}
 \end{Lst}}
+
+
+\subsection{Constrained Elliptic Model Problem}
+
+\begin{frame}
+\frametitle{Problem and Weak Formulation}
+Consider now the following model problem:
+\begin{subequations} \label{Eq:Example02}
+\begin{align*}
+ -\Delta u + a u  &= f &&\text{in $\Omega\subset\mathbb{R}^d$},\\
+                u &= g &&\text{on $\Gamma_D\subseteq\partial\Omega$},\\
+-\nabla u \cdot n &= j &&\text{on $\Gamma_N=\partial\Omega\setminus\Gamma_D$},
+\end{align*}
+\end{subequations}
+where $a>0$ when $\Gamma_D=\emptyset$.
+
+Weak formulation. For $w\in H^1(\Omega)$, $w = g$ on 
+$\Gamma_D$ (``extension of $g$''), set
+\begin{align*}
+\tilde{U} &= H_D^1(\Omega) = \{ u \in H^1(\Omega) \,:\, u|_{\Gamma_D}=0 \} \subset H^1(\Omega), \\
+w + \tilde{U} &= \{ u \in H^1(\Omega) \,:\, u = w+\tilde{u} \wedge \tilde{u}\in\tilde{U}\},
+\end{align*}
+
+Then find
+\begin{equation*}
+u\in w+\tilde{U} \quad : \quad \underbrace{\int_\Omega \nabla u \cdot \nabla v + 
+a u v - f v \,dx + \int_{\Gamma_N} j v \,ds}_{r(u,v)} = 0 \qquad \forall v\in\tilde{U}.
+\end{equation*}
+\end{frame}
+
+\begin{frame}
+\frametitle{What is different ?}
+\begin{itemize}
+\item The residual form has a new term which is a boundary integral.
+\begin{itemize}
+\item There will be an additional method on the local operator.
+\end{itemize}
+\item The problem is solved in an affine subspace. 
+We call $\tilde{U}$ a \textit{constrained space}. 
+\item In the linear case it suffices to solve a problem with homogeneous Dirichlet
+boundary conditions:
+\begin{subequations}
+\begin{align*}
+ -\Delta \bar{u} + a \bar{u}  &= f + \Delta w - a w &&\text{in $\Omega\subset\mathbb{R}^d$},\\
+                \bar{u} &= 0 &&\text{on $\Gamma_D\subseteq\partial\Omega$},\\
+-\nabla \bar{u} \cdot n &= j+\nabla w\cdot n &&\text{on $\Gamma_N=\partial\Omega\setminus\Gamma_D$},
+\end{align*}
+where $w$ is an extension of $g$ to $\Omega$ and $u = w + \bar{u}$.
+\end{subequations}
+\item In the nonlinear case this is not possible.
+\end{itemize} 
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Finite Element Spaces in Constrained Case}
+\begin{itemize}
+\item Define appropriate finite-dimensional subspaces:
+\begin{equation*}
+\tilde{U}_h^k = \left \{ u \in U_h^k \,:\, u|_{\Gamma_D} = 0 \right\} \subset U_h^k.
+\end{equation*}
+(Mesh resolves the Dirichlet bopundary $\Gamma_D$.
+\item Provide extension $w\in U_h^k$ with ``$w=g$'' on $\Gamma_D$ in an appropriate sense.
+\item Obviously, $\text{dim}\tilde{U}_h^k < \text{dim} U_h^k$.
+\item Note: Dirichlet boundary conditions could also be handled by penalty methods. 
+This can be done easily in PDELab but is not shown here. 
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Realization of Dirichlet Constraints}
+\begin{itemize}
+\item Assume $\Phi_{U_h^k}$ is a Lagrange basis: 
+\begin{equation*}
+\phi_j(x_i)=\delta_{i,j} \quad\text{where $x_i$ are the Lagrange points}.
+\end{equation*}
+\item Construct subspace via basis representation:
+\begin{itemize}
+\item $\mathcal{I}_{\tilde{U}_h^k} = \left\{ j\in \mathcal{I}_{U_h^k} \,:\, 
+x_j \in \Gamma_D \right\} \subset \mathcal{I}_{U_h^k}$.
+\item $\Phi_{\tilde{U}_h^k} = \left\{ \phi_j\in \Phi_{U_h^k} \,:\, 
+j \in \mathcal{I}_{\tilde{U}_h^k} \right\} \subset \Phi_{U_h^k}$.
+\item $\tilde{U}_h^k = \text{span}\Phi_{\tilde{U}_h^k}$.
+\end{itemize}
+\item For the coefficient space there are two options:
+\begin{enumerate}
+\item $\tilde{\mathbf{U}} = \mathbb{R}^{\mathcal{I}_{\tilde{U}_h^k}} \not\subseteq \mathbf{U}$.
+\item $\tilde{\mathbf{U}} = \left\{ \mathbf{u}\in\mathbf{U} \,:\, (\mathbf{u})_j = 0 \, \forall
+j \in \mathcal{I}_{U_h^k} \setminus \mathcal{I}_{\tilde{U}_h^k} \right\} \subset \mathbf{U}$. 
+\end{enumerate}
+\item We choose (2) because
+\begin{itemize}
+\item $w + \tilde{u}$ is just adding coefficient vectors.
+\item Changing $\Gamma_D$, e.g. in time-dependent problems is easy.
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{General Constrained Spaces}
+\begin{itemize}
+\item Constrained spaces turn up in a number of other cases:
+\begin{itemize}
+\item Hanging nodes.
+\item Functions with zero average, rigid body modes.
+\item Varying polynomial degree in conforming finite elements ($p$-method).
+\item Periodic boundary conditions.
+\item Artificial essential boundary conditions or ghost degrees of freedom in parallelization.
+\end{itemize}
+\item PDELab has a general concept to handle all types of constraints. 
+\item Given $U_h$ with index set $\mathcal{I}_{U_h^k}$, construct a basis of the subspace:
+\begin{itemize}
+\item Partition index set: $\mathcal{I}_{U_h^k} = \tilde{\mathcal{I}} \cup \bar{\mathcal{I}}$.
+\item Construct new basis from given basis:
+\begin{equation*}
+\tilde\phi_i = \phi_i + \sum\limits_{j\in\bar{\mathcal{I}}} \omega_{i,j} \phi_j, \qquad i\in\tilde{\mathcal{I}}.
+\end{equation*}
+\item $\tilde{U}_h$ is spanned by the new basis.
+\end{itemize}
+\item Constrained space defined by splitting $\tilde{\mathcal{I}} \cup \bar{\mathcal{I}}$ 
+and coefficients $\omega_{i,j}$.
+\end{itemize}
+\end{frame}
+
+
+\subsection{Example 2}
+
+\begin{frame}
+\frametitle{Example 2 Overview}
+The first example implements model problem \eqref{Eq:Example01}.
+
+It consists of the following files:
+\begin{itemize}
+\item \lstinline{example02.cc} -- the file to be compiled, main function. 
+\item \lstinline{example02_bctype.hh} -- a function giving the splitting $\partial\Omega = \Gamma_D \cup \Gamma_N$.
+\item \lstinline{example02_bcextension.hh} -- a function for $g$ and its extension $w$.
+\item \lstinline{example02_operator.hh} -- local operator including inhomogeneous Neumann boundary conditions.
+\item \lstinline{example02_Q1.hh} -- driver setting up and solving the problem. 
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Driver for Solving Constrained Linear Problem}
+\framesubtitle{About \lstinline{example02_Q1.hh}}
+\begin{itemize}
+\item Class \lstinline{ConformingDirichletConstraints} parametrizes the grid function space
+with the possibility of having Dirichlet constraints.
+\item Function \lstinline{constraints} assembles constraints (i.e. the splitting 
+$\mathcal{I}_{U_h^k} = \tilde{\mathcal{I}} \cup \bar{\mathcal{I}}$) from a given function.
+\item Function \lstinline{interpolate} initializes a coefficient vector from a given function.
+At the same time this defines the extension $w$ of $g$.
+\item The rest is the same as before.
+\end{itemize}
+\end{frame}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Constrained Elliptic Problem}
+\framesubtitle<presentation>{File \texttt{examples/example02\_Q1.hh}}
+\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example02_Q1.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/example02\_Q1.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example02_Q1.hh}
+\end{Lst}}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Boundary Condition Type Function}
+\framesubtitle<presentation>{File \texttt{examples/example02\_bctype.hh}}
+\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example02_bctype.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/example02\_bctype.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example02_bctype.hh}
+\end{Lst}}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Boundary Condition Extension Function}
+\framesubtitle<presentation>{File \texttt{examples/example02\_bcextension.hh}}
+\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example02_bcextension.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/example02\_bcextension.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example02_bcextension.hh}
+\end{Lst}}
+
+\begin{frame}[fragile]
+\frametitle{\lstinline{alpha_boundary} Method}
+Local operator is extended by a new method \lstinline{alpha_boundary}
+computing the boundary integral.
+
+\lstinline{alpha_boundary} has the following signature: 
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+template<typename IG, typename LFSU, typename X, 
+         typename LFSV, typename R>void alpha_boundary (const IG& ig, const LFSU& lfsu_s, const X& x_s,                      const LFSV& lfsv_s, R& r_s) const\end{lstlisting}
+Where the arguments are:
+\begin{itemize}
+\item \lstinline{ig} -- intersection with domain boundary.
+\item \lstinline{lfsu_s} -- local basis $\hat\phi_{e,l}$ for trial space on inside element.
+\item \lstinline{x_s} -- local coefficients on inside element.
+\item \lstinline{lfsv_s} -- local basis $\hat\psi_{e,l}$ for test space on inside element. 
+\item \lstinline{r_s} -- local contribution to residual on inside element.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Local Operator with Neumann Boundary}
+\framesubtitle<presentation>{File \texttt{examples/example02\_operator.hh}}
+\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example02_operator.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/example02\_operator.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example02_operator.hh}
+\end{Lst}}
+
+\begin{frame}<presentation>
+\frametitle{Visualization of Example 2 Results}
+Neumann boundary condition at $x=1$, Dirichlet elsewhere.
+
+\begin{center}
+\includegraphics[width=0.58\textwidth]{./EPS/example02_Q1}
+\end{center}
+\end{frame}
+
+\mode<article>{
+Figure \ref{fig:Example01aResults} shows visualizations of the results computed
+with \lstinline{example01}.
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{./EPS/example02_Q1}
+\end{center}
+\caption{Result for example 2 computed with $Q_1$ elements.}
+\label{fig:Example02Results}
+\end{figure}
+}
 
 
 
