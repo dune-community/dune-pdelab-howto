@@ -34,9 +34,9 @@ void example01b_Q2 (const GV& gv)
 #endif
 
   // <<<5>>> solve nonlinear problem
-  typedef typename GFS::template VectorContainer<Real>::Type V;
-  V x(gfs,2.0); // initial value
-  Dune::PDELab::Newton<GOS,LS,V> newton(gos,x,ls);
+  typedef typename GFS::template VectorContainer<Real>::Type U;
+  U x(gfs,2.0); // initial value
+  Dune::PDELab::Newton<GOS,LS,U> newton(gos,x,ls);
   newton.setReassembleThreshold(0.0);
   newton.setVerbosityLevel(2);
   newton.setReduction(1e-10);
@@ -47,7 +47,7 @@ void example01b_Q2 (const GV& gv)
 
   // <<<6>>> graphical output
   {
-    typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+    typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
     DGF xdgf(gfs,x);
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));

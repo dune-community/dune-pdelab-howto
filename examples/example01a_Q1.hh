@@ -34,14 +34,15 @@ void example01a_Q1 (const GV& gv)
 #endif
 
   // <<<5>>> solve linear problem
-  typedef typename GFS::template VectorContainer<Real>::Type V;
-  V x(gfs,0.0); // initial value
-  Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,V> slp(gos,x,ls,1e-10);
+  typedef typename GFS::template VectorContainer<Real>::Type U;
+  U x(gfs,0.0); // initial value
+  typedef Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,U> SLP;
+  SLP slp(gos,x,ls,1e-10);
   slp.apply();
 
   // <<<6>>> graphical output
   {
-    typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+    typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
     DGF xdgf(gfs,x);
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
