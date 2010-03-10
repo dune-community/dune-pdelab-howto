@@ -81,11 +81,14 @@ public:
         for (size_type i=0; i<lfsu.size(); i++)
           gradu.axpy(x[i],gradphi[i]);
 
-        // evaluate parameters; 
+        // evaluate parameters
         Dune::FieldVector<RF,dim> 
           globalpos = eg.geometry().global(it->position());
-        RF f = std::min(100.0*globalpos.two_norm2(),50.0); 
-        RF a =  1.0; 
+        Dune::FieldVector<RF,dim> midpoint(0.5);
+	globalpos -= midpoint;
+        RF f;
+	if (globalpos.two_norm()<0.25) f = -10.0; else f = 10.0;
+        RF a =  10.0; 
 
         // integrate grad u * grad phi_i + a*u*phi_i - f phi_i
         RF factor = it->weight()*eg.geometry().integrationElement(it->position());
