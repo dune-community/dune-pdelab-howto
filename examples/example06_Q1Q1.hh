@@ -64,9 +64,9 @@ void example06_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   Real kappa = -0.05;
   Real tau = 0.1;
   typedef Example05LocalOperator LOP; 
-  LOP lop(d_0,d_1,lambda,sigma,kappa,4);
+  LOP lop(d_0,d_1,lambda,sigma,kappa,2);
   typedef Example05TimeLocalOperator TLOP; 
-  TLOP tlop(tau,4);
+  TLOP tlop(tau,2);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MBE;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,TLOP,CC,CC,MBE> IGOS;
   IGOS igos(gfs,cc,gfs,cc,lop,tlop);
@@ -127,6 +127,6 @@ void example06_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
       xold = xnew;
       time += dt;
       if (dt<dtmax-1e-8)
-        dt = std::min(dt*1.2,dtmax);
+        dt = std::min(dt*1.1,dtmax);
     }
 }

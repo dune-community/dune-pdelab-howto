@@ -46,8 +46,6 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   typedef Dune::PDELab::CompositeGridFunction<U0InitialType,U1InitialType> UInitialType;
   UInitialType uinitial(u0initial,u1initial);
   Dune::PDELab::interpolate(uinitial,gfs,xold);
-  for (unsigned i=0; i<gfs.globalSize(); i++)
-    xold[i/2][i%2] = -1.0+2.0*(random()&07)/7.0;
 
   // <<<4>>> Make instationary grid operator space
   Real d_0 = 0.00028;
@@ -57,9 +55,9 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   Real kappa = -0.05;
   Real tau = 0.1;
   typedef Example05LocalOperator LOP; 
-  LOP lop(d_0,d_1,lambda,sigma,kappa,4);
+  LOP lop(d_0,d_1,lambda,sigma,kappa,2);
   typedef Example05TimeLocalOperator TLOP; 
-  TLOP tlop(tau,4);
+  TLOP tlop(tau,2);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MBE;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,TLOP,CC,CC,MBE> IGOS;
   IGOS igos(gfs,gfs,lop,tlop);
@@ -122,6 +120,6 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
       xold = xnew;
       time += dt;
       if (dt<dtmax-1e-8)
-        dt = std::min(dt*1.2,dtmax);
+        dt = std::min(dt*1.1,dtmax);
     }
 }

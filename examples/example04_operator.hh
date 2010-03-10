@@ -50,8 +50,9 @@ public:
     // evaluate reaction term
     Dune::FieldVector<DF,dim> center = eg.geometry().center();
     RF a = 0.0;
+    RF f = 0.0;
 
-    r[0] = a*x[0]*eg.geometry().volume();
+    r[0] = (a-f)*x[0]*eg.geometry().volume();
   }
 
   // skeleton integral depending on test and ansatz functions

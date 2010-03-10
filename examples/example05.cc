@@ -1,8 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 /** \file
     
-    \brief Solve parabolic problem with conforming finite elements
-    in space and implicit one step methods in time
+    \brief Solve two-component diffusion-reaction system
+    with conforming finite elements
 */
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
@@ -71,7 +71,7 @@
 
 #include"example05_operator.hh"
 #include"example05_toperator.hh"
-#include"example05_initial.hh"
+#include"example06_initial.hh"
 #include"example05_Q1Q1.hh"
 #include"example05_Q2Q2.hh"
 
@@ -122,8 +122,8 @@ int main(int argc, char** argv)
       grid.globalRefine(level);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
-      example05_Q1Q1(gv,dtstart,dtmax,tend);
-      //example05_Q2Q2(gv,dtstart,dtmax,tend);
+      //example05_Q1Q1(gv,dtstart,dtmax,tend);
+      example05_Q2Q2(gv,dtstart,dtmax,tend);
     }
   }
   catch (Dune::Exception &e){

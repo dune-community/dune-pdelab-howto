@@ -1,8 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 /** \file
     
-    \brief Solve parabolic problem with conforming finite elements
-    in space and implicit one step methods in time
+    \brief Solve two-component diffusion-reaction system
+    with conforming finite elements in parallel on overlapping grids
 */
 #ifdef HAVE_CONFIG_H
 #include "config.h"     

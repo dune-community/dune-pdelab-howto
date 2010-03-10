@@ -33,15 +33,13 @@ void example05_Q2Q2 (const GV& gv, double dtstart, double dtmax, double tend)
   // <<<4>>> Make FE function with initial value / Dirichlet b.c.
   typedef typename GFS::template VectorContainer<Real>::Type V;
   V xold(gfs,0.0);
-  typedef U0Initial<GV,Real> U0InitalType;
-  U0InitalType u0initial(gv);
-  typedef U1Initial<GV,Real> U1InitalType;
-  U1InitalType u1initial(gv);
-  typedef Dune::PDELab::CompositeGridFunction<U0InitalType,U1InitalType> UInitialType;
+  typedef U0Initial<GV,Real> U0InitialType;
+  U0InitialType u0initial(gv);
+  typedef U1Initial<GV,Real> U1InitialType;
+  U1InitialType u1initial(gv);
+  typedef Dune::PDELab::CompositeGridFunction<U0InitialType,U1InitialType> UInitialType;
   UInitialType uinitial(u0initial,u1initial);
   Dune::PDELab::interpolate(uinitial,gfs,xold);
-  for (unsigned i=0; i<gfs.globalSize(); i++)
-    xold[i/2][i%2] = -1.0+2.0*(random()&07)/7.0;
 
   // <<<4>>> Make instationary grid operator space
   Real d_0 = 0.00028;
@@ -114,6 +112,6 @@ void example05_Q2Q2 (const GV& gv, double dtstart, double dtmax, double tend)
       xold = xnew;
       time += dt;
       if (dt<dtmax-1e-8)
-        dt = std::min(dt*1.2,dtmax);
+        dt = std::min(dt*1.1,dtmax);
     }
 }
