@@ -6,8 +6,8 @@
 
 /** a local operator for solving the equation
  *
- *   - \Delta u + u   = min(100*||x||^2,50)   in \Omega
- *   \nabla u \cdot n = 0                     on \partial\Omega
+ *   - \Delta u + au   = f   in \Omega
+ *    \nabla u \cdot n = 0   on \partial\Omega
  *
  * with conforming finite elements on all types of grids in any dimension
  *
@@ -85,9 +85,9 @@ public:
         Dune::FieldVector<RF,dim> 
           globalpos = eg.geometry().global(it->position());
         Dune::FieldVector<RF,dim> midpoint(0.5);
-	globalpos -= midpoint;
+        globalpos -= midpoint;
         RF f;
-	if (globalpos.two_norm()<0.25) f = -10.0; else f = 10.0;
+        if (globalpos.two_norm()<0.25) f = -10.0; else f = 10.0;
         RF a =  10.0; 
 
         // integrate grad u * grad phi_i + a*u*phi_i - f phi_i
