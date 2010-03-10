@@ -20,7 +20,7 @@
 \begin{frame}
 \frametitle{Problem and Weak Formulation}
 Consider the following model problem:
-\begin{subequations}
+\begin{subequations} \label{Eq:Example01}
 \begin{align*}
 -\Delta u + a u &= f &&\text{in $\Omega\subset\mathbb{R}^d$ (open, connected)},\\
 \nabla u \cdot n &= 0 &&\text{on $\partial\Omega$}.
@@ -219,6 +219,72 @@ is a special case of the nonlinear case \ldots
 \end{enumerate}
 \end{frame}
 
+\subsection{Example 1}
+
+\begin{frame}
+\frametitle{Example 1 Overview}
+The first example implements model problem \eqref{Eq:Example01}.
+
+It consists of the following files:
+\begin{itemize}
+\item \lstinline{example01.cc} -- the file to be compiled. 
+\item \lstinline{example01_main.hh} -- main function. Instantiates a grid and runs the variants.
+\item \lstinline{example01a_Q1.hh} -- solve model problem \eqref{Eq:Example01} with $Q_1$ elements.
+\item \lstinline{example01a_Q2.hh} -- same with $Q_2$ elements.
+\item \lstinline{example01a_RT.hh} -- same with nonconforming rotated bilinear (``Rannacher-Turek'' element).
+\item \lstinline{example01a_operator.hh} -- local operator implementing $\bm{\alpha}_{h,e}^{\text{vol}}$.
+\item \lstinline{example01b_Q2.hh} -- solve nonlinear variant of the model problem \eqref{Eq:Example01} with $Q_2$ elements.
+\item \lstinline{example01b_operator.hh} -- the local operator for the nonlinear variant.
+\end{itemize}
+\end{frame}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Function \lstinline{main}}
+\framesubtitle<presentation>{File \texttt{examples/example01\_main.hh}}
+\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example01_main.hh}
+\end{frame}
+\mode<article>{
+For completeness we show the main function that just instantiates a \lstinline{YaspGrid} object
+and calls the variants.
+
+Main functions will not be shown in later examples.
+
+\begin{Lst}[File examples/example01\_main.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example01_main.hh}
+\end{Lst}}
+
+
+\begin{frame}
+\frametitle{Driver for Solving Stationary Linear Problems}
+\framesubtitle{About \lstinline{example01a_Q1.hh}}
+\begin{enumerate}
+\item Define useful constants/types like dimension or basic numeric type.
+\item Make \textit{grid function space} which corresponds here to $U_h^k$. It requires
+\begin{itemize}
+\item a \textit{finite element map} defining a local basis on each element.
+\item a method to set up \textit{constraints} on the function space (empty here).
+\item a suitable vector backend.
+\end{itemize}
+\item Make \textit{grid operator space} computing $\mathcal{R}(\mathbf{u})$, $\nabla\mathcal{R}(\mathbf{u})$. It requires
+\begin{itemize}
+\item a local operator which provides $\bm{\alpha}_{h,e}^{\text{vol}}$.
+\item trial and test grid function spaces, possibly with constraints.
+\item a suitable matrix backend.
+\end{itemize}
+\item Select a linear solver backend (see vector/matrix backend).
+\item Solve the linear problem given with the selected solver backend.
+\begin{itemize}
+\item \textit{Vector container} is used to store degrees of freedom $\mathbf{u}\in\mathbf{U}$.
+\end{itemize}
+\item Output graphics files to visualize solution with ParaView.
+\begin{itemize}
+\item \textit{Discrete grid function} implements finite element isomorphism.
+\end{itemize}
+\end{enumerate}
+\end{frame}
 
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
@@ -235,6 +301,56 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/example01a_Q1.hh}
 \end{Lst}}
 
 
+\begin{frame}
+\frametitle{Local Operator}
+\begin{itemize}
+\item The local operator implements $\bm{\alpha}_{h,e}^{\text{vol}}$ (and more).
+\item Class template \lstinline{GridOperatorSpace} builds on a local operator and
+provides $\mathcal{R}(\mathbf{u})$, $\nabla\mathcal{R}(\mathbf{u})$ \textit{generically}.
+\item Works for many different discretizations (see below).
+\item Works as well for systems of PDEs (see below).
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Local Operator Implementation}
+\framesubtitle{About \lstinline{example01a_operator.hh}}
+A local operator is a class providing the following:
+\begin{itemize}
+\item Flags controlling the sparsity pattern assembly.
+\item Method \lstinline{pattern_volume} assembling sparsity pattern (default provided).
+\item Flags controlling which terms to assemble.
+\item Method \lstinline{alpha_volume} computing $\bm{\alpha}_{h,e}^{\text{vol}}(\mathbf{u})$.
+\item Method \lstinline{jacobian_volume} computing $\nabla\bm{\alpha}_{h,e}^{\text{vol}}(\mathbf{u})$. 
+This method can be provided generically through numerical differentiation.
+\item Method \lstinline{jacobian_apply_volume} computing $\nabla\bm{\alpha}_{h,e}^{\text{vol}}(\mathbf{u})\mathbf{u}$. 
+This method can be provided generically through numerical differentiation.
+\item Possibly more methods (to be introduced later):
+\begin{itemize}
+\item \lstinline{alpha_boundary}, \lstinline{alpha_skeleton} -- boundary/interior face integrals.
+\item \lstinline{lambda_volume}, \lstinline{lambda_boundary} -- parts of the residual depending on the test function only (optional).
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\lstinline{alpha_volume} Method}
+The method \lstinline{alpha_volume} has the following signature: 
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+template<typename EG, typename LFSU, typename X, 
+         typename LFSV, typename R>void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, 
+                   const LFSV& lfsv, R& r) const;\end{lstlisting}
+Where the arguments are:
+\begin{itemize}
+\item \lstinline{eg} -- a codim 0 entity $e\in E_h^0$.
+\item \lstinline{lfsu} -- local basis functions $\hat\phi_{e,l}$ for trial space.
+\item \lstinline{x} -- local coefficients $(\mathbf{u})_l$.
+\item \lstinline{lfsv} -- local basis $\hat\psi_{e,l}$ for the test space 
+\item \lstinline{r} -- local contribution to residual (the result).
+\end{itemize}
+\end{frame}
+
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Operator for Unconstrained Elliptic Problem}
 \framesubtitle<presentation>{File \texttt{examples/examples01a\_operator.hh}}
@@ -247,3 +363,90 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/example01a_operator.hh}
 \lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/example01a_operator.hh}
 \end{Lst}}
+
+\begin{frame}<presentation>
+\frametitle{Visualization of Example 1 Results}
+Left figure shows the results for $Q_1$ elements.
+
+But we can do easily other elements as well!
+
+\begin{center}
+\includegraphics[width=0.32\textwidth]{./EPS/example01a_Q1} $\hspace{1mm}$
+\includegraphics[width=0.32\textwidth]{./EPS/example01a_Q2} $\hspace{1mm}$
+\includegraphics[width=0.32\textwidth]{./EPS/example01a_RT}
+
+$Q_1$ \hspace{30mm} $Q_2$ \hspace{30mm} $RT$
+\end{center}
+\end{frame}
+
+\mode<article>{
+Figure \ref{fig:Example01aResults} shows visualizations of the results computed
+with \lstinline{example01}.
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.32\textwidth]{./EPS/example01a_Q1} $\hspace{1mm}$
+\includegraphics[width=0.32\textwidth]{./EPS/example01a_Q2} $\hspace{1mm}$
+\includegraphics[width=0.32\textwidth]{./EPS/example01a_RT}
+\end{center}
+\caption{Results for example 1a computed with three different finite element spaces.
+From left: $Q_1$ elements, $Q_2$ elements, rotated bilinear (Rannacher-Turek) element.}
+\label{fig:Example01aResults}
+\end{figure}
+}
+
+
+\begin{frame}
+\frametitle{Using $Q_2$ Elements}
+\ldots is quite simple, see \lstinline{example01a_Q2.hh}. Just
+\begin{itemize}
+\item Use another finite element map \lstinline{Q22DLocalFiniteElementMap}.
+\item Increase quadrature order on the local operator to 4.
+\item Use \lstinline{SubsamplingVTKWriter} to allow visualization of higher order polynomials.
+\item Use a new name for the output file.
+\end{itemize}
+
+Explore the Rannacher Turek element in \lstinline{example01a_RT.hh}
+\end{frame}
+
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Unconstrained Elliptic Problem with $Q_2$}
+\framesubtitle<presentation>{File \texttt{examples/examples01a\_Q2.hh}}
+\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example01a_Q2.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/example01a\_Q2.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example01a_Q2.hh}
+\end{Lst}}
+
+
+\begin{frame}
+\frametitle{Going Nonlinear}
+\ldots is also easy. Just 
+\begin{itemize}
+\item Make a new local operator where the coefficients $a$ and $f$ depend on the solution $u$,
+see \lstinline{example01b_operator}.
+\item Use this new local operator in the grid operator space.
+\item Use class \lstinline{Newton} to solve the nonlinear algebraic problem.
+\item Use a new name for the output file :-).
+\end{itemize}
+\end{frame}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Unconstrained Nonlinear Elliptic Problem with $Q_2$}
+\framesubtitle<presentation>{File \texttt{examples/examples01b\_Q2.hh}}
+\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example01b_Q2.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/example01b\_Q2.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=5pt]{../../examples/example01b_Q2.hh}
+\end{Lst}}
+
+
+
