@@ -656,7 +656,10 @@ computing the boundary integral.
 \lstinline{alpha_boundary} has the following signature: 
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
 template<typename IG, typename LFSU, typename X, 
-         typename LFSV, typename R>void alpha_boundary (const IG& ig, const LFSU& lfsu_s, const X& x_s,                      const LFSV& lfsv_s, R& r_s) const\end{lstlisting}
+         typename LFSV, typename R>
+void alpha_boundary (const IG& ig, const LFSU& lfsu_s, const X& x_s, 
+                     const LFSV& lfsv_s, R& r_s) const
+\end{lstlisting}
 Where the arguments are:
 \begin{itemize}
 \item \lstinline{ig} -- intersection with domain boundary.
@@ -709,4 +712,7 @@ type from the implementation of the local operator.
 \end{frame}
 
 
+\subsection{Cell-centered Finite Volumes}
+
+\subsection{Example 4}
 
