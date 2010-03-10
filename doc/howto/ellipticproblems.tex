@@ -370,7 +370,7 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/example01a_operator.hh}
 \frametitle{Visualization of Example 1 Results}
 Left figure shows the results for $Q_1$ elements.
 
-But we can do easily other elements as well!
+But we can do easily other elements as well \ldots
 
 \begin{center}
 \includegraphics[width=0.32\textwidth]{./EPS/example01a_Q1} $\hspace{1mm}$
@@ -379,6 +379,10 @@ But we can do easily other elements as well!
 
 $Q_1$ \hspace{30mm} $Q_2$ \hspace{30mm} $RT$
 \end{center}
+
+\mode<presentation>{
+More on that in the excercises!
+}
 \end{frame}
 
 \mode<article>{
@@ -528,7 +532,7 @@ This can be done easily in PDELab but is not shown here.
 \item Construct subspace via basis representation:
 \begin{itemize}
 \item $\mathcal{I}_{\tilde{U}_h^k} = \left\{ j\in \mathcal{I}_{U_h^k} \,:\, 
-x_j \in \Gamma_D \right\} \subset \mathcal{I}_{U_h^k}$.
+x_j \not\in \Gamma_D \right\} \subset \mathcal{I}_{U_h^k}$.
 \item $\Phi_{\tilde{U}_h^k} = \left\{ \phi_j\in \Phi_{U_h^k} \,:\, 
 j \in \mathcal{I}_{\tilde{U}_h^k} \right\} \subset \Phi_{U_h^k}$.
 \item $\tilde{U}_h^k = \text{span}\Phi_{\tilde{U}_h^k}$.
@@ -536,7 +540,7 @@ j \in \mathcal{I}_{\tilde{U}_h^k} \right\} \subset \Phi_{U_h^k}$.
 \item For the coefficient space there are two options:
 \begin{enumerate}
 \item $\tilde{\mathbf{U}} = \mathbb{R}^{\mathcal{I}_{\tilde{U}_h^k}} \not\subseteq \mathbf{U}$.
-\item $\tilde{\mathbf{U}} = \left\{ \mathbf{u}\in\mathbf{U} \,:\, (\mathbf{u})_j = 0 \, \forall
+\item $\tilde{\mathbf{U}} = \left\{ \mathbf{u}\in\mathbf{U} \,:\, (\mathbf{u})_j = 0 \  \forall
 j \in \mathcal{I}_{U_h^k} \setminus \mathcal{I}_{\tilde{U}_h^k} \right\} \subset \mathbf{U}$. 
 \end{enumerate}
 \item We choose (2) because
@@ -697,6 +701,12 @@ with \lstinline{example01}.
 \label{fig:Example02Results}
 \end{figure}
 }
+
+\begin{frame}
+\frametitle{Remark on Local Operators}
+In practice one would access parameter functions such as $a, f, j$ and the boundary condition
+type from the implementation of the local operator.
+\end{frame}
 
 
 
