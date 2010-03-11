@@ -8,7 +8,7 @@
  *
  *   - \Delta u + a*u = f   in \Omega
  *                  u = g   on \Gamma_D\subseteq\partial\Omega
- *   \nabla u \cdot n = j   on \Gamma_N = \partial\Omega\setminus\Gamma_D
+ *  -\nabla u \cdot n = j   on \Gamma_N = \partial\Omega\setminus\Gamma_D
  *
  * with conforming finite elements on all types of grids in any dimension
  *
@@ -29,9 +29,9 @@ public:
 
   // residual assembly flags
   enum { doAlphaVolume = true };
-  enum { doAlphaBoundary = true };
+  enum { doAlphaBoundary = true };                                // assemble boundary
 
-  Example02LocalOperator (const B& b_, unsigned int intorder_=2)
+  Example02LocalOperator (const B& b_, unsigned int intorder_=2)  // needs boundary cond. type
     : b(b_), intorder(intorder_)
   {}
 
@@ -56,7 +56,8 @@ public:
 
     // select quadrature rule
     Dune::GeometryType gt = eg.geometry().type();
-    const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
+    const Dune::QuadratureRule<DF,dim>& 
+      rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
 
     // loop over quadrature points
     for (typename Dune::QuadratureRule<DF,dim>::const_iterator 
@@ -119,10 +120,12 @@ public:
         
     // select quadrature rule for face
     Dune::GeometryType gtface = ig.geometryInInside().type();
-    const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
+    const Dune::QuadratureRule<DF,dim-1>& 
+      rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
     // loop over quadrature points and integrate normal flux
-    for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+    for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); 
+	 it!=rule.end(); ++it)
       {
         // evaluate boundary condition type
         typename B::Traits::RangeType bctype;

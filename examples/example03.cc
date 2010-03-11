@@ -108,7 +108,7 @@ int main(int argc, char** argv)
 	sscanf(argv[3],"%lg",&tend);
 
     // sequential version
-    if (1 && helper.size()==1)
+    if (helper.size()==1)
     {
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(1);

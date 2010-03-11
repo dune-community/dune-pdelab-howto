@@ -3,27 +3,21 @@
 
 /** a local operator for solving the equation
  *
- *   - \Delta u + a*u = f   in \Omega
- *                  u = g   on \Gamma_D\subseteq\partial\Omega
- *   \nabla u \cdot n = j   on \Gamma_N = \partial\Omega\setminus\Gamma_D
+ *  \partial_t u - \Delta u + a*u = f   in \Omega
+ *                              u = g   on \Gamma_D\subseteq\partial\Omega
+ *             - \nabla u \cdot n = j   on \Gamma_N = \partial\Omega\setminus\Gamma_D
+ *                              u = u_0 at t=t_0
  *
- * with conforming finite elements on all types of grids in any dimension
+ * (spatial part!) with conforming finite elements on all types of grids in any dimension
  *
  * \tparam B a function indicating the type of boundary condition
  */
 template<class B>
 class Example03LocalOperator :
   public Example02LocalOperator<B>,
-  public Dune::PDELab::InstationaryLocalOperatorDefaultMethods<double>
+  public Dune::PDELab::InstationaryLocalOperatorDefaultMethods<double> // default methods
 {
 public:
   Example03LocalOperator (const B& b_, unsigned int intorder_=2)
-    : Example02LocalOperator<B>(b_,intorder_), time(0.0)
-  {}
-
-  //! set time for subsequent evaluation
-  void setTime (double t) {time = t;}
-
-private:
-  double time;
+    : Example02LocalOperator<B>(b_,intorder_) {}
 };

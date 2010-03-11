@@ -8,7 +8,7 @@
  *
  *   - \Delta u + a*u = f   in \Omega
  *                  u = g   on \Gamma_D\subseteq\partial\Omega
- *   \nabla u \cdot n = j   on \Gamma_N = \partial\Omega\setminus\Gamma_D
+ *  -\nabla u \cdot n = j   on \Gamma_N = \partial\Omega\setminus\Gamma_D
  *
  * with cell-centered finite volumes on axiparallel, structured grids
  *
