@@ -23,8 +23,8 @@ void example04 (const GV& gv)
   GOS gos(gfs,gfs,lop);
 
   // <<<4>>> Select a linear solver backend
-  typedef Dune::PDELab::ISTLBackend_SEQ_CG_SSOR LS;
-  LS ls(5000,true);
+  typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<GFS> LS;
+  LS ls(2,5000,2);
 
   // <<<5>>> assemble and solve linear problem
   typedef typename GFS::template VectorContainer<Real>::Type U;
@@ -35,7 +35,7 @@ void example04 (const GV& gv)
   // <<<6>>> graphical output
   typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
   DGF udgf(gfs,u);
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);  // write cell data
-  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"solution"));
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming); // nonconforming for P0
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"solution"));
   vtkwriter.write("example04",Dune::VTKOptions::binaryappended);
 }

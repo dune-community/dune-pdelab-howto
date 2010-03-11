@@ -15,14 +15,14 @@
  * \tparam B a function indicating the type of boundary condition
  * \tparam G a function for the values of the Dirichlet boundary condition
  */
-class Example04LocalOperator : 
+class Example04LocalOperator :    // implement jacobian evaluation in base classes
   public Dune::PDELab::NumericalJacobianApplyVolume<Example04LocalOperator>,
   public Dune::PDELab::NumericalJacobianVolume<Example04LocalOperator>,
   public Dune::PDELab::NumericalJacobianApplySkeleton<Example04LocalOperator>,
   public Dune::PDELab::NumericalJacobianSkeleton<Example04LocalOperator>,
   public Dune::PDELab::NumericalJacobianApplyBoundary<Example04LocalOperator>,
   public Dune::PDELab::NumericalJacobianBoundary<Example04LocalOperator>,
-  public Dune::PDELab::FullSkeletonPattern,
+  public Dune::PDELab::FullSkeletonPattern,                     // matrix entries skeleton 
   public Dune::PDELab::FullVolumePattern,
   public Dune::PDELab::LocalOperatorDefaultFlags
 {
@@ -33,12 +33,13 @@ public:
 
   // residual assembly flags
   enum { doAlphaVolume  = true };
-  enum { doAlphaSkeleton  = true };
+  enum { doAlphaSkeleton  = true };                             // assemble skeleton term
   enum { doAlphaBoundary  = true };
 
   // volume integral depending on test and ansatz functions
   template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+		     R& r) const
   {
     // domain and range field type
     typedef typename LFSV::Traits::LocalFiniteElementType::
@@ -52,7 +53,7 @@ public:
     RF a = 0.0;
     RF f = 0.0;
 
-    r[0] = (a-f)*x[0]*eg.geometry().volume();
+    r[0] = (a*x[0]-f)*eg.geometry().volume();
   }
 
   // skeleton integral depending on test and ansatz functions
@@ -85,7 +86,7 @@ public:
   }
 
   // skeleton integral depending on test and ansatz functions
-  // We put the Dirchlet evaluation also in the alpha term to save some geometry evaluations
+  // Here Dirichlet and Neumann boundary conditions are evaluated
   template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
   void alpha_boundary (const IG& ig, 
                        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
