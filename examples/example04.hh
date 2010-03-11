@@ -8,14 +8,14 @@ void example04 (const GV& gv)
 
   // <<<2>>> Make grid function space
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
-  FEM fem(Dune::GeometryType::cube);
-  typedef Dune::PDELab::NoConstraints CON;
+  FEM fem(Dune::GeometryType::cube);                            // supply element type for P0
+  typedef Dune::PDELab::NoConstraints CON;                      // we have no constraints!
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
   // <<<3>>> Make grid operator space
-  typedef Example04LocalOperator LOP; 
+  typedef Example04LocalOperator LOP;                           // our new operator
   LOP lop;
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::EmptyTransformation CC;
@@ -35,7 +35,7 @@ void example04 (const GV& gv)
   // <<<6>>> graphical output
   typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
   DGF udgf(gfs,u);
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);  // write cell data
   vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"solution"));
   vtkwriter.write("example04",Dune::VTKOptions::binaryappended);
 }

@@ -23,6 +23,6 @@ public:
     : Example02LocalOperator<B>(b_,intorder_) {}
   void setTime (double time)
   {
-    b.setTime(time);
+    b.setTime(time); // enable change of boundary condition type
   }
 };
