@@ -711,8 +711,95 @@ In practice one would access parameter functions such as $a, f, j$ and the bound
 type from the implementation of the local operator.
 \end{frame}
 
-
 \subsection{Cell-centered Finite Volumes}
 
+\begin{frame}
+\frametitle{Problem}
+We wish to demonstrate that allows also the implementation of Finite Volume methods.
+
+Consider again the elliptic model problem:
+\begin{subequations} \label{Eq:Example04}
+\begin{align*}
+ -\Delta u + a u  &= q &&\text{in $\Omega\subset\mathbb{R}^d$},\\
+                u &= g &&\text{on $\Gamma_D\subseteq\partial\Omega$},\\
+-\nabla u \cdot n &= j &&\text{on $\Gamma_N=\partial\Omega\setminus\Gamma_D$},
+\end{align*}
+\end{subequations}
+where $a>0$ when $\Gamma_D=\emptyset$.
+
+We show how to formulate this method in the framework of residual forms.
+\end{frame}
+
+\begin{frame}
+\frametitle{Discrete Weak Formulation I}
+For a grid $E_h^0$ define $W_h = \{ u \in L_2(\Omega) \,:\, 
+u|_{\Omega_e} = \text{const} \quad \forall e\in E_h^0\}$.
+\begin{equation*}
+\begin{split}
+& \sum_{e\in E_h^0} \int_{\Omega_e} (-\Delta u + au - q) v \, dx = 
+\sum_{e\in E_h^0} \biggl\{ \int_{\Omega_e} (au - q) v \, dx - 
+\int_{\partial\Omega_e} (\nabla u\cdot n) v \, ds \biggr\}\\
+&\quad = \sum_{e\in E_h^0} \biggl\{ \int_{\Omega_e} (au - q) v \, dx
+- \int_{\partial\Omega_e\cap\Omega_e} (\nabla u\cdot n) v \, ds\\
+&\hspace{30mm} - \int_{\partial\Omega_e\cap\Gamma_D} (\nabla u\cdot n) v \, ds
++ \int_{\partial\Omega_e\cap\Gamma_N} j v \, ds \biggr\}\\
+&\quad = \sum_{e\in E_h^0} \int_{\Omega_e} (au - q) v \, dx
+- \sum_{f\in E_h^1} \int_{\Omega_f} (\nabla u\cdot n_f) [v] \, ds\\
+&\hspace{30mm} - \sum_{f\in B_h^1} \int_{\Omega_f\cap\Gamma_D} (\nabla u\cdot n) v \, ds
++ \sum_{f\in B_h^1} \int_{\Omega_f\cap\Gamma_N} j v \, ds .
+\end{split}
+\end{equation*}
+$E_h^1$: interior faces, $B_h^1$: boundary faces, $n_f$ pointing from $e^-_f$ to $e^+_f$,
+$x_f^-$ center of $e_f^-$, $x_f^+$ center of $e_f^+$, $[v]|_f = v(x_f^-) - v(x_f^+)$.
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Discrete Weak Formulation II}
+Approximation with difference quotient and midpoint rule:
+\begin{equation*}
+\begin{split}
+r_h^{\text{FV}}(u_h,v) & = \sum_{e\in E_h^0} \bigl(a(x_e)u_h(x_e) - q(x_e)\bigr) v(x_e) |\Omega_e|\\
+&\qquad - \sum_{f\in E_h^1} \frac{u_h(x_f^+)-u_h(x_f^-)}{\|x_f^+ - x_f^-\|} 
+\bigl(v(x_f^-) - v(x_f^+)\bigr) |\Omega_f|\\
+&\qquad - \sum_{f\in B_h^1; \Omega_f\subseteq\Gamma_D} \frac{g(x_f)-u_h(x_f^-)}{\|x_f - x_f^-\|} 
+v(x_f^-) |\Omega_f|\\
+&\qquad + \sum_{f\in B_h^1; \Omega_f\subseteq\Gamma_N} j(x_f) v(x_f) |\Omega_f| .
+\end{split}
+\end{equation*}
+The discrete problem then reads
+\begin{equation*}
+u_h \in W_h : \quad r_h^{\text{FV}}(u_h,v) = 0 \qquad \forall v \in W_h.
+\end{equation*}
+The interior face term is new! CCFV has no constraints!
+\end{frame}
+
 \subsection{Example 4}
+
+\begin{frame}
+\frametitle{Example 4 Overview}
+Example 4 implements the cell-centered finite volume method for the elliptiv model problem.
+
+It works only on axiparallel, cube grids.
+
+It consists of the following files:
+\begin{itemize}
+\item \lstinline{example04.cc} -- the file to be compiled, main function. 
+\item \lstinline{example04.hh} -- driver setting up and solving the problem. 
+\item \lstinline{example04_operator.hh} -- local operator for cell centered finite volumes.
+\end{itemize}
+\end{frame}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Driver for Cell-Centered Finite Volumes}
+\framesubtitle<presentation>{File \texttt{examples/example04.hh}}
+\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+numberstyle=\tiny, numbersep=2pt]{../../examples/example04.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/example04\_operator.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=2pt]{../../examples/example04_operator.hh}
+\end{Lst}}
 
