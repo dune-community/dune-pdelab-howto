@@ -395,7 +395,8 @@ with \lstinline{example01}.
 \includegraphics[width=0.32\textwidth]{./EPS/example01a_RT}
 \end{center}
 \caption{Results for example 1a computed with three different finite element spaces.
-From left: $Q_1$ elements, $Q_2$ elements, rotated bilinear (Rannacher-Turek) element.}
+From left: $Q_1$ elements, $Q_2$ elements, rotated bilinear (Rannacher-Turek) 
+element on an $8 \times 8$ grid.}
 \label{fig:Example01aResults}
 \end{figure}
 }
@@ -685,12 +686,15 @@ numberstyle=\tiny, numbersep=2pt]{../../examples/example02_operator.hh}
 \end{Lst}}
 
 \begin{frame}<presentation>
-\frametitle{Visualization of Example 2 Results}
+\frametitle{Visualization of Constrained Problem Results}
 Neumann boundary condition at $x=1$, Dirichlet elsewhere.
 
 \begin{center}
-\includegraphics[width=0.58\textwidth]{./EPS/example02_Q1}
+\includegraphics[width=0.48\textwidth]{./EPS/example02_Q1} \hspace{1mm}
+\includegraphics[width=0.48\textwidth]{./EPS/example04}
 \end{center}
+
+Conforming $Q_1$ from example 2 left and cell-centered finite volumes from example 4 right.
 \end{frame}
 
 \mode<article>{
@@ -698,9 +702,11 @@ Figure \ref{fig:Example01aResults} shows visualizations of the results computed
 with \lstinline{example01}.
 \begin{figure}
 \begin{center}
-\includegraphics[width=0.5\textwidth]{./EPS/example02_Q1}
+\includegraphics[width=0.48\textwidth]{./EPS/example02_Q1} \hspace{1mm}
+\includegraphics[width=0.48\textwidth]{./EPS/example04}
 \end{center}
-\caption{Result for example 2 computed with $Q_1$ elements.}
+\caption{Result for example 2 computed with $Q_1$ elements on the right. 
+Same problem solved with cell-centered finite volume method in example 4.}
 \label{fig:Example02Results}
 \end{figure}
 }
@@ -790,11 +796,56 @@ It consists of the following files:
 \end{itemize}
 \end{frame}
 
+\begin{frame}
+\frametitle{The Driver}
+New things in this driver are:
+\begin{itemize}
+\item Use of element-wise constant functions.
+\item The new local operator shown below.
+\item Use CG preconditioned with AMG as solver (just for fun).
+\item Write nonconforming vertex data in \lstinline{VTKWriter}.
+\end{itemize}
+\end{frame}
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Driver for Cell-Centered Finite Volumes}
 \framesubtitle<presentation>{File \texttt{examples/example04.hh}}
 \lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
 numberstyle=\tiny, numbersep=2pt]{../../examples/example04.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/example04.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=2pt]{../../examples/example04.hh}
+\end{Lst}}
+
+\begin{frame}[fragile]
+\frametitle{\lstinline{alpha_skeleton} Method}
+Local operator is extended by a new method \lstinline{alpha_skeleton}
+called once for each interior intersection.
+
+Optionally it can be called from each element touching the intersection.
+
+\lstinline{alpha_boundary} has the following signature: 
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+template<typename IG, typename LFSU, typename X, typename LFSV, 
+         typename R>void alpha_skeleton (const IG& ig,            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,            R& r_s, R& r_n) const\end{lstlisting}
+Where the arguments are:
+\begin{itemize}
+\item \lstinline{ig} -- interior intersection.
+\item \lstinline{lfsu_s, lfsu_n} -- trial space in self (inside) and neighbor (outside).
+\item \lstinline{x_s, x_n} -- local coefficients in self and neighbor.
+\item \lstinline{lfsv_s, lfsv_n} -- test space in self and neighbor. 
+\item \lstinline{r_s, r_n} -- local contribution to residual in self and neighbor.
+\end{itemize}
+\end{frame}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Local Operator for Cell-Centered Finite Volumes}
+\framesubtitle<presentation>{File \texttt{examples/example04\_operator.hh}}
+\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+numberstyle=\tiny, numbersep=2pt]{../../examples/example04_operator.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File examples/example04\_operator.hh] \mbox
