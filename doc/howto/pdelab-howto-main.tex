@@ -191,6 +191,10 @@
 {
   \begin{frame}
     \titlepage
+    % Make sure the cite from the abstract is included in the bibliography, even
+    % if the abstract itself is skipped.  Needs to be inside a frame,
+    % otherwise presentation mode will ignore it.
+    \nocite{Dune2008a,Dune2008b}
   \end{frame}
 }
 \mode<article>
