@@ -27,15 +27,15 @@ void example04 (const GV& gv)
   LS ls(5000,true);
 
   // <<<5>>> assemble and solve linear problem
-  typedef typename GFS::template VectorContainer<Real>::Type V;
-  V x(gfs,0.0);
-  Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,V> slp(gos,x,ls,1e-10);
+  typedef typename GFS::template VectorContainer<Real>::Type U;
+  U u(gfs,0.0);
+  Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,U> slp(gos,u,ls,1e-10);
   slp.apply();
 
   // <<<6>>> graphical output
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  DGF xdgf(gfs,x);
+  typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
+  DGF udgf(gfs,u);
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
+  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"solution"));
   vtkwriter.write("example04",Dune::VTKOptions::binaryappended);
 }

@@ -17,7 +17,12 @@ class Example03LocalOperator :
   public Example02LocalOperator<B>,
   public Dune::PDELab::InstationaryLocalOperatorDefaultMethods<double> // default methods
 {
+  B& b;
 public:
-  Example03LocalOperator (const B& b_, unsigned int intorder_=2)
+  Example03LocalOperator (B& b_, unsigned int intorder_=2)
     : Example02LocalOperator<B>(b_,intorder_) {}
+  void setTime (double time)
+  {
+    b.setTime(time);
+  }
 };
