@@ -122,8 +122,8 @@ int main(int argc, char** argv)
       grid.globalRefine(level);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
-      //example05_Q1Q1(gv,dtstart,dtmax,tend);
-      example05_Q2Q2(gv,dtstart,dtmax,tend);
+      example05_Q1Q1(gv,dtstart,dtmax,tend);
+      //example05_Q2Q2(gv,dtstart,dtmax,tend);
     }
   }
   catch (Dune::Exception &e){

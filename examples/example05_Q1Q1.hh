@@ -5,47 +5,42 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
   const int dim = GV::dimension;
-
-  // <<<2>>> initialize time variable
   Real time = 0.0;
 
-  // <<<2a>>> Make grid function space for the system
+  // <<<2>>> Make grid function space for the system
   typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM0;
   FEM0 fem0;
-  typedef Dune::PDELab::NoConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<2> VBE;
+  typedef Dune::PDELab::NoConstraints CON;                      // pure Neumann: no constraints
+  typedef Dune::PDELab::ISTLVectorBackend<2> VBE;               // block size 2
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM0,CON,VBE> GFS0;
   GFS0 gfs0(gv,fem0);
 
   typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM1;
-  FEM1 fem1;
+  FEM1 fem1;                                                    // might use Q2 as well
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM1,CON,VBE> GFS1;
   GFS1 gfs1(gv,fem1);
 
-  typedef Dune::PDELab::CompositeGridFunctionSpace<
-    Dune::PDELab::GridFunctionSpaceBlockwiseMapper,
+  typedef Dune::PDELab::CompositeGridFunctionSpace<             // compose function space
+  Dune::PDELab::GridFunctionSpaceBlockwiseMapper,               // point block ordering
 	  GFS0,GFS1> GFS;              
   GFS gfs(gfs0,gfs1);
+  typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
 
-  // <<<2b>>> Make subspaces to extract components for visualization
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,0> U0SUB;
+  typedef Dune::PDELab::GridFunctionSubSpace<GFS,0> U0SUB;      // subspaces for later use
   U0SUB u0sub(gfs);
   typedef Dune::PDELab::GridFunctionSubSpace<GFS,1> U1SUB;
   U1SUB u1sub(gfs);
 
-  // <<<3>>> Constraints on function space
-  typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
-
-  // <<<4>>> Make FE function with initial value / Dirichlet b.c.
-  typedef typename GFS::template VectorContainer<Real>::Type V;
-  V xold(gfs,0.0);
+  // <<<3>>> Make FE function with initial value
+  typedef typename GFS::template VectorContainer<Real>::Type U;
+  U uold(gfs,0.0);
   typedef U0Initial<GV,Real> U0InitialType;
   U0InitialType u0initial(gv);
   typedef U1Initial<GV,Real> U1InitialType;
   U1InitialType u1initial(gv);
   typedef Dune::PDELab::CompositeGridFunction<U0InitialType,U1InitialType> UInitialType;
   UInitialType uinitial(u0initial,u1initial);
-  Dune::PDELab::interpolate(uinitial,gfs,xold);
+  Dune::PDELab::interpolate(uinitial,gfs,uold);
 
   // <<<4>>> Make instationary grid operator space
   Real d_0 = 0.00028;
@@ -55,11 +50,11 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   Real kappa = -0.05;
   Real tau = 0.1;
   typedef Example05LocalOperator LOP; 
-  LOP lop(d_0,d_1,lambda,sigma,kappa,2);
+  LOP lop(d_0,d_1,lambda,sigma,kappa,2);                        // spatial part
   typedef Example05TimeLocalOperator TLOP; 
-  TLOP tlop(tau,2);
+  TLOP tlop(tau,2);                                             // temporal part
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MBE;
-  typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,TLOP,CC,CC,MBE> IGOS;
+  typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,U,GFS,GFS,LOP,TLOP,CC,CC,MBE> IGOS;
   IGOS igos(gfs,gfs,lop,tlop);
 
   // <<<5>>> Select a linear solver backend
@@ -67,7 +62,7 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   LS ls(5000,false);
 
   // <<<6>>> Solver for non-linear problem per stage
-  typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
+  typedef Dune::PDELab::Newton<IGOS,LS,U> PDESOLVER;
   PDESOLVER pdesolver(igos,ls);
   pdesolver.setReassembleThreshold(0.0);
   pdesolver.setVerbosityLevel(2);
@@ -78,18 +73,17 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
 
   // <<<7>>> time-stepper
   Dune::PDELab::Alexander2Parameter<Real> method;
-  Dune::PDELab::OneStepMethod<Real,IGOS,PDESOLVER,V,V> osm(method,igos,pdesolver);
+  Dune::PDELab::OneStepMethod<Real,IGOS,PDESOLVER,U,U> osm(method,igos,pdesolver);
   osm.setVerbosityLevel(2);
 
   // <<<8>>> graphics for initial guess
   Dune::PDELab::FilenameHelper fn("example05_Q1Q1");
   {
-    typedef Dune::PDELab::DiscreteGridFunction<U0SUB,V> U0DGF;
-    U0DGF u0dgf(u0sub,xold);
-    typedef Dune::PDELab::DiscreteGridFunction<U1SUB,V> U1DGF;
-    U1DGF u1dgf(u1sub,xold);
+    typedef Dune::PDELab::DiscreteGridFunction<U0SUB,U> U0DGF;
+    U0DGF u0dgf(u0sub,uold);
+    typedef Dune::PDELab::DiscreteGridFunction<U1SUB,U> U1DGF;
+    U1DGF u1dgf(u1sub,uold);
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-    //Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U0DGF>(u0dgf,"u0"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U1DGF>(u1dgf,"u1"));
     vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
@@ -97,29 +91,28 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   }
 
   // <<<9>>> time loop
-  V xnew(gfs,0.0);
-  xnew = xold;
+  U unew(gfs,0.0);
+  unew = uold;
   double dt = dtstart;
   while (time<tend-1e-8)
     {
       // do time step
-      osm.apply(time,dt,xold,xnew);
+      osm.apply(time,dt,uold,unew);
 
       // graphics
-      typedef Dune::PDELab::DiscreteGridFunction<U0SUB,V> U0DGF;
-      U0DGF u0dgf(u0sub,xnew);
-      typedef Dune::PDELab::DiscreteGridFunction<U1SUB,V> U1DGF;
-      U1DGF u1dgf(u1sub,xnew);
+      typedef Dune::PDELab::DiscreteGridFunction<U0SUB,U> U0DGF;
+      U0DGF u0dgf(u0sub,unew);
+      typedef Dune::PDELab::DiscreteGridFunction<U1SUB,U> U1DGF;
+      U1DGF u1dgf(u1sub,unew);
       Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-      //Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U0DGF>(u0dgf,"u0"));
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U1DGF>(u1dgf,"u1"));
       vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
       fn.increment();
 
-      xold = xnew;
+      uold = unew;
       time += dt;
-      if (dt<dtmax-1e-8)
-        dt = std::min(dt*1.1,dtmax);
+      if (dt<dtmax-1e-8)                                        // very simple time
+        dt = std::min(dt*1.1,dtmax);                            // step adaption
     }
 }
