@@ -13,7 +13,6 @@ public:
 
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const {  
-	y[0] = x[0];
-	for (int i=1; i<GV::dimension; i++) y[i] = x[i]*y[i-1];
+	y[0]=x[0]; for (int i=1; i<GV::dimension; i++) y[i]=x[i]*y[i-1];
   }
 };
