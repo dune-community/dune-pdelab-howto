@@ -20,7 +20,7 @@ class Example03LocalOperator :
   B& b;
 public:
   Example03LocalOperator (B& b_, unsigned int intorder_=2)
-    : Example02LocalOperator<B>(b_,intorder_) {}
+    : Example02LocalOperator<B>(b_,intorder_), b(b_) {}
   void setTime (double time)
   {
     b.setTime(time); // enable change of boundary condition type
