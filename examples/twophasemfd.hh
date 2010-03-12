@@ -413,7 +413,7 @@ namespace Dune
                 FieldVector<ctype,dim> localcenter = GenericReferenceElements<ctype,dim>::general(gt).position(0,0);
 
 		typedef typename LFSV::Traits::GridFunctionSpaceType::Traits::BackendType B;
-                rtype S_w_old = B::const_access(x_old, w_cell_space.globalIndex(0));
+                rtype S_w_old = B::access(x_old, w_cell_space.globalIndex(0));
 
                 if (!init_mode)
                 {
@@ -424,7 +424,7 @@ namespace Dune
                 }
                 else
                 {
-                    rtype p_n_old = B::const_access(x_old, n_cell_space.globalIndex(0));
+                    rtype p_n_old = B::access(x_old, n_cell_space.globalIndex(0));
                     r[n_cell_space.localIndex(0)] -= p_n_old;
                     r[w_cell_space.localIndex(0)] -= S_w_old;
                 }

@@ -338,8 +338,8 @@ namespace Dune {
 
 		// contribution from last time step
 		typedef typename LFSV::Traits::GridFunctionSpaceType::Traits::BackendType B;
-		RF p_l_old = B::const_access(pold,lfsv.globalIndex(liquid));
-		RF p_g_old = B::const_access(pold,lfsv.globalIndex(gas));
+		RF p_l_old = B::access(pold,lfsv.globalIndex(liquid));
+		RF p_g_old = B::access(pold,lfsv.globalIndex(gas));
 		RF phi = tp.phi(eg.entity(),cell_center_local);
 		RF s_l = tp.s_l(eg.entity(),cell_center_local,p_g_old-p_l_old);
 		r[liquid] -= phi * s_l * tp.nu_l(eg.entity(),cell_center_local,p_l_old) * cell_volume;
