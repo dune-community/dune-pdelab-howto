@@ -37,13 +37,11 @@
 }
 
 % all after
+\usepackage{tikz}
 \usepackage{graphicx}
 \usepackage{psfrag}
-\usepackage{listings}
-\lstset{language=C++, basicstyle=\ttfamily, 
-  keywordstyle=\color{red}\bfseries, tabsize=4, stringstyle=\ttfamily,
-  commentstyle=\it, extendedchars=true, escapeinside={/*@}{@*/}}
 \usepackage{curves}
+\usepackage{listings}
 %\usepackage{epic}
 \usepackage{calc}
 \usepackage{picinpar}
@@ -60,6 +58,9 @@
 \usepackage{hyperref}
   \setkomafont{pagenumber}{\normalfont\scshape}
   \setkomafont{pagehead}{\normalfont\scshape}
+\lstset{language=C++, basicstyle=\small, 
+  keywordstyle=\bfseries, tabsize=4, stringstyle=\ttfamily,
+  commentstyle=\it, extendedchars=true, escapeinside={/*@}{@*/}}
 }
 
 %The theorems
@@ -78,6 +79,9 @@
 }
 \mode<presentation> 
 {
+\lstset{language=C++, basicstyle=\ttfamily, 
+  keywordstyle=\color{red}\bfseries, tabsize=4, stringstyle=\ttfamily,
+  commentstyle=\it, extendedchars=true, escapeinside={/*@}{@*/}}
 \theoremstyle{definition}
 }
 \newtheorem{Def}{Definition}%[section]
@@ -256,7 +260,7 @@ of finite element methods.
 
 \mode<presentation>
 {
-\begin{frame}
+\begin{frame}[allowframebreaks,allowdisplaybreaks]
 \frametitle{Bibliography}
 \bibliographystyle{alpha}
 \bibliography{lit}

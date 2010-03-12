@@ -15,7 +15,8 @@
 \item Diagonally implicit Runge-Kutta methods.
 \item Explicit Runge-Kutta methods.
 \item Includes Explicit/implicit Euler, Crank-Nicolson, fractional
-step $\theta$, Shu's explicit TVD Runge-Kutta methods \ldots
+step $\theta$, Alexanders S-stable methods \cite{alexander:77}, 
+Shu's explicit TVD Runge-Kutta methods \cite{shu:88}\ldots
 \end{itemize}
 \item Multistep methods (e.g. BDF) could be implemented easily in current approach.
 \item Space-time methods are not yet supported
@@ -242,39 +243,39 @@ Major extensions from the stationary \lstinline{example03} are:
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Instationary Problem Driver}
 \framesubtitle<presentation>{File \texttt{examples/example03\_Q2.hh}}
-\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left, 
 numberstyle=\tiny, numbersep=2pt]{../../examples/example03_Q2.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File examples/example03\_Q2.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=2pt]{../../examples/example03_Q2.hh}
 \end{Lst}}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Instationary Boundary Condition Type}
 \framesubtitle<presentation>{File \texttt{examples/example03\_bctype.hh}}
-\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left, 
 numberstyle=\tiny, numbersep=2pt]{../../examples/example03_bctype.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File examples/example03\_bctype.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=2pt]{../../examples/example03_bctype.hh}
 \end{Lst}}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Instationary Boundary Condition Function}
 \framesubtitle<presentation>{File \texttt{examples/example03\_bcextension.hh}}
-\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left, 
 numberstyle=\tiny, numbersep=2pt]{../../examples/example03_bcextension.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File examples/example03\_bcextension.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=2pt]{../../examples/example03_bcextension.hh}
 \end{Lst}}
 
@@ -300,26 +301,26 @@ numberstyle=\tiny, numbersep=2pt]{../../examples/example03_bcextension.hh}
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Operator for Spatial Part}
 \framesubtitle<presentation>{File \texttt{examples/example03\_operator.hh}}
-\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left, 
 numberstyle=\tiny, numbersep=2pt]{../../examples/example03_operator.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File examples/example03\_operator.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=2pt]{../../examples/example03_operator.hh}
 \end{Lst}}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Operator for Temporal Part}
 \framesubtitle<presentation>{File \texttt{examples/example03\_toperator.hh}}
-\lstinputlisting[basicstyle=\ttfamily\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left, 
 numberstyle=\tiny, numbersep=2pt]{../../examples/example03_toperator.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File examples/example03\_toperator.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=2pt]{../../examples/example03_toperator.hh}
 \end{Lst}}
 
