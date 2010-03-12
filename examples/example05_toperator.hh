@@ -26,8 +26,7 @@ public:
 
   // constructor remembers parameters
   Example05TimeLocalOperator (double tau_, unsigned int intorder_=2)
-    : tau(tau_), intorder(intorder_)
-  {}
+    : tau(tau_), intorder(intorder_) {}
 
   // volume integral depending on test and ansatz functions
   template<typename EG, typename LFSU, typename X, typename LFSV, typename R>

@@ -44,8 +44,8 @@ public:
   void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
   {
     // select the two components (assume Galerkin scheme U=V)
-    typedef typename LFSU::template Child<0>::Type LFSU0;
-    const LFSU0& lfsu0 = lfsu.template getChild<0>();
+    typedef typename LFSU::template Child<0>::Type LFSU0;       // extract components
+    const LFSU0& lfsu0 = lfsu.template getChild<0>();           // with template magic
     typedef typename LFSU::template Child<1>::Type LFSU1;
     const LFSU1& lfsu1 = lfsu.template getChild<1>();
 
@@ -80,9 +80,11 @@ public:
 
         // compute u_0, u_1 at integration point
         RF u_0=0.0;
-        for (size_type i=0; i<lfsu0.size(); i++) u_0 += x[lfsu0.localIndex(i)]*phi0[i];
-        RF u_1=0.0;
-        for (size_type i=0; i<lfsu1.size(); i++) u_1 += x[lfsu1.localIndex(i)]*phi1[i];
+        for (size_type i=0; i<lfsu0.size(); i++) 
+	  u_0 += x[lfsu0.localIndex(i)]*phi0[i];                // localIndex() maps dof within
+        RF u_1=0.0;                                             // leaf space to all dofs
+        for (size_type i=0; i<lfsu1.size(); i++)                // within given element
+	  u_1 += x[lfsu1.localIndex(i)]*phi1[i];
 
         // evaluate gradient of basis functions on reference element
         std::vector<JacobianType> js0(lfsu0.size());
@@ -112,10 +114,12 @@ public:
         RF factor = it->weight()*eg.geometry().integrationElement(it->position());
         // eq. 0: - d_0 \Delta u_0 - (\lambda*u_0 - u_0^3 - \sigma* u_1 + \kappa) = 0
         for (size_type i=0; i<lfsu0.size(); i++) 
-          r[lfsu0.localIndex(i)] += (d_0*(gradu0*gradphi0[i])-(lambda*u_0-u_0*u_0*u_0-sigma*u_1+kappa)*phi0[i])*factor;
+          r[lfsu0.localIndex(i)] += (d_0*(gradu0*gradphi0[i])  
+             -(lambda*u_0-u_0*u_0*u_0-sigma*u_1+kappa)*phi0[i])*factor;
         // eq. 1: - d_1 \Delta u_1 - (u_0 - u_1) = 0
         for (size_type i=0; i<lfsu1.size(); i++) 
-          r[lfsu1.localIndex(i)] += (d_1*(gradu1*gradphi1[i])-(u_0-u_1)*phi1[i])*factor;
+          r[lfsu1.localIndex(i)] += (d_1*(gradu1*gradphi1[i])
+             -(u_0-u_1)*phi1[i])*factor;
       }
   }
 

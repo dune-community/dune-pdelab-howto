@@ -43,12 +43,8 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   Dune::PDELab::interpolate(uinitial,gfs,uold);
 
   // <<<4>>> Make instationary grid operator space
-  Real d_0 = 0.00028;
-  Real d_1 = 0.005;
-  Real lambda = 1.0;
-  Real sigma = 1.0;
-  Real kappa = -0.05;
-  Real tau = 0.1;
+  Real d_0 = 0.00028, d_1 = 0.005;
+  Real lambda = 1.0, sigma = 1.0, kappa = -0.05, tau = 0.1;
   typedef Example05LocalOperator LOP; 
   LOP lop(d_0,d_1,lambda,sigma,kappa,2);                        // spatial part
   typedef Example05TimeLocalOperator TLOP; 
