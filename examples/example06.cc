@@ -71,7 +71,7 @@
 
 #include"example05_operator.hh"
 #include"example05_toperator.hh"
-#include"example06_initial.hh"
+#include"example05_initial.hh"
 #include"example06_bctype.hh"
 #include"example06_Q1Q1.hh"
 
