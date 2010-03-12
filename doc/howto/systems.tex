@@ -246,6 +246,8 @@ numberstyle=\tiny, numbersep=2pt]{../../examples/example05_Q1Q1.hh}
 \item Components are extracted with template magic.
 \item \lstinline{localIndex()} method on local function space maps
 a degree of freedom from this space to all degrees of freedom of the element.
+\item This local operator would work also when $u_0$ and $u_1$ are discretized
+with different finite element spaces.
 \item Same features are used in the temporal part.
 \end{itemize}
 \end{frame}
@@ -279,13 +281,13 @@ numberstyle=\tiny, numbersep=2pt]{../../examples/example05_toperator.hh}
 \begin{frame}<presentation>
 \frametitle{Visualization of Example 5 Results}
 \begin{center}
-\includegraphics[width=0.3\textwidth]{./EPS/example05_0_0.5} $\hspace{1mm}$
-\includegraphics[width=0.3\textwidth]{./EPS/example05_0_5.0} $\hspace{1mm}$
-\includegraphics[width=0.3\textwidth]{./EPS/example05_0_50.0}
-
-\includegraphics[width=0.3\textwidth]{./EPS/example05_1_0.5} $\hspace{1mm}$
-\includegraphics[width=0.3\textwidth]{./EPS/example05_1_5.0} $\hspace{1mm}$
-\includegraphics[width=0.3\textwidth]{./EPS/example05_1_50.0}
+\includegraphics[width=0.3\textwidth]{./EPS/example05_0_05} $\hspace{1mm}$
+\includegraphics[width=0.3\textwidth]{./EPS/example05_0_5} $\hspace{1mm}$
+\includegraphics[width=0.3\textwidth]{./EPS/example05_0_50}\\
+\includegraphics[width=0.3\textwidth]{./EPS/example05_1_05} $\hspace{1mm}$
+\includegraphics[width=0.3\textwidth]{./EPS/example05_1_5} $\hspace{1mm}$
+\includegraphics[width=0.3\textwidth]{./EPS/example05_1_50}\\
+{\tiny $t=0.5$ \hspace{30mm} $t=5.0$ \hspace{30mm} $t=50.0$}
 \end{center}
 \end{frame}
 
@@ -294,18 +296,32 @@ Figure \ref{fig:Example05Results} shows visualizations of the results computed
 with \lstinline{example05}.
 \begin{figure}
 \begin{center}
-\includegraphics[width=0.3\textwidth]{./EPS/example05_0_0.5} $\hspace{1mm}$
-\includegraphics[width=0.3\textwidth]{./EPS/example05_0_5.0} $\hspace{1mm}$
-\includegraphics[width=0.3\textwidth]{./EPS/example05_0_50.0}
+\includegraphics[width=0.3\textwidth]{./EPS/example05_0_05} $\hspace{1mm}$
+\includegraphics[width=0.3\textwidth]{./EPS/example05_0_5} $\hspace{1mm}$
+\includegraphics[width=0.3\textwidth]{./EPS/example05_0_50}
 
-\includegraphics[width=0.3\textwidth]{./EPS/example05_1_0.5} $\hspace{1mm}$
-\includegraphics[width=0.3\textwidth]{./EPS/example05_1_5.0} $\hspace{1mm}$
-\includegraphics[width=0.3\textwidth]{./EPS/example05_1_50.0}
+\medskip
+
+\includegraphics[width=0.3\textwidth]{./EPS/example05_1_05} $\hspace{1mm}$
+\includegraphics[width=0.3\textwidth]{./EPS/example05_1_5} $\hspace{1mm}$
+\includegraphics[width=0.3\textwidth]{./EPS/example05_1_50}
 \end{center}
-\caption{Results for example 5.}
+\caption{Results for example 5 computed with $Q_1$ elements on a $128\times 128$ grid
+at times $0.5, 5$ and $50$ (left to right) and components 0 and 1 (top to bottom).
+Parameters of the FitzHugh-Nagumo model were $d_0=0.00028$, $d_1=0.005$, 
+$\lambda=1$, $\sigma=1$, $\kappa=-0.05$ and $\tau=0.1$.}
 \label{fig:Example05Results}
 \end{figure}
 }
+
+\begin{frame}<presentation>
+\frametitle{Example 5 Animations}
+\begin{center}
+\movie{\includegraphics[width=0.48\textwidth]{./EPS/turing}}{turing.avi}$\hspace{1mm}$
+\movie{\includegraphics[width=0.48\textwidth]{./EPS/turing_3D}}{turing_3D.avi}
+\end{center}
+\end{frame}
+
 
 \subsection{Parallelization}
 
