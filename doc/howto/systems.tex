@@ -323,6 +323,43 @@ $\lambda=1$, $\sigma=1$, $\kappa=-0.05$ and $\tau=0.1$.}
 \end{frame}
 
 
-\subsection{Parallelization}
-
 \subsection{Example 6}
+
+\begin{frame}
+\frametitle{Example 6 Overview}
+We demonstrate orthogonality of concepts by parallelizing example 5.
+
+Example 6 consist of the following files
+\begin{itemize}
+\item \lstinline{example06.cc} -- the file to be compiled, main function. 
+\item \lstinline{example06_Q1Q1.hh} -- parallel driver for \textit{overlapping} grids. 
+\item \lstinline{example06_bctype.hh} -- dummy boundary condition type for overlapping constraints class.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Main Features of the Parallel Driver}
+\framesubtitle{About \lstinline{example06_Q1Q1.hh}}
+\begin{itemize}
+\item Needs \lstinline{OverlappingConformingDirichletConstraints}
+to assemble Dirichlet constraints at artificial processor boundaries.
+\item Needs boundary condition type function to call \lstinline{constraints()} function.
+\item Operators and initial conditions are taken from example 5.
+\item Select a parallel solver backend for overlapping grids.
+\item Invoke driver with a parallel overlapping grid (see \lstinline{example06.cc}).
+\item Thats it.
+\end{itemize}
+\end{frame}
+
+\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\frametitle<presentation>{Parallel Instationary Nonlinear Driver}
+\framesubtitle<presentation>{File \texttt{examples/example06\_Q1Q1.hh}}
+\lstinputlisting[basicstyle=\tiny,numbers=left, 
+numberstyle=\tiny, numbersep=2pt]{../../examples/example06_Q1Q1.hh}
+\end{frame}
+\mode<article>{
+\begin{Lst}[File examples/example06\_Q1Q1.hh] \mbox
+\nopagebreak
+\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+numberstyle=\tiny, numbersep=2pt]{../../examples/example06_Q1Q1.hh}
+\end{Lst}}
