@@ -59,7 +59,7 @@ u \, \nabla\cdot v \, dx
 ds .
 \end{split}
 \end{equation*}
-Discrete problem in residual for reads
+Discrete problem in residual form reads
 \begin{equation*}
 (\sigma_h, u_h) \in (w_h+\tilde{S}_h)\times W_h : \quad 
 r_h^\text{mixed}\left((\sigma_h,u_h),(v,q)\right) = 0 \quad \forall
@@ -106,7 +106,7 @@ Composite function spaces have tree structure:
 \end{frame}
 
 \begin{frame}
-\frametitle<presentation>{Implementation of Function Space Composition}
+\frametitle{Implementation of Function Space Composition}
 \begin{itemize}
 \item \lstinline{Dune::PDELab::PowerGridFunctionSpace<GFS,k,M>} builds a
 new grid function space that is \lstinline{k}-times the product of \lstinline{GFS}.
@@ -133,7 +133,7 @@ numberstyle=\tiny, numbersep=2pt]{../../examples/thinterpolate.hh}
 \mode<article>{
 \begin{Lst}[File examples/thinterpolate.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=2pt]{../../examples/thinterpolate.hh}
 \end{Lst}}
 
@@ -233,7 +233,7 @@ numberstyle=\tiny, numbersep=2pt]{../../examples/example05_Q1Q1.hh}
 \mode<article>{
 \begin{Lst}[File examples/example05\_Q1Q1.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=2pt]{../../examples/example05_Q1Q1.hh}
 \end{Lst}}
 
@@ -363,3 +363,6 @@ numberstyle=\tiny, numbersep=2pt]{../../examples/example06_Q1Q1.hh}
 \lstinputlisting[basicstyle=\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=2pt]{../../examples/example06_Q1Q1.hh}
 \end{Lst}}
+
+\cleardoublepage
+

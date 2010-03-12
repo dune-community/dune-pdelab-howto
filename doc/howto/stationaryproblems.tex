@@ -511,7 +511,7 @@ where $w$ is an extension of $g$ to $\Omega$ and $u = w + \bar{u}$.
 \begin{frame}
 \frametitle{Finite Element Spaces in Constrained Case}
 \begin{itemize}
-\item Define appropriate finite-dimensional subspaces:
+\item Define appropriate finite-dimensional subspace:
 \begin{equation*}
 \tilde{U}_h^k = \left \{ u \in U_h^k \,:\, u|_{\Gamma_D} = 0 \right\} \subset U_h^k.
 \end{equation*}
@@ -854,3 +854,261 @@ numberstyle=\tiny, numbersep=2pt]{../../examples/example04_operator.hh}
 numberstyle=\tiny, numbersep=2pt]{../../examples/example04_operator.hh}
 \end{Lst}}
 
+
+\subsection{Other Schemes to Solve the Model Problem}
+
+\paragraph{Vertex-centered Finite Volumes}
+
+This method uses a discontinuous test space that is constant on
+``cells''. Let us introduce some notation to define this formally.
+
+\begin{frame}<article>
+\frametitle<presentation>{Vertex-centered Finite Volumes}
+\begin{window}[0,r,{
+\psfrag{bi}{$c_i$}
+\psfrag{vi}{$z_i$}
+\psfrag{bj}{$c_j$}
+\psfrag{vj}{$z_j$}
+\includegraphics[width=0.4\textwidth]{./EPS/SecMesh2D}},{}]
+$E_h^d=\{z_0,\ldots,z_{N_h^d-1}\}$ are the vertices of the mesh
+(entities of codimension $d$). 
+
+$x_z$ is the position of $z\in E_h^d$.
+
+$C_h = \{c_0,\ldots,c_{N_h^d-1}\}$ are ``cells'' around each vertex of
+the mesh.
+\end{window}
+
+$\Omega_c$ is the domain of $c\in C_h$ and $x_c=x_z$ when $c$ is the
+cell around $z$.
+
+Define the \textit{discontinuous} test function space:
+\begin{align*}
+V_h^0 & = \{ v\in L_2(\Omega) \,|\, \forall c\in C_h : v|_{\Omega_c} =
+\text{const} \},\\
+\tilde{V}_h^0 &= \{ v\in V_h \,|\, \forall z\in E_h^d, x_z\in\Gamma_D : v(x_z)=0\}.
+\end{align*}
+
+\end{frame}
+
+\begin{frame}<article>
+\frametitle<presentation>{Vertex Centered Finite Volumes (Contd.)}
+The discontinuities are located on the \textit{skeleton} which is given by:
+\begin{equation*}
+\Gamma_h^{\text{int}} = \{\gamma_{e,c,c^\prime} \,|\,
+\gamma_{e,c,c^\prime} = \Omega_e \cap \partial\Omega_c \cap
+\partial\Omega_{c^\prime} \}
+\end{equation*}
+and the boundary faces are given by
+\begin{equation*}
+\Gamma_h^{\text{ext}} = \{\gamma_{e,c} \,|\,
+\gamma_{e,c} = \partial\Omega_e \cap \partial\Omega_c \cap
+\partial\Omega \}.
+\end{equation*}
+
+For $\gamma\in\Gamma_h^{\text{int}}$, $\nu_\gamma(x)$ is
+the \textit{unique} unit
+normal vector to $\gamma$ in point $x$. 
+
+Similarly, for
+$\gamma\in\Gamma_h^{\text{ext}}$, $\nu_\gamma(x)$ is the unit outer
+normal vector.
+
+The jump of a function $v\in V_h$ in
+$x\in\gamma\in\Gamma_h^{\text{int}}$ given by
+\begin{equation*}
+[v]_\gamma(x) = \lim_{\varepsilon\to 0-} v(x+\varepsilon \nu_\gamma(x))
+-  \lim_{\varepsilon\to 0+} v(x+\varepsilon \nu_\gamma(x))\quad.
+\end{equation*}
+\end{frame}
+
+\begin{frame}<article>
+\frametitle<presentation>{Vertex Centered Finite Volumes (Contd.)}
+The discrete problem then reads as follows. Find $u_h\in w_h+\tilde{U}_h^1$ s.t.
+\begin{equation}
+\underbrace{- \sum_{\gamma\in\Gamma_h^{\text{int}}} \int_\gamma
+\nabla u_h \cdot \nu_\gamma \,[v]\diffd s
++ \sum_{\substack{\gamma\in\Gamma_h^{\text{ext}},\\ \gamma\subseteq\Gamma_N}}
+\int_\gamma j v \diffd s\quad
+- \int_\Omega fv \diffd x}_{= r_h^\text{FE}(u_h,v)} = 0,
+\quad \forall v\in \tilde{V}_h^0.
+\end{equation}
+$\tilde{U}_h^1$ is the linear conforming finite element space and $w_h$ is
+defined as before.
+
+Typically, the integrals are evaluated with low order quadrature rules
+such as the midpoint rule.
+
+This gives a simple example with non-conforming residual form and
+different trial and test functions.
+\end{frame}
+
+
+\paragraph{Discontinuous Galerkin}
+
+\begin{frame}<article>
+\frametitle<presentation>{Discontinuous Galerkin Finite Element
+Method}
+Let $k : E^0_h \to \mathbb{N}_0$ be a function that associates an
+nonnegative integer with each element.
+
+Define the discrete function space
+\begin{equation*}
+W_h^k = \{u\in L_2(\Omega) \,|\, \forall e\in E^0_h : u|_{\Omega_e} \in P_{k(e)}\}.
+\end{equation*}
+
+For any $x\in\Omega_f, f\in E_h^1$, define the jump of a function
+$u\in W_h^k$:
+\begin{equation*}
+\label{Eq:Jump}
+[u]_f(x) = \lim\limits_{\epsilon\to 0-} u(x+\epsilon\nu_f) - 
+\lim\limits_{\epsilon\to 0+} u(x+\epsilon\nu_f).
+\end{equation*}
+
+For any $x\in\Omega_f, f\in E_h^1$, define the average of a function
+$u\in W_h^k$:
+\begin{equation*}
+\label{Eq:Average}
+\langle u\rangle_f(x) = \frac{1}{2}\left(\lim\limits_{\epsilon\to 0-} u(x+\epsilon
+\nu_f) +  \lim\limits_{\epsilon\to 0+} u(x+\epsilon
+\nu_f)\right ).
+\end{equation*}
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle<presentation>{Discontinuous Galerkin Finite Element
+Method (Contd.)}
+The discrete problem for the OBB method \cite{OBB98} then reads
+\begin{equation*}
+u_h \in W^k_h \quad : \quad r_h^\text{OBB}(u_h,v) = 0 \qquad \forall v\in W_h^k,
+\end{equation*}
+where
+\begin{equation*}
+\begin{split}
+r_h^\text{OBB}(u &,v) = \sum_{e\in E_h^0} \int_{\Omega_e} \nabla u\cdot \nabla v
+ - fv \, dx \\
+&+ \sum_{f\in E^1_h} \int_{\Omega_f} \langle \nabla v\cdot\nu_f\rangle [u]_f
+- [v]_f \langle \nabla u\cdot \nu_f\rangle \, ds\\
+&+ \sum_{\substack{b\in B^1_h\\\Omega_b\subseteq\Gamma_D}} \int_{\Omega_b} (\nabla v\cdot\nu_f) (u-g)
+- v (\nabla u\cdot \nu_f) \, ds + \sum_{\substack{b\in
+B^1_h\\\Omega_b\subseteq\Gamma_N}} \int_{\Omega_b} j v \,ds .
+\end{split}
+\end{equation*}
+Note the seperation into volume, skeleton and boundary terms.
+\end{frame}
+
+
+\paragraph{Crouzeix-Raviart}
+
+\begin{frame}
+\frametitle<presentation>{Crouzeix-Raviart Element}
+Here we use the following discrete spaces:
+\begin{align*}
+X_h &= \{u\in L_2(\Omega) \,|\, u|_{\Omega_e}\in P_1 \text{ and $u$
+continuous at face centers}\},\\
+\tilde{X}_h &= \{u\in X_h \,|\, \text{``$u=0$'' on $\Gamma_D$}\}.
+\end{align*}
+
+The discrete problem then reads
+\begin{equation*}
+u_h \in w_h+\tilde{X}_h \quad : \quad r_h^\text{CR}(u_h,v) = 0 \qquad \forall v\in \tilde{X}_h,
+\end{equation*}
+where
+\begin{equation*}
+\begin{split}
+r_h^\text{CR}(u &,v) = \sum_{e\in E_h^0} \int_{\Omega_e} \nabla u\cdot \nabla v \, dx
++ \sum_{\substack{b\in
+B^1_h\\\Omega_b\subseteq\Gamma_N}} \int_{\Omega_b} j v \,ds  - \sum_{e\in E_h^0} \int_{\Omega_e} fv \, dx .
+\end{split}
+\end{equation*}
+Again $w_h\in X_h$ such that ``$w_h=g$'' on $\Gamma_D$.
+\end{frame}
+
+
+\subsection{Properties of the Residual Form}
+
+\begin{frame}
+\frametitle<presentation>{Weighted Residual Formulation}
+\begin{Def}[Weighted Residual Formulation]
+We claim that all problems we ever want to solve can be written in the form
+\begin{equation}
+\text{Find } u_h\in w_h + \tilde{U}_h : \qquad r_h(u_h,v) =
+0 \qquad \forall v\in \tilde{V}_h.  
+\end{equation}
+Where:
+\begin{itemize}
+\item $\tilde{U}_h\subseteq U_h$, $\tilde{V}_h\subseteq V_h$ are
+finite-dimensional function spaces and corresponding subspaces.
+\item Affine shift: $u_h\in w_h + \tilde{U}_h$ for a given $w_h\in U_h$ means
+$u_h = w_h + \tilde{u}_h$ for some $\tilde{u}_h\in\tilde{U}_h$.
+\item $r_h : U_h \times V_h \to \mathbb{K}$ is the \textit{residual form}.
+\begin{itemize}
+\item $r_h$ may be \textit{nonlinear} in its first argument.
+\item $r_h$ \textit{is always linear} in its second argument.
+\item $r_h$ may depend on the grid in non-conforming methods.
+\end{itemize}
+\item We assume that this problem has a unique solution. \hfill$\square$
+\end{itemize}
+\end{Def}
+\end{frame}
+
+The examples above imply the following properties of $r_h$.
+
+\begin{frame}
+\frametitle<presentation>{Properties of the Residual Form}
+\begin{Pro}[Splitting]
+$r_h$ can be split into element, skeleton and boundary sums
+\begin{equation*}
+r_h(u,v) = \sum_{e\in E^0_h} r^\text{vol}_{h,e}(u,v) + \sum_{f\in E^1_h} r^\text{skel}_{h,f}(u,v)
++ \sum_{b\in B^1_h} r^\text{bnd}_{h,b}(u,v)
+\end{equation*}
+$r_h$ can be split into a part depending
+on $u$ and a part independent of $u$:
+\begin{equation*}
+r_h(u,v) = \alpha_h(u,v) + \lambda_h(v) .
+\end{equation*}
+
+Together we obtain
+\begin{equation}
+\begin{split}
+r_h(u,v) &= \sum_{e\in E^0_h} \alpha^\text{vol}_{h,e}(u,v) + \sum_{f\in E^1_h} \alpha^\text{skel}_{h,f}(u,v)
++ \sum_{b\in B^1_h} \alpha^\text{bnd}_{h,b}(u,v)\\
+&\quad + \sum_{e\in E^0_h} \lambda^\text{vol}_{h,e}(v) + \sum_{f\in E^1_h} \lambda^\text{skel}_{h,f}(v)
++ \sum_{b\in B^1_h} \lambda^\text{bnd}_{h,b}(v) .
+\end{split}
+\end{equation}
+\hfill$\square$
+\end{Pro}
+\end{frame}
+
+\begin{frame}
+\frametitle<presentation>{Properties of the Residual Form (Contd.)}
+\begin{Pro}[Linearity]\label{Ass:Linearity}
+$r_h$, as well as, $r^\text{vol}_{h,e}$, $r^\text{skel}_{h,f}$ and
+$r^\text{bnd}_{h,b}$ are linear in their second
+argument.
+
+As a consequence we have $r_h(u,0)=0$.\hfill$\square$
+\end{Pro}
+\begin{Pro}[Localization]
+We assume that the following holds:
+\begin{subequations}
+\begin{align*}
+e&\in E^0_h : & r^\text{vol}_{h,e}(u,v) &= r^\text{vol}_{h,e}(\chi_{\Omega_e} u,\chi_{\Omega_e} v),\\
+f&\in E^1_h : & r^\text{skel}_{h,f}(u,v) &=
+r^\text{skel}_{h,f}(\chi_{\Omega_{l(f)}\cup\Omega_{r(f)}}
+u,\chi_{\Omega_{l(f)}\cup\Omega_{r(f)}} v),\\ 
+b&\in B^1_h : & r^\text{bnd}_{h,b}(u,v) &= r^\text{bnd}_{h,b}(\chi_{\Omega_{l(b)}} u,\chi_{\Omega_{l(b)}} v).
+\end{align*}
+\end{subequations}
+where $\chi_\omega(x) : \omega \to \{0,1\}$ is the characteristic function of $\omega$.
+
+This is a consequence of  $r^\text{vol}_{h,e}$, $r^\text{skel}_{h,e}$
+and $r^\text{bnd}_{h,e}$ being integrals over an element, a face or a
+boundary face.
+\end{Pro}
+\end{frame}
+
+\cleardoublepage

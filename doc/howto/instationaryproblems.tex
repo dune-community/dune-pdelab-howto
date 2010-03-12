@@ -226,13 +226,13 @@ Major extensions from the stationary \lstinline{example03} are:
 \begin{itemize}
 \item Boundary condition type and boundary condition extension depend on time.
 \begin{itemize}
-\item Keep interface; add method \lstinline{setTime()}
+\item Keep interface, add method \lstinline{setTime()}.
 \end{itemize}
 \item Two local operators are needed now
 \begin{itemize}
 \item One for $r(u,v;t)$.
 \item Another for $m(u,v;t)$.
-\item Same idea keep interface, add \lstinline{setTime()} method.
+\item Same idea: keep interface, add \lstinline{setTime()} method.
 \end{itemize}
 \item Class \lstinline{InstationaryGridOperatorSpace} takes two local operators.
 \item Class \lstinline{OneStepMethod} implements time-stepping scheme.
@@ -331,4 +331,5 @@ numberstyle=\tiny, numbersep=2pt]{../../examples/example03_toperator.hh}
 \end{center}
 \end{frame}
 
+\cleardoublepage
 
