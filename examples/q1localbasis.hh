@@ -4,8 +4,8 @@ template<class D, class R>
 class Q1LocalBasis
 {
 public:
-  typedef Dune::LocalBasisTraits<D,2,Dune::FieldVector<D,2>,R,1,Dune::FieldVector<R,1>,
-			   Dune::FieldMatrix<R,1,2>, 1> Traits;
+  typedef Dune::LocalBasisTraits<D,2,Dune::FieldVector<D,2>,R,1,
+    Dune::FieldVector<R,1>,Dune::FieldMatrix<R,1,2>, 1> Traits;
 
   unsigned int size () const { return 4; }
 
