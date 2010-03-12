@@ -15,37 +15,39 @@ void thinterpolate (const GV& gv)
   typedef double R;
   const int dim = GV::dimension;
 
-  // make finite element maps
+  //  make Q_1 grid function space
   typedef Dune::PDELab::Q12DLocalFiniteElementMap<D,R> Q12DFEM;
   Q12DFEM q12dfem;                    // Q1 finite elements
-  typedef Dune::PDELab::Q22DLocalFiniteElementMap<D,R> Q22DFEM;
-  Q22DFEM q22dfem;                    // Q2 finite elements
-  
-  // make grid function spaces
   typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM> Q1GFS;
   Q1GFS q1gfs(gv,q12dfem);            // Q1 space
+  
+  // make Q_2 grid function spaces
+  typedef Dune::PDELab::Q22DLocalFiniteElementMap<D,R> Q22DFEM;
+  Q22DFEM q22dfem;                    // Q2 finite elements
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
   Q2GFS q2gfs(gv,q22dfem);            // Q2 space
+
+  // make velocity grid function space
   typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,dim> VGFS;
   VGFS vgfs(q2gfs);                   // velocity space
+
+  // make Taylor-Hood grid function space
   typedef Dune::PDELab::CompositeGridFunctionSpace<
     Dune::PDELab::GridFunctionSpaceLexicographicMapper,
-	  VGFS,Q1GFS> THGFS;              
+    VGFS,Q1GFS> THGFS;              
   THGFS thgfs(vgfs,q1gfs);            // Taylor-Hood space
 
   // make coefficent vector
   typedef typename THGFS::template VectorContainer<R>::Type X;
   X x(thgfs,0.0);                     // one x for all dofs !
 
-  // make composite analytic function
+  // interpolate from analytic function
   typedef U<GV,R> Pressure;
   Pressure p(gv);                     // pressure component
   typedef V<GV,R> Velocity;
   Velocity v(gv);                     // velocity component
   typedef Dune::PDELab::CompositeGridFunction<Velocity,Pressure> THF;
   THF thf(v,p);
-
-  // do interpolation
   Dune::PDELab::interpolate(thf,thgfs,x);
 
   // select subspaces
