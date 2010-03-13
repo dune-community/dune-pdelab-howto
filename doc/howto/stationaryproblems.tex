@@ -8,11 +8,21 @@
 
 \begin{frame}
 \frametitle<presentation>{Abstraction}
+\textbf{Code reuse requires abstraction.}
 \begin{itemize}
-\item Code reuse requires abstraction.
-\item Abstractions for function spaces.
-\item Abstractions for PDE discretizations.
+\item Put mathematical problem in abstract form.
+\item Approach is based on \textit{weighted residual formulation}.
+\item Represent mathematical concepts by classes.
 \end{itemize}
+\textbf{Flexibility means orthogonality.}
+\begin{itemize}
+\item Features that can be combined independently:
+\item various kinds of grids and function spaces.
+\item sequential and parallel (overlapping/nonoverlapping).
+\item stationary and instationary.
+\item linear and nonlinear.
+\end{itemize}
+We demonstrate these concepts in the following.
 \end{frame}
 
 \subsection{Unconstrained Elliptic Model Problem}
@@ -234,7 +244,7 @@ It consists of the following files:
 \item \lstinline{example01a_RT.hh} -- same with nonconforming rotated bilinear (``Rannacher-Turek'' element).
 \item \lstinline{example01a_operator.hh} -- local operator implementing $\bm{\alpha}_{h,e}^{\text{vol}}$.
 \item \lstinline{example01b_Q2.hh} -- solve nonlinear variant of the model problem \eqref{Eq:Example01} with $Q_2$ elements.
-\item \lstinline{example01b_operator.hh} -- the local operator for the nonlinear variant.
+\item \lstinline{example01b_operator.hh} -- local operator for nonlinear variant.
 \end{itemize}
 \end{frame}
 
@@ -717,6 +727,35 @@ In practice one would access parameter functions such as $a, f, j$ and the bound
 type from the implementation of the local operator.
 \end{frame}
 
+\begin{frame}
+\frametitle{Summary: Implementation of Mathematical Concepts}
+\begin{itemize}
+\item A \textit{grid function space} represents an unconstrained finite-dimensional
+function space on a grid:
+\begin{itemize}
+\item \lstinline{gfs} $\quad\leftrightarrow\quad$ $U_h(E_h^0)$.
+\end{itemize}
+\item A grid function space with a \textit{constraints container} represents a constrained 
+finite-dimensional function space:
+\begin{itemize}
+\item \lstinline{gfs} $+$ \lstinline{cc} $\quad\leftrightarrow\quad$ $\tilde{U}_h(E_h^0)$.
+\end{itemize}
+\item A \textit{vector container} represents a vector space of coefficients:
+\begin{itemize}
+\item \lstinline{u} $\quad\leftrightarrow\quad$ $\mathbf{U}$.
+\end{itemize}
+\item A \textit{grid operator space} realizes computations with residual forms:
+\begin{itemize}
+\item \lstinline{gos.residual(u,r)} $\quad\leftrightarrow\quad$ $\mathbf{r} = \mathcal{R}(\mathbf{u})$.
+\item \lstinline{gos.jacobian(u,A)} $\quad\leftrightarrow\quad$ $\mathbf{A} = \nabla\mathcal{R}(\mathbf{u})$.
+\end{itemize}
+\item A \textit{matrix container} represents a linear map (not shown yet):
+\begin{itemize}
+\item \lstinline{A} $\quad\leftrightarrow\quad$ $\mathbf{A}\in L(\mathbf{U},\mathbf{V})$.
+\end{itemize}
+\end{itemize}
+\end{frame}
+
 \subsection{Cell-centered Finite Volumes}
 
 \begin{frame}
@@ -830,7 +869,12 @@ Optionally it can be called from each element touching the intersection.
 \lstinline{alpha_boundary} has the following signature: 
 \begin{lstlisting}[basicstyle=\scriptsize]
 template<typename IG, typename LFSU, typename X, typename LFSV, 
-         typename R>void alpha_skeleton (const IG& ig,            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,            R& r_s, R& r_n) const\end{lstlisting}
+         typename R>
+void alpha_skeleton (const IG& ig, 
+           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+           R& r_s, R& r_n) const
+\end{lstlisting}
 Where the arguments are:
 \begin{itemize}
 \item \lstinline{ig} -- interior intersection.
