@@ -21,8 +21,8 @@ class Example03LocalOperator :
 public:
   Example03LocalOperator (B& b_, unsigned int intorder_=2)
     : Example02LocalOperator<B>(b_,intorder_), b(b_) {}
-  void setTime (double time)
-  {
+  void preStep (double time, double dt, int stages) {
     b.setTime(time); // enable change of boundary condition type
+    Dune::PDELab::InstationaryLocalOperatorDefaultMethods<double>::preStep(time,dt,stages);
   }
 };
