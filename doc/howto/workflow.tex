@@ -6,225 +6,82 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{frame}
-  \frametitle<presentation>{Abstraction}
-  \begin{itemize}
-    \item Real world problems have complex computational domains.
-      require abstraction.
-    \item Abstractions for function spaces.
-    \item Abstractions for PDE discretizations.
-  \end{itemize}
-\end{frame}
-
+%-------------------------------------------------------------------
 \subsection{Overview}
 % Bilder
 % Tool Chain
 
-%\begin{frame}
-%\frametitle{Problem and Weak Formulation}
-%Consider the following model problem:
-%\begin{subequations} \label{Eq:Example01}
-%\begin{align*}
-%-\Delta u + a u &= f &&\text{in $\Omega\subset\mathbb{R}^d$ (open, connected)},\\
-%\nabla u \cdot n &= 0 &&\text{on $\partial\Omega$}.
-%\end{align*}
-%\end{subequations}
-%\medskip
-%Weak formulation. Set $U = H^1(\Omega)$.
-%\begin{equation*}
-%u\in U \quad : \quad \underbrace{\int_\Omega \nabla u \cdot \nabla v +
-%a u v - f v \,dx}_{r(u,v)} = 0 \qquad \forall v\in U.
-%\end{equation*}
-%Has unique solution for $a(x)\geq a_0>0$.
-%
-%We call $r(u,v)$ residual form.
-%
-%Other boundary conditions are treated later.
-%\end{frame}
-%
-%\begin{frame}
-%\frametitle{Conforming Finite Element Method}
-%Needs conforming triangulation $E_h^0 = \{e_o,\ldots,e_{N_h^0-1} \}$ of $\Omega$.
-%
-%Define the conforming finite element space
-%\begin{equation*}
-%U_h^k = \left\{  u\in C^0(\overline{\Omega}) \ : \ u|_{\Omega_e} \in P_{k_e} \forall e\in E_h^0\right\} \subset H^1(\Omega).
-%\end{equation*}
-%\begin{itemize}
-%\item $\Omega_e$: domain of element $e\in E_h^0$.
-%\item $P_k$: Polynomials of degree $k$.
-%\item $k_e$: Polynomial degree on element $e$.
-%\end{itemize}
-%Discrete problem then reads:
-%\begin{equation*}
-%u_h \in U_h^k \quad : \quad r(u_h,v) = 0 \qquad \forall v \in U_h^k.
-%\end{equation*}
-%\end{frame}
-%
-%\begin{frame}
-%\frametitle{Affine Finite Element Spaces}
-%Construct functions in $U_h^k$ from local basis on reference elements:
-%\begin{equation*}
-%U_h^k\ni u_h(x) = \sum_{e\in E_h^0} \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)}
-%\, \hat{\phi}_{e,l}(\mu_e^{-1}(x)) \, \chi_e(x).
-%\end{equation*}
-%\begin{itemize}
-%\item $n(e)$: Number of basis functions on element $e\in E_h^0$.
-%\item $\hat\Omega_e$: Reference element of element $e\in E_h^0$.
-%\item $\mu_e : \hat\Omega_e \to \Omega_e$: Element transformation.
-%\item $\hat\phi_{e,l} : \hat\Omega_e \to \mathbb{R}$: Local basis function.
-%\item $\mathcal{I}_{U_h^k} = \{0,\ldots,N_{U_h^k}-1\}$: Global index set.
-%\item $g : E_h^0 \times \mathbb{N}_0 \to \mathcal{I}_{U_h^k}$: Local to global index map.
-%\item $\mathbf{u} \in \mathbf{U} = \mathbb{R}^{\mathcal{I}_{U_h^k}}$: Global vector of degrees of freedom.
-%\item $\chi_e$: Characteristic function of element $e$.
-%\end{itemize}
-%Note: We might have a different set of basis functions on each element.
-%\end{frame}
-%
-%\begin{frame}
-%\frametitle{Global Basis; Finite Element Isomorphism}
-%For $j\in \mathcal{I}_{U_h^k}$ set $L(j) = \{ (e,l) \, : \, g(e,l) = j\}$ (all local degrees
-%of freedom associated with global degree of freedom $j$.
-%
-%Global basis:
-%\begin{equation*}
-%\Phi_{U_h^k} = \left\{ \phi_j(x) = \sum_{(e,l)\in L(j)} \hat{\phi}_{e,l}(\mu_e^{-1}(x)) \, \chi_e(x)
-%\, : \, j \in \mathcal{I}_{U_h^k} \right\}.
-%\end{equation*}
-%
-%Finite Element Isomorphism:
-%\begin{align*}
-%\text{FE}_{\Phi_{U_h^k}} : \mathbf{U} &\to U_h^k, &
-%\text{FE}_{\Phi_{U_h^k}}(\mathbf{u}) &= \sum_{j\in \mathcal{I}_{U_h^k}} (\mathbf{u})_j \phi_j.
-%\end{align*}
-%\end{frame}
-%
-%\begin{frame}
-%\frametitle{Algebraic Problem}
-%Using the basis the discrete problem can be written equivalently as a (in general nonlinear) algebraic problem:
-%\begin{align*}
-%&&& u_h \in U_h^k \quad : \quad r(u_h,v) = 0 && \forall v \in U_h^k,\\
-%&\Leftrightarrow && \mathbf{u}\in\mathbf{U} \quad : \quad
-%r\left(\text{FE}_{\Phi_{U_h^k}}(\mathbf{u}),\phi_i\right) = 0 &&
-%i\in\mathcal{I}_{U_h^k}, \\
-%&\Leftrightarrow && \mathbf{u}\in\mathbf{U} \quad : \quad
-%\mathcal{R}(\mathbf{u}) = \mathbf{0}.
-%\end{align*}
-%where
-%\begin{align*}
-%\mathcal{R} &: \mathbf{U} \to \mathbf{U}, &
-%\left(\mathcal{R}(\mathbf{u}) \right)_i :=  r\left(\text{FE}_{\Phi_{U_h^k}}(\mathbf{u}),\phi_i\right) .
-%\end{align*}
-%
-%For linear PDEs $\mathcal{R}$ is affine linear: $\mathcal{R}(\mathbf{u}) = \mathbf{A} \mathbf{u} - \mathbf{b}$.
-%\end{frame}
-%
-%\begin{frame}
-%\frametitle{Residual Assembly}
-%\begin{equation*}
-%\begin{split}
-%&(\mathcal{R}(\mathbf{u}) )_i  = r\left(\text{FE}(\mathbf{u}),\phi_i\right)
-%= \sum_{e\in E_h^0} \int_{\Omega_e} \nabla \text{FE}(\mathbf{u}) \cdot \nabla\phi_i
-%+ a \, \text{FE}_{\Phi_{U_h^k}}(\mathbf{u}) \phi_i - f \phi_i \,dx\\
-%&= \sum_{e\in E_h^0} \int_{\Omega_e}
-%\left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \nabla_x \hat\phi_{e,l}(\mu_e^{-1}(x))\right]
-%\cdot \nabla_x \underbrace{\hat\phi_{e,m}}_{g(e,m)=i}(\mu_e^{-1}(x))\\
-%& + a \, \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \hat\phi_{e,l}(\mu_e^{-1}(x)) \right] \hat\phi_{e,m}(\mu_e^{-1}(x))
-%- f \hat\phi_{e,m}(\mu_e^{-1}(x)) \, dx\\
-%&= \sum_{e\in E_h^0} \int_{\hat\Omega_e}
-%\Biggl\{\left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} (\nabla \mu_e(\hat{x}))^{-T}\nabla_{\hat{x}} \hat\phi_{e,l}(\hat{x})\right]
-%\cdot (\nabla \mu_e(\hat{x}))^{-T} \nabla_{\hat{x}} \hat\phi_{e,m}(\hat{x})\\
-%& + a \, \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \hat\phi_{e,l}(\hat{x}) \right] \hat\phi_{e,m}(\hat{x})
-%- f \hat\phi_{e,m}(\hat{x}) \Biggr\} \text{det} \nabla\mu_e(\hat{x}) \, d\hat{x} .
-%\end{split}
-%\end{equation*}
-%\end{frame}
-%
-%\begin{frame}
-%\frametitle{Local Operator}
-%Define restriction to local degrees of freedom
-%\begin{align*}
-%\mathbf{U}_e &= \mathbb{R}^{n(e)}, &
-%\mathbf{R}_e &: \mathbf{U} \to \mathbf{U}_e, &
-%\left(\mathbf{U}_e(\mathbf{u})\right)_l &= (\mathbf{u})_{g(e,l)} \quad 0\leq l < n(e).
-%\end{align*}
-%Define \textit{local operator} $\bm{\alpha}^{\text{vol}}_{h,e} : \mathbf{U}_e \to \mathbf{U}_e$ (user part):
-%\begin{equation*}
-%\begin{split}
-%&\bigl(\bm{\alpha}^{\text{vol}}_{h,e}({\color{cyan}\mathbf{u}})\bigr)_m  = \\
-%&\sum_{e\in E_h^0} \int_{\hat\Omega_e}
-%\Biggl\{\left[ \sum_{l=0}^{n(e)-1} ({\color{cyan}\mathbf{u}})_{l} {\color{purple}
-%(\nabla \mu_e(\hat{x}))^{-T}} {\color{blue}\nabla_{\hat{x}} \hat\phi_{e,l}(\hat{x})} \right]
-%\cdot {\color{purple}(\nabla \mu_e(\hat{x}))^{-T}} {\color{blue}\nabla_{\hat{x}} \hat\phi_{e,m}(\hat{x})}\\
-%& + {\color{olive} a} \, \left[ \sum_{l=0}^{n(e)-1} ({\color{cyan}\mathbf{u}})_{l}
-% {\color{blue}\hat\phi_{e,l}(\hat{x})} \right] {\color{blue}\hat\phi_{e,m}(\hat{x})}
-%- {\color{olive} f} {\color{blue}\hat\phi_{e,m}(\hat{x})} \Biggr\} {\color{purple}\text{det} \nabla\mu_e(\hat{x})} \, d\hat{x} .
-%\end{split}
-%\end{equation*}
-%Residual assembly is written generically:
-%\begin{equation*}
-%\mathcal{R}(\mathbf{u}) = \sum_{e\in E_h^0} \mathbf{R}_e^T \bm{\alpha}^{\text{vol}}_{h,e} (\mathbf{R}_e \mathbf{u})
-%\end{equation*}
-%\end{frame}
-%
-%
-%\begin{frame}
-%\frametitle{Solving the Algebraic System}
-%Use damped Newton method.
-%
-%Given $\mathbf{u}^0\in\mathbf{U}$. Compute $\mathbf{r}^0 = \mathcal{R}(\mathbf{u}^0)$. Set $k=0$.
-%
-%Iterate until convergence:
-%\begin{enumerate}
-%\item Assemble Jacobian System $\mathbf{A}^k = \nabla\mathcal{R}(\mathbf{u}^k)$.
-%\item Solve $\mathbf{A}^k \mathbf{z}^k = \mathbf{r}^k$ with some linear solver.
-%\item Update $\mathbf{u}^{k+1} = \mathbf{u}^{k} - \sigma^k \mathbf{z}^{k+1}$. $\sigma\in(0,1]$.
-%\item Compute new residual $\mathbf{r}^{k+1} = \mathcal{R}(\mathbf{u}^{k+1})$.
-%\item Set $k = k +1$.
-%\end{enumerate}
-%
-%We need methods to compute $\mathcal{R}(\mathbf{u})$ and $\nabla\mathcal{R}(\mathbf{u})$.
-%\end{frame}
-%
-%\begin{frame}
-%\frametitle{Jacobian}
-%The Jacobian matrix is defined as
-%\begin{equation*}
-%(\mathbf{A}^k)_{i,j} = (\nabla\mathcal{R}(\mathbf{u}^k))_{i,j}
-%= \frac{\partial (\mathcal{R})_i}{\partial (\mathbf{u})_j}(\mathbf{u}^k)
-%= \sum_{e\in E_h^0} \frac{\partial (\bm{\alpha}_{h,e}^{\text{vol}})_m }{\partial (\mathbf{u})_l } (\mathbf{R}_e \mathbf{u}),
-%\end{equation*}
-%where $g(e,m)=l, g(e,l)=j$.
-%
-%Again, the Jacobian can be computed from local contributions:
-%\begin{equation*}
-%\mathbf{A}^k = \sum_{e\in E_h^0} \mathbf{R}_e^T \nabla\bm{\alpha}_{h,e}^{\text{vol}}(\mathbf{R}_e \mathbf{u}) \, \mathbf{R}_e.
-%\end{equation*}
-%
-%The local Jacobians can be
-%\begin{itemize}
-%\item programmed explicitly by the user, or
-%\item derived generically through numerical differentiation. This requires only coding
-%of the local residual contributions $\bm{\alpha}_{h,e}^{\text{vol}}$.
-%\end{itemize}
-%\end{frame}
-%
-%
-%\begin{frame}
-%\frametitle{The Linear Case}
-%is a special case of the nonlinear case \ldots
-%\begin{enumerate}
-%\item Given $\mathbf{u}^0\in\mathbf{U}$.
-%\item Compute $\mathbf{r} = \mathcal{R}(\mathbf{u}^0)$.
-%\item Assemble Jacobian System $\mathbf{A} = \nabla\mathcal{R}(\mathbf{u}^0)$.
-%\item Solve $\mathbf{A} \mathbf{z} = \mathbf{r}$ with some linear solver.
-%\item Update $\mathbf{u} = \mathbf{u}^{0} - \mathbf{z}$.
-%\end{enumerate}
-%\end{frame}
+\begin{frame}
+  \frametitle<presentation>{Overview}
+  \begin{itemize}
+    \item Real world problems have complex computational domains.
+    \item One possibility to model such domains is CAD modelling.
+    \item Need ability to import CAD models.
+  \end{itemize}
+  In Dune, the interface to CAD-Models is via \lstinline!Gmsh!.
+\end{frame}
 
-\subsection{The DUNE Gmsh-Reader Interface}
-% install with opencascade
-% Dune\dotsGmshReader
+\begin{frame}
+  \frametitle<presentation>{Some example meshes for CAD-meshes imported in Dune}
+  \begin{figure}
+    \begin{center}
+      \includegraphics[width=0.48\textwidth]{./EPS/motor}  $\hspace{1mm}$
+      \includegraphics[width=0.48\textwidth]{./EPS/shape2} $\hspace{1mm}$
+      \caption[]{Some example meshes import to Dune.}
+      \label{fig:CADExmapleMeshesToDune}
+    \end{center}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle<presentation>{Overview}
+  The outline to import meshed CAD-models in Dune is as follows
+  \begin{itemize}
+    \item Create or retrieve a CAD-model.
+    \item Edit and mesh the CAD-model with Gmsh, a \ldots
+    \item Export a \lstinline!.msh!-File from Gmsh.
+    \item Import the mesh file with the \lstinline!Dune::GmshReader!.
+  \end{itemize}
+  We will show each step in detail in the following sections.
+\end{frame}
+
+%-------------------------------------------------------------------
+\subsection{Gmsh and the DUNE Gmsh-Reader Interface}
+% Dune GmshReader
+% Gmsh und OpenCascade
+% Installation
+% welche Grids?
+
+\begin{frame}[fragile]
+  \frametitle{The Dune::GmshReader}
+  We begin with the import of a Mesh file \lstinline!meshfile.msh! using Dune's
+  \lstinline!GmshReader!:
+  \begin{lstlisting}[basicstyle=\scriptsize]
+// include gmshreader interface
+#include<dune/grid/io/file/gmshreader.hh>
+...
+// construct grid from mesh file
+Dune::UGGrid<2> grid(1000);
+Dune::GmshReader<Dune::UGGrid<2> >::read(grid, "mesh.msh");
+grid.globalRefine(3);
+  \end{lstlisting}
+  Note that you have to include the Gmsh-Interface header from
+  \lstinline!dune-grid! to be able to import the meshes.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Gmsh}
+  The meshes are created and exported by Gmsh, an external Software,
+  which is able to
+  \begin{itemize}
+    \item Import CAD models in various formats (\lstinline!GEO, STEP, IGES, BREP, ...!)
+    \item Group subparts of the models into phyiscal \emph{entities} or
+      \lstinline{groups},
+    \item Mesh the models,
+    \item Write the meshes including physical group regions to a mesh file
+      (ending \lstinline!.msh!).
+  \end{itemize}
+\end{frame}
 
 %\begin{frame}
 %\frametitle{Example 1 Overview}
@@ -461,8 +318,10 @@
 %\end{Lst}}
 
 
+%-------------------------------------------------------------------
 \subsection{Importing and Meshing CAD-Geometries with Gmsh}
-% CAD-Files
+% CAD-Files Uebersicht
+% install with opencascade
 % Import
 % Welcher Mesher?
 
@@ -535,36 +394,6 @@
 %\end{frame}
 %
 %\begin{frame}
-%\frametitle{Realization of Dirichlet Constraints}
-%\begin{itemize}
-%\item Assume $\Phi_{U_h^k}$ is a Lagrange basis:
-%\begin{equation*}
-%\phi_j(x_i)=\delta_{i,j} \quad\text{where $x_i$ are the Lagrange points}.
-%\end{equation*}
-%\item Construct subspace via basis representation:
-%\begin{itemize}
-%\item $\mathcal{I}_{\tilde{U}_h^k} = \left\{ j\in \mathcal{I}_{U_h^k} \,:\,
-%x_j \not\in \Gamma_D \right\} \subset \mathcal{I}_{U_h^k}$.
-%\item $\Phi_{\tilde{U}_h^k} = \left\{ \phi_j\in \Phi_{U_h^k} \,:\,
-%j \in \mathcal{I}_{\tilde{U}_h^k} \right\} \subset \Phi_{U_h^k}$.
-%\item $\tilde{U}_h^k = \text{span}\Phi_{\tilde{U}_h^k}$.
-%\end{itemize}
-%\item For the coefficient space there are two options:
-%\begin{enumerate}
-%\item $\tilde{\mathbf{U}} = \mathbb{R}^{\mathcal{I}_{\tilde{U}_h^k}} \not\subseteq \mathbf{U}$.
-%\item $\tilde{\mathbf{U}} = \left\{ \mathbf{u}\in\mathbf{U} \,:\, (\mathbf{u})_j = 0 \  \forall
-%j \in \mathcal{I}_{U_h^k} \setminus \mathcal{I}_{\tilde{U}_h^k} \right\} \subset \mathbf{U}$.
-%\end{enumerate}
-%\item We choose (2) because
-%\begin{itemize}
-%\item $w + \tilde{u}$ is just adding coefficient vectors.
-%\item Changing $\Gamma_D$, e.g. in time-dependent problems is easy.
-%\end{itemize}
-%\end{itemize}
-%\end{frame}
-%
-%
-%\begin{frame}
 %\frametitle{General Constrained Spaces}
 %\begin{itemize}
 %\item Constrained spaces turn up in a number of other cases:
@@ -591,52 +420,52 @@
 %\end{frame}
 
 
+%-------------------------------------------------------------------
 \subsection{Attaching Data to a CAD-Geometry and its Mesh}
 % Gruppen in Gmsh
 % Gmshreader nur eine Gruppe pro Element!
 % PDELab-Code
 
-%\begin{frame}
-%\frametitle{Example 2 Overview}
-%The first example implements model problem \eqref{Eq:Example01}.
-%
-%It consists of the following files:
-%\begin{itemize}
-%\item \lstinline{example02.cc} -- the file to be compiled, main function.
-%\item \lstinline{example02_bctype.hh} -- a function giving the splitting $\partial\Omega = \Gamma_D \cup \Gamma_N$.
-%\item \lstinline{example02_bcextension.hh} -- a function for $g$ and its extension $w$.
-%\item \lstinline{example02_operator.hh} -- local operator including inhomogeneous Neumann boundary conditions.
-%\item \lstinline{example02_Q1.hh} -- driver setting up and solving the problem.
-%\end{itemize}
-%\end{frame}
-%
-%\begin{frame}
-%\frametitle{Driver for Solving Constrained Linear Problem}
-%\framesubtitle{About \lstinline{example02_Q1.hh}}
-%\begin{itemize}
-%\item Class \lstinline{ConformingDirichletConstraints} parametrizes the grid function space
-%with the possibility of having Dirichlet constraints.
-%\item Function \lstinline{constraints} assembles constraints (i.e. the splitting
-%$\mathcal{I}_{U_h^k} = \tilde{\mathcal{I}} \cup \bar{\mathcal{I}}$) from a given function.
-%\item Function \lstinline{interpolate} initializes a coefficient vector from a given function.
-%At the same time this defines the extension $w$ of $g$.
-%\item The rest is the same as before.
-%\end{itemize}
-%\end{frame}
-%
-%\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-%\frametitle<presentation>{Constrained Elliptic Problem}
-%\framesubtitle<presentation>{File \texttt{examples/example02\_Q1.hh}}
-%\lstinputlisting[basicstyle=\tiny,numbers=left,
-%numberstyle=\tiny, numbersep=2pt]{../../examples/example02_Q1.hh}
-%\end{frame}
-%\mode<article>{
-%\begin{Lst}[File examples/example02\_Q1.hh] \mbox
-%\nopagebreak
-%\lstinputlisting[basicstyle=\scriptsize,numbers=left,
-%numberstyle=\tiny, numbersep=2pt]{../../examples/example02_Q1.hh}
-%\end{Lst}}
-%
+\begin{frame}
+  \frametitle<presentation>{Abstraction}
+  Most simulations include parameters associated to some part of the
+  domain, for instance
+  \begin{itemize}
+    \item Material properties (conductivities,\ldots),
+    \item Variing boundary conditions,
+    \item \ldots
+  \end{itemize}
+  Thus we need an ability to specify subdomains for our CAD-model.
+  In Gmsh: \emph{Physical Groups}:
+  \begin{itemize}
+    \item Volume groups,
+    \item Surface groups,
+    \item Line groups.
+    \item Point groups.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle<presentation>{Abstraction}
+  \begin{figure}
+    \begin{center}
+      \includegraphics[width=0.8\textwidth]{./EPS/crank/geo2} $\hspace{1mm}$
+      \caption[]{Physical groups for a CAD-Model in Gmsh.}
+      \label{fig:gmshPhysGroups}
+    \end{center}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle<presentation>{Abstraction}
+  The \lstinline!Dune::GmshReader! is able to read
+  \begin{itemize}
+    \item Volume groups, and
+    \item Surface groups
+  \end{itemize}
+  from a \lstinline!.msh!-file. The following code shows that:
+\end{frame}
+
 %\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 %\frametitle<presentation>{Boundary Condition Type Function}
 %\framesubtitle<presentation>{File \texttt{examples/example02\_bctype.hh}}
@@ -710,35 +539,55 @@
 %
 %Conforming $Q_1$ from example 2 left and cell-centered finite volumes from example 4 right.
 %\end{frame}
-%
-%\mode<article>{
-%Figure \ref{fig:Example01aResults} shows visualizations of the results computed
-%with \lstinline{example01}.
-%\begin{figure}
-%\begin{center}
-%\includegraphics[width=0.48\textwidth]{./EPS/example02_Q1} \hspace{1mm}
-%\includegraphics[width=0.48\textwidth]{./EPS/example04}
-%\end{center}
-%\caption{Result for example 2 computed with $Q_1$ elements on the right.
-%Same problem solved with cell-centered finite volume method in example 4.}
-%\label{fig:Example02Results}
-%\end{figure}
-%}
-%
-%\begin{frame}
-%\frametitle{Remark on Local Operators}
-%In practice one would access parameter functions such as $a, f, j$ and the boundary condition
-%type from the implementation of the local operator.
-%\end{frame}
 
+%-------------------------------------------------------------------
 \subsection{Salome}
-% Gruppen in Gmsh
-% Gmshreader nur eine Gruppe pro Element!
-% PDELab-Code
 
-\subsection{Other useful open source CAD-Tools}
-% Gruppen in Gmsh
-% Gmshreader nur eine Gruppe pro Element!
-% PDELab-Code
+% Constructing Geometries
+% Export von geo und unv
+% Ausblick: Reader
+
+%-------------------------------------------------------------------
+\subsection{Other useful Open Source CAD-Tools}
+% Uebersicht ueber andere nuetzliche CAD-Tools
+
+\begin{frame}
+  \frametitle{Overview: Other Open Source CAD-Tools}
+  \begin{table}
+    Table \ref{tab:CADTools} shows some other useful CAD-Tools which are able to
+    export geometry or mesh files suitable for Gmsh import.
+    \begin{center}
+      \begin{tabular}{|c|c|c|c|c|c|c|}
+        \hline
+        Tool & Licence & Description & Geom & Geom & Mesh
+        \\
+        &  &  & Import & Export & Export
+        \\
+        \hline
+        \hline
+        Gmsh &  &  &  &  &
+        \\
+        \hline
+        Salome & LGPL & &  &  &
+        \\
+        \hline
+        BRLCad & GPL/BSD & &  &  &
+        \\
+        \hline
+        GCad3D & \lstinline!.igs, .iges! & &  &  &
+        \\
+        \hline
+        Blender & \lstinline!.geo! & CSG &  &  &
+        \\
+        \hline
+        PythonOCC & \lstinline!.geo! & Python Wrapper for OpenCascade &  &  &
+        \\
+        \hline
+      \end{tabular}
+      \caption{Some CAD tools.}
+      \label{tab:CADTools}
+    \end{center}
+  \end{table}
+\end{frame}
 
 \cleardoublepage
