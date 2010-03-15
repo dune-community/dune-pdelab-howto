@@ -32,8 +32,8 @@ Consider the following model problem:
 \begin{subequations} \label{Eq:Example03}
 \begin{align*}
 \partial_t u -\Delta u + a u &= f &&\text{in $\Omega\times\Sigma$}, \Sigma=(t_0,t_0+T),\\
-u(\cdot,t) &= g(\cdot,t) && \text{on $\Gamma_D(t)$},\\ 
--\nabla u(\cdot,t) \cdot n &= j(\cdot,t) &&\text{on $\Gamma_N(t)=\partial\Omega\setminus\Gamma_D(t)$},\\
+u(\cdot,t) &= g(\cdot,t) && \text{on $\Gamma_D$},\\ 
+-\nabla u(\cdot,t) \cdot n &= j(\cdot,t) &&\text{on $\Gamma_N=\partial\Omega\setminus\Gamma_D$},\\
 u(\cdot,t_0) &= u_0(\cdot) && \text{at $t=t_0$}.
 \end{align*}
 \end{subequations}
