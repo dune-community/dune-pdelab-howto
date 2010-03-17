@@ -1,5 +1,4 @@
-/** \brief boundary grid function selecting boundary conditions 
- * 0 means Neumann, 1 means Dirichlet */
+/** \brief boundary grid function selecting boundary conditions 0=Neumann, 1=Dirichlet */
 template<typename GV>
 class BCType : public Dune::PDELab::BoundaryGridFunctionBase<
 Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> >,BCType<GV> >
@@ -16,8 +15,7 @@ public:
   inline void evaluate (I& i, const typename Traits::DomainType& xlocal,
                         typename Traits::RangeType& y) const {  
     Dune::FieldVector<typename GV::Grid::ctype,GV::dimension> x = i.geometry().global(xlocal);
-    if (x[0]>1.0-1e-6) y = 0; else  y = 1;
-    return;
+    if (x[0]>1.0-1e-6) y = 0; else  y = 1; return;
   }
 
   //! get a reference to the grid view
