@@ -61,28 +61,10 @@ required to do the examples on simplex grids.
 
 \subsection{How to Read this Manual}
 
-Section 2 introduces the \textit{weighted residual formulation} which
-is the abstract formulation of PDE problems in PDELab. You should at
-least get some idea about it on your first reading.
-
-Section 3 presents the theory behind grid function
-spaces including the constuction of subspaces due to general
-constraints. An understanding of this is necessary if you want to
-implement new function spaces or constraints.
-
-Section 4 provides a step by step introduction to the implementation
-of grid function spaces. Working through these examples will enable
-you to use existing function spaces and implement new ones.
-
-Section 5 contains the theory behind the solution of the algebraic
-systems arising from the constrained weigthed residual formulation.
-
-Section 6 then shows how a discretization scheme is implemented using
-the grid function spaces. A simple conforming discretization of the
-Laplacian is worked through in detail and the set-up of solvers
-using \lstinline{dune-istl} is explained.
-
-Section 7 contains a list of the problems implemented in
-the \lstinline{examples} directory.
+The main idea of this howto is to introduce the concepts by working
+through a set of increasingly complex examples. We will start by 
+solving stationary elliptic problems first without and then with constrained spaces
+(Dirichlet boundary conditions). After some excursion to linear algebra backends and 
+working with CAD models instationary problems and systems will be treated.
 
 \cleardoublepage
