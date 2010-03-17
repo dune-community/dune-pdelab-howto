@@ -7,6 +7,21 @@
 \subsection{General Construction}
 
 \begin{frame}
+\frametitle{Introduction}
+\begin{itemize}
+\item We consider affine finite element spaces: 
+\begin{itemize}
+\item Global functions are pieced together from local functions on each element.
+\item Local functions are constructed by transformation from a reference element.
+\end{itemize}
+\item Global functions need not be continuous and can be vector-valued.
+\item The functions on the reference element are collected in the module \lstinline{dune-localfunctions}.
+\item Constructing the global function spaces from this is part of PDELab.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
 \frametitle{Finite-dimensional Function Spaces}
 $\Omega\subset\mathbb{R}^n$, $n\geq 1$, is a domain, 
 $\mathbb{T}_h$ a grid partitioning the domain $\Omega$.
@@ -88,27 +103,25 @@ finite element spaces for each element.
 
 \begin{frame}
 \frametitle{Local Finite Element Space}
-A local finite element space (compare \cite{Ciarlet}) 
-is represented by \lstinline{Dune::LocalFiniteElementInterface}
-and consists of the following:
-\begin{itemize}
+A finite element space on the reference element (compare \cite{Ciarlet}) 
+implements \lstinline{Dune::FiniteElementInterface}:
+\begin{enumerate}
 \item The type of reference element, given by \lstinline{Dune::GeometryType}.
 \item The local basis functions
 $\hat\Phi = \{\hat\phi_i : \mathbb{D}^n \to \mathbb{K}^m \,|\, 0\leq i < k\}$
-and their gradients in a class derived from \lstinline{Dune::C1LocalBasisInterface}.
+and possibly derivatives in a class implementing e.g \lstinline{C0BasisInterface}.
 \item Information that allows to construct the local to global map $g:
-(e,i) \mapsto j$ in a class derived
-from \lstinline{Dune::LocalCoefficientsInterface}. 
+(e,i) \mapsto j$ in a class implementing \lstinline{Dune::LocalCoefficientsInterface}. 
 \item A method that allows to compute coefficients $z_i$ such that
 \begin{equation*}
 \sum_{0\leq i < k} z_i \hat\phi_i = \hat{u} \qquad \hat{u}\in\text{span}\hat\Phi 
 \end{equation*} 
-in a class derived
-from \lstinline{Dune::LocalInterpolationInterface}. For
+in a class implementing
+from \lstinline{Dune::InterpolationInterface}. For
 $\hat{u}\not\in\text{span}\hat\Phi$ the method provides a projection.
-\item The dune module \lstinline{dune-localfunctions} provides a
+\end{enumerate}
+The dune module \lstinline{dune-localfunctions} provides a
 collection of local finite element spaces.
-\end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -119,25 +132,16 @@ $\mathbb{D}, \mathbb{D}^n, \mathbb{K}, \mathbb{K}^m$, the numbers $n$,
 $m$ and a type for the Jacobian:
 \begin{lstlisting}[basicstyle=\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]
-template<class DF, int n, class D, class RF, int m, class R>
-struct C0LocalBasisTraits 
+template<class DF, int n, class D, class RF, int m, class R, 
+         class J, int dorder=0>struct LocalBasisTraits 
 {
-  typedef DF DomainFieldType; typedef D DomainType;
-  typedef RF RangeFieldType;  typedef R RangeType;
-  enum { dimDomain=n }; enum { dimRange=m }; enum { diffOrder=0 };
-};
-\end{lstlisting}
-\begin{lstlisting}[basicstyle=\scriptsize,numbers=left, 
-numberstyle=\tiny, numbersep=5pt]
-template<class DF, int n, class D, class RF, int m, class R, class J>
-struct C1LocalBasisTraits : public C0LocalBasisTraits<DF,n,D,RF,m,R> 
-{
-  typedef J JacobianType; enum { diffOrder=1 };
-};
-\end{lstlisting}
+  typedef DF DomainFieldType;  typedef D DomainType;  typedef RF RangeFieldType;   typedef R RangeType;
 
-Note: Basis functions may be vector-valued.
+  enum { dimDomain = n }; enum { dimRange = m }; 
 
+  typedef J JacobianType;
+
+  enum { diffOrder=dorder };};\end{lstlisting}
 Later on, other classes representing functions will use the same
 traits classes.
 \end{frame}
@@ -176,32 +180,23 @@ quadrilateral.
 
 \begin{frame}[fragile]
 \frametitle{$Q_1$ Local Basis Implementation}
-The following listing gives an implementation of the local basis
-functions. 
-
-The base class \lstinline{Dune::C1LocalBasisInterface} provides
-provides a Barton-Nackman style interface base class for
-differentiable basis functions.
-
-This interface will be extended to provide also higher derivatives.
-
-There is also an interface \lstinline{Dune::C0LocalBasisInterface}
-when no derivatives are provided.
-
-Evaluation always provides the values of \textit{all} basis functions
-or gradients at \textit{one} point. 
-
-Implementations typically use \lstinline{Dune::FieldVector<T,n>} to
+\begin{itemize}
+\item The following listing gives an implementation of the $Q_1$ local basis
+functions in 2D. 
+\item We provide also gradients ($C^1$ function).
+\item There is also an interface for higher derivatives (not shown).
+\item Evaluation always provides the values of \textit{all} basis functions
+or gradients at \textit{one} point (in coordinates of the reference element). 
+\item Implementations typically use \lstinline{Dune::FieldVector<T,n>} to
 represent short vectors.
-
-\lstinline{JacobianType} is \lstinline{Dune::FieldVector<Dune::FieldVector<R,2>,1>}.
-
-In the jacobian evaluation in lines \ref{q1b:grad0} to \ref{q1b:grad3}
+\item \lstinline{JacobianType} is \lstinline{Dune::FieldMatrix<R,1,2>}.
+\item In the jacobian evaluation in lines \ref{q1b:grad0} to \ref{q1b:grad3}
 we have
 \begin{equation*}
 \text{\lstinline{out[i][j][k]}}
 = \partial_{\hat{x}_k} \left(\hat\phi_i\right)_j (\hat{x}) . 
 \end{equation*}
+\end{itemize}
 \end{frame}
 
 
@@ -221,26 +216,26 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localbasis.hh}
 
 \begin{frame}
 \frametitle{$Q_1$ Local Coefficients}
-In order to provide (different forms of) continuity of \textit{global} basis
-functions local indices in \textit{adjacent} elements need to be \textit{identified}.
-
-This is done via (sub-)entities of a given codim 0 entity.
-
-\textit{On the reference element} each local index $0\leq i < k$ is
+\begin{itemize}
+\item Piecing together local functions to global functions (globalization)
+may involve some form of continuity.
+\item Part of this is \textit{identifying degrees of freedom}:
+Associate basis functions with 
+(sub-)entities of the reference element.
+\item \textit{On the reference element} each (number of a) basis function is 
 mapped to
 \begin{itemize}
 \item a subentity given by a number and a codimension.
 \item an offset with in that entity if several indices are mapped to
 the same subentity (offset is zero if only one local index is mapped
 to the subentity). 
+\item \lstinline{Dune::LocalKey} represents such a triple.
 \end{itemize} 
-
-From this information a local-to-global map $g$ can be
+\item Globalization may also involve orientation of geometric entities.
+\item From this information a local-to-global map $g$ can be
 constructed \textit{generically}. 
-
-Class \lstinline{Dune::LocalKey} collects subentity and offset information.
-
-For the $Q_1$ element the code is given by the following listing.
+\item This is \textit{not} part of \lstinline{dune-localfunctions}!
+\end{itemize}
 \end{frame}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
@@ -259,17 +254,20 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localcoefficients.hh}
 
 \begin{frame}
 \frametitle{$Q_1$ Local Interpolation}
-Local interpolation takes a function $\hat{u}(\hat{x})$ \textit{on the
+\begin{itemize}
+\item Local interpolation takes a function $\hat{u}(\hat{x})$ \textit{on the
 reference element} and provides a projection onto the space spanned by
 the local basis.
-
-For Lagrange basis functions this is point-wise evaluation.
-
-For other basis functions this might involve the solution of a local
+\item It does so by providing the coefficients with respect to the basis 
+(inverse of local finite element isomorphism).
+\item For Lagrange basis functions this is point-wise evaluation.
+\item For other basis functions this might involve the solution of a local
 system (e.g. $L_2$-projection).
-
-The local interpolation interface is provided by
+\item The local interpolation interface is provided by
 \lstinline{Dune::LocalInterpolationInterface}.
+\item The given function needs to map from \lstinline{Traits::DomainType}
+to \lstinline{Traits::RangeType} like the basis.
+\end{itemize}
 \end{frame}
 
 
@@ -288,24 +286,15 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localinterpolation.hh}
 
 \begin{frame}
 \frametitle{$Q_1$ Local Finite Element}
-Finally, we need to collect local basis, local coefficients and local
+\begin{itemize}
+\item Finally, we need to collect local basis, local coefficients and local
 interpolation in a local finite element.
 
-Local finite element also provides the reference element.
+\item Local finite element also provides the reference element.
 
-The interface is given
-in \lstinline{Dune::LocalFiniteElementInterface}.
+\item The interface is given
+in \lstinline{Dune::FiniteElementInterface}.
 
-Currently (March 2009), \lstinline{dune-localfunctions} implements the
-following elements:
-\begin{itemize}
-\item Piecewise constant elements $P_0$ for any reference element in any
-dimension. 
-\item Piecewise linear Lagrange elements $P_1$ in $1, 2, 3d$.
-\item Piecewise multi-linear Lagrange elements $Q_1$ in $1, 2, 3d$.
-\item $P_k$ on triangles.
-\item $Q_2$ on quadrilaterals.
-\item Lowest order Raviart-Thomas elements on triangles. 
 \end{itemize}
 \end{frame}
 
@@ -322,29 +311,41 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelement.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelement.hh}
 \end{Lst}}
 
+\begin{frame}
+\frametitle{List of Elements}
+Currently (March 2010), \lstinline{dune-localfunctions} implements the
+following elements:
+\begin{itemize}
+\item $P_0$ for any reference element in any dimension. 
+\item Piecewise linear Lagrange elements $P_1$ in $1, 2, 3d$.
+\item Piecewise multi-linear Lagrange elements $Q_1$ in $1, 2, 3d$.
+\item $P_k$ on triangles and tetrahedra
+\item $Q_2$ on quadrilaterals.
+\item Lowest order Raviart-Thomas elements on triangles, quadrilaterals, hexahedra.
+\item $P_k$ discontinuous on any element in $1, 2, 3d$ (monomial and orthogonal basis).
+\item Rotated bilinear element in $2d$.
+\item Whitney elements in $2, 3d$.
+\item Some hierarchical macro-elements.
+\end{itemize}
+\end{frame}
 
 \subsection{Building a Global Finite Element Space from Local Spaces}
 
 \begin{frame}
 \frametitle{Local Finite Element Map}
-A global finite element space is made up from a collection of local
-finite element spaces. 
-
-So we need a map that delivers for each element (codim 0 entity) $e\in E_h^0$ a
-local finite element.
-
-But there is only one \textit{type} for all the local finite elements in the map.
-This type may be polymorphic if needed.
-
-For multi-element type meshes and $hp$-refinement this map may be
-rather complicated.
-
-In our implementation of $P_k$ elements for $k>2$ we use the map to
-match the degrees of freedom on common edges and faces.
-
-For the special case where we have \textit{the same} local finite
-element for \textit{all} the elements there is a default implementation that is
-used in the following listing.
+\begin{itemize}
+\item PDELab uses classes from \lstinline{dune-localfunctions} to 
+piece local functions together forming global functions.
+\item Each codim 0 entity may have a different local basis (i.e. local finite element).
+\item A \textit{local finite element map} provides this basis for each entity.
+\item Can handle hybrid meshes and $hp$-methods.
+\item To ease implementation there is a variant of the 
+local finite element in \lstinline{dune-localfunctions} \textit{with virtual functions}.
+\item The local finite element map is responsible for ensuring
+the required continuity.
+\item The case where each codim 0 entity has the same basis is 
+particularly easy. See next code example.
+\end{itemize}
 \end{frame}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
@@ -363,31 +364,28 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1localfiniteelementmap.hh}
 
 \begin{frame}
 \frametitle{$Q_1$ Grid Function Space}
-Now we use the $Q_1$ local finite element map to build
-a global finite element space.
+\begin{itemize}
+\item The local finite element map is a parameter to 
+the class template \lstinline{GridFunctionSpace}.
 
-The main class is \lstinline{GridFunctionSpace} which 
-builds up the local to global map $g$ and provides information about
-the local finite elements.
+\item The \lstinline{GridFunctionSpace} is responsible for:
+\begin{itemize}
+\item Building up the local-to-global-map $g$.
+\item Provides a type for coefficient vectors (``vector container'').
+\item Provides information about the local finite element and degrees of freedoms
+on each element (``local function space'').
+\end{itemize}
 
-An element of the function space is represented by a coefficient
-vector that is
-encapsulated in a seperate type, see definition \lstinline{X}.
-
-The type \lstinline{X} is derived from \lstinline{std::vector<R>} here
-but his will be changed later.
-
-The remaining lines construct a function object that can be evaluated
-in local coordinates on the reference element (explained below).
-
-\lstinline{Dune::SubsamplingVTKWriter} allows the output of
-nonconforming and higher order functions.
+\item The remaining lines construct a function object that can be evaluated
+in local coordinates on the reference element (explained below). It is used
+by the \lstinline{Dune::SubsamplingVTKWriter}.
+\end{itemize}
 \end{frame}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{$Q_1$ Grid Function Space Listing}
 \framesubtitle<presentation>{File \texttt{examples/q1gridfunctionspace.hh}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1gridfunctionspace.hh}
 \end{frame}
 \mode<article>{
@@ -397,19 +395,13 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1gridfunctionspace.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1gridfunctionspace.hh}
 \end{Lst}}
 
-\begin{frame}
-\frametitle{$Q_1$ Grid Function Space Main Program}
 Finally, in the main program a \lstinline{Dune::Grid} is instantiated
 and the generic function is called.
-
-We show only one main program here for illustration. In the other
-examples below the main programs will not be listed.
-\end{frame}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{$Q_1$ GFS Main Program Listing}
 \framesubtitle<presentation>{File \texttt{examples/q1gridfunctionspacemain.cc}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1gridfunctionspacemain.cc}
 \end{frame}
 \mode<article>{
@@ -452,7 +444,7 @@ with ParaView.
 \end{figure}
 }
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle{Functions}
 Often one wants to prescribe functions for initial or boundary
 conditions.
@@ -475,7 +467,7 @@ $$u : (E_h^1\text{``$\cap\partial\Omega$''}) \times \mathbb{D}^{n'} \to \mathbb{
 \end{frame}
 
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle{Useful Adapters and Base Classes}
 There are various useful adapters and base classes:
 
@@ -519,12 +511,12 @@ reference element.
 For more details see \lstinline{dune/pdelab/common/function.hh}.
 \end{frame}
 
-\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{\texttt{AnalyticGridFunctionBase} Example Listing}
-\framesubtitle<presentation>{File \texttt{examples/analyticfunction.hh}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
-numberstyle=\tiny, numbersep=5pt]{../../examples/analyticfunction.hh}
-\end{frame}
+%\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+%\frametitle<presentation>{\texttt{AnalyticGridFunctionBase} Example Listing}
+%\framesubtitle<presentation>{File \texttt{examples/analyticfunction.hh}}
+%\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+%numberstyle=\tiny, numbersep=5pt]{../../examples/analyticfunction.hh}
+%\end{frame}
 \mode<article>{
 \begin{Lst}[File examples/analyticfunction.hh] \mbox
 \nopagebreak
@@ -532,18 +524,18 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/analyticfunction.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/analyticfunction.hh}
 \end{Lst}}
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle{Generic Interpolation}
 Interpolation of a finite element function from a given function is
 now generic.
 \end{frame}
 
-\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Generic Interpolation Listing}
-\framesubtitle<presentation>{File \texttt{examples/q1interpolate.hh}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
-numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolate.hh}
-\end{frame}
+%\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+%\frametitle<presentation>{Generic Interpolation Listing}
+%\framesubtitle<presentation>{File \texttt{examples/q1interpolate.hh}}
+%\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+%numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolate.hh}
+%\end{frame}
 \mode<article>{
 \begin{Lst}[File examples/q1interpolate.hh] \mbox
 \nopagebreak
@@ -551,19 +543,17 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolate.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolate.hh}
 \end{Lst}}
 
-\begin{frame}<presentation>
-\frametitle<presentation>{Visualization of the Result}
-\begin{center}
-\includegraphics[width=0.65\textwidth]{./EPS/q1interpolate}
-\end{center}
-\end{frame}
-
-
+%\begin{frame}<presentation>
+%\frametitle<presentation>{Visualization of the Result}
+%\begin{center}
+%\includegraphics[width=0.65\textwidth]{./EPS/q1interpolate}
+%\end{center}
+%\end{frame}
 
 \subsection{Interpolation Error Example}
 
-\begin{frame}
-\frametitle<presentation>{Interpolation Error Example}
+\begin{frame}<article>
+\frametitle{Interpolation Error Example}
 Now, we do a little example that shows how one can work with global
 finite element functions.
 
@@ -587,7 +577,7 @@ d\hat{x} \text{ $+$ error} .
 \end{equation*}
 \end{frame}
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle<presentation>{Interpolation Error Example}
 In the following code example the
 function \lstinline{l2interpolationerror} is parametrized by
@@ -609,12 +599,12 @@ exported by a grid function space which
 quadrature rules for many element types, dimensions and orders.
 \end{frame}
 
-\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Interpolation Error Listing}
-\framesubtitle<presentation>{File \texttt{examples/l2interpolationerror.hh}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
-numberstyle=\tiny, numbersep=5pt]{../../examples/l2interpolationerror.hh}
-\end{frame}
+%\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+%\frametitle<presentation>{Interpolation Error Listing}
+%\framesubtitle<presentation>{File \texttt{examples/l2interpolationerror.hh}}
+%\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+%numberstyle=\tiny, numbersep=5pt]{../../examples/l2interpolationerror.hh}
+%\end{frame}
 \mode<article>{
 \begin{Lst}[File examples/l2interpolationerror.hh] \mbox
 \nopagebreak
@@ -625,12 +615,12 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/l2interpolationerror.hh}
 Next comes the driver that uses the generic $L_2$ interpolation error
 function.
 
-\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Interpolation Error Driver Listing}
-\framesubtitle<presentation>{File \texttt{examples/q1interpolationerror.hh}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
-numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolationerror.hh}
-\end{frame}
+%\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+%\frametitle<presentation>{Interpolation Error Driver Listing}
+%\framesubtitle<presentation>{File \texttt{examples/q1interpolationerror.hh}}
+%\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+%numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolationerror.hh}
+%\end{frame}
 \mode<article>{
 \begin{Lst}[File examples/q1interpolationerror.hh] \mbox
 \nopagebreak
@@ -638,7 +628,7 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolationerror.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/q1interpolationerror.hh}
 \end{Lst}}
 
-\begin{frame}[fragile]
+\begin{frame}<article>[fragile]
 \frametitle{$Q_1$ Interpolation Error Results}
 Evaluating the interpolaton error for our $Q_1$ basis for different
 levels of refinement produces the following result:
@@ -658,7 +648,7 @@ interpolation error:  1048576 elements 4.78590858e-07
 Obviously, we get second order approximation.
 \end{frame}
 
-\begin{frame}
+\begin{frame}<article>
 \frametitle{Modification for $Q_2$}
 Now it is very easy to compute the interpolation error for other
 function spaces.
@@ -668,12 +658,12 @@ with \lstinline{Dune::PDELab::Q22DLocalFiniteElementMap} in
 lines \ref{l2int:q2} and \ref{l2int:q22}!
 \end{frame}
 
-\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{$Q_2$ Interpolation Error Driver Listing}
-\framesubtitle<presentation>{File \texttt{examples/q2interpolationerror.hh}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
-numberstyle=\tiny, numbersep=5pt]{../../examples/q2interpolationerror.hh}
-\end{frame}
+%\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+%\frametitle<presentation>{$Q_2$ Interpolation Error Driver Listing}
+%\framesubtitle<presentation>{File \texttt{examples/q2interpolationerror.hh}}
+%\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+%numberstyle=\tiny, numbersep=5pt]{../../examples/q2interpolationerror.hh}
+%\end{frame}
 \mode<article>{
 \begin{Lst}[File examples/q2interpolationerror.hh] \mbox
 \nopagebreak
@@ -681,7 +671,7 @@ numberstyle=\tiny, numbersep=5pt]{../../examples/q2interpolationerror.hh}
 numberstyle=\tiny, numbersep=5pt]{../../examples/q2interpolationerror.hh}
 \end{Lst}}
 
-\begin{frame}[fragile]
+\begin{frame}<article>[fragile]
 \frametitle{$Q_2$ Interpolation Error Result}
 And we see third order approximation:
 \begin{lstlisting}[basicstyle=\scriptsize]
