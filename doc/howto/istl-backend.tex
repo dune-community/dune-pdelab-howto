@@ -247,7 +247,7 @@ blocks.
       is the currently available backend for ISTL sparse
       matrices.
     \item \lstinline!brows! is the number rows and \lstinline!bcols!
-      is the number of columns in all matrix blocks.
+      is the number of columns of each matrix block.
   \item The backend uses
     \lstinline!BCRSMatrix<FieldMatrix<E,brows,bcols> >! as the
     underlying container.
@@ -280,11 +280,11 @@ blocks.
   \begin{itemize}
   \item Go parallel by choosing
     \begin{enumerate}
-    \item A suitable parallel grid (e.g. an overlapping one for
-      overlapping domain decomposition methods).
-    \item Choosing the correct constraints for the discretization of
-      the PDE.
-    \item A suitable and matching parallel solver backend of the
+    \item a suitable parallel grid (e.g. an overlapping one for
+      overlapping domain decomposition methods),
+    \item the correct constraints for the discretization of
+      the PDE, and
+    \item a suitable and matching parallel solver backend of the
       PDELab backend.
     \end{enumerate}
   \end{itemize}
@@ -332,7 +332,7 @@ blocks.
   of the parallel constraints used.
   \begin{itemize}
   \item \lstinline!template<class GFS> class ISTLBackend_NOVLP_BCGS_NOPREC!:
-    Parallel unpreconditioned
+    parallel unpreconditioned
     stabilized bi-conjugate gradient method for nonoverlapping grids.
     \item \lstinline!template<class GFS> class ISTLBackend_OVLP_BCGS_SSORk!:
       the above preconditioned with $k$ steps of SSOR.
@@ -341,8 +341,8 @@ blocks.
       decomposition method with SuperLU for the problems local to the
       processors.
       \item \lstinline!template<class GFS> ISTLBackend_BCGS_AMG_SSOR!:
-        The first with parallel AMG smoothed by SSOR. Requires an
-        overlapping grid!
+        the first method preconsitioned by parallel AMG smoothed by
+        SSOR. Requires an overlapping grid!
   \end{itemize}
 \end{frame}
 
