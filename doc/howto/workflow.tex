@@ -16,47 +16,51 @@
   \textbf{Real world problems can be defined on complex domains.}
   \begin{itemize}
     \item Often, such domains are given by CAD-models.
-    \item Dune cannot handle Geometry Models (yet).
-    \item Thus a workflow is needed to computational grids for Dune Simualations
-      from CAD-models.
+    \item Dune cannot handle such models directly.
+    \item $\rightarrow$ Need of a workflow to import computational grids
+      for CAD-models used in simulations.
   \end{itemize}
   The interface to meshed CAD-Models in Dune is via \lstinline!Gmsh!-files.
 \end{frame}
 
 \begin{frame}
-  \frametitle<presentation>{Some Examples for Meshed CAD-Models Imported to Dune}
-  \begin{figure}
-    \begin{center}
-      \includegraphics[width=0.48\textwidth]{./EPS/motor}  $\hspace{1mm}$
-      \includegraphics[width=0.48\textwidth]{./EPS/shape2} $\hspace{1mm}$
-      \caption[]{Some example meshes import to Dune.}
-      \label{fig:CADExmapleMeshesToDune}
-    \end{center}
-  \end{figure}
-\end{frame}
-
-\begin{frame}
   \frametitle<presentation>{Overview}
   The outline to import meshed CAD-models in Dune is
-  \begin{itemize}
+  \begin{enumerate}
     \item Create or retrieve a CAD-model.
-    \item Edit and mesh the CAD-model with Gmsh, an external Numerics
-      Environment \href{http://www.geuz.org/msh}{(www.geuz.org/gmsh)}.
+    \item Edit and mesh the CAD-model with Gmsh
+      \href{http://www.geuz.org/msh}{(www.geuz.org/gmsh)}.
     \item Export a \lstinline!.msh!-File from Gmsh.
     \item File can contain additional data such as connected subdomains.
     \item Import the mesh file with the \lstinline!Dune::GmshReader!.
     \item Evaluate physical data specified in the mesh file.
-  \end{itemize}
-  Each step will be shown in detail in the following sections.
+  \end{enumerate}
+  The important steps will be shown in detail in the following sections.
+\end{frame}
+
+\begin{frame}
+  \frametitle<presentation>{A Meshed CAD-Models Imported to Dune}
+  The picture shows a sample geometry meshed with Gmsh on the left and the mesh
+  imported by Dune on the right.
+  %\begin{figure*}
+  \begin{center}
+    \includegraphics[width=0.48\textwidth]{./EPS/gcad3d_cyl_gmsh}  $\hspace{1mm}$
+    \includegraphics[width=0.48\textwidth]{./EPS/gcad3d_cyl_dune}
+    %\caption[]{Some example meshes import to Dune.}
+    %\label{fig:CADExmapleMeshesToDune}
+  \end{center}
+  {\tiny (CAD-Model from gCAD3D).}
+  %\end{figure*}
 \end{frame}
 
 \begin{frame}
   \frametitle<presentation>{The Workflow to Import meshed CAD-Models to Dune}
+  In general we have the flow chart
   \begin{center}
-    In general we have the flow chart\\[5pt]
-    \includegraphics[width=0.7\textwidth]{./EPS/workflow}\\[5pt]
-    Of course any Geometry modeller could be applied behind the Gmsh-Interface.
+    \includegraphics[width=0.7\textwidth]{./EPS/workflow}
   \end{center}
+  Salome is another geometry modeller behind the Gmsh-Interface.
+  Other tools might be applicable as well.
 \end{frame}
 
 %-------------------------------------------------------------------
@@ -66,26 +70,21 @@
 % Installation
 % welche Grids?
 
-\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
+\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
   \frametitle{The Dune::GmshReader}
   We begin with the import of a Mesh file \lstinline!meshfile.msh! using Dune's
   \lstinline!GmshReader!:
   \lstinputlisting[basicstyle=\tiny,numbers=left,
       numberstyle=\tiny, numbersep=2pt]{./src_examples/gridtest.cc}
-  \textbf{Notes:}
+      \textbf{Changes to the code seen up to now are:}
   \begin{itemize}
-    \item Inclusion the Gmsh-Interface header from \lstinline!dune-grid!.
-    \item Use of \lstinline!UGGrid!. Up to now only \lstinline!UGGrid! and
-      \lstinline!ALUGrid! feasible for Gmsh meshes.
+    \item Include the Gmsh-Interface header from \lstinline!dune-grid! (line
+      $12$).
+    \item Use \lstinline!UGGrid! -- Up to now \lstinline!UGGrid! and
+      \lstinline!ALUGrid! are feasible for Gmsh meshes (line $33$-$35$).
+    \item Import gmsh file (line $37$-$40$).
   \end{itemize}
 \end{frame}
-\mode<article>{
-  \begin{Lst} \mbox
-  \nopagebreak
-  \lstinputlisting[basicstyle=\scriptsize,numbers=left,
-      numberstyle=\tiny, numbersep=2pt]{./src_examples/gridtest.cc}
-  \end{Lst}
-}
 
 \begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
   \frametitle{Gmsh}
@@ -104,9 +103,9 @@
   It comes with a more or less user-friedly GUI:
   \begin{center}
     \includegraphics[width=0.7\textwidth]{./EPS/gcad3d_deckel}
-    \\
-    {\tiny (CAD-Model from gCAD3D).}
   \end{center}
+  {\tiny (CAD-Model from gCAD3D).}
+
   \textbf{Further features of Gmsh:}
   \begin{itemize}
     \item Geometry Kernel: OpenCascade
@@ -159,12 +158,36 @@
       \hline
     \end{tabular}
   \end{center}
-  All imported models are converted to the geo-format internally.
+  Imported models are converted to the geo-format internally. Gmsh's merge
+  function preserves the original format.
 \end{frame}
 
 \begin{frame}
   \frametitle{Meshing CAD-Models with Gmsh}
-  \textbf{Gmsh allows to mesh CAD-models.}
+  \textbf{Gmsh comes with a meshing functionality:}
+  \begin{enumerate}
+    \item Advancing front, and
+    \item Delaunay meshes.
+    \item Mesher can be parametrized by hypothesises.
+    \item All meshes handled as unstructured grids.
+    \item Only simplicial meshes.
+  \end{enumerate}
+\end{frame}
+
+\subsubsection*{Further notes on ineraction between Dune and Gmsh}
+
+\begin{frame}
+  \frametitle{Dune and Gmsh Notes}
+  \begin{enumerate}
+    \item In Dune: Higher order elements available!
+    \item But meshes from Gmsh are always linear
+      (though boundary segment apprximation might be quadratic).
+    \item Dune Grids from Gmsh Meshes created with \emph{GridFactories}.
+      \begin{itemize}
+        \item GridFactory implementation depends on Dune GridType.
+        \item For UG and ALU the Factories are ready.
+      \end{itemize}
+  \end{enumerate}
 \end{frame}
 
 %-------------------------------------------------------------------
@@ -182,18 +205,19 @@
     \item Boundary conditions,
     \item \ldots
   \end{itemize}
-  \textbf{In Gmsh parts of the CAD-model can be joined}:
+  \textbf{The subdomains available in Gmsh are:}
   \begin{itemize}
     \item Volume groups,
     \item Surface groups,
     \item Line groups,
     \item Point groups.
   \end{itemize}
-  \pagebreak<presentation>
-  \textbf{Physical groups are best specified by user interaction:}
-  \begin{center}
-    \includegraphics[width=0.8\textwidth]{./EPS/crank/geo2}
-  \end{center}
+  %\pagebreak<presentation>
+  %\textbf{Physical groups can be set by user interaction:}
+  %\begin{center}
+  %  \includegraphics[width=0.6\textwidth]{./EPS/crank/geo2}
+  %\end{center}
+  %The meaning of the numbers will be explained forthwith.
 \end{frame}
 
 \begin{frame}
@@ -208,40 +232,45 @@
     \item Codim 0 entities $\Leftrightarrow$ Geometry volume groups, and
     \item Codim 1 entities $\Leftrightarrow$ Geometry surface groups,
   \end{itemize}
-  are stored in \lstinline!std::vector<int>!s.
+  can be saved in two \lstinline!std::vector<int>!s.
 \end{frame}
 
 \begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
   \frametitle<presentation>{An Example for Physical Grouping in Gmsh}
+  \textbf{The next pictures show how physical groups can be set by user interaction in
+  Gmsh:}
   \begin{center}
-    \includegraphics[width=0.8\textwidth]{./EPS/L/L_numbers_vols_faces}\\[0.5em]
-    Volumes and Faces of geometry models have unique numbers. Volume numbers --
-    yellow here, surface -- grey. This model has internal faces.
+    \includegraphics[width=0.8\textwidth]{./EPS/L/L_numbers_vols_faces}
   \end{center}
+  Volumes and Faces of geometry models have unique numbers. Here: Volume numbers --
+  yellow, surface -- grey. This model has internal faces.
   \begin{center}
-    \includegraphics[width=0.8\textwidth]{./EPS/L/L_volgroup1}\\[0.5em]
-    The model volume consists of several sub-volumes which we divide into two
-    physical groups. This is the first one\ldots
+    \includegraphics[width=0.8\textwidth]{./EPS/L/L_volgroup1}
   \end{center}
+  The model volume consists of several sub-volumes which we divide into two
+  physical groups. This is the first one\ldots
   \begin{center}
-    \includegraphics[width=0.8\textwidth]{./EPS/L/L_volgroup2}\\[0.5em]
-    \ldots and this the second.
+    \includegraphics[width=0.8\textwidth]{./EPS/L/L_volgroup2}
   \end{center}
+  \ldots and this the second.
   \begin{center}
-    \includegraphics[width=0.8\textwidth]{./EPS/L/L_surfgroup1}\\[0.5em]
-    Next we create two surface groups. Group $1$\ldots
+    \includegraphics[width=0.8\textwidth]{./EPS/L/L_surfgroup1}
   \end{center}
+  Next we create two surface groups. Group $1$\ldots
   \begin{center}
-    \includegraphics[width=0.8\textwidth]{./EPS/L/L_surfgroup2}\\[0.5em]
-    \ldots and group $2$. Internal faces are not grouped.
+    \includegraphics[width=0.8\textwidth]{./EPS/L/L_surfgroup2}
   \end{center}
+  \ldots and group $2$. Internal faces are not grouped.
   \begin{center}
     \includegraphics[width=0.355\textwidth]{./EPS/L/L_physgroups}\rule{1mm}{0mm}
     \includegraphics[width=0.29\textwidth]{./EPS/L/L_meshstatistics}\rule{1mm}{0mm}
     \includegraphics[width=0.29\textwidth]{./EPS/L/L_geostatistics}\\
-    This picture shows physical grous, mesh and geo statistics.
   \end{center}
+  This picture shows physical grous, mesh and geo statistics.
 \end{frame}
+
+%-------------------------------------------------------------------
+\subsection{A sample Dune-Simulation importing a CAD-model}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
   \frametitle{Using Physical Groups from within Dune}
@@ -361,14 +390,14 @@
 }
 
 %-------------------------------------------------------------------
-\subsection{Salome}
+\subsection{Salome and some other Open Source CAD-Tools}
 
 % Constructing Geometries
 % Export von geo und unv
 % Ausblick: Reader
 \begin{frame}
   \frametitle{Salome}
-  \textbf{Salome is a user-friendly CAE-environment which can also export
+  \textbf{Salome is a more user-friendly CAE-environment which can also export
   CAD-models and meshes suitable for Gmsh-Import}.
   \begin{itemize}
     \item Geometry Kernel: OpenCascade, exposes more of the functionality than Gmsh.
@@ -379,13 +408,10 @@
   \end{itemize}
 \end{frame}
 
-%-------------------------------------------------------------------
-\subsection{Other Open Source CAD-Tools}
-
 \begin{frame}
   \frametitle{Other Open Source CAD-Tools}
   %\begin{table}
-    Some CAD-Tools which are able to export geometry models or mesh
+    Some other CAD-Tools which are able to export geometry models or mesh
     files suitable for Gmsh import:
     \begin{center}
       \small
