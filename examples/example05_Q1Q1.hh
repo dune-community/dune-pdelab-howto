@@ -1,6 +1,5 @@
 template<class GV>
-void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
-{
+void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend) {
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
@@ -21,8 +20,7 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   GFS1 gfs1(gv,fem1);
 
   typedef Dune::PDELab::CompositeGridFunctionSpace<             // compose function space
-  Dune::PDELab::GridFunctionSpaceBlockwiseMapper,               // point block ordering
-	  GFS0,GFS1> GFS;              
+  Dune::PDELab::GridFunctionSpaceBlockwiseMapper,GFS0,GFS1> GFS;// point block ordering
   GFS gfs(gfs0,gfs1);
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
 
@@ -43,8 +41,7 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   Dune::PDELab::interpolate(uinitial,gfs,uold);
 
   // <<<4>>> Make instationary grid operator space
-  Real d_0 = 0.00028, d_1 = 0.005;
-  Real lambda = 1.0, sigma = 1.0, kappa = -0.05, tau = 0.1;
+  Real d_0 = 0.00028, d_1 = 0.005, lambda = 1.0, sigma = 1.0, kappa = -0.05, tau = 0.1;
   typedef Example05LocalOperator LOP; 
   LOP lop(d_0,d_1,lambda,sigma,kappa,2);                        // spatial part
   typedef Example05TimeLocalOperator TLOP; 
@@ -108,7 +105,6 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
 
       uold = unew;
       time += dt;
-      if (dt<dtmax-1e-8)                                        // very simple time
-        dt = std::min(dt*1.1,dtmax);                            // step adaption
+      if (dt<dtmax-1e-8) dt = std::min(dt*1.1,dtmax);           // time step adaption
     }
 }
