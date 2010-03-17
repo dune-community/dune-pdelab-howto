@@ -759,7 +759,12 @@ finite-dimensional function space:
 \end{itemize}
 \item A \textit{vector container} represents a vector space of coefficients:
 \begin{itemize}
-\item \lstinline{u} $\quad\leftrightarrow\quad$ $\mathbf{U}$.
+\item \lstinline{U u} $\quad\leftrightarrow\quad$ $\mathbf{u}\in\mathbf{U}$.
+\end{itemize}
+\item A grid function space and a coefficient vector represent a function in a
+finite-dimensional function space:
+\begin{itemize}
+\item \lstinline{gfs} $+$ \lstinline{u} $\quad\leftrightarrow\quad$ $u_h\in U_h(E_h^0)$.
 \end{itemize}
 \item A \textit{grid operator space} realizes computations with residual forms:
 \begin{itemize}
@@ -768,7 +773,7 @@ finite-dimensional function space:
 \end{itemize}
 \item A \textit{matrix container} represents a linear map (not shown yet):
 \begin{itemize}
-\item \lstinline{A} $\quad\leftrightarrow\quad$ $\mathbf{A}\in L(\mathbf{U},\mathbf{V})$.
+\item \lstinline{Matrix A} $\quad\leftrightarrow\quad$ $\mathbf{A}\in L(\mathbf{U},\mathbf{V})$.
 \end{itemize}
 \end{itemize}
 \end{frame}
