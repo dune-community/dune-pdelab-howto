@@ -5,11 +5,7 @@
 #include<dune/pdelab/localoperator/flags.hh>
 #include<dune/pdelab/localoperator/idefault.hh>
 
-/** a local operator for the mass operator (L_2 integral) in the system
- *
- * u_0
- * \tau *u_1
- */
+/** \brief A local operator for the mass operator (L_2 integral) in the system */
 class Example05TimeLocalOperator 
   : public Dune::PDELab::NumericalJacobianApplyVolume<Example05TimeLocalOperator>,
     public Dune::PDELab::NumericalJacobianVolume<Example05TimeLocalOperator>,
