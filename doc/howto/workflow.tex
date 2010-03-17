@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{The Dune Workflow for Simulations with CAD-Models}\label{Sec:Workflow}
+\section{The DUNE Workflow for Simulations with CAD-Models}\label{Sec:Workflow}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -16,45 +16,45 @@
   \textbf{Real world problems can be defined on complex domains.}
   \begin{itemize}
     \item Often, such domains are given by CAD-models.
-    \item Dune cannot handle such models directly.
+    \item DUNE cannot handle such models directly.
     \item $\rightarrow$ Need of a workflow to import computational grids
       for CAD-models used in simulations.
   \end{itemize}
-  The interface to meshed CAD-Models in Dune is via \lstinline!Gmsh!-files.
+  The interface to meshed CAD-Models in DUNE is via \lstinline!Gmsh!-files.
 \end{frame}
 
 \begin{frame}
   \frametitle<presentation>{Overview}
-  The outline to import meshed CAD-models in Dune is
+  The outline to import meshed CAD-models in DUNE is
   \begin{enumerate}
     \item Create or retrieve a CAD-model.
     \item Edit and mesh the CAD-model with Gmsh
       \href{http://www.geuz.org/msh}{(www.geuz.org/gmsh)}.
     \item Export a \lstinline!.msh!-File from Gmsh.
     \item File can contain additional data such as connected subdomains.
-    \item Import the mesh file with the \lstinline!Dune::GmshReader!.
+    \item Import the mesh file with the \lstinline!DUNE::GmshReader!.
     \item Evaluate physical data specified in the mesh file.
   \end{enumerate}
   The important steps will be shown in detail in the following sections.
 \end{frame}
 
 \begin{frame}
-  \frametitle<presentation>{A Meshed CAD-Models Imported to Dune}
+  \frametitle<presentation>{A Meshed CAD-Models Imported to DUNE}
   The picture shows a sample geometry meshed with Gmsh on the left and the mesh
-  imported by Dune on the right.
+  imported by DUNE on the right.
   %\begin{figure*}
   \begin{center}
     \includegraphics[width=0.48\textwidth]{./EPS/gcad3d_cyl_gmsh}  $\hspace{1mm}$
     \includegraphics[width=0.48\textwidth]{./EPS/gcad3d_cyl_dune}
-    %\caption[]{Some example meshes import to Dune.}
-    %\label{fig:CADExmapleMeshesToDune}
+    %\caption[]{Some example meshes import to DUNE.}
+    %\label{fig:CADExmapleMeshesToDUNE}
   \end{center}
   {\tiny (CAD-Model from gCAD3D).}
   %\end{figure*}
 \end{frame}
 
 \begin{frame}
-  \frametitle<presentation>{The Workflow to Import meshed CAD-Models to Dune}
+  \frametitle<presentation>{The Workflow to Import meshed CAD-Models to DUNE}
   In general we have the flow chart
   \begin{center}
     \includegraphics[width=0.7\textwidth]{./EPS/workflow}
@@ -65,14 +65,14 @@
 
 %-------------------------------------------------------------------
 \subsection{Gmsh and the DUNE Gmsh-Interface}
-% Dune GmshReader
+% DUNE GmshReader
 % Gmsh und OpenCascade
 % Installation
 % welche Grids?
 
 \begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
   \frametitle{The Dune::GmshReader}
-  We begin with the import of a Mesh file \lstinline!meshfile.msh! using Dune's
+  We begin with the import of a Mesh file \lstinline!meshfile.msh! using DUNE's
   \lstinline!GmshReader!:
   \lstinputlisting[basicstyle=\tiny,numbers=left,
       numberstyle=\tiny, numbersep=2pt]{./src_examples/gridtest.cc}
@@ -110,14 +110,36 @@
   \begin{itemize}
     \item Geometry Kernel: OpenCascade
       \begin{itemize}
-        \item Gmsh $\leq$ 2.3.1: Build from scratch for OpenCascde and Gsmh
+        \item Gmsh $\leq$ 2.3.1:\\ Build from scratch for OpenCascde and Gmsh
           necessary to import CAD-models.
-        \item Gmsh $\geq$ 2.4.2: Precompiled build for Linux and MAC work with
+        \item Gmsh $\geq$ 2.4.2:\\ Precompiled build for Linux and MAC work with
           OpenCascade packages from distributor (Tested for Debian and MacOS).
       \end{itemize}
     \item Does not cover full functionality of geometry kernel.
-    \item Possible: Second order boundaries. Dune supports them (But there is a
-      bug in the current trunk!).
+  \end{itemize}
+\end{frame}
+
+\subsubsection*{Further notes on ineraction between DUNE and Gmsh}
+
+\begin{frame}
+  \frametitle{DUNE and Gmsh Notes}
+  \begin{itemize}
+    \item Possible: Second order boundary representation, readable by the
+      GmshReader (Bug in the current trunk!).
+    \item Underlying DUNE-grid needs to support higher order boundaries. During grid
+      refinement boundary is approximated the better.
+    \item In DUNE: Higher order local FE bases available.
+    \item Higher order elements are not possible but not implemented yet in DUNE:
+      \begin{itemize}
+        \item Need approriate grid-managers.
+        \item Need mesher which exports such elements.
+        \item GmshReader uses \emph{GridFactories} to create grids.
+          \begin{itemize}
+            \item GridFactory implementation depends on DUNE GridType.
+            \item For UG and ALU the Factories are ready.
+            \item For other grids, user may need to implement a specific factory.
+          \end{itemize}
+      \end{itemize}
   \end{itemize}
 \end{frame}
 
@@ -138,12 +160,12 @@
       \\
       \hline
       \hline
-      STEP & \lstinline!.stp, .step! & ISO10303 norm\\
-      & & Able to save all data of work process
+      STEP & \lstinline!.stp, .step! & ISO10303 norm, STandard for the\\
+      & & Exchange of Product model data.
       \\
       \hline
       IGES & \lstinline!.igs, .iges! & Transfers mainly geometry data\\
-      & & 2D/3D shape models (NURBS + Bezier)
+      & & 2D/3D shape models (NURBS, Bezier, \ldots)
       \\
       \hline
       ACIS & \lstinline!.sat! & Volume modelling kernel. Widely used format.
@@ -158,36 +180,18 @@
       \hline
     \end{tabular}
   \end{center}
-  Imported models are converted to the geo-format internally. Gmsh's merge
-  function preserves the original format.
 \end{frame}
 
 \begin{frame}
   \frametitle{Meshing CAD-Models with Gmsh}
   \textbf{Gmsh comes with a meshing functionality:}
-  \begin{enumerate}
+  \begin{itemize}
     \item Advancing front, and
     \item Delaunay meshes.
-    \item Mesher can be parametrized by hypothesises.
-    \item All meshes handled as unstructured grids.
+    \item Meshers can be parametrized by hypothesises.
+    \item All meshes are handled as unstructured grids.
     \item Only simplicial meshes.
-  \end{enumerate}
-\end{frame}
-
-\subsubsection*{Further notes on ineraction between Dune and Gmsh}
-
-\begin{frame}
-  \frametitle{Dune and Gmsh Notes}
-  \begin{enumerate}
-    \item In Dune: Higher order elements available!
-    \item But meshes from Gmsh are always linear
-      (though boundary segment apprximation might be quadratic).
-    \item Dune Grids from Gmsh Meshes created with \emph{GridFactories}.
-      \begin{itemize}
-        \item GridFactory implementation depends on Dune GridType.
-        \item For UG and ALU the Factories are ready.
-      \end{itemize}
-  \end{enumerate}
+  \end{itemize}
 \end{frame}
 
 %-------------------------------------------------------------------
@@ -198,30 +202,37 @@
 
 \begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
   \frametitle<presentation>{Physical Groups in CAD-Models}
-  \textbf{Physical parameters can be associated to subdomains of the
-  domain, e.g.}
-  \begin{itemize}
-    \item Material properties (conductivities,\ldots),
-    \item Boundary conditions,
-    \item \ldots
-  \end{itemize}
-  \textbf{The subdomains available in Gmsh are:}
-  \begin{itemize}
-    \item Volume groups,
-    \item Surface groups,
-    \item Line groups,
-    \item Point groups.
-  \end{itemize}
-  %\pagebreak<presentation>
-  %\textbf{Physical groups can be set by user interaction:}
-  %\begin{center}
-  %  \includegraphics[width=0.6\textwidth]{./EPS/crank/geo2}
-  %\end{center}
-  %The meaning of the numbers will be explained forthwith.
+  \begin{minipage}{0.67\linewidth}
+    \textbf{Parameters can be associated to subdomains of the
+    domain, e.g.}
+    \begin{itemize}
+      \item Material properties (conductivities,\ldots),
+      \item Boundary conditions,
+      \item \ldots
+    \end{itemize}
+    \textbf{The subdomains available in Gmsh are:}
+    \begin{itemize}
+      \item Volume groups,
+      \item Surface groups,
+      \item Line groups,
+      \item Point groups.
+    \end{itemize}
+    \textbf{How to set groups:}
+    \begin{itemize}
+      \item Via \texttt{Geometry} $\rightarrow$ \texttt{Physical groups} in
+        the menu window.
+    \end{itemize}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.31\linewidth}
+    \begin{center}
+      \includegraphics[width=\linewidth]{./EPS/hammer_surfgroups}
+    \end{center}
+  \end{minipage}
 \end{frame}
 
 \begin{frame}
-  \frametitle<presentation>{Evaluating Physical Groups with the Dune::GmshReader}
+  \frametitle<presentation>{Evaluating Physical Groups with the GmshReader}
   The \lstinline!Dune::GmshReader! is able to read
   \begin{itemize}
     \item Volume groups, and
@@ -237,49 +248,43 @@
 
 \begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
   \frametitle<presentation>{An Example for Physical Grouping in Gmsh}
-  \textbf{The next pictures show how physical groups can be set by user interaction in
-  Gmsh:}
+  The next picture shows physical surface groups set by user interaction:
+
+  \begin{minipage}{\linewidth}
+    \begin{minipage}{0.64\linewidth}
+      \begin{center}
+        \includegraphics[width=\textwidth]{./EPS/crank/crank_surfgroups1}
+      \end{center}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.35\linewidth}
+      \begin{center}
+        \includegraphics[width=\textwidth]{./EPS/crank/crank_surfgroups2}
+      \end{center}
+    \end{minipage}
+  \end{minipage}
+\end{frame}
+
+\begin{frame}[fragile,allowframebreaks,allowdisplaybreaks]
+  \frametitle<presentation>{The example mesh read by GmshReader in Dune}
   \begin{center}
-    \includegraphics[width=0.8\textwidth]{./EPS/L/L_numbers_vols_faces}
+    \includegraphics[width=0.7\textwidth]{./EPS/crank/crank_DirBC}
   \end{center}
-  Volumes and Faces of geometry models have unique numbers. Here: Volume numbers --
-  yellow, surface -- grey. This model has internal faces.
-  \begin{center}
-    \includegraphics[width=0.8\textwidth]{./EPS/L/L_volgroup1}
-  \end{center}
-  The model volume consists of several sub-volumes which we divide into two
-  physical groups. This is the first one\ldots
-  \begin{center}
-    \includegraphics[width=0.8\textwidth]{./EPS/L/L_volgroup2}
-  \end{center}
-  \ldots and this the second.
-  \begin{center}
-    \includegraphics[width=0.8\textwidth]{./EPS/L/L_surfgroup1}
-  \end{center}
-  Next we create two surface groups. Group $1$\ldots
-  \begin{center}
-    \includegraphics[width=0.8\textwidth]{./EPS/L/L_surfgroup2}
-  \end{center}
-  \ldots and group $2$. Internal faces are not grouped.
-  \begin{center}
-    \includegraphics[width=0.355\textwidth]{./EPS/L/L_physgroups}\rule{1mm}{0mm}
-    \includegraphics[width=0.29\textwidth]{./EPS/L/L_meshstatistics}\rule{1mm}{0mm}
-    \includegraphics[width=0.29\textwidth]{./EPS/L/L_geostatistics}\\
-  \end{center}
-  This picture shows physical grous, mesh and geo statistics.
+  This above picture shows the mesh read by the GmshReader. Dirichlet constraints are
+  set by the \lstinline!set_constrained_dofs! method in Dune (red colored
+  faces). Remaining faces have Neumann-0 boundary conditions.
 \end{frame}
 
 %-------------------------------------------------------------------
-\subsection{A sample Dune-Simulation importing a CAD-model}
+\subsection{A sample DUNE-Simulation importing a CAD-model}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-  \frametitle{Using Physical Groups from within Dune}
-  \textbf{Next we show how the physical groups can be used in Dune. We use the
-  examples from the stationary problems section. Changes are}:
+  \frametitle{Using Physical Groups from within DUNE}
+  \textbf{Next we solve the constraint stationary linear diffusion problem
+  (cf. 1st lecture) on the crank-domain. Possible changes are}:
   \begin{itemize}
-    \item Use \lstinline!Dune::GmshReader!,
-    \item Use \lstinline!UGGrid!,
-    \item Use $P1$-elements for simplicity only,
+    \item Use \lstinline!Dune::GmshReader! and \lstinline!UGGrid!,
+    \item Use $P1$-elements,
     \item Rewrite
       \begin{itemize}
         \item \lstinline!bctype.hh!,
@@ -287,73 +292,92 @@
         \item Source term evaluation,
         \item Diffusion parameter evaluation.
       \end{itemize}
-      \textbf{Boundary conditions and material parameters depend on the physical group
-      maps now!}
-    \item The PDELab local operator is parametrized with boundary selection and value
-      classes, source term class and a class for the non-constant material
+      \textbf{Boundary conditions and material parameters may depend on physical group
+      maps now.}
+    \item The PDELab-LocalOperator is parametrized with boundary selection and value
+      classes, a source term class and a class for the non-constant material
       parameter.
   \end{itemize}
   \textbf{The Code constist of four files:}
   \begin{itemize}
-    \item \lstinline!e02.cc!: main file creating grid files from Gmsh files,
-    \item \lstinline!e02_parameter.hh!: Parameter classes containg maps to
+    \item \lstinline!cadsample.cc!:\\ Main file creating grid files from Gmsh files,
+    \item \lstinline!cadsample_parameter.hh!:\\ Parameter classes which contain maps to
       physical groups,
-    \item \lstinline!e02_P1.hh!: Set up the P1 driver,
-    \item \lstinline!e02_operator.hh!: local operator parametrized by the
-      classes from \lstinline!e02_parameter.hh!
+    \item \lstinline!cadsample_P1.hh!:\\ Set up the P1 driver,
+    \item \lstinline!cadsample_operator.hh!:\\ The local operator parametrized by the
+      classes from \lstinline!cadsample_parameter.hh!
   \end{itemize}
 \end{frame}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
   \frametitle<presentation>{The Main File of the Example}
-  \lstinputlisting[basicstyle=\tiny,numbers=left,
-      numberstyle=\tiny, numbersep=2pt]{./src_examples/e02.cc}
+  \lstinputlisting[basicstyle=\tiny,numbers=left,firstline=53,lastline=122,firstnumber=53,
+      numberstyle=\tiny, numbersep=2pt]{./src_examples/cadsample.cc}
   \textbf{Notes:}
   \begin{itemize}
-    \item In line $80$, the \lstinline!GmshReader! takes two vectors
-      (instantiated in lines $74,75$) to store volume and surface map data from
+    \item In line $75$, the \lstinline!GmshReader! takes two vectors
+      (instantiated in lines $69,70$) to store volume and surface map data from
       the Gmsh file.
-    \item In line $98-108$, the parameter classes for the problem are created.
-      In the constructor they take the according vector. Example:
-      \lstinline!LeiffelBCType! evaluates mapping \lstinline!Dune::Intersection!
-      with boundary and physical group of geometry boundary.
+    \item In line $85-97$, the parameter classes for the problem are created.
+      In the constructor they take the according vectors.\\
+      Example: \lstinline!CrankBCType! evaluates the mapping \lstinline!Dune::Intersection!
+      with boundary to physical group of geometrical boundary.
     \item All parameter objects are passed to the driving function
-      \lstinline!e02_P1! in line $111$ which forwards them to the operator.
+      \lstinline!cadsample_P1! in line $111$ which forwards them to the operator.
   \end{itemize}
 \end{frame}
 \mode<article>{
   \begin{Lst} \mbox
   \nopagebreak
   \lstinputlisting[basicstyle=\scriptsize,numbers=left,
-      numberstyle=\tiny, numbersep=2pt]{./src_examples/e02.cc}
+      numberstyle=\tiny, numbersep=2pt]{./src_examples/cadsample.cc}
   \end{Lst}
+  \textbf{Notes:}
+  \begin{itemize}
+    \item The \lstinline!GmshReader! takes two vectors to store volume and surface
+      map data from the Gmsh file.
+    \item In function \lstinline!crank!, the parameter classes for the problem are created.
+      In the constructor they take the according vectors.\\
+      Example: \lstinline!CrankBCType! evaluates the mapping \lstinline!Dune::Intersection!
+      with boundary to physical group of geometrical boundary.
+    \item All parameter objects are passed to the driving function
+      \lstinline!cadsample_P1! which forwards them to the operator.
+  \end{itemize}
 }
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-  \frametitle<presentation>{The Parameter Class File of the Example}
-  \lstinputlisting[basicstyle=\tiny,numbers=left,
-      numberstyle=\tiny, numbersep=2pt]{./src_examples/e02_parameter.hh}
+  \frametitle<presentation>{The Parameter Classes in Detail}
+  \lstinputlisting[basicstyle=\tiny,numbers=left,linerange={19-61,63-115,120-158,161-189},
+      numberstyle=\tiny, numbersep=2pt]{./src_examples/cadsample_parameter.hh}
   \textbf{Notes:}
   \begin{itemize}
     \item The parameter classes evaluate the physical maps instead of global
-      coordinates now!
+      coordinates now.
     \item E.g., take the diffusion coefficient. Based on the element index
-      it evaluates the physical grou map for volumes.
-    \item Similar evaluates hold true for the other parameter classes.
+      it evaluates the physical group map for volumes.
+    \item Similar evaluation for the other parameter classes.
   \end{itemize}
 \end{frame}
 \mode<article>{
   \begin{Lst} \mbox
   \nopagebreak
   \lstinputlisting[basicstyle=\scriptsize,numbers=left,
-      numberstyle=\tiny, numbersep=2pt]{./src_examples/e02_parameter.hh}
+      numberstyle=\tiny, numbersep=2pt]{./src_examples/cadsample_parameter.hh}
   \end{Lst}
+  \textbf{Notes:}
+  \begin{itemize}
+    \item The parameter classes evaluate the physical maps instead of global
+      coordinates now.
+    \item E.g., take the diffusion coefficient. Based on the element index
+      it evaluates the physical group map for volumes.
+    \item Similar evaluates hold true for the other parameter classes.
+  \end{itemize}
 }
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
   \frametitle<presentation>{The Driver function for the Example}
-  \lstinputlisting[basicstyle=\tiny,numbers=left,
-      numberstyle=\tiny, numbersep=2pt]{./src_examples/e02_P1.hh}
+  \lstinputlisting[basicstyle=\tiny,numbers=left,linerange={1-6,27-34},
+      numberstyle=\tiny, numbersep=2pt]{./src_examples/cadsample_P1.hh}
   \textbf{Notes:}
   \begin{itemize}
     \item The driver is nearly unchanged to the stationary examples.
@@ -364,14 +388,34 @@
   \begin{Lst} \mbox
   \nopagebreak
   \lstinputlisting[basicstyle=\scriptsize,numbers=left,
-      numberstyle=\tiny, numbersep=2pt]{./src_examples/e02_P1.hh}
+      numberstyle=\tiny, numbersep=2pt]{./src_examples/cadsample_P1.hh}
   \end{Lst}
+  \textbf{Notes:}
+  \begin{itemize}
+    \item The driver is nearly unchanged to the stationary examples.
+    \item Passes the parameter objects to the operator and constraints.
+  \end{itemize}
 }
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
   \frametitle<presentation>{The Parametrized Local Operator for the Example}
   \lstinputlisting[basicstyle=\tiny,numbers=left,
-      numberstyle=\tiny, numbersep=2pt]{./src_examples/e02_operator.hh}
+      linerange={7-22,40-47,96-105,113-117,155-158,166-171},
+      numberstyle=\tiny, numbersep=2pt]{./src_examples/cadsample_operator.hh}
+  \textbf{Notes:}
+  \begin{itemize}
+    \item Operator is parametrized with boundary type selection,
+      boundary extension and boundary flux classes.
+    \item Source term vanishes but could also be a parameter to the operator.
+    \item Compare Evaluation of the parameters to the parameter classes!
+  \end{itemize}
+\end{frame}
+\mode<article>{
+  \begin{Lst} \mbox
+  \nopagebreak
+  \lstinputlisting[basicstyle=\scriptsize,numbers=left,
+      numberstyle=\tiny, numbersep=2pt]{./src_examples/cadsample_operator.hh}
+  \end{Lst}
   \textbf{Notes:}
   \begin{itemize}
     \item The operator is now parametrized with the boundary type selection,
@@ -380,17 +424,19 @@
     \item Evaluation of the parameter in operator via enities and intersecions.
       Compare the parameter classes!
   \end{itemize}
-\end{frame}
-\mode<article>{
-  \begin{Lst} \mbox
-  \nopagebreak
-  \lstinputlisting[basicstyle=\scriptsize,numbers=left,
-      numberstyle=\tiny, numbersep=2pt]{./src_examples/e02_operator.hh}
-  \end{Lst}
 }
 
+\begin{frame}
+  \frametitle<presentation>{Simulation results}
+  \begin{center}
+    \includegraphics[width=0.7\textwidth]{./EPS/crank/crank_sol}
+  \end{center}
+  This picture shows the results of the simulation (stationary diffusion, no flux
+  boundaries, P1-FEM).
+\end{frame}
+
 %-------------------------------------------------------------------
-\subsection{Salome and some other Open Source CAD-Tools}
+\subsection{Some other applicable Open Source CAD-Tools}
 
 % Constructing Geometries
 % Export von geo und unv
@@ -406,6 +452,7 @@
     \item Has a generic Mesher interface (Available: Netgen, GHS3D, ...)
     \item User friendly GUI for creating and processing CAD-models.
   \end{itemize}
+  \mode<presentation>{$\longrightarrow$ We will use it in the exercises.}
 \end{frame}
 
 \begin{frame}
@@ -423,14 +470,11 @@
         \\
         \hline
         \hline
-        Gmsh & LGPL & geo & iges, step, brep, acis &
+        Gmsh & LGPL & geo & iges, step, brep, acis & msh
         \\
         \hline
         Salome & LGPL & iges, step, brep, acis & iges, step, brep, acis & unv,
         stl
-        \\
-        \hline
-        BRLCad & GPL &  &  &
         \\
         \hline
         gCAD3D & Freeware & step, iges & step, iges &
@@ -439,7 +483,7 @@
         Blender & own (BL) & CSG & iges &
         \\
         \hline
-        PythonOCC & GPL & &  &
+        PythonOCC & GPL & \multicolumn{2}{c}{Python-Wrapper for OpenCascade} &
         \\
         \hline
       \end{tabular}
