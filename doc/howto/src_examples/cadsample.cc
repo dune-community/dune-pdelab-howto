@@ -1,17 +1,20 @@
 /** \file
 
     \brief Solve elliptic problem in constrained spaces with
-    conforming finite elements
+    conforming finite elements (as the stationary problems)
 */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+// dune includes
 #include<math.h>
 #include<iostream>
 #include<vector>
-#include<map>
+//#include<map>
 #include<string>
 
+// dune includes
 #include<dune/common/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
@@ -29,6 +32,7 @@
 #include<dune/istl/io.hh>
 #include<dune/istl/superlu.hh>
 
+// pdelab includes
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
@@ -47,24 +51,15 @@
 #include<dune/pdelab/stationary/linearproblem.hh>
 
 // include application heaeders
-#include"e02_operator.hh"
-#include"e02_parameter.hh"
-#include"e02_P1.hh"
-
-template <typename V>
-void output(const V& v)
-{
-  for (int j=0; j<v.size(); ++j)
-    std::cout << v[j] << "   ";
-  std::cout << std::endl;
-}
+#include"cadsample_operator.hh"
+#include"cadsample_parameter.hh"
+#include"cadsample_P1.hh"
 
 //===============================================================
-// Problems
+// Problem
 //===============================================================
-
-// the Ljump is a building block of the eiffel tower!
-void LEiffel(int level)
+// crank.igs with solid from Salome
+void crank(int level)
 {
   // instanciate ug grid object
   typedef Dune::UGGrid<3> GridType;
@@ -75,18 +70,10 @@ void LEiffel(int level)
   std::vector<int> elementIndexToPhysicalEntity;
 
   // read a gmsh file
-  std::string gridName = "./grids/L.msh";
+  std::string gridName = "./grids/crank.msh";
   Dune::GmshReader<GridType> gmshreader;
   gmshreader.read(grid, gridName, boundaryIndexToPhysicalEntity,
       elementIndexToPhysicalEntity, true, false);
-
-  // just for control
-  output(elementIndexToPhysicalEntity);
-  output(boundaryIndexToPhysicalEntity);
-
-  // edit gridName
-  gridName.erase(0, gridName.rfind("/")+1);
-  gridName.erase(gridName.find(".", 0), gridName.length());
 
   // refine grid
   grid.globalRefine(level);
@@ -95,63 +82,44 @@ void LEiffel(int level)
   typedef GridType::LeafGridView GV;
   const GV& gv = grid.leafView();
 
-  // material and boundary conditions
-  typedef LeiffelDiffusion<GV,double,std::vector<int> > M;
+  // material conditions
+  typedef CrankDiffusion<GV,double,std::vector<int> > M;
   M m(gv, elementIndexToPhysicalEntity);
-  typedef LeiffelBCType<GV,std::vector<int> > B;
+  
+  // boundary conditions
+  typedef CrankBCType<GV,std::vector<int> > B;
   B b(gv, boundaryIndexToPhysicalEntity);
-  typedef LeiffelBCExtension<GV,double,std::vector<int> > G;
+  typedef CrankBCExtension<GV,double,std::vector<int> > G;
   G g(gv, boundaryIndexToPhysicalEntity);
 
-  // Flux at boundaries
-  typedef LeiffelFlux<GV,double,std::vector<int> > J;
+  // boundaries fluxes
+  typedef CrankFlux<GV,double,std::vector<int> > J;
   J j(gv, boundaryIndexToPhysicalEntity);
 
-  // run simulation
-  e02_P1(gv, m, b, g, j, gridName);
+  // call driver with parameters
+  gridName.erase(0, gridName.rfind("/")+1);
+  gridName.erase(gridName.find(".",0), gridName.length());
+  cadsample_P1(gv, m, b, g, j, gridName);
 }
 
 //===============================================================
 // Main program with grid setup
 //===============================================================
-
 int main(int argc, char** argv)
 {
-  try{
-    //Maybe initialize Mpi
-    Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
-    if(Dune::MPIHelper::isFake)
-      std::cout<< "This is a sequential program." << std::endl;
-    else
-    {
-      if(helper.rank()==0)
-        std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
-    }
-
-    // scan arguments
-    if (argc!=2)
-    {
-      if(helper.rank()==0)
-        std::cout << "usage: ./example02 <level>" << std::endl;
-      return 1;
-    }
-
-    // refinement level
-    int level;
-    sscanf(argv[1],"%d",&level);
-
-    // run simulations
-    if (1 && helper.size()==1)
-    {
-      LEiffel(level);
-    }
-  }
-  catch (Dune::Exception &e){
-    std::cerr << "Dune reported error: " << e << std::endl;
+  // scan arguments
+  if (argc!=2)
+  {
+    std::cout << "usage: ./cadsample <level>" << std::endl;
     return 1;
   }
-  catch (...){
-    std::cerr << "Unknown exception thrown!" << std::endl;
-    return 1;
-  }
+
+  // refinement level
+  int level = 0;
+  sscanf(argv[1],"%d",&level);
+
+  // run simulation
+  crank(level);
+  
+  return 0;
 }

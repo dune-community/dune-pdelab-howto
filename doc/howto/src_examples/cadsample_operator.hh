@@ -6,9 +6,9 @@
 
 /** a local operator for solving the equation
  *
- *   - \Delta m(x) u + a*u = 0   in \Omega
- *                       u = g   on \Gamma_D\subseteq\partial\Omega
- *   \nabla m(x) u \cdot n = j   on \Gamma_N = \partial\Omega\setminus\Gamma_D
+ *   - \Delta m(x) u + a*u   = f   in \Omega
+ *                       u   = g   on \Gamma_D\subseteq\partial\Omega
+ *   - \nabla m(x) u \cdot n = j   on \Gamma_N = \partial\Omega\setminus\Gamma_D
  *
  * with conforming finite elements on all types of grids in any dimension
  * Note the source term is 0 here.
@@ -17,12 +17,13 @@
  * \tparam B a function indicating the type of boundary condition
  * \tparam J a function indicating the source term
  */
-template<typename M, typename B, typename J>
-class E02LocalOperator :
-  public Dune::PDELab::NumericalJacobianApplyVolume<E02LocalOperator<M, B, J> >,
-  public Dune::PDELab::NumericalJacobianVolume<E02LocalOperator<M, B, J> >,
-  public Dune::PDELab::NumericalJacobianApplyBoundary<E02LocalOperator<M, B, J> >,
-  public Dune::PDELab::NumericalJacobianBoundary<E02LocalOperator<M, B, J> >,
+template<typename M, typename B, typename J>                            // NEW
+class CADLocalOperator :
+
+  public Dune::PDELab::NumericalJacobianApplyVolume<CADLocalOperator<M, B, J> >,
+  public Dune::PDELab::NumericalJacobianVolume<CADLocalOperator<M, B, J> >,
+  public Dune::PDELab::NumericalJacobianApplyBoundary<CADLocalOperator<M, B, J> >,
+  public Dune::PDELab::NumericalJacobianBoundary<CADLocalOperator<M, B, J> >,
   public Dune::PDELab::FullVolumePattern,
   public Dune::PDELab::LocalOperatorDefaultFlags
 {
@@ -36,7 +37,8 @@ public:
   enum { doAlphaVolume = true };
   enum { doAlphaBoundary = true };
 
-  E02LocalOperator (const M& m_, const B& b_, const J& j_, unsigned int intorder_=2)
+  // constructor parametrized by material and boundary classes          // NEW
+  CADLocalOperator (const M& m_, const B& b_, const J& j_, unsigned int intorder_=2)
     : m(m_), b(b_), j(j_), intorder(intorder_)
   {}
 
@@ -97,6 +99,9 @@ public:
         globalpos = eg.geometry().global(it->position());
       RF f = 0;
       RF a = 0;
+      typename M::Traits::RangeType y;
+      m.evaluate(eg.entity(), it->position(), y);                       // NEW
+      gradu *= (double) y;
 
       // integrate grad u * grad phi_i + a*u*phi_i - f phi_i
       RF factor = it->weight()*eg.geometry().integrationElement(it->position());
@@ -149,7 +154,7 @@ public:
           u += x_s[i]*phi[i];
 
         // evaluate flux boundary condition
-        typename J::Traits::RangeType y;
+        typename J::Traits::RangeType y;                                // NEW
         j.evaluate(ig, it->position(), y);
 
         // integrate j

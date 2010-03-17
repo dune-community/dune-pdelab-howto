@@ -1,7 +1,7 @@
-// driver now parametrized by M, B, G, J
+// driver now parametrized by M, B, G, J                                 // NEW
 template<typename GV, typename M, typename B, typename G, typename J>
-void e02_P1 (const GV& gv, const M& m, const B& b, const G& g,
-             const J& j, std::string gridName)
+void cadsample_P1 (const GV& gv, const M& m, const B& b, const G& g,
+                   const J& j, std::string gridName)
 {
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
@@ -30,7 +30,7 @@ void e02_P1 (const GV& gv, const M& m, const B& b, const G& g,
   Dune::PDELab::interpolate(g,gfs,x);
 
   // <<<4>>> Make grid operator space
-  typedef E02LocalOperator<M,B,J> LOP;
+  typedef CADLocalOperator<M,B,J> LOP;                                  // NEW
   LOP lop(m, b, j);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;

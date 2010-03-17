@@ -1,5 +1,5 @@
-#ifndef __E02_PARAMETER_HH_
-#define __E02_PARAMETER_HH_
+#ifndef __CADSAMPLE_PARAMETER_HH_
+#define __CADSAMPLE_PARAMETER_HH_
 
 // layout for codim0 data
 template <int dim>
@@ -13,43 +13,41 @@ struct P0Layout
 };
 
 //===============================================================
-// Leiffel parameter
-// The L is a building block of the Eiffel tower
+// crank parameter classes
 //===============================================================
 
-/**
- * \brief A function defining the diffusion coefficient
- */
+// function defining scalar diffusion parameter
 template<typename GV, typename RF, typename PGMap>
-class LeiffelDiffusion
+class CrankDiffusion
   : public Dune::PDELab::GridFunctionBase<
         Dune::PDELab::GridFunctionTraits<GV,RF,1,Dune::FieldVector<RF,1> >,
-        LeiffelDiffusion<GV,RF,PGMap> >
+        CrankDiffusion<GV,RF,PGMap> >
 {
 public:
 
   typedef Dune::PDELab::GridFunctionTraits<GV,RF,1,Dune::FieldVector<RF,1> > Traits;
   typedef Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<GV,RF,1,
-      Dune::FieldVector<RF,1> >, LeiffelDiffusion<GV,RF,PGMap> > BaseT;
+      Dune::FieldVector<RF,1> >, CrankDiffusion<GV,RF,PGMap> > BaseT;
 
   // constructor
-  LeiffelDiffusion(const GV& gv_, const PGMap& pg_) : gv(gv_), mapper(gv), pg(pg_) {}
+  CrankDiffusion(const GV& gv_, const PGMap& pg_) : gv(gv_), mapper(gv), pg(pg_) {}
 
   // evaluate scalar diffusion parameter
   inline void evaluate (const typename Traits::ElementType& e,
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
   {
-    // retrieve element index and corresponding material parameter index
+    // retrieve element index and corresponding material index on level 0
+    typename GV::template Codim<0>::EntityPointer ep(e);
+    while (ep->level() != 0) ep = ep->father();
     const int ei              = mapper.map(e);
     const int physgroup_index = pg[ei];
 
     // evaluate physical group map and set values accordingly
     switch ( physgroup_index )
     {
-      case 1  : y = 2.0; break;
-      case 2  : y = 2.0;  break;
-      default : y = 1.0;  break;
+      case 1  : y = 1.0;  break;
+      default : y = 1.0;  break; // only one material here
     }
   }
 
@@ -67,32 +65,44 @@ private:
  * 1 means Dirichlet
  */
 template<typename GV, typename PGMap>
-class LeiffelBCType : public Dune::PDELab::BoundaryGridFunctionBase<
+class CrankBCType : public Dune::PDELab::BoundaryGridFunctionBase<
         Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,
-        Dune::FieldVector<int,1> >,LeiffelBCType<GV,PGMap> >
+        Dune::FieldVector<int,1> >,CrankBCType<GV,PGMap> >
 {
-
 public:
 
   typedef Dune::PDELab::BoundaryGridFunctionTraits<
           GV,int,1,Dune::FieldVector<int,1> > Traits;
 
   //! construct from grid view
-  LeiffelBCType (const GV& gv_, const PGMap& pg_) : gv(gv_), pg(pg_) {}
+  CrankBCType (const GV& gv_, const PGMap& pg_) : gv(gv_), pg(pg_) {}
 
   //! return bc type at point on intersection
   template<typename I>
   inline void evaluate (I& i, const typename Traits::DomainType& xlocal,
                         typename Traits::RangeType& y) const
   {
-    int physgroup_index = pg[i.boundarySegmentIndex()];
-    switch ( physgroup_index )
-    {
-      case 3  : y = 0; break; // Neumann
-      case 4  : y = 1; break; // Dirichlet
-      default : y = 0; break; // Neumann is default
-    }
+    // use with global ccordinates
+    const int dim = Traits::GridViewType::Grid::dimension;
+    typedef typename Traits::GridViewType::Grid::ctype ctype;
+    Dune::FieldVector<ctype,dim> x = i.geometry().global(xlocal);
+    if ( (x[2]<20.+1E-6) || (x[2] > 59.979-1e-6 ) )
+      y = 1; // Dirichlet
+    else
+      y = 0; // Neumann
     return;
+
+    // evaluate with maps
+    //int physgroup_index = pg[i.boundarySegmentIndex()];
+    //switch ( physgroup_index )
+    //{
+    //  case 2  : y = 0; break;
+    //  case 3  : y = 0; break;
+    //  case 4  : y = 1; break;
+    //  case 5  : y = 1; break;
+    //  default : y = 0; break; // Neumann
+    //}
+    //return;
   }
 
   //! get a reference to the grid view
@@ -105,14 +115,13 @@ private:
 };
 
 /**
- * \brief A function that defines Dirichlet boundary conditions
- *        AND its extension to the interior
+ * \brief A function that defines Dirichlet boundary conditions AND its extension to the interior
  */
 template<typename GV, typename RF, typename PGMap>
-class LeiffelBCExtension
+class CrankBCExtension
   : public Dune::PDELab::GridFunctionBase<Dune::PDELab::
            GridFunctionTraits<GV,RF,1,Dune::FieldVector<RF,1> >,
-           LeiffelBCExtension<GV,RF,PGMap> >
+           CrankBCExtension<GV,RF,PGMap> >
 {
 public :
 
@@ -120,27 +129,21 @@ public :
   typedef typename GV::IntersectionIterator IntersectionIterator;
 
   //! construct from grid view
-  LeiffelBCExtension(const GV& gv_, const PGMap& pg_) : gv(gv_), mapper(gv), pg(pg_) {}
+  CrankBCExtension(const GV& gv_, const PGMap& pg_) : gv(gv_), mapper(gv), pg(pg_) {}
 
   //! evaluate extended function on element
   inline void evaluate (const typename Traits::ElementType& e,
                         const typename Traits::DomainType& xlocal,
                         typename Traits::RangeType& y) const
   {
-    // retrieve element index and corresponding material parameter index
-    const int ei              = mapper.map(e);
-    const int physgroup_index = pg[ei];
-
-    // find Dirichlet boundaries and handle them
-    y = 0.0;
-    for (IntersectionIterator is=gv.ibegin(e); is!=gv.iend(e); ++is)
-    {
-      if ( is->boundary() )
-      {
-        if ( physgroup_index == 4 ) y = 1.0;
-        break;
-      }
-    }
+    // evaluate with global ccordinates
+    const int dim = Traits::GridViewType::Grid::dimension;
+    typedef typename Traits::GridViewType::Grid::ctype ctype;
+    Dune::FieldVector<ctype,dim> x = e.geometry().global(xlocal);
+    if ( x[2] < 20.0+1E-6 )
+      y = 1.0;
+    else
+      y = 0.0;
     return;
   }
 
@@ -154,14 +157,12 @@ private :
   const PGMap& pg;
 };
 
-/**
- * \brief A function defining Flux boundary conditions
- */
+// function for defining radiation and Neumann boundary conditions
 template<typename GV, typename RF, typename PGMap>
-class LeiffelFlux
+class CrankFlux
   : public Dune::PDELab::BoundaryGridFunctionBase<
            Dune::PDELab::BoundaryGridFunctionTraits<GV,RF,1,
-           Dune::FieldVector<RF,1> >, LeiffelFlux<GV,RF,PGMap> >
+           Dune::FieldVector<RF,1> >, CrankFlux<GV,RF,PGMap> >
 {
 public:
 
@@ -169,19 +170,15 @@ public:
           GV,RF,1,Dune::FieldVector<RF,1> > Traits;
 
   // constructor
-  LeiffelFlux(const GV& gv_, const PGMap& pg_) : gv(gv_), pg(pg_) {}
+  CrankFlux(const GV& gv_, const PGMap& pg_) : gv(gv_), pg(pg_) {}
 
   // evaluate flux boundary condition
   template<typename I>
   inline void evaluate(I& i, const typename Traits::DomainType& xlocal,
                        typename Traits::RangeType& y) const
   {
-    int physGroupInd = pg[i.boundarySegmentIndex()];
-    switch ( physGroupInd )
-    {
-      case 3  : y = 0.0; break; // some influx
-      default : y = 0.0; break; // Neumann-0 BC
-    }
+    // could be handled as in the case of the BCType class!
+    y = 0.0;
     return;
   }
 
