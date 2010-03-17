@@ -9,8 +9,8 @@
 
 #include<dune/common/exceptions.hh>
 #include<dune/grid/io/file/vtk/vtkwriter.hh>
-#include<dune/grid/io/file/gmshreader.hh>    // Dune::GmshReader
-#if HAVE_UG
+#include<dune/grid/io/file/gmshreader.hh>      // New: Dune::GmshReader
+#if HAVE_UG                                    // New: Use UG here
 #include<dune/grid/uggrid.hh>
 #endif
 
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 
   // refinement level
   int level = 0;
-  sscanf(argv[2],"%d",&level);
+  sscanf(argv[2], "%d", &level);
 
   // instanciate ug grid object (xxx MB heap)
   typedef Dune::UGGrid<3> GridType;
