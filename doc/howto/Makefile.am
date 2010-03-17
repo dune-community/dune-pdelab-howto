@@ -11,6 +11,11 @@ MAINDOCS = pdelab-howto-article.dvi pdelab-howto-article.pdf \
 
 EXTRA_DIST = pdelab-howto-article.pdf pdelab-howto-beamer.pdf Makefile.dist.in Makefile.dist.am
 
+TEX_FILES = functionspaces.tex istl-backend.tex pdelab-howto-beamer.tex \
+	summary.tex instationaryproblems.tex  operators.tex \
+	pdelab-howto-main.tex systems.tex introduction.tex \
+	pdelab-howto-article.tex  stationaryproblems.tex   weightedresidual.tex
+
 if BUILD_DOCS
 if CONVERT
  DOCS = $(HTDOCS) $(MAINDOCS) $(WMLDOCS)
@@ -46,8 +51,8 @@ dist-hook:
 
 EXTRA_TEXINPUTS:=$(top_srcdir)
 
-pdelab-howto-article.dvi: pdelab-howto-main.tex $(EPS_FILES) lit.bib
-pdelab-howto-beamer.dvi: pdelab-howto-main.tex $(EPS_FILES) lit.bib
+pdelab-howto-article.dvi: pdelab-howto-main.tex $(EPS_FILES) lit.bib $(TEX_FILES)
+pdelab-howto-beamer.dvi: pdelab-howto-main.tex $(EPS_FILES) lit.bib $(TEX_FILES)
 
 art: pdelab-howto-article.pdf
 	xpdf -z 200 pdelab-howto-article.pdf
