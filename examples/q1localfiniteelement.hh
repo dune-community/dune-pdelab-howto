@@ -1,6 +1,10 @@
 #include<dune/common/geometrytype.hh>
 #include<dune/localfunctions/common/localfiniteelementtraits.hh>
 
+#include"q1localbasis.hh"
+#include"q1localcoefficients.hh"
+#include"q1localinterpolation.hh"
+
 template<class D, class R>
 class Q1LocalFiniteElement
 {
@@ -8,7 +12,6 @@ class Q1LocalFiniteElement
   Q1LocalCoefficients coefficients;
   Q1LocalInterpolation<Q1LocalBasis<D,R> > interpolation;
   Dune::GeometryType gt;
-
 public:
   typedef Dune::LocalFiniteElementTraits<Q1LocalBasis<D,R>,
 				Q1LocalCoefficients,
@@ -33,8 +36,7 @@ public:
 	
   Dune::GeometryType type () const { return gt; }
 
-  Q1LocalFiniteElement* clone () const
-  {
+  Q1LocalFiniteElement* clone () const {
     return new Q1LocalFiniteElement(*this);
   }
 };

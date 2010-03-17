@@ -2,10 +2,9 @@
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
+#include"q1localfiniteelementmap.hh"
 
-template<typename GV>
-void q1GridFunctionSpace (const GV& gv)
-{
+template<typename GV> void q1GridFunctionSpace (const GV& gv) {
   typedef typename GV::Grid::ctype D;// domain type
   typedef double R;                  // range type
 
