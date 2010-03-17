@@ -378,6 +378,27 @@ numberstyle=\tiny, numbersep=2pt]{../../examples/example01a_operator.hh}
 numberstyle=\tiny, numbersep=2pt]{../../examples/example01a_operator.hh}
 \end{Lst}}
 
+\begin{frame}
+\frametitle{Remark on Local Operators}
+In practice one would separate parameter functions such as $a, f, j$ and the boundary condition
+type from the implementation of the local operator.
+
+\begin{center}
+\begin{tikzpicture}[scale=1.0]
+\draw (5,4) node {\lstinline{GridOperatorSpace}};
+\draw[black,thick] (3,3.5) rectangle (7,4.5);
+\draw (5,2) node {\lstinline{LocalOperator}};
+\draw[black,thick] (3,1.5) rectangle (7,2.5);
+\draw (5,0) node {\lstinline{Parameters}};
+\draw[black,thick] (3,-0.5) rectangle (7,0.5);
+\draw[->,thick] (5,3.5) -- (5,2.5);
+\draw[->,thick] (5,1.5) -- (5,0.5);
+\end{tikzpicture}
+\end{center}
+The interface between \lstinline{LocalOperator} and \lstinline{Parameters} is up to you.
+\end{frame}
+
+
 \begin{frame}<presentation>
 \frametitle{Visualization of Example 1 Results}
 Left figure shows the results for $Q_1$ elements.
@@ -722,12 +743,6 @@ Same problem solved with cell-centered finite volume method in example 4.}
 \label{fig:Example02Results}
 \end{figure}
 }
-
-\begin{frame}
-\frametitle{Remark on Local Operators}
-In practice one would access parameter functions such as $a, f, j$ and the boundary condition
-type from the implementation of the local operator.
-\end{frame}
 
 \begin{frame}
 \frametitle{Summary: Implementation of Mathematical Concepts}
