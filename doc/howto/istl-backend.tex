@@ -76,7 +76,10 @@
 %  \item Provides associated type \lstinline!Pattern! for setting up
 %    the sparsity pattern.
   \item Provides method \lstinline!clearRow(RI i, C& c)! for setting
-    the values of row with index $i$ of container \lstinline!c! to zero.
+    the values of row with index $i$ of container \lstinline!c! to
+    zero.
+    \item Const and mutable data access with 
+    \lstinline!access(Matrix<T,E>& cont, size_type i, size_type j)!
   \end{itemize}
 \end{frame}
 
