@@ -125,11 +125,12 @@
   \frametitle{DUNE and Gmsh Notes}
   \begin{itemize}
     \item Possible: Second order boundary representation, readable by the
-      GmshReader (Bug in the current trunk!).
-    \item Underlying DUNE-grid needs to support higher order boundaries. During grid
+      GmshReader (Instable in the current trunk!).
+    \item Underlying DUNE-Grid needs to support higher order boundaries. During grid
       refinement boundary is approximated the better.
     \item In DUNE: Higher order local FE bases available.
-    \item Higher order elements are not possible but not implemented yet in DUNE:
+    \item Higher order elements are generally possible but not
+      implemented yet in DUNE:
       \begin{itemize}
         \item Need approriate grid-managers.
         \item Need mesher which exports such elements.
