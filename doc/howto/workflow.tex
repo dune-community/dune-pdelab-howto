@@ -53,14 +53,71 @@
   %\end{figure*}
 \end{frame}
 
+% tikz style definitions
+\mode<all>{
+  \tikzstyle{cadsoftware} = [rectangle, draw, fill=blue!30,
+      text badly centered, inner sep=0.5em, top color=blue!60]
+  \tikzstyle{cadformat} = [rectangle, draw, fill=green!20,
+      text badly centered, inner sep=0.56em, top color=orange!50]
+}
+
 \begin{frame}
   \frametitle<presentation>{The Workflow to Import meshed CAD-Models to DUNE}
-  In general we have the flow chart
-  \begin{center}
-    \includegraphics[width=0.7\textwidth]{./EPS/workflow}
-  \end{center}
-  Salome is another geometry modeller behind the Gmsh-Interface.
-  Other tools might be applicable as well.
+  \begin{figure}[h]
+    \begin{center}
+      % the flow chart
+      \mode<article>{\begin{tikzpicture}}
+      \mode<beamer>{\begin{tikzpicture}[scale=0.6] \scriptsize}
+        % draw the nodes
+        \node [cadsoftware, rectangle split, rectangle split parts=2]
+            (dune) at (5, 0) {
+              {\Large \textbf{DUNE}}
+              \nodepart{second} \texttt{Grid Instance}
+            };
+        \node [cadsoftware] (gmshreader) at (0, 0) {\texttt{Dune::GmshReader}};
+        \node [cadsoftware, rectangle split, rectangle split parts=3]
+            (gmsh) at (-4, -4) {
+              {\Large \textbf{GMSH}}
+              \nodepart{second} Geometry Module
+              \nodepart{third}  Mesh Module
+            };
+        \node [cadformat, rectangle split, rectangle split parts=4]
+            (cadformats) at (2, -3.5) {
+            \textbf{Geo Formats}
+              \nodepart{second} IGES
+              \nodepart{third} ACIS
+              \nodepart{fourth} STEP
+            };
+        \node [cadformat, rectangle split, rectangle split parts=3]
+            (meshformats) at (2, -7.5) {
+              \textbf{Mesh Formats}
+              \nodepart{second} UNV
+              \nodepart{third} MED
+            };
+        \node [cadsoftware, rectangle split, rectangle split parts=3]
+            (salome) at (7, -6) {
+            {\Large \textbf{Salom\'{e}}}
+              \nodepart{second} Geometry Module
+              \nodepart{third}  Mesh Module
+            };
+        % draw the connecting arrows
+        \path[black!60,->, line width=1.5, shading=axis]
+            (cadformats) edge (gmsh.east);
+        \path[black!60,->, line width=1.5, shading=axis]
+            (meshformats) edge (gmsh.south east);
+        \path[black!60,->, line width=1.5, shading=axis]
+            (gmshreader.east) edge (dune.195);
+        \path[black!60,->, line width=1.5, shading=axis]
+            (salome.west) edge (cadformats);
+        \path[black!60,->, line width=1.5, shading=axis]
+            (salome.205) edge (meshformats.east);
+        \path[black!60,->, line width=1.5, shading=axis]
+            (gmsh.205) edge [out= 180, in= 180] (gmshreader.west);
+      \end{tikzpicture}
+    \end{center}
+  \end{figure}
+  The flow charts depicts the general way of using gmsh or another external
+  geometry modeler behind it to import CAD-models meshed by Gmsh into DUNE.
 \end{frame}
 
 %-------------------------------------------------------------------
