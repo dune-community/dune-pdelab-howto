@@ -18,10 +18,6 @@
 #include<dune/pdelab/finiteelementmap/p1fem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
 
-#include"q1localbasis.hh"
-#include"q1localcoefficients.hh"
-#include"q1localinterpolation.hh"
-#include"q1localfiniteelement.hh"
 #include"q1localfiniteelementmap.hh"
 #include"analyticfunction.hh"
 #include"q1constraints.hh"
