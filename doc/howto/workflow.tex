@@ -101,17 +101,17 @@
               \nodepart{third}  Mesh Module
             };
         % draw the connecting arrows
-        \path[black!60,->, line width=1.5, shading=axis]
+        \path[black!60,->, line width=1.5]
             (cadformats) edge (gmsh.east);
-        \path[black!60,->, line width=1.5, shading=axis]
+        \path[black!60,->, line width=1.5]
             (meshformats) edge (gmsh.south east);
-        \path[black!60,->, line width=1.5, shading=axis]
+        \path[black!60,->, line width=1.5]
             (gmshreader.east) edge (dune.195);
-        \path[black!60,->, line width=1.5, shading=axis]
+        \path[black!60,->, line width=1.5]
             (salome.west) edge (cadformats);
-        \path[black!60,->, line width=1.5, shading=axis]
+        \path[black!60,->, line width=1.5]
             (salome.205) edge (meshformats.east);
-        \path[black!60,->, line width=1.5, shading=axis]
+        \path[black!60,->, line width=1.5]
             (gmsh.205) edge [out= 180, in= 180] (gmshreader.west);
       \end{tikzpicture}
     \end{center}
