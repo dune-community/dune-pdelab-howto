@@ -24,7 +24,7 @@ void example04 (const GV& gv)
 
   // <<<4>>> Select a linear solver backend
   typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<GFS> LS;
-  LS ls(2,5000,2);
+  LS ls(2,100,2);
 
   // <<<5>>> assemble and solve linear problem
   typedef typename GFS::template VectorContainer<Real>::Type U;
