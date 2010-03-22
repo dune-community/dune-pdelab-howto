@@ -72,10 +72,10 @@ finite element spaces $\pi_e$ is just the identity and we have $m'=m$.
 \frametitle{Global Basis Functions}
 For $j\in \mathcal{I}_{U_h}$ we define the \textit{global basis function}
 \begin{equation*}
-U_h \ni \phi_j(x) = \sum_{(e,i)\in l(j)} \pi_e(\mu_e^{-1}(x)) \,
+U_h \ni \phi_j(x) = \sum_{(e,i)\in L(j)} \pi_e(\mu_e^{-1}(x)) \,
 \hat\phi_{e,i}(\mu_e^{-1}(x)) \, \chi_e(x)
 \end{equation*} 
-and $l(j) = \left\{ (e,i)\in L \,|\, g(e,i)=j \right\}$.
+and $L(j) = \left\{ (e,i)\in L \,|\, g(e,i)=j \right\}$.
 With that we have
 \begin{align}
 \Phi_{U_h} &= \{\phi_i \,|\, i\in \mathcal{I}_{U_h}\}, & U_h &= \text{span}\ \Phi_{U_h}.
@@ -133,15 +133,19 @@ $m$ and a type for the Jacobian:
 \begin{lstlisting}[basicstyle=\scriptsize,numbers=left, 
 numberstyle=\tiny, numbersep=5pt]
 template<class DF, int n, class D, class RF, int m, class R, 
-         class J, int dorder=0>struct LocalBasisTraits 
+         class J, int dorder=0>
+struct LocalBasisTraits 
 {
-  typedef DF DomainFieldType;  typedef D DomainType;  typedef RF RangeFieldType;   typedef R RangeType;
+  typedef DF DomainFieldType;  typedef D DomainType;
+  typedef RF RangeFieldType;   typedef R RangeType;
 
   enum { dimDomain = n }; enum { dimRange = m }; 
 
   typedef J JacobianType;
 
-  enum { diffOrder=dorder };};\end{lstlisting}
+  enum { diffOrder=dorder };
+};
+\end{lstlisting}
 Later on, other classes representing functions will use the same
 traits classes.
 \end{frame}

@@ -161,7 +161,7 @@ Define \textit{local operator} $\bm{\alpha}^{\text{vol}}_{h,e} : \mathbf{U}_e \t
 \begin{equation*}
 \begin{split}
 &\bigl(\bm{\alpha}^{\text{vol}}_{h,e}({\color{cyan}\mathbf{u}})\bigr)_m  = \\
-&\sum_{e\in E_h^0} \int_{\hat\Omega_e} 
+&\int_{\hat\Omega_e} 
 \Biggl\{\left[ \sum_{l=0}^{n(e)-1} ({\color{cyan}\mathbf{u}})_{l} {\color{purple}
 (\nabla \mu_e(\hat{x}))^{-T}} {\color{blue}\nabla_{\hat{x}} \hat\phi_{e,l}(\hat{x})} \right]
 \cdot {\color{purple}(\nabla \mu_e(\hat{x}))^{-T}} {\color{blue}\nabla_{\hat{x}} \hat\phi_{e,m}(\hat{x})}\\
@@ -530,11 +530,11 @@ We call $\tilde{U}$ a \textit{constrained space}.
 boundary conditions:
 \begin{subequations}
 \begin{align*}
- -\Delta \bar{u} + a \bar{u}  &= f + \Delta w - a w &&\text{in $\Omega\subset\mathbb{R}^d$},\\
-                \bar{u} &= 0 &&\text{on $\Gamma_D\subseteq\partial\Omega$},\\
--\nabla \bar{u} \cdot n &= j+\nabla w\cdot n &&\text{on $\Gamma_N=\partial\Omega\setminus\Gamma_D$},
+ -\Delta \tilde{u} + a \tilde{u}  &= f + \Delta w - a w &&\text{in $\Omega\subset\mathbb{R}^d$},\\
+                \tilde{u} &= 0 &&\text{on $\Gamma_D\subseteq\partial\Omega$},\\
+-\nabla \tilde{u} \cdot n &= j+\nabla w\cdot n &&\text{on $\Gamma_N=\partial\Omega\setminus\Gamma_D$},
 \end{align*}
-where $w$ is an extension of $g$ to $\Omega$ and $u = w + \bar{u}$.
+where $w$ is an extension of $g$ to $\Omega$ and $u = w + \tilde{u}$.
 \end{subequations}
 \item In the nonlinear case this is not possible.
 \end{itemize} 
@@ -782,7 +782,7 @@ finite-dimensional function space:
 
 \begin{frame}
 \frametitle{Problem}
-We wish to demonstrate that allows also the implementation of Finite Volume methods.
+We wish to demonstrate that PDELab allows also the implementation of Finite Volume methods.
 
 Consider again the elliptic model problem:
 \begin{subequations} \label{Eq:Example04}
@@ -800,7 +800,7 @@ We show how to formulate this method in the framework of residual forms.
 \begin{frame}
 \frametitle{Discrete Weak Formulation I}
 For a grid $E_h^0$ define $W_h = \{ u \in L_2(\Omega) \,:\, 
-u|_{\Omega_e} = \text{const} \quad \forall e\in E_h^0\}$.
+u|_{\Omega_e} = \text{const} \ \forall e\in E_h^0\}$. $v\in W_h$:
 \begin{equation*}
 \begin{split}
 & \sum_{e\in E_h^0} \int_{\Omega_e} (-\Delta u + au - q) v \, dx = 

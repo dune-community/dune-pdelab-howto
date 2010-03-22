@@ -73,8 +73,8 @@ Difference quotient in time. Find $u_h \in w_h(t^{n+1}) + \tilde{U}_h^k(t^{n+1})
 Solve (non-) linear problem per time step:
 \begin{equation*}
 \begin{split}
-m\left(u_h^{n+1},v;t^{n+1}\right) &+ k^n r\left(u_h^{n+1},v;t^{n+1}\right)\\
-&\qquad \qquad - m\left(u_h^{n},v;t^{n}\right) = 0 \qquad  \forall v \in \tilde{U}_h^k(t^{n+1}).
+\underbrace{m\left(u_h^{n+1},v;t^{n+1}\right) + k^n r\left(u_h^{n+1},v;t^{n+1}\right)
+ - m\left(u_h^{n},v;t^{n}\right)}_{\tilde{r}(u_h^{n+1},v)} = 0 \ \forall v \in \tilde{U}_h^k(t^{n+1}).
 \end{split}
 \end{equation*}
 \end{frame}
