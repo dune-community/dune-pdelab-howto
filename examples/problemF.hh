@@ -166,13 +166,16 @@ public:
 template<typename GV>
 class B_F
   : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::
-                                                  BoundaryGridFunctionTraits<GV,int,1,
-                                                                             Dune::FieldVector<int,1> >,
+                                                  BoundaryGridFunctionTraits<
+                                                    GV,Dune::PDELab::DiffusionBoundaryCondition::Type,1,
+                                                    Dune::FieldVector<
+                                                      Dune::PDELab::DiffusionBoundaryCondition,1> >,
                                                   B_F<GV> >
 {
   const GV& gv;
 
 public:
+  typedef Dune::PDELab::DiffusionBoundaryCondition BC;
   typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
   typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,B_F<GV> > BaseT;
 
@@ -187,9 +190,9 @@ public:
       xg = ig.geometry().global(x);
 
     if (xg[0]<1E-6 || xg[0]>1.0-1E-6)
-	  y = 1; // Dirichlet
+      y = BC::Dirichlet;
 	else
-	  y = 0;
+	  y = BC::Neumann;
   }
 
   //! get a reference to the GridView

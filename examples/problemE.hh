@@ -82,13 +82,16 @@ public:
 template<typename GV>
 class B_E
   : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::
-                                                  BoundaryGridFunctionTraits<GV,int,1,
-                                                                             Dune::FieldVector<int,1> >,
+                                                  BoundaryGridFunctionTraits<
+                                                    GV,Dune::PDELab::DiffusionBoundaryCondition::Type,1,
+                                                    Dune::FieldVector<
+                                                      Dune::PDELab::DiffusionBoundaryCondition,1> >,
                                                   B_E<GV> >
 {
   const GV& gv;
 
 public:
+  typedef Dune::PDELab::DiffusionBoundaryCondition BC;
   typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
   typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,B_E<GV> > BaseT;
 
@@ -99,7 +102,7 @@ public:
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
   {  
-    y = 1; // Dirichlet
+    y = BC::Dirichlet;
   }
 
   //! get a reference to the GridView
