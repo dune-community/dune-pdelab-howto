@@ -427,7 +427,6 @@ namespace Dune {
 
         if (bc==1) // Dirichlet boundary
           {
-            typename TP::Traits::RangeFieldType g;
             if (vn>=0) 
               mat_ss(0,0) += vn*face_volume;
             const Dune::FieldVector<DF,IG::dimension>&
