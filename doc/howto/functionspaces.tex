@@ -475,8 +475,14 @@ $$u : (E_h^1\text{``$\cap\partial\Omega$''}) \times \mathbb{D}^{n'} \to \mathbb{
 \frametitle{Useful Adapters and Base Classes}
 There are various useful adapters and base classes:
 
-\lstinline{Dune::PDELab::DiscreteGridFunction}: Takes a grid
-function space and a coefficient vector and makes a grid function out
+\lstinline{Dune::PDELab::DiscreteGridFunction}: Takes a scalar
+\lstinline{Dune::PDELab::GridFunctionSpace}
+and a coefficient vector and makes a scalar grid function out
+of it.
+
+\lstinline{Dune::PDELab::VectorDiscreteGridFunction}: Takes a 
+\lstinlinegrid{Dune::PDELab::PowerGridFunctionSpace}
+and a coefficient vector and makes a vector valued grid function out
 of it.
 
 \lstinline{Dune::PDELab::VTKGridFunctionAdapter}: Takes a grid
