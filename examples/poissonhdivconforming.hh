@@ -13,6 +13,7 @@
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
+#include<dune/pdelab/localoperator/defaultimp.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
 #include<dune/pdelab/localoperator/flags.hh>
 

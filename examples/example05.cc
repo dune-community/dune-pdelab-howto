@@ -59,7 +59,6 @@
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/gridfunctionspace/constraints.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include<dune/pdelab/gridoperatorspace/instationarygridoperatorspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
