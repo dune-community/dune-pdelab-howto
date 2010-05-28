@@ -49,7 +49,7 @@ dist-hook:
 	sed $(srcdir)/Makefile.dist.am -e 's/Makefile\.dist/Makefile/g' > $(distdir)/Makefile.am
 	sed $(srcdir)/Makefile.dist.in -e 's/Makefile\.dist/Makefile/g' > $(distdir)/Makefile.in
 
-EXTRA_TEXINPUTS:=$(top_srcdir)
+EXTRA_TEXINPUTS = $(top_srcdir)
 
 pdelab-howto-article.dvi: pdelab-howto-main.tex $(EPS_FILES) lit.bib $(TEX_FILES)
 pdelab-howto-beamer.dvi: pdelab-howto-main.tex $(EPS_FILES) lit.bib $(TEX_FILES)
