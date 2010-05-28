@@ -10,7 +10,6 @@ void example02_Q1 (const GV& gv)
   typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;     // constraints class
-  CON con;
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);

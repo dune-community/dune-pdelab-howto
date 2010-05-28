@@ -61,7 +61,6 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
 {
     typedef typename GV::Grid::ctype DF;
     typedef double RF;
-    const int dim = GV::dimension;
     Dune::Timer watch;
 
     // make function space
