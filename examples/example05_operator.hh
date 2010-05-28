@@ -36,8 +36,8 @@ public:
   // constructor stores parameters
   Example05LocalOperator (double d_0_, double d_1_, double lambda_, double sigma_, 
                           double kappa_, unsigned int intorder_=2)
-    : d_0(d_0_), d_1(d_1_), lambda(lambda_), sigma(sigma_), 
-      kappa(kappa_), intorder(intorder_)
+    : intorder(intorder_), d_0(d_0_), d_1(d_1_), lambda(lambda_),
+      sigma(sigma_), kappa(kappa_)
   {}
 
   // volume integral depending on test and ansatz functions
