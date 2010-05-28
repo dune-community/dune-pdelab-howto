@@ -4,14 +4,12 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
-  const int dim = GV::dimension;
   Real time = 0.0;                                              // make a time variable
 
   // <<<2>>> Make grid function space
   typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM;
   FEM fem;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
-  CON con;
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);

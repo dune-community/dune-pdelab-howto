@@ -4,7 +4,6 @@ void example01a_RT (const GV& gv)
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
-  const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
   typedef Dune::PDELab::RannacherTurek2DLocalFiniteElementMap<Coord,Real> FEM;
