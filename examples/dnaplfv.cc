@@ -1,4 +1,4 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+#// -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
@@ -583,10 +583,10 @@ int main(int argc, char** argv)
 	  }
     rank = helper.rank();
 
-	if (argc!=4)
+	if (argc!=4 && argc!=5)
 	  {
 		if(helper.rank()==0)
-		  std::cout << "usage: ./dnapl <level> <timesteps> <timestep>" << std::endl;
+		  std::cout << "usage: ./dnapl <level> <timesteps> <timestep> [<dimension>]" << std::endl;
 		return 1;
 	  }
 
@@ -599,11 +599,15 @@ int main(int argc, char** argv)
 	double timestep;
 	sscanf(argv[3],"%lg",&timestep);
 
+    int dim=2;
+    if(argc>4)
+      sscanf(argv[4], "%d", &dim);
+
 #if HAVE_MPI
     double start=MPI_Wtime();
 
     // 2D
-    if (true)
+    if (dim==2)
     {
       // make grid
       int l=maxlevel;
@@ -618,7 +622,7 @@ int main(int argc, char** argv)
     }
 
     // 3D
-    if (false)
+    if (dim==3)
     {
       // make grid
       int l=maxlevel;
