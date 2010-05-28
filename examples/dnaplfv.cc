@@ -436,14 +436,12 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef double RF;
   const int dim = GV::dimension;
   Dune::Timer watch;
-  
-  const int size=2;
-  
+
   // <<<2>>> Make grid function space
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
   FEM fem(Dune::GeometryType::cube);
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<size> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<2> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
   typedef Dune::PDELab::PowerGridFunctionSpace<GFS,2,
@@ -501,18 +499,18 @@ void test (const GV& gv, int timesteps, double timestep)
   LOP lop(tp);
   typedef Dune::PDELab::TwoPhaseOnePointTemporalOperator<TP> MLOP;
   MLOP mlop(tp);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<size,size> MBE;
+  typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MBE;
   Dune::PDELab::Alexander2Parameter<RF> method;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<RF,V,TPGFS,TPGFS,LOP,MLOP,C,C,MBE> IGOS;
   IGOS igos(method,tpgfs,cg,tpgfs,cg,lop,mlop);
 
   // <<<10>>> Make a linear solver 
-  //typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<TPGFS,C> LS;
-  //LS ls(tpgfs,cg,5000,5,2);
+  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<TPGFS,C> LS;
+  LS ls(tpgfs,cg,5000,5,1);
   
   // Comment out above and uncomment to use Parallel AMG
-  typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<TPGFS> LS;
-  LS ls (tpgfs, 1, 5000, 2);
+  //typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<TPGFS> LS;
+  //LS ls (tpgfs,1);
 
   // <<<11>>> make Newton for time-dependent problem
   typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
@@ -520,9 +518,8 @@ void test (const GV& gv, int timesteps, double timestep)
   tnewton.setReassembleThreshold(0.0);
   tnewton.setVerbosityLevel(2);
   tnewton.setReduction(1e-8);
-  tnewton.setMinLinearReduction(1e-4);
-  tnewton.setLineSearchMaxIterations(20);
-  
+  tnewton.setMinLinearReduction(1e-3);
+
   // <<<12>>> time-stepper
   Dune::PDELab::OneStepMethod<RF,IGOS,PDESOLVER,V,V> osm(method,igos,tnewton);
   osm.setVerbosityLevel(2);
@@ -604,7 +601,7 @@ int main(int argc, char** argv)
 
 #if HAVE_MPI
     double start=MPI_Wtime();
-    
+
     // 2D
     if (true)
     {
