@@ -198,14 +198,16 @@ class B_C
                                                   BoundaryGridFunctionTraits<
                                                     GV,Dune::PDELab::DiffusionBoundaryCondition::Type,1,
                                                     Dune::FieldVector<
-                                                      Dune::PDELab::DiffusionBoundaryCondition,1> >,
+                                                      Dune::PDELab::DiffusionBoundaryCondition::Type,1> >,
                                                   B_C<GV> >
 {
   const GV& gv;
 
 public:
   typedef Dune::PDELab::DiffusionBoundaryCondition BC;
-  typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
+  typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,
+     Dune::PDELab::DiffusionBoundaryCondition::Type,1,
+     Dune::FieldVector<Dune::PDELab::DiffusionBoundaryCondition::Type,1> > Traits;
   typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,B_C<GV> > BaseT;
 
   B_C (const GV& gv_) : gv(gv_) {}
