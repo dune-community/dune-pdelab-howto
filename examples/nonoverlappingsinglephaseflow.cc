@@ -130,7 +130,7 @@ void driver (const BType& b, const GType& g,
   typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
   PHELPER phelper(gfs);
   typedef Dune::PDELab::NonoverlappingOperator<GFS,M,V,V> POP;
-  POP pop(gfs,m,phelper);
+  POP pop(gfs,m);
   typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
   PSP psp(gfs,phelper);
   typedef Dune::PDELab::NonoverlappingRichardson<GFS,V,V> PRICH;
