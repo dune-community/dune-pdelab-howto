@@ -7,7 +7,13 @@ dist_noinst_DATA = poisson laplacedirichletccfv
 
 GRIDDIM=2
 
-noinst_PROGRAMS = example01 example02 example03 example04 example05 example06 dg overlappingsinglephaseflowccfv overlappingsinglephaseflow nonoverlappingsinglephaseflow parallelgfs dnaplfv dnaplmfd nonlineardiffusion transporttest instationarytest poisson mimetic laplacedirichletccfv reentrantcorner q1gridfunctionspacemain q1interpolatemain q1interpolationerrormain q2interpolationerrormain q1constrainedinterpolatemain thinterpolatemain laplacedirichletmain rt0main dgstokes
+noinst_PROGRAMS = example01 example02 example03 example04 example05 example06 dg overlappingsinglephaseflowccfv overlappingsinglephaseflow nonoverlappingsinglephaseflow parallelgfs dnaplfv dnaplmfd nonlineardiffusion transporttest instationarytest poisson mimetic laplacedirichletccfv reentrantcorner q1gridfunctionspacemain q1interpolatemain q1interpolationerrormain q2interpolationerrormain q1constrainedinterpolatemain thinterpolatemain laplacedirichletmain rt0main dgstokes cgstokes
+
+cgstokes_SOURCES = cg_stokes.cc
+cgstokes_CXXFLAGS = $(AM_CXXFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) -DDUNE_DEVEL_MODE $(ALUGRID_CPPFLAGS)
+cgstokes_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS)
+cgstokes_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
+cgstokes_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
 dgstokes_SOURCES = dgstokes.cc
 dgstokes_CXXFLAGS = $(AM_CXXFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) -DDUNE_DEVEL_MODE
