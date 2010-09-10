@@ -320,7 +320,6 @@ int main(int argc, char** argv)
 
       // get view
       const GV& gv=grid.leafView(); 
-      const int dim = GV::dimension;
       
       // Do some random refinement. The result is a grid that may
       // contain multiple hanging nodes per edge.
@@ -340,7 +339,6 @@ int main(int argc, char** argv)
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
-      const int k=3;
       const int q=2;
       typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,R,3> FEM;
       FEM fem;
@@ -505,8 +503,6 @@ int main(int argc, char** argv)
       
       // get view
       const GV& gv=grid.leafView(); 
-      const int dim = GV::dimension;
-      
 
       // Do some random refinement. The result is a grid that may
       // contain multiple hanging nodes per edge.
@@ -526,7 +522,6 @@ int main(int argc, char** argv)
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
-      const int k=3;
       const int q=2;
       typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,R,3> FEM;
       FEM fem;
