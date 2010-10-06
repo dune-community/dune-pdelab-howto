@@ -7,7 +7,42 @@ dist_noinst_DATA = poisson laplacedirichletccfv
 
 GRIDDIM=2
 
-noinst_PROGRAMS = example01 example02 example03 example04 example05 example06 dg overlappingsinglephaseflowccfv overlappingsinglephaseflow nonoverlappingsinglephaseflow parallelgfs dnaplfv dnaplmfd nonlineardiffusion transporttest instationarytest poisson mimetic laplacedirichletccfv reentrantcorner q1gridfunctionspacemain q1interpolatemain q1interpolationerrormain q2interpolationerrormain q1constrainedinterpolatemain thinterpolatemain laplacedirichletmain rt0main dgstokes cgstokes cgstokes_instat
+if SUPERLU
+SUPERLUPROGRAMS = dnaplmfd \
+	dg \
+	rt0main
+
+endif
+
+noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
+	example01 \
+	example02 \
+	example03 \
+	example04 \
+	example05 \
+	example06 \
+	overlappingsinglephaseflowccfv \
+	overlappingsinglephaseflow \
+	nonoverlappingsinglephaseflow \
+	parallelgfs \
+	dnaplfv \
+	nonlineardiffusion \
+	transporttest \
+	instationarytest \
+	poisson \
+	mimetic \
+	laplacedirichletccfv \
+	reentrantcorner \
+	q1gridfunctionspacemain \
+	q1interpolatemain \
+	q1interpolationerrormain \
+	q2interpolationerrormain \
+	q1constrainedinterpolatemain \
+	thinterpolatemain \
+	laplacedirichletmain \
+	dgstokes \
+	cgstokes \
+	cgstokes_instat
 
 cgstokes_SOURCES = cg_stokes.cc
 cgstokes_CXXFLAGS = $(AM_CXXFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) -DDUNE_DEVEL_MODE $(ALUGRID_CPPFLAGS)
@@ -70,11 +105,13 @@ example06_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDF
 example06_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 example06_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
+if SUPERLU
 dg_SOURCES = dg.cc
 dg_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 dg_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS) 
 dg_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 dg_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
+endif
 
 overlappingsinglephaseflowccfv_SOURCES = overlappingsinglephaseflowccfv.cc
 overlappingsinglephaseflowccfv_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
