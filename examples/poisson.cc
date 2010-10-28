@@ -358,9 +358,9 @@ int main(int argc, char** argv)
         <GV::Grid,ConstraintsAssembler,BType> Constraints;
 
       // Get constraints engine. We set adaptToIsolateHangingNodes =
-      // false as ALU Grid refinement prevents the appearance of
+      // true as ALU Grid refinement allows for the appearance of
       // multiple hanging nodes per edge.
-      Constraints constraints(grid,false,b);
+      Constraints constraints(grid,true,b);
       
       // solve problem
       poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_ALU_Q1_3d",constraints);
