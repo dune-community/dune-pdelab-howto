@@ -187,7 +187,7 @@ void stokes (const GV& gv, std::string filename)
     // <<<4>>> Make grid Function operator
     watch.reset();
     typedef Dune::PDELab::StokesDG<FType,BType,VType,PType> LocalDGOperator;
-    LocalDGOperator lop("OBB", f,b,v,p);
+    LocalDGOperator lop("nipg", f,b,v,p);
     typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LocalDGOperator,
        Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation,
        Dune::PDELab::ISTLBCRSMatrixBackend<blockSize,blockSize> > GridOpertorSpace;
@@ -280,9 +280,9 @@ int main(int argc, char** argv)
         //Maybe initialize Mpi
         Dune::MPIHelper::instance(argc, argv);
 
-        int x=1;
-        int y=1;
-        int z=1;
+        int x=2;
+        int y=2;
+        int z=2;
         if (argc > 1)
             x = atoi(argv[1]);
         if (argc > 2)
