@@ -207,7 +207,7 @@ namespace Dune
                 unsigned e = ig.intersectionIndex();
                 rtype u_n = 0.0;
                 rtype u_w = 0.0;
-                for(int f = 0, m = e*cell.num_faces; f < cell.num_faces; ++f, ++m)
+                for(unsigned int f = 0, m = e*cell.num_faces; f < cell.num_faces; ++f, ++m)
                 {
                     u_n += W[m] * (p_n_s - x_s[n_face_space_s.localIndex(f)]);
                     u_w += W[m] * (p_n_s - p_c_s - x_s[w_face_space_s.localIndex(f)]);
@@ -340,7 +340,7 @@ namespace Dune
                 // calculate fluxes (not including mobilities so far)
                 rtype u_n = 0.0;
                 rtype u_w = 0.0;
-                for(int f = 0, m = e*cell.num_faces; f < cell.num_faces; ++f, ++m)
+                for(unsigned int f = 0, m = e*cell.num_faces; f < cell.num_faces; ++f, ++m)
                 {
                     u_n += W[m] * (p_n_s - x_s[n_face_space_s.localIndex(f)]);
                     u_w += W[m] * (p_n_s - p_c_s - x_s[w_face_space_s.localIndex(f)]);
@@ -465,7 +465,7 @@ namespace Dune
             rtype gravity_flux(unsigned e) const
             {
                 rtype grav_flux = 0.0;
-                for (int i = 0, m = e*dim; i < dim; ++i, ++m)
+                for (unsigned int i = 0, m = e*dim; i < dim; ++i, ++m)
                     grav_flux += K_gravity[i] * cell.N[m];
                 grav_flux *= cell.face_areas[e];
                 return grav_flux;
