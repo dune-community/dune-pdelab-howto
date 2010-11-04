@@ -37,9 +37,9 @@ double l2interpolationerror (const U& u, const GFS& gfs, X& x,
 		{
 		  // evaluate finite element function at integration point
 		  RangeType u_fe(0.0);
-		  lfs.localFiniteElement().localBasis().evaluateFunction(
+		  lfs.finiteElement().localBasis().evaluateFunction(
             qit->position(),b);
-		  for (int i=0; i<lfs.size(); i++)
+		  for (unsigned int i=0; i<lfs.size(); i++)
 			u_fe.axpy(xl[i],b[i]);
 
 		  // evaluate the given grid function at integration point
