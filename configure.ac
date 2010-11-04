@@ -24,7 +24,6 @@ AC_CONFIG_FILES([
   m4/Makefile
   doc/Makefile
   doc/howto/Makefile
-  doc/howto/Makefile.dist
   examples/Makefile
   dune-pdelab-howto.pc
 ])

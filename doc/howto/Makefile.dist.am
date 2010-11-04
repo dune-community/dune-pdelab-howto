@@ -1,7 +1,0 @@
-docdir=$(datadir)/doc/dune-pdelab-howto
-
-doc_DATA = pdelab-howto-article.pdf pdelab-howto-beamer.pdf
-
-include $(top_srcdir)/am/global-rules
-include $(top_srcdir)/am/webstuff
-include $(top_srcdir)/am/latex
