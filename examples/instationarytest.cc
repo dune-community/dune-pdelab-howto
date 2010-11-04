@@ -199,14 +199,12 @@ void sequential (const GV& gv, int t_level)
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
-  const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
   //typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
   typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM;
   FEM fem;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
-  CON con;
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
