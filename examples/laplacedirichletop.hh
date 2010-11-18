@@ -1,7 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
+#include <cstddef>
 #include<vector>
+
 #include<dune/common/fvector.hh>
 #include<dune/common/geometrytype.hh>
 #include<dune/grid/common/quadraturerules.hh>
@@ -62,7 +64,7 @@ public:
 		const Dune::FieldMatrix<DF,dimw,dim> jac = 
 		  eg.geometry().jacobianInverseTransposed(it->position());
 		std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
-		for (int i=0; i<lfsu.size(); i++)
+        for (std::size_t i=0; i<lfsu.size(); i++)
 		  {
 			gradphi[i] = 0.0;
 			jac.umv(js[i][0],gradphi[i]);
@@ -70,13 +72,13 @@ public:
 
 		// compute gradient of u
 		Dune::FieldVector<RF,dim> gradu(0.0);
-		for (int i=0; i<lfsu.size(); i++)
+        for (std::size_t i=0; i<lfsu.size(); i++)
 		  gradu.axpy(x[i],gradphi[i]);
 
 		// integrate grad u * grad phi_i
 		RF factor = it->weight() * eg.geometry().integrationElement(
 		                                          it->position());
-		for (int i=0; i<lfsu.size(); i++)
+        for (std::size_t i=0; i<lfsu.size(); i++)
 		  r[i] += (gradu*gradphi[i])*factor;
 	  }
   }
