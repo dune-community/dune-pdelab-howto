@@ -36,13 +36,13 @@ public:
     const LFSU1& lfsu1 = lfsu.template getChild<1>();
 
     // domain and range field type (assume both components have same RF)
-    typedef typename LFSU0::Traits::LocalFiniteElementType::
+    typedef typename LFSU0::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::DomainFieldType DF;
-    typedef typename LFSU0::Traits::LocalFiniteElementType::
+    typedef typename LFSU0::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::RangeFieldType RF;
-    typedef typename LFSU0::Traits::LocalFiniteElementType::
+    typedef typename LFSU0::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::JacobianType JacobianType;
-    typedef typename LFSU0::Traits::LocalFiniteElementType::
+    typedef typename LFSU0::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::RangeType RangeType;
     typedef typename LFSU::Traits::SizeType size_type;
         

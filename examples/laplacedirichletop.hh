@@ -33,11 +33,11 @@ public:
 					 const LFSV& lfsv, R& r) const
   {
 	// domain and range field type
-	typedef typename LFSU::Traits::LocalFiniteElementType::
+    typedef typename LFSU::Traits::FiniteElementType::
 	  Traits::LocalBasisType::Traits::DomainFieldType DF;
-	typedef typename LFSU::Traits::LocalFiniteElementType::
+    typedef typename LFSU::Traits::FiniteElementType::
 	  Traits::LocalBasisType::Traits::RangeFieldType RF;
-	typedef typename LFSU::Traits::LocalFiniteElementType::
+    typedef typename LFSU::Traits::FiniteElementType::
 	  Traits::LocalBasisType::Traits::JacobianType JacobianType;
 
 	// dimensions

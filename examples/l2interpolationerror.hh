@@ -11,7 +11,7 @@ double l2interpolationerror (const U& u, const GFS& gfs, X& x,
   const int dim = GV::Grid::dimension;
   typedef typename GV::Traits::template Codim<0>::Iterator 
 	ElementIterator;
-  typedef typename GFS::Traits::LocalFiniteElementType::
+  typedef typename GFS::Traits::FiniteElementType::
 	Traits::LocalBasisType::Traits FTraits;
   typedef typename FTraits::DomainFieldType D;
   typedef typename FTraits::RangeFieldType R;

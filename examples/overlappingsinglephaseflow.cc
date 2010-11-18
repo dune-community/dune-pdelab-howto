@@ -56,7 +56,7 @@ void driver (const BType& b, const GType& g,
 {
   // constants and types and global variables
   typedef typename GV::Grid::ctype DF;
-  typedef typename FEM::Traits::LocalFiniteElementType::Traits::
+  typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
   Dune::Timer watch;
 
