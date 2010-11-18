@@ -55,7 +55,7 @@ public:
 	  {
 		// evaluate gradient of shape functions (assume Galerkin)
 		std::vector<JacobianType> js(lfsu.size());
-		lfsu.localFiniteElement().localBasis().evaluateJacobian(
+        lfsu.finiteElement().localBasis().evaluateJacobian(
 		  it->position(),js);
 
 		// transform gradient to real element

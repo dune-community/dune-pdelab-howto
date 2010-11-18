@@ -75,9 +75,9 @@ public:
       {
         // evaluate basis functions on reference element
         std::vector<RangeType> phi0(lfsu0.size());
-        lfsu0.localFiniteElement().localBasis().evaluateFunction(it->position(),phi0);
+        lfsu0.finiteElement().localBasis().evaluateFunction(it->position(),phi0);
         std::vector<RangeType> phi1(lfsu1.size());
-        lfsu1.localFiniteElement().localBasis().evaluateFunction(it->position(),phi1);
+        lfsu1.finiteElement().localBasis().evaluateFunction(it->position(),phi1);
 
         // compute u_0, u_1 at integration point
         RF u_0=0.0;
@@ -89,9 +89,9 @@ public:
 
         // evaluate gradient of basis functions on reference element
         std::vector<JacobianType> js0(lfsu0.size());
-        lfsu0.localFiniteElement().localBasis().evaluateJacobian(it->position(),js0);
+        lfsu0.finiteElement().localBasis().evaluateJacobian(it->position(),js0);
         std::vector<JacobianType> js1(lfsu1.size());
-        lfsu1.localFiniteElement().localBasis().evaluateJacobian(it->position(),js1);
+        lfsu1.finiteElement().localBasis().evaluateJacobian(it->position(),js1);
 
         // transform gradients from reference element to real element
         const Dune::FieldMatrix<DF,dimw,dim> 

@@ -58,7 +58,7 @@ public:
       {
         // evaluate basis functions
         std::vector<RangeType> phi(lfsu.size());
-        lfsu.localFiniteElement().localBasis().evaluateFunction(it->position(),phi);
+        lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
         // evaluate u
         RF u=0.0;
