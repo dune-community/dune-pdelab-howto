@@ -130,7 +130,7 @@ public:
 	else
 	  iz=0;
 
-	RF k;
+	RF k = 0;
     if ( iz==0 && iy==0 && ix==0 ) k=K000;
     if ( iz==0 && iy==0 && ix==1 ) k=K001;
     if ( iz==0 && iy==1 && ix==0 ) k=K010;
