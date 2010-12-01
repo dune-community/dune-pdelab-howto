@@ -19,8 +19,9 @@
 #include<dune/istl/paamg/amg.hh>
 #include<dune/istl/superlu.hh>
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include<dune/grid/common/scsgmapper.hh>
 
-#include<dune/pdelab/finiteelementmap/monomfem.hh>
+#include<dune/pdelab/finiteelementmap/variablemonomfem.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -44,9 +45,8 @@
 #include"problemF.hh"  // Constant flow with constant permeability with is 1E-6 in x direction
 
 // Define most changed values
-#define QUADRATURE_RULE_ORDER 6
-#define MONOM_BASIS_ORDER 2
-#define BLOCK_SIZE 6
+static const int monom_max_order = 10;
+#define BLOCK_SIZE 1
 #define GRID_REFINE 2
 #define DG_METHOD 0  // OBB: 0, NIPG: 1, SIPG: 2
 #define MAKE_VTK_OUTPUT
@@ -59,6 +59,7 @@
 template<class GV, class FEM>
 void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool verbose)
 {
+    typedef typename GV::Grid Grid;
     typedef typename GV::Grid::ctype DF;
     typedef double RF;
     Dune::Timer watch;
@@ -92,7 +93,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
 
     // make grid function operator
     typedef Dune::PDELab::DiffusionDG<KType,FType,BType,GType,JType> LOP;
-    LOP la(k,f,b,g,j,DG_METHOD,QUADRATURE_RULE_ORDER);
+    LOP la(k,f,b,g,j,DG_METHOD);
     typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,
        Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation,
        Dune::PDELab::ISTLBCRSMatrixBackend<BLOCK_SIZE,BLOCK_SIZE> > GOS;
@@ -159,40 +160,12 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
 
     #ifdef MAKE_VTK_OUTPUT
     // output grid function with SubsamplingVTKWriter
-    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
+    k_C<GV,RF> k2(gv);
+    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,5);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
+    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter< k_C<GV,RF> >(k2,"k"));
+    vtkwriter.addCellData(new Dune::PDELab::VTKFiniteElementMapAdapter<Grid,FEM>(fem,"fem order"));
     vtkwriter.write(filename,Dune::VTKOptions::ascii);
-    #endif
-
-    #ifdef ANALYTIC_SOLUTION_PROVIDED
-    AnalyticSolution<GV,RF> analyticSolution(gv);
-    #else
-    std::cout << "No analytic solution provided, can't calculate L2 error" << std::endl;
-    #warning No analytic solution provided, will not calculate L2 Error
-    #endif
-
-    #ifdef CALCULATE_L2_ERROR
-    #ifdef ANALYTIC_SOLUTION_PROVIDED
-    double error_l2 = l2error(analyticSolution,gfs,x,QUADRATURE_RULE_ORDER);
-    std::cout.precision(8);
-    std::cout << "L2 error: "
-        << std::setw(8) << gv.size(0) << " elements "
-        << std::scientific << error_l2 << std::endl;
-    #else
-    std::cout << "No analytic solution provided, can't calculate L2 error" << std::endl;
-    #warning No analytic solution provided, will not calculate L2 Error
-    #endif
-    #endif
-
-    #ifdef CALCULATE_ABSOLUTE_ERROR
-    #ifdef ANALYTIC_SOLUTION_PROVIDED
-    Dune::FieldVector<DF,dim> evaluate_point(0.8);
-    double error_absolute = absolute_error(analyticSolution,gfs,x,evaluate_point,verbose);
-    std::cout.precision(8);
-    std::cout << "Absolute error: "
-        << std::setw(8) << gv.size(0) << " elements "
-        << std::scientific << error_absolute << std::endl;
-    #endif
     #endif
 }
 
@@ -201,25 +174,25 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
     if(Dune::MPIHelper::isFake)
-      std::cout<< "This is a sequential program." << std::endl;
+        std::cout<< "This is a sequential program." << std::endl;
     else
-	  {
+    {
 		if(helper.rank()==0)
-		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
-	  }
+            std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
+    }
     
     std::string problem="C";
 
     try
     {
         // 2D
-      if (true)
         {
             // make grid
             Dune::FieldVector<double,2> L(1.0);  // L[0]=2.0; L[1]=1.0;
-            Dune::FieldVector<int,2> N(64);       // N[0]=2; N[1]=2;
+            Dune::FieldVector<int,2> N(32);       // N[0]=2; N[1]=2;
             Dune::FieldVector<bool,2> B(false);
-            Dune::YaspGrid<2> grid(L,N,B,0);
+            typedef Dune::YaspGrid<2> Grid;
+            Grid grid(L,N,B,0);
             #ifdef REFINE_STEPWISE
             for (int i = 0; i <= GRID_REFINE; ++i)
             {
@@ -227,37 +200,27 @@ int main(int argc, char** argv)
                 grid.globalRefine(1);
             }
             #else
-            grid.globalRefine(GRID_REFINE);
+            // grid.globalRefine(GRID_REFINE);
 
             // instantiate finite element maps
-            typedef Dune::PDELab::MonomLocalFiniteElementMap<double,double,2,MONOM_BASIS_ORDER> FEM;
-            FEM fem(Dune::GeometryType::cube); // works only for cubes
+            typedef Dune::SingleCodimSingleGeomTypeMapper<Grid::LeafGridView, 0> CellMapper;
+            CellMapper cellmapper(grid.leafView());
+            typedef Dune::PDELab::VariableMonomLocalFiniteElementMap<
+                CellMapper,double,double,2,monom_max_order> FEM;
+            FEM fem(cellmapper, 2); // works only for cubes
 
+            // set polynomial order per element
+            unsigned int range = std::ceil( double(cellmapper.size()) / (monom_max_order-1) );
+            for (auto it = grid.leafView().begin<0>(), end = grid.leafView().end<0>();
+                 it != end; ++it)
+            {
+                fem.setOrder(*it, 2 + cellmapper.map(*it) / range);
+            }
+            
             // solve problem :)
             solve_dg(grid.leafView(),fem,"DG_Yasp_2d",true);
             #endif
         }
-
-#if HAVE_ALBERTA
-      if (true)
-        {
-          typedef AlbertaUnitSquare GridType;
-          GridType grid;
-          grid.globalRefine(10);
-          
-          // get view
-          typedef GridType::LeafGridView GV;
-          const GV& gv=grid.leafView(); 
- 
-          // instantiate finite element maps
-          typedef Dune::PDELab::MonomLocalFiniteElementMap<double,double,2,MONOM_BASIS_ORDER> FEM;
-          FEM fem(Dune::GeometryType::simplex); // works only for cubes
-
-          solve_dg(gv,fem,"DG_Alberta_2d",true);
-         
-        }
-#endif
-
 
     }
     catch (Dune::Exception &e)
