@@ -44,7 +44,8 @@ noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
 	laplacedirichletmain \
 	dgstokes \
 	cgstokes \
-	cgstokes_instat 
+	cgstokes_instat \
+	adaptivity
 
 #	novlp_test	
 
@@ -61,6 +62,12 @@ noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
 # novlp_test_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS) $(PARMETIS_LDFLAGS)
 # novlp_test_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
+
+adaptivity_SOURCES = adaptivity.cc
+adaptivity_CXXFLAGS = $(AM_CXXFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) -DDUNE_DEVEL_MODE $(ALUGRID_CPPFLAGS)
+adaptivity_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS)
+adaptivity_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
+adaptivity_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
 cgstokes_SOURCES = cg_stokes.cc
 cgstokes_CXXFLAGS = $(AM_CXXFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) -DDUNE_DEVEL_MODE $(ALUGRID_CPPFLAGS)
