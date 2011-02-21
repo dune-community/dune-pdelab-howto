@@ -15,6 +15,6 @@ public:
   {
 	typename Traits::DomainType center(0.0);
 	center -= x;
-	y = exp((-1.0/(1500*1500))*center.two_norm2());
+	y = exp(-1.0*center.two_norm2());
   }
 };
