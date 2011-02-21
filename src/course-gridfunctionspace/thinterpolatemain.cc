@@ -1,4 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file
+    \brief Taylor-Hood gridfunctionspace example 
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif

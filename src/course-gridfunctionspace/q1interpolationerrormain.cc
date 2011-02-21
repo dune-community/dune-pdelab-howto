@@ -1,4 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file
+    \brief Compute interpolation error with Q_1 elements 
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif

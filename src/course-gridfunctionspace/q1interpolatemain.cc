@@ -1,4 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file
+    \brief Initialize a grid function without constraints from a given function 
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
