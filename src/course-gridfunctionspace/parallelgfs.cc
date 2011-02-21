@@ -82,7 +82,7 @@ void testp0 (const GV& gv)
 
   // instantiate finite element maps
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
-  FEM fem(Dune::GeometryType::cube);
+  FEM fem(Dune::GeometryType(Dune::GeometryType::cube,dim));
   
   // make grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
