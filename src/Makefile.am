@@ -1,4 +1,4 @@
 srcdir = $(includedir)/src
-SUBDIRS = utility course
+SUBDIRS = utility course-examples
 
 include $(top_srcdir)/am/global-rules
