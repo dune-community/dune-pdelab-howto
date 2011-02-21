@@ -1,8 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 /** \file
     
-    \brief Solve elliptic problem in constrained spaces with 
-    conforming finite elements
+    \brief Solve elliptic problem with adaptive conforming finite element method
 */
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
@@ -69,7 +68,7 @@
 #include"example02_bctype.hh"
 #include"example02_bcextension.hh"
 #include"example02_operator.hh"
-#include"adaptivity.hh"
+#include"example07_adaptivity.hh"
 
 //===============================================================
 // Main program with grid setup

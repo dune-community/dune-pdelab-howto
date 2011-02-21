@@ -1,5 +1,7 @@
 utilitydir = $(includedir)/src/utility
-finiteelementmap_HEADERS = \
-	permeability_generator.hh
+utility_HEADERS = \
+	permeability_generator.hh \
+	gridexamples.hh \
+	basicunitcube.hh
 
 include $(top_srcdir)/am/global-rules
