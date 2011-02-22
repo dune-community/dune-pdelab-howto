@@ -1,4 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file 
+    \brief Solve Problems A-F in parallel using cell-centered finite volumes (works on nonoverlapping grids in overlapping mode)
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
@@ -36,8 +39,12 @@
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 
 #include"../utility/gridexamples.hh"
+#include"problemA.hh"
+#include"problemB.hh"
+#include"problemC.hh"
 #include"problemD.hh"
-
+#include"problemE.hh"
+#include"problemF.hh"
 
 template<class GV> 
 void test (const GV& gv)
@@ -49,7 +56,7 @@ void test (const GV& gv)
 
   // instantiate finite element maps
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
-  FEM fem(Dune::GeometryType::cube); // works only for cubes
+  FEM fem(Dune::GeometryType(Dune::GeometryType::cube,dim)); // works only for cubes
   
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,

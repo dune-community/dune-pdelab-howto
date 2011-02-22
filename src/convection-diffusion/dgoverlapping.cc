@@ -1,4 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file 
+    \brief test overlapping Schwarz solver for discontinuous Galerkin (solves Problem A-F)
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

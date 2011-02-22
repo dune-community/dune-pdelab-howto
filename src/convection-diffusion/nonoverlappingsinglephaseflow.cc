@@ -1,4 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file 
+    \brief Solve Problems A-F in parallel on non-overlapping grids using conforming linear finite elements
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif

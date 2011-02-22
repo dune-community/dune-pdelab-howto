@@ -1,4 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file 
+    \brief Nonlinear diffusion equation solved in sequential and parallel (overlapping and nonoverlapping) using linear elements
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif

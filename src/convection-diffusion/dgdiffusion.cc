@@ -1,4 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file 
+    \brief Discontinuous Galerkin method 
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -199,7 +202,7 @@ int main(int argc, char** argv)
 
             // instantiate finite element maps
             typedef Dune::PDELab::MonomLocalFiniteElementMap<double,double,2,MONOM_BASIS_ORDER> FEM;
-            FEM fem(Dune::GeometryType::cube); // works only for cubes
+            FEM fem(Dune::GeometryType(Dune::GeometryType::cube,2)); // works only for cubes
 
             // solve problem :)
             solve_dg(grid.leafView(),fem,"DG_Yasp_2d",true);
@@ -219,7 +222,7 @@ int main(int argc, char** argv)
  
           // instantiate finite element maps
           typedef Dune::PDELab::MonomLocalFiniteElementMap<double,double,2,MONOM_BASIS_ORDER> FEM;
-          FEM fem(Dune::GeometryType::simplex); // works only for cubes
+          FEM fem(Dune::GeometryType(Dune::GeometryType::simplex,2)); // works only for cubes
 
           solve_dg(gv,fem,"DG_Alberta_2d",true);
          

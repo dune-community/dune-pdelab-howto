@@ -1,4 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file 
+    \brief Solve Poisson problem on various grids (sequential)
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif

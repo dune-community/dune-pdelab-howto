@@ -1,4 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file 
+    \brief Solve Problems A-F using lowest order Raviart-Thomas elements (sequential)
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
@@ -266,7 +269,7 @@ int main(int argc, char** argv)
       const int dim = 2;
       typedef double R;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
-      P0FEM p0fem(Dune::GeometryType::cube);
+      P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::cube,dim));
       typedef Dune::PDELab::RT0QLocalFiniteElementMap<GV,DF,R,dim> RT0FEM;
       RT0FEM rt0fem(grid.leafView());
 
@@ -288,7 +291,7 @@ int main(int argc, char** argv)
       const int dim = 3;
       typedef double R;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
-      P0FEM p0fem(Dune::GeometryType::cube);
+      P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::cube,dim));
       typedef Dune::PDELab::RT0QLocalFiniteElementMap<GV,DF,R,dim> RT0FEM;
       RT0FEM rt0fem(grid.leafView());
 
@@ -307,7 +310,7 @@ int main(int argc, char** argv)
       const int dim = 2;
       typedef double R;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
-      P0FEM p0fem(Dune::GeometryType::simplex);
+      P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
       typedef Dune::PDELab::RT02DLocalFiniteElementMap<GV,DF,R> RT0FEM;
       RT0FEM rt0fem(grid.leafView());
 
@@ -327,7 +330,7 @@ int main(int argc, char** argv)
       const int dim = 2;
       typedef double R;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
-      P0FEM p0fem(Dune::GeometryType::simplex);
+      P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
       typedef Dune::PDELab::RT02DLocalFiniteElementMap<GV,DF,R> RT0FEM;
       RT0FEM rt0fem(grid.leafView());
 
@@ -347,7 +350,7 @@ int main(int argc, char** argv)
       const int dim = 2;
       typedef double R;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
-      P0FEM p0fem(Dune::GeometryType::simplex);
+      P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
       typedef Dune::PDELab::RT02DLocalFiniteElementMap<GV,DF,R> RT0FEM;
       RT0FEM rt0fem(grid.leafView());
 

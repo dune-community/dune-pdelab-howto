@@ -1,4 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file 
+    \brief Solve Problems A-F in parallel on overlapping grids using conforming linear finite elements
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
@@ -42,7 +45,12 @@
 #include<dune/pdelab/localoperator/diffusion.hh>
 
 #include"../utility/gridexamples.hh"
+#include"problemA.hh"
+#include"problemB.hh"
+#include"problemC.hh"
 #include"problemD.hh"
+#include"problemE.hh"
+#include"problemF.hh"
 
 //===============================================================
 // set up diffusion problem and solve it

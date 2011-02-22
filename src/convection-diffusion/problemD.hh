@@ -2,7 +2,7 @@
 #define DUNE_PARSOLVE_PROBLEMD_HH
 
 #include<math.h>
-#include"permeability_generator.hh"
+#include"../utility/permeability_generator.hh"
 
 // function for defining the diffusion tensor
 template<typename GV, typename RF>

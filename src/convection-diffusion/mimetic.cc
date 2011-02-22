@@ -1,4 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file 
+    \brief Mimetic finite difference example (solves Problem A-F)
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

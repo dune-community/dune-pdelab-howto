@@ -1,4 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file 
+    \brief Discontinuous Galerkin with variable polynomial degree
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

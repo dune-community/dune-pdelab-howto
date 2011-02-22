@@ -1,4 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file 
+    \brief Solve heat equation with high order in space and time (known analytic solution)
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
