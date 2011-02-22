@@ -41,7 +41,7 @@
 #include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include<dune/pdelab/localoperator/diffusion.hh>
 
-#include"gridexamples.hh"
+#include"../utility/gridexamples.hh"
 #include"problemD.hh"
 
 //===============================================================

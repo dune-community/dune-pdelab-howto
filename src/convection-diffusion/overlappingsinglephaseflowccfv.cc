@@ -35,7 +35,7 @@
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 
-#include"gridexamples.hh"
+#include"../utility/gridexamples.hh"
 #include"problemD.hh"
 
 

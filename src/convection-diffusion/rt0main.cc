@@ -30,7 +30,7 @@
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/localoperator/diffusionmixed.hh>
 
-#include"gridexamples.hh"
+#include"../utility/gridexamples.hh"
 #include"problemA.hh"
 #include"problemB.hh"
 #include"problemC.hh"

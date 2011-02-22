@@ -24,8 +24,7 @@ noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
 	poisson \
 	mimetic \
 	laplacedirichletccfv \
-	reentrantcorner \
-	laplacedirichletmain
+	reentrantcorner 
 
 # novlp_test_SOURCES = novlp_test.cc
 # novlp_test_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) \

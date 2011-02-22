@@ -63,7 +63,7 @@
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/instationary/onestep.hh>
 
-#include"gridexamples.hh"
+#include"../utility/gridexamples.hh"
 
 //==============================================================================
 // Parameter class for the convection diffusion problem

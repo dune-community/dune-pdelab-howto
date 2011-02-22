@@ -42,7 +42,7 @@
 #include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include<dune/pdelab/localoperator/poisson.hh>
 
-#include "gridexamples.hh"
+#include "../utility/gridexamples.hh"
 
 //===============================================================
 //===============================================================

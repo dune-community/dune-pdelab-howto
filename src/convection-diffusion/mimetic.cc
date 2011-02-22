@@ -36,7 +36,7 @@
 #include<dune/pdelab/localoperator/diffusionmfd.hh>
 #include<dune/pdelab/localoperator/poisson.hh>
 
-#include "gridexamples.hh"
+#include "../utility/gridexamples.hh"
 #include "problemA.hh"
 #include "problemB.hh"
 #include "problemC.hh"
