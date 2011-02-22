@@ -1,3 +1,7 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file 
+    \brief Solve two-phase flow in porous media with mimetic finite-difference method in pressure-saturation formulation
+*/
 #include "config.h"
 #include<iostream>
 #include<vector>
@@ -27,7 +31,6 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
-//#include<dune/pdelab/localoperator/laplacedirichletccfv.hh>
 #include<dune/pdelab/localoperator/twophaseccfv.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>

@@ -2,8 +2,7 @@
 
 /** \file 
 
-    \brief Example applications of the local operator
-    TaylorHoodNavierStokesJacobian. 
+    \brief Example applications of the local operator TaylorHoodNavierStokesJacobian (stationary case). 
 
     This file provides examples applications of Navier-Stokes flow in
     2- and 3-dimensional tubes with and without obstacles. An L-shape

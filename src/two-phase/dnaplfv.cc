@@ -1,4 +1,7 @@
-#// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
+/** \file 
+    \brief Solve two-phase flow in porous media with cell-centered FV in pressure-pressure formulation
+*/
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
