@@ -11,7 +11,6 @@ if SUPERLU
 SUPERLUPROGRAMS = dgdiffusion \
 	dgdiffusion-hp \
 	rt0main
-
 endif
 
 noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
@@ -26,15 +25,7 @@ noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
 	mimetic \
 	laplacedirichletccfv \
 	reentrantcorner \
-	laplacedirichletmain \
-	dgstokes \
-	cgstokes \
-	cgstokes_instat \
-	adaptivity
-
-#	novlp_test	
-
-#	dnaplfvamg 
+	laplacedirichletmain
 
 # novlp_test_SOURCES = novlp_test.cc
 # novlp_test_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) \
@@ -46,13 +37,6 @@ noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
 # $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS) 
 # novlp_test_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS) $(PARMETIS_LDFLAGS)
 # novlp_test_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
-
-#switches to use corner point grid
-#example04_SOURCES = example04.cc
-#example04_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
-#example04_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) ../../dune-cornerpoint/lib/libdunecornerpoint.la 
-#example04_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS) $(BOOST_LDFLAGS)
-#example04_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(BOOST_CPPFLAGS)
 
 if SUPERLU
 dgdiffusion_SOURCES = dgdiffusion.cc

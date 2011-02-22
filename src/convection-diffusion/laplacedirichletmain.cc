@@ -22,7 +22,7 @@
 #include"analyticfunction.hh"
 #include"q1constraints.hh"
 #include"laplacedirichlet.hh"
-#include"gridexamples.hh"
+#include"../utility/gridexamples.hh"
 
 int main(int argc, char** argv)
 {

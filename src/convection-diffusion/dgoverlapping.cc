@@ -37,7 +37,7 @@
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/diffusiondg.hh>
 
-#include"gridexamples.hh"
+#include"../utility/gridexamples.hh"
 
 // Select Problem
 #include"problemA.hh"  // exp(-norm(x,y))
