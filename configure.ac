@@ -3,7 +3,7 @@
 AC_PREREQ(2.50)
 DUNE_AC_INIT # gets module version from dune.module file
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([examples/poisson.cc])
+AC_CONFIG_SRCDIR([src/course-examples/example01.cc])
 AM_CONFIG_HEADER([config.h])
 
 AC_CHECK_PROGS([CONVERT], [convert], [false])
@@ -24,7 +24,13 @@ AC_CONFIG_FILES([
   m4/Makefile
   doc/Makefile
   doc/howto/Makefile
-  examples/Makefile
+  src/Makefile
+  src/utility/Makefile
+  src/course-examples/Makefile
+  src/course-gridfunctionspace/Makefile
+  src/navier-stokes/Makefile
+  src/two-phase/Makefile
+  src/convection-diffusion/Makefile
   dune-pdelab-howto.pc
 ])
 AC_OUTPUT
