@@ -172,11 +172,20 @@ public:
 };
 #endif
 
-#if HAVE_UG 
-class UGUnitSquare : public Dune::UGGrid<2>
+#if HAVE_UG
+
+struct UGSetHeapSize
+{
+  UGSetHeapSize (unsigned int heapSize)
+  {
+    Dune::UGGrid<2>::setDefaultHeapSize(heapSize);
+  }
+};
+
+class UGUnitSquare : UGSetHeapSize, public Dune::UGGrid<2>
 {
 public:
-  UGUnitSquare (unsigned int heapSize=100) : Dune::UGGrid<2>(heapSize)
+  UGUnitSquare (unsigned int heapSize=100) : UGSetHeapSize(heapSize), Dune::UGGrid<2>()
   {
     Dune::GridFactory<Dune::UGGrid<2> > factory(this);
 	Dune::FieldVector<double,2> pos;
@@ -197,10 +206,10 @@ public:
   }
 };
 
-class UGUnitSquareQ : public Dune::UGGrid<2>
+class UGUnitSquareQ : UGSetHeapSize, public Dune::UGGrid<2>
 {
 public:
-  UGUnitSquareQ (unsigned int heapSize=100) : Dune::UGGrid<2>(heapSize)
+  UGUnitSquareQ (unsigned int heapSize=100) : UGSetHeapSize(heapSize), Dune::UGGrid<2>()
   {
     Dune::GridFactory<Dune::UGGrid<2> > factory(this);
 	Dune::FieldVector<double,2> pos;
@@ -220,10 +229,10 @@ public:
 };
 
 
-class UGUnitTriangle : public Dune::UGGrid<2>
+class UGUnitTriangle : UGSetHeapSize, public Dune::UGGrid<2>
 {
 public:
-  UGUnitTriangle (unsigned int heapSize=100) : Dune::UGGrid<2>(heapSize)
+  UGUnitTriangle (unsigned int heapSize=100) : UGSetHeapSize(heapSize), Dune::UGGrid<2>()
   {
     Dune::GridFactory<Dune::UGGrid<2> > factory(this);
 	Dune::FieldVector<double,2> pos;
@@ -240,10 +249,10 @@ public:
   }
 };
 
-class UGLDomain : public Dune::UGGrid<2>
+class UGLDomain : UGSetHeapSize, public Dune::UGGrid<2>
 {
 public:
-  UGLDomain (unsigned int heapSize=100) : Dune::UGGrid<2>(heapSize)
+  UGLDomain (unsigned int heapSize=100) : UGSetHeapSize(heapSize), Dune::UGGrid<2>()
   {
     Dune::GridFactory<Dune::UGGrid<2> > factory(this);
 	Dune::FieldVector<double,2> pos;
