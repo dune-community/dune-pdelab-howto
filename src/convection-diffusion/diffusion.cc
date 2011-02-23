@@ -281,7 +281,7 @@ void runFEM (const GV& gv, const FEM& fem, PROBLEM& problem, std::string basenam
 
   // make local operator
   typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM> LOP;
-  LOP lop(problem,4);
+  LOP lop(problem);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
   GOS gos(gfs,cc,gfs,cc,lop);
