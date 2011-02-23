@@ -21,18 +21,6 @@
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/grid/yaspgrid.hh>
-#if HAVE_ALBERTA
-#include<dune/grid/albertagrid.hh>
-#include <dune/grid/albertagrid/dgfparser.hh>
-#endif
-#if HAVE_UG 
-#include<dune/grid/uggrid.hh>
-#endif
-#if HAVE_ALUGRID
-#include<dune/grid/alugrid.hh>
-#include<dune/grid/io/file/dgfparser/dgfalu.hh>
-#include<dune/grid/io/file/dgfparser/dgfparser.hh>
-#endif
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
 #include<dune/istl/solvers.hh>
@@ -42,15 +30,7 @@
 
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/p12dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk2dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk3dfem.hh>
-#include<dune/pdelab/finiteelementmap/q12dfem.hh>
-#include<dune/pdelab/finiteelementmap/q22dfem.hh>
 #include<dune/pdelab/finiteelementmap/q1fem.hh>
-#include<dune/pdelab/finiteelementmap/p1fem.hh>
-#include<dune/pdelab/finiteelementmap/rannacher_turek2dfem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
@@ -107,7 +87,6 @@ int main(int argc, char** argv)
 	double tend;
 	sscanf(argv[4],"%lg",&tend);
 
-#if HAVE_MPI
     // 2D
     {
       // make grid
@@ -120,7 +99,6 @@ int main(int argc, char** argv)
       const GV& gv=grid.leafView();
       example06_Q1Q1(gv,dtstart,dtmax,tend);
     }
-#endif
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
