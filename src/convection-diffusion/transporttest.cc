@@ -472,9 +472,8 @@ int main(int argc, char** argv)
 	int o;
 	sscanf(argv[4],"%d",&o);
 
-#if HAVE_MPI
     // parallel overlapping version
-    if (1)
+    if (true)
     {
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(n);
@@ -487,7 +486,6 @@ int main(int argc, char** argv)
       implicit_scheme(gv,Tend,timestep);
       explicit_scheme(gv,Tend,timestep);
     }
-#endif
 
   }
   catch (Dune::Exception &e){
