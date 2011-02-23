@@ -218,8 +218,6 @@ int main(int argc, char** argv)
 	  }
     rank = helper.rank();
 
-
-#if HAVE_MPI
     // 2D
     if (true)
     {
@@ -249,7 +247,6 @@ int main(int argc, char** argv)
       testp0(grid.leafView());
       testp1(grid.leafView());
     }
-#endif
 
 	// test passed
 	return 0;
