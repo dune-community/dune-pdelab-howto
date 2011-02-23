@@ -604,10 +604,6 @@ int main(int argc, char** argv)
     if(argc>4)
       sscanf(argv[4], "%d", &dim);
 
-#if HAVE_MPI
-    double start=MPI_Wtime();
-#endif
-
     // 2D
     if (dim==2)
     {
@@ -637,12 +633,6 @@ int main(int argc, char** argv)
       // solve problem :)
       test(grid.leafView(),timesteps,timestep);
     }
-
-#if HAVE_MPI
-    if(helper.rank()==0)
-      std::cout<<"Total computation time was "<<MPI_Wtime()-start
-               <<" seconds."<<std::endl;
-#endif
 
 	// test passed
 	return 0;

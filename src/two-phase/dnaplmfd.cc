@@ -708,7 +708,6 @@ int main(int argc, char** argv)
     double timestep;
     sscanf(argv[3],"%lg",&timestep);
 
-#if HAVE_MPI
     // 2D
     if (true)
     {
@@ -738,7 +737,6 @@ int main(int argc, char** argv)
       // solve problem :)
       test(grid.leafView(),timesteps,timestep);
     }
-#endif
 
     // test passed
     return 0;

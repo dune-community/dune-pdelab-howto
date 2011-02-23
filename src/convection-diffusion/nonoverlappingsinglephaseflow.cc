@@ -240,7 +240,6 @@ int main(int argc, char** argv)
     
     std::string problem="C";
 
-#if HAVE_MPI
     // Q1, 2d
     if (false)
     {
@@ -263,9 +262,7 @@ int main(int argc, char** argv)
 
       dispatcher(problem,gv,fem,fem0,"yasp2d_Q1",2);
     }
-#endif
 
-#if HAVE_MPI
     // Q1, 3d
     if (false)
     {
@@ -288,9 +285,7 @@ int main(int argc, char** argv)
 
       dispatcher(problem,gv,fem,fem0,"yasp3d_Q1",2);
     }
-#endif
 
-#if HAVE_MPI
     // Rannacher Turek, 2d
     if (true)
     {
@@ -313,7 +308,6 @@ int main(int argc, char** argv)
 
       dispatcher(problem,gv,fem,fem0,"yasp2d_rannacher_turek",2);
     }
-#endif
 
 #if HAVE_UG
     if (false)
