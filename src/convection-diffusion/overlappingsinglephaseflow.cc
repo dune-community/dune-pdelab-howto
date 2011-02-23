@@ -159,7 +159,6 @@ int main(int argc, char** argv)
 		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
 	  }
     
-#if HAVE_MPI
     // Q1, 2d
     if (true)
     {
@@ -184,9 +183,7 @@ int main(int argc, char** argv)
              A0_D<GV,double>(gv),F_D<GV,double>(gv),J_D<GV,double>(gv),
              gv,fem,"single_phase_yasp2d_Q1");
     }
-#endif
 
-#if HAVE_MPI
     // Q1, 3d
     if (false)
     {
@@ -211,7 +208,6 @@ int main(int argc, char** argv)
              A0_D<GV,double>(gv),F_D<GV,double>(gv),J_D<GV,double>(gv),
              gv,fem,"single_phase_yasp3d_Q1");
     }
-#endif
 
 	return 0;
   }
