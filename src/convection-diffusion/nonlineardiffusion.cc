@@ -19,18 +19,6 @@
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/grid/yaspgrid.hh>
-#if HAVE_ALBERTA
-#include<dune/grid/albertagrid.hh>
-#include <dune/grid/albertagrid/dgfparser.hh>
-#endif
-#if HAVE_UG 
-#include<dune/grid/uggrid.hh>
-#endif
-#if HAVE_ALUGRID
-#include<dune/grid/alugrid.hh>
-#include<dune/grid/io/file/dgfparser/dgfalu.hh>
-#include<dune/grid/io/file/dgfparser/dgfparser.hh>
-#endif
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
 #include<dune/istl/solvers.hh>
@@ -38,15 +26,8 @@
 #include<dune/istl/io.hh>
 #include<dune/istl/superlu.hh>
 
-#include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/p12dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk2dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk3dfem.hh>
-#include<dune/pdelab/finiteelementmap/q12dfem.hh>
-#include<dune/pdelab/finiteelementmap/q22dfem.hh>
 #include<dune/pdelab/finiteelementmap/q1fem.hh>
-#include<dune/pdelab/finiteelementmap/p1fem.hh>
-#include<dune/pdelab/finiteelementmap/rannacher_turek2dfem.hh>
+#include<dune/pdelab/finiteelementmap/q22dfem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
@@ -182,14 +163,12 @@ void sequential (const GV& gv)
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
-  const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
   //typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
   typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM;
   FEM fem;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
-  CON con;
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
@@ -425,7 +404,7 @@ int main(int argc, char** argv)
 	sscanf(argv[1],"%d",&level);
 
     // sequential version
-    if (1 && helper.size()==1)
+    if (helper.size()==1)
     {
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(16);
@@ -438,9 +417,8 @@ int main(int argc, char** argv)
       sequential(gv);
     }
 
-#if HAVE_MPI
     // nonoverlapping version
-    if (1 && helper.size()>1)
+    if (helper.size()>1)
     {
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(16);
@@ -454,7 +432,7 @@ int main(int argc, char** argv)
     }
 
     // overlapping version
-    if (1 && helper.size()>1)
+    if (helper.size()>1)
     {
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(16);
@@ -466,7 +444,6 @@ int main(int argc, char** argv)
       const GV& gv=grid.leafView();
       parallel_overlapping_Q1(gv);
     }
-#endif
 
   }
   catch (Dune::Exception &e){
