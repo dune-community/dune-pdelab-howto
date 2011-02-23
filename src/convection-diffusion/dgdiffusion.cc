@@ -24,6 +24,8 @@
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 
 #include<dune/pdelab/finiteelementmap/monomfem.hh>
+#include<dune/pdelab/finiteelementmap/opbfem.hh>
+#include<dune/pdelab/finiteelementmap/qkdg.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -48,7 +50,7 @@
 
 // Define most changed values
 #define MONOM_BASIS_ORDER 2
-#define BLOCK_SIZE 6
+#define BLOCK_SIZE 9
 #define GRID_REFINE 2
 #define DG_METHOD 0  // OBB: 0, NIPG: 1, SIPG: 2
 #define MAKE_VTK_OUTPUT
@@ -179,8 +181,6 @@ int main(int argc, char** argv)
 		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
 	  }
     
-    std::string problem="C";
-
     try
     {
         // 2D
@@ -201,8 +201,14 @@ int main(int argc, char** argv)
             grid.globalRefine(GRID_REFINE);
 
             // instantiate finite element maps
-            typedef Dune::PDELab::MonomLocalFiniteElementMap<double,double,2,MONOM_BASIS_ORDER> FEM;
-            FEM fem(Dune::GeometryType(Dune::GeometryType::cube,2)); // works only for cubes
+            //typedef Dune::PDELab::MonomLocalFiniteElementMap<double,double,2,MONOM_BASIS_ORDER> FEM;
+            //FEM fem(Dune::GeometryType(Dune::GeometryType::cube,2)); // works only for cubes
+
+            //typedef Dune::PDELab::OPBLocalFiniteElementMap<double,double,2,MONOM_BASIS_ORDER,Dune::GeometryType::cube> FEM;
+            //FEM fem;
+
+            typedef Dune::PDELab::QkDGLocalFiniteElementMap<double,double,MONOM_BASIS_ORDER,2> FEM;
+            FEM fem;
 
             // solve problem :)
             solve_dg(grid.leafView(),fem,"DG_Yasp_2d",true);
@@ -221,7 +227,7 @@ int main(int argc, char** argv)
           const GV& gv=grid.leafView(); 
  
           // instantiate finite element maps
-          typedef Dune::PDELab::MonomLocalFiniteElementMap<double,double,2,MONOM_BASIS_ORDER> FEM;
+          typedef Dune::PDELab::MonomLocalFiniteElementMap<double,double,MONOM_BASIS_ORDER,2> FEM;
           FEM fem(Dune::GeometryType(Dune::GeometryType::simplex,2)); // works only for cubes
 
           solve_dg(gv,fem,"DG_Alberta_2d",true);
