@@ -318,13 +318,13 @@ public:
 
 template<typename GV, typename RF>
 class P_g
-  : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<GV,RF,GV::Grid::dimension,Dune::FieldVector<RF,1> >,
+  : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<GV,RF,1,Dune::FieldVector<RF,1> >,
                                           P_g<GV,RF> >
 {
   const GV& gv;
   const TwoPhaseParameter<GV,RF>& tp;
 public:
-  typedef Dune::PDELab::GridFunctionTraits<GV,RF,GV::Grid::dimension,Dune::FieldVector<RF,1> > Traits;
+  typedef Dune::PDELab::GridFunctionTraits<GV,RF,1,Dune::FieldVector<RF,1> > Traits;
   typedef Dune::PDELab::GridFunctionBase<Traits,P_g<GV,RF> > BaseT;
 
   P_g (const GV& gv_, const TwoPhaseParameter<GV,RF>& tp_) : gv(gv_), tp(tp_) {}
@@ -490,10 +490,10 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef S_g<TP,P_lDGF,P_gDGF> S_gDGF; 
   S_gDGF s_gdgf(tp,p_ldgf,p_gdgf);
 
-  // <<<8>>> make constraints map and initialize it from a function
+  // <<<8>>> make constraints map and initialize it
   typedef typename TPGFS::template ConstraintsContainer<RF>::Type C;
   C cg; cg.clear();
-  Dune::PDELab::constraints(p_initial,tpgfs,cg,false);
+  Dune::PDELab::constraints(p_initial /* acts as dummy */,tpgfs,cg,false);
 
   // <<<9>>> make grid operator space
   typedef Dune::PDELab::TwoPhaseTwoPointFluxOperator<TP> LOP;
