@@ -83,7 +83,6 @@ void driver (BType& b, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
 {
   // types and constants
   typedef typename GV::Grid::ctype DF;
-  const int dim = GV::dimension;
   typedef double R;
 
   // make a grid function space
