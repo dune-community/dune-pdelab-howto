@@ -78,7 +78,6 @@ public:
     inline void evaluateGlobal (const typename Traits::DomainType& x, 
         typename Traits::RangeType& y) const
     {
-        typename Traits::RangeFieldType norm = x.two_norm2();
         y = 0.0;
     }
 };
