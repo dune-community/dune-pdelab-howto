@@ -6,13 +6,14 @@ public:
   template<typename B, typename I, typename LFS, typename T>
   void boundary (const B& b, const I& ig, const LFS& lfs, T& trafo) const
   {
-	typename B::Traits::DomainType ip(0.5); // test edge midpoint
-	typename B::Traits::RangeType bctype;   // return value
-	b.evaluate(ig,ip,bctype);               // eval condition type
+    Dune::FieldVector<typename I::ctype,I::dimension-1>
+      ip(0.5);                     // test edge midpoint
+	bool isDirichlet =
+      b.isDirichlet(ig,ip);        // eval condition type
 
-	if (bctype<=0) return;                  // done
+	if (!isDirichlet) return;      // done
 
-	typename T::RowType empty;              // need not interpolate
+	typename T::RowType empty;     // need not interpolate
 	if (ig.indexInInside()==0) { trafo[0]=empty; trafo[2]=empty; }
 	if (ig.indexInInside()==1) { trafo[1]=empty; trafo[3]=empty; }
 	if (ig.indexInInside()==2) { trafo[0]=empty; trafo[1]=empty; }
