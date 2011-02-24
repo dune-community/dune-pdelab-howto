@@ -493,7 +493,7 @@ void test (const GV& gv, int timesteps, double timestep)
   // <<<8>>> make constraints map and initialize it
   typedef typename TPGFS::template ConstraintsContainer<RF>::Type C;
   C cg; cg.clear();
-  Dune::PDELab::constraints(p_initial /* acts as dummy */,tpgfs,cg,false);
+  Dune::PDELab::constraints(tpgfs,cg,false);
 
   // <<<9>>> make grid operator space
   typedef Dune::PDELab::TwoPhaseTwoPointFluxOperator<TP> LOP;
