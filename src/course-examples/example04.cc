@@ -74,7 +74,7 @@
 int main(int argc, char** argv)
 {
   try{
-    //Maybe initialize Mpi
+    // initialize MPI if neccessary
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
     if(Dune::MPIHelper::isFake)
       std::cout<< "This is a sequential program." << std::endl;
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 	sscanf(argv[1],"%d",&level);
 
     // sequential version
-    if (1 && helper.size()==1)
+    if (helper.size()==1)
     {
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(1);
