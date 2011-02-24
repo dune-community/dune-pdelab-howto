@@ -255,7 +255,8 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::Q12DLocalFiniteElementMap<DF,double> FEM;
       FEM fem;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,2> FEM0;
-      FEM0 fem0(Dune::GeometryType::cube);
+      Dune::GeometryType cube; cube.makeCube(2);
+      FEM0 fem0(cube);
 
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
@@ -278,7 +279,8 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double,3> FEM;
       FEM fem;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,3> FEM0;
-      FEM0 fem0(Dune::GeometryType::cube);
+      Dune::GeometryType cube; cube.makeCube(3);
+      FEM0 fem0(cube);
 
       typedef Dune::YaspGrid<3>::LeafGridView GV;
       const GV& gv=grid.leafView();
@@ -301,7 +303,8 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::RannacherTurek2DLocalFiniteElementMap<DF,double> FEM;
       FEM fem;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,2> FEM0;
-      FEM0 fem0(Dune::GeometryType::cube);
+      Dune::GeometryType cube; cube.makeCube(2);
+      FEM0 fem0(cube);
 
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
@@ -341,7 +344,8 @@ int main(int argc, char** argv)
       //typedef Dune::PDELab::P1LocalFiniteElementMap<DF,R,GridType::dimension> FEM;
       //FEM fem;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,GridType::dimension> FEM0;
-      FEM0 fem0(Dune::GeometryType::simplex);
+      Dune::GeometryType simplex; simplex.makeSimplex(3);
+      FEM0 fem0(simplex);
 
       dispatcher(problem,gv,fem,fem0,"UG3d_P1",q);
     }
@@ -383,7 +387,8 @@ int main(int argc, char** argv)
       //typedef Dune::PDELab::P1LocalFiniteElementMap<DF,R,GridType::dimension> FEM;
       //FEM fem;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,GridType::dimension> FEM0;
-      FEM0 fem0(Dune::GeometryType::simplex);
+      Dune::GeometryType simplex; simplex.makeSimplex(3);
+      FEM0 fem0(simplex);
 
       dispatcher(problem,gv,fem,fem0,"ALU3d_P1_PlastkDoeddel",q);
     }
@@ -432,7 +437,8 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,R,GridType::dimension> FEM;
       FEM fem;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,GridType::dimension> FEM0;
-      FEM0 fem0(Dune::GeometryType::cube);
+      Dune::GeometryType cube; cube.makeCube(3);
+      FEM0 fem0(cube);
  
       dispatcher(problem,gv,fem,fem0,"ALU3d_Q1",2);
     }
@@ -457,7 +463,8 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,GridType::dimension> FEM0;
-      FEM0 fem0(Dune::GeometryType::simplex);
+      Dune::GeometryType simplex; simplex.makeSimplex(GridType::dimension);
+      FEM0 fem0(simplex);
 
       dispatcher(problem,gv,fem,fem0,"Alberta_Pk",q);
     }
