@@ -7,12 +7,15 @@ class BParam
 {
 public:
   template<typename I>
-  bool isDirichlet(const I & intersection,                                          /*@\label{bcp:name}@*/
-    const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord) const
+  bool isDirichlet(
+				   const I & intersection,                                          /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
   {
-    Dune::FieldVector<typename I::ctype, I::dimension-1>
-      xg = intersection.geometry().global(coord);
 
+    Dune::FieldVector<typename I::ctype, I::dimension>
+      xg = intersection.geometry().global( coord );
+	
     if (xg[0]<1E-6 && xg[1]>0.25 && xg[1]<0.75 )
       return false; // no Dirichlet
     return true;  // Dirichlet
