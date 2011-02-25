@@ -205,7 +205,7 @@ void sequential (const GV& gv, int t_level)
   typedef double Real;
 
   // <<<2>>> Make grid function space
-  //typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
+  //typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,GV::Grid::dimension> FEM;
   typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM;
   FEM fem;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
@@ -235,7 +235,8 @@ void sequential (const GV& gv, int t_level)
   typedef Dune::PDELab::L2 MLOP; 
   MLOP mlop(4);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
-  Dune::PDELab::FractionalStepParameter<Real> method;
+  //Dune::PDELab::FractionalStepParameter<Real> method;
+  Dune::PDELab::Alexander3Parameter<Real> method;
   typedef typename GFS::template VectorContainer<Real>::Type V;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,MLOP,C,C,MBE> IGOS;
   IGOS igos(method,gfs,cg,gfs,cg,lop,mlop);

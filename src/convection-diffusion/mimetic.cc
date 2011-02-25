@@ -217,7 +217,7 @@ void mimetictest(Data& data, std::string filename)
 
     // make finite element maps
     typedef Dune::PDELab::P0LocalFiniteElementMap<double,double,dim> CellFEM;
-    CellFEM cell_fem(Dune::GeometryType::cube);
+    CellFEM cell_fem(Dune::GeometryType(Dune::GeometryType::cube,dim));
     typedef Dune::PDELab::MimeticLocalFiniteElementMap<IIS,double,double,dim> FaceFEM;
     FaceFEM face_fem(iis, Dune::GeometryType::cube);
 
