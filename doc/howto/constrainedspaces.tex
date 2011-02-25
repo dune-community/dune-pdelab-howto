@@ -278,6 +278,16 @@ intersections (for boundary conditions).
 Flags \lstinline{do...} control which methods must be provided.
 \end{frame}
 
+\begin{onlyenv}<article>
+  Depending on the type of the constraints, certain additional
+  information are necessary,
+  e.g. in the following example, the class \lstinline{Dune::PDELab::Q1Constraints} needs to know, if a
+  given point on a boundary belongs to a Dirichlet boundary, or
+  not. These information usually depend on the given problem and can
+  differs for different components of the
+  \lstinline{Dune::PDELab::GridFunctionSpace} tree.
+\end{onlyenv}
+
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Constraints Assembler Listing}
 \framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q1constraints.hh}}
@@ -294,24 +304,34 @@ numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1constrain
 \begin{frame}
 \frametitle<presentation>{A Boundary Condition Function}
 To use assembling of constraints 
-we define a boundary grid function that gives the \textit{boundary
-condition type} for a point on the boundary.
+we have to provide the parameters required by the given type of
+constraints.
 
-Note that \lstinline{RangeFieldType} is set to \lstinline{int} in
-line \ref{bct:int}.
+In this example it must provide a method
+\only<presentattion>{\begin{center}}
+\lstinline{isDirichlet}
+\only<presentattion>{\end{center}}
+(see line \ref{bcp:name}), which is derived from
+\only<presentattion>{\begin{center}}\only<article>{\newline}
+\lstinline{Dune::PDELab::DirichletConstraintsParameters}
+\only<presentattion>{\end{center}}
+(see line \ref{bcp:base}). This class is defined in
+\only<presentattion>{\begin{center}}\only<article>{\newline}
+\texttt{dune/pdelab/constraints/constraintsparameters.hh}.
+\only<presentattion>{\end{center}}
 \end{frame}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Boundary Condition Type Function Listing}
-\framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/boundaryconditiontypefunction.hh}}
+\frametitle<presentation>{Boundary Constraints Parameters Listing}
+\framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q1constraintsparameters.hh}}
 \lstinputlisting[basicstyle=\scriptsize,numbers=left, 
-numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/boundaryconditiontypefunction.hh}
+numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1constraintsparameters.hh}
 \end{frame}
 \mode<article>{
-\begin{Lst}[File src/course-gridfunctionspace/boundaryconditiontypefunction.hh] \mbox
+\begin{Lst}[File src/course-gridfunctionspace/q1constraintsparameters.hh] \mbox
 \nopagebreak
 \lstinputlisting[basicstyle=\scriptsize,numbers=left, 
-numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/boundaryconditiontypefunction.hh}
+numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1constraintsparameters.hh}
 \end{Lst}}
 
 \begin{frame}
@@ -326,7 +346,7 @@ In line \ref{cint:container} the grid function space exports a type to
 hold the transformation matrix
 $\mathbf{T}^T_{\tilde{U}_h,\bar{U}_h}$. 
 
-In line \ref{cint:bctfunction} the function giving the boundary
+In line \ref{cint:bcparam} the function giving the boundary
 condition type is instantiated.
 
 Finally, in line \ref{cint:constraints} the constraints are assembled
