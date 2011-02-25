@@ -18,7 +18,7 @@ double l2interpolationerror (const U& u, const GFS& gfs, X& x,
   typedef typename FTraits::RangeType RangeType;
   
   // make local function space
-  typedef typename GFS::LocalFunctionSpace LFS;
+  typedef Dune::PDELab::LocalFunctionSpace<GFS> LFS;
   LFS lfs(gfs);                            /*@\label{l2int:lfs}@*/
   std::vector<R> xl(lfs.maxSize());        // local coefficients
   std::vector<RangeType> b(lfs.maxSize()); // shape function values
