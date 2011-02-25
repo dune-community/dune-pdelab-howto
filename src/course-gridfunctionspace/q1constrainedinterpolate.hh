@@ -3,7 +3,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 
 template<typename GV>
 void q1interpolate (const GV& gv)
@@ -19,7 +19,7 @@ void q1interpolate (const GV& gv)
 
   typedef typename GFS::template ConstraintsContainer<R>::Type T;       /*@\label{cint:container}@*/ 
   T t;                               // container for transformation    
-  B<GV> b(gv);                       // boundary condition function     /*@\label{cint:bctfunction}@*/
+  BParam b;                          // boundary constraints parameters /*@\label{cint:bcparam}@*/
   Dune::PDELab::constraints(b,gfs,t);// fill container                  /*@\label{cint:constraints}@*/
 
   typedef typename GFS::template VectorContainer<R>::Type X;

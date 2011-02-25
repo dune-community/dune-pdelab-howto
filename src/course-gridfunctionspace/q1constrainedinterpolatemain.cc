@@ -11,8 +11,8 @@
 
 #include"q1localfiniteelementmap.hh"
 #include"analyticfunction.hh"
-#include"boundaryconditiontypefunction.hh"
 #include"q1constraints.hh"
+#include"q1constraintsparameters.hh"
 #include"q1constrainedinterpolate.hh"
 
 int main(int argc, char** argv)
