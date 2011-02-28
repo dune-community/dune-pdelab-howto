@@ -13,14 +13,14 @@
  *
  * with conforming finite elements on all types of grids in any dimension
  *
- * \tparam B a function indicating the type of boundary condition
+ * \tparam BCType a function indicating the type of boundary condition
  */
-template<class B>
+template<class BCType>
 class Example02LocalOperator : 
-  public Dune::PDELab::NumericalJacobianApplyVolume<Example02LocalOperator<B> >,
-  public Dune::PDELab::NumericalJacobianVolume<Example02LocalOperator<B> >,
-  public Dune::PDELab::NumericalJacobianApplyBoundary<Example02LocalOperator<B> >,
-  public Dune::PDELab::NumericalJacobianBoundary<Example02LocalOperator<B> >,
+  public Dune::PDELab::NumericalJacobianApplyVolume<Example02LocalOperator<BCType> >,
+  public Dune::PDELab::NumericalJacobianVolume<Example02LocalOperator<BCType> >,
+  public Dune::PDELab::NumericalJacobianApplyBoundary<Example02LocalOperator<BCType> >,
+  public Dune::PDELab::NumericalJacobianBoundary<Example02LocalOperator<BCType> >,
   public Dune::PDELab::FullVolumePattern,
   public Dune::PDELab::LocalOperatorDefaultFlags
 {
@@ -32,8 +32,12 @@ public:
   enum { doAlphaVolume = true };
   enum { doAlphaBoundary = true };                                // assemble boundary
 
-  Example02LocalOperator (const B& b_, unsigned int intorder_=2)  // needs boundary cond. type
-    : b(b_), intorder(intorder_)
+  Example02LocalOperator(
+						 const BCType& bctype_ // needs boundary cond.type
+						 , unsigned int intorder_=2
+						 )
+    : bctype( bctype_ )
+	, intorder( intorder_ )
   {}
 
   // volume integral depending on test and ansatz functions
@@ -129,11 +133,12 @@ public:
 	 it!=rule.end(); ++it)
       {
         // evaluate boundary condition type
-        typename B::Traits::RangeType bctype;
-        b.evaluate(ig,it->position(),bctype);
- 
+        //typename B::Traits::RangeType bctype;
+        //b.evaluate(ig,it->position(),bctype);
+
         // skip rest if we are on Dirichlet boundary
-        if (bctype>0) continue;
+        if ( ! bctype.isDirichlet( ig, it->position() ) )
+		  continue;
 
         // position of quadrature point in local coordinates of element 
         Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
@@ -161,6 +166,6 @@ public:
   }
 
 private:
-  const B& b;
+  const BCType& bctype;
   unsigned int intorder;
 };

@@ -9,15 +9,14 @@ void example02_Q1 (const GV& gv)
   // <<<2>>> Make grid function space
   typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem;
-  typedef Dune::PDELab::ConformingDirichletConstraints CON;     // constraints class
+  typedef Dune::PDELab::ConformingDirichletConstraints CONSTRAINTS; // constraints class
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CONSTRAINTS,VBE> GFS;
   GFS gfs(gv,fem);
-  typedef BCType<GV> B;                                         // boundary condition type
-  B b(gv);
+  BCTypeParam bctype; // boundary condition type
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
-  Dune::PDELab::constraints(b,gfs,cc);                          // assemble constraints
+  Dune::PDELab::constraints( bctype, gfs, cc ); // assemble constraints
   std::cout << "constrained dofs=" << cc.size() 
             << " of " << gfs.globalSize() << std::endl;
 
@@ -29,8 +28,8 @@ void example02_Q1 (const GV& gv)
   Dune::PDELab::interpolate(g,gfs,u);                           // interpolate coefficient vector
 
   // <<<4>>> Make grid operator space
-  typedef Example02LocalOperator<B> LOP;                        // operator including boundary
-  LOP lop(b);
+  typedef Example02LocalOperator<BCTypeParam> LOP;                        // operator including boundary
+  LOP lop( bctype );
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
   GOS gos(gfs,cc,gfs,cc,lop);
