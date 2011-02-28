@@ -13,12 +13,12 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
-  typedef BCType<GV> B;
-  B b(gv);
-  b.setTime(time);                                              // b.c. depends on time now
+
+  BCTypeParam bctype;
+  bctype.setTime(time);                                              // b.c. depends on time now
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
-  Dune::PDELab::constraints(b,gfs,cc);
+  Dune::PDELab::constraints( bctype, gfs, cc );
 
   // <<<3>>> Make FE function with initial value / Dirichlet b.c.
   typedef typename GFS::template VectorContainer<Real>::Type U;
@@ -29,8 +29,8 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   Dune::PDELab::interpolate(g,gfs,uold);
 
   // <<<4>>> Make instationary grid operator space
-  typedef Example03LocalOperator<B> LOP; 
-  LOP lop(b,4);                                                 // local operator r
+  typedef Example03LocalOperator<BCTypeParam> LOP; 
+  LOP lop(bctype,4);                                           // local operator r
   typedef Example03TimeLocalOperator TLOP; 
   TLOP tlop(4);                                                 // local operator m
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
@@ -65,9 +65,9 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   U unew(gfs,0.0);                                              // solution to be computed
   while (time<tend-1e-8) {
       // do time step
-      b.setTime(time+dt);                                       // compute constraints
+      bctype.setTime(time+dt);                                       // compute constraints
       cc.clear();                                               // for this time step
-      Dune::PDELab::constraints(b,gfs,cc);
+      Dune::PDELab::constraints(bctype,gfs,cc);
       osm.apply(time,dt,uold,g,unew);                           // do one time step
 
       // graphics

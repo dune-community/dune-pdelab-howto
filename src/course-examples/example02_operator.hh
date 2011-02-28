@@ -137,7 +137,7 @@ public:
         //b.evaluate(ig,it->position(),bctype);
 
         // skip rest if we are on Dirichlet boundary
-        if ( ! bctype.isDirichlet( ig, it->position() ) )
+        if ( bctype.isDirichlet( ig, it->position() ) )
 		  continue;
 
         // position of quadrature point in local coordinates of element 
@@ -156,7 +156,10 @@ public:
         Dune::FieldVector<RF,dim> 
           globalpos = ig.geometry().global(it->position());
         RF j;
-        if (globalpos[1]<0.5) j = 1.0; else j = -1.0; // some outflow 
+        if (globalpos[1]<0.5) 
+		  j = 1.0; 
+		else 
+		  j = -1.0; // some outflow 
             
         // integrate j
         RF factor = it->weight()*ig.geometry().integrationElement(it->position());
