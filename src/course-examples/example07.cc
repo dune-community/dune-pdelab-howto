@@ -103,12 +103,14 @@ int main(int argc, char** argv)
     // sequential version
     if (1 && helper.size()==1)
     {
+#if HAVE_UG 
       UGUnitSquare grid;
       grid.loadBalance();
       grid.globalRefine(startLevel);
       typedef UGUnitSquare::LeafGridView GV;
       const GV& gv=grid.leafView();
       adaptivity(grid,gv,startLevel,maxLevel);
+#endif
     }
   }
   catch (Dune::Exception &e){
