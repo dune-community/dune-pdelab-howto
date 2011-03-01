@@ -26,13 +26,13 @@ void example06_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
 	  GFS0,GFS1> GFS;              
   GFS gfs(gfs0,gfs1);
 
-  typedef BCType<GV> U0BC;
-  U0BC u0bc(gv);
-  typedef Dune::PDELab::PowerGridFunction<U0BC,2> UBC;
-  UBC ubc(u0bc);
+  typedef BCTypeParam<GV> U0_BCTypeParam;
+  U0_BCTypeParam u0_bctype( gv );
+  typedef Dune::PDELab::PowerConstraintsParameters<U0_BCTypeParam,2> U_BCTypeParam;
+  U_BCTypeParam u_bctype( u0_bctype );
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
-  CC cc;                                                        // constraints needed due 
-  Dune::PDELab::constraints(ubc,gfs,cc);                        // to artificial boundaries
+  CC cc;                                          // constraints needed due 
+  Dune::PDELab::constraints( u_bctype, gfs, cc);  // to artificial boundaries
 
   typedef Dune::PDELab::GridFunctionSubSpace<GFS,0> U0SUB;
   U0SUB u0sub(gfs);
