@@ -55,7 +55,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 	if (argc!=3)
 	  {
 		if(helper.rank()==0)
-		  std::cout << "usage: ./example02 <startLevel> <maxLevel>" << std::endl;
+		  std::cout << "usage: ./example07 <startLevel> <maxLevel>" << std::endl;
 		return 1;
 	  }
 
@@ -110,6 +110,8 @@ int main(int argc, char** argv)
       typedef UGUnitSquare::LeafGridView GV;
       const GV& gv=grid.leafView();
       adaptivity(grid,gv,startLevel,maxLevel);
+#else
+      std::cout << "This example requires UG!" << std::endl;
 #endif
     }
   }

@@ -13,22 +13,22 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
-  typedef BCType<GV> B;                                         // boundary condition type
-  B b(gv);
+
+  BCTypeParam bctype; // boundary condition type
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
-  Dune::PDELab::constraints(b,gfs,cc);                          // assemble constraints
+  Dune::PDELab::constraints( bctype, gfs, cc );               // assemble constraints
 
   // <<<3>>> Make FE function extending Dirichlet boundary conditions
   typedef typename GFS::template VectorContainer<Real>::Type U;
   U u(gfs,0.0);
-  typedef BCExtension<GV,Real> G;                               // boundary value + extension
+  typedef BCExtension<GV,Real> G;                        // boundary value + extension
   G g(gv);
-  Dune::PDELab::interpolate(g,gfs,u);                           // interpolate coefficient vector
+  Dune::PDELab::interpolate(g,gfs,u);                    // interpolate coefficient vector
 
   // <<<4>>> Make grid operator space
-  typedef Example02LocalOperator<B> LOP;                        // operator including boundary
-  LOP lop(b);
+  typedef Example02LocalOperator<BCTypeParam> LOP;       // operator including boundary
+  LOP lop(bctype);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
   GOS gos(gfs,cc,gfs,cc,lop);
@@ -73,7 +73,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
     
     // <<<10>>> adapt the grid
     gra.adapt(u);
-    Dune::PDELab::constraints(b,gfs,cc);
+    Dune::PDELab::constraints(bctype,gfs,cc);
     Dune::PDELab::interpolate(g,gfs,u);
   }
 }
