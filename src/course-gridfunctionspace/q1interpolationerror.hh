@@ -17,7 +17,7 @@ void q1interpolationerror (const GV& gv)
 	Q1LocalFiniteElementMap<D,R> > GFS;    
   GFS gfs(gv,fem);                    // make grid function space
 
-  typedef typename GFS::template VectorContainer<R>::Type X;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,R>::Type X;
   X x(gfs,0.0);                       // make coefficient vector
 
   U<GV,R> u(gv);                      // make analytic function object

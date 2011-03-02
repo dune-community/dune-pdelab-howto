@@ -22,7 +22,7 @@ void q1interpolate (const GV& gv)
   BParam b;                          // boundary constraints parameters /*@\label{cint:bcparam}@*/
   Dune::PDELab::constraints(b,gfs,t);// fill container                  /*@\label{cint:constraints}@*/
 
-  typedef typename GFS::template VectorContainer<R>::Type X;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,R>::Type X;
   X x(gfs,0.0);                      // make coefficient vector
 
   U<GV,R> u(gv);                     // analytic function object

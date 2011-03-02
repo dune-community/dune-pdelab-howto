@@ -29,7 +29,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -79,7 +79,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     }
 
     // make coefficient Vector and initialize it from a function
-    typedef typename GFS::template VectorContainer<RF>::Type V;
+    typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
     V x0(gfs);
     x0 = 0.0;
     typedef K_C<GV,RF> KType;

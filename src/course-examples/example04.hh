@@ -27,7 +27,7 @@ void example04 (const GV& gv)
   LS ls(2,100,2);
 
   // <<<5>>> assemble and solve linear problem
-  typedef typename GFS::template VectorContainer<Real>::Type U;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
   U u(gfs,0.0);
   Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,U> slp(gos,u,ls,1e-10);
   slp.apply();

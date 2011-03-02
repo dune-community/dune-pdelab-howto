@@ -28,7 +28,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -79,7 +79,8 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     }
 
     // make coefficient Vector and initialize it from a function
-    typedef typename GFS::template VectorContainer<RF>::Type V;
+    typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
+    
     V x0(gfs);
     x0 = 0.0;
     typedef K_C<GV,RF> KType;
@@ -214,7 +215,7 @@ int main(int argc, char** argv)
 
             // set polynomial order per element
             unsigned int range = std::ceil( double(cellmapper.size()) / (monom_max_order-1) );
-            for (auto it = grid.leafView().begin<0>(), end = grid.leafView().end<0>();
+            for (Grid::LeafGridView::Codim<0>::Iterator it = grid.leafView().begin<0>(), end = grid.leafView().end<0>();
                  it != end; ++it)
             {
                 fem.setOrder(*it, 2 + cellmapper.map(*it) / range);

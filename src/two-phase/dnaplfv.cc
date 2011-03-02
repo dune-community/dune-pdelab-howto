@@ -26,7 +26,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -472,7 +472,7 @@ void test (const GV& gv, int timesteps, double timestep)
   PType p_initial(p_l_initial,p_g_initial);
 
   // <<<5>>> make vector for old time step and initialize
-  typedef typename TPGFS::template VectorContainer<RF>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<TPGFS,RF>::Type V;
   V pold(tpgfs);
   Dune::PDELab::interpolate(p_initial,tpgfs,pold);
 

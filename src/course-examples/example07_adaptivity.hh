@@ -20,7 +20,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   Dune::PDELab::constraints( bctype, gfs, cc );               // assemble constraints
 
   // <<<3>>> Make FE function extending Dirichlet boundary conditions
-  typedef typename GFS::template VectorContainer<Real>::Type U;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
   U u(gfs,0.0);
   typedef BCExtension<GV,Real> G;                        // boundary value + extension
   G g(gv);

@@ -38,7 +38,7 @@ void thinterpolate (const GV& gv)
   THGFS thgfs(vgfs,q1gfs);            // Taylor-Hood space
 
   // make coefficent vector
-  typedef typename THGFS::template VectorContainer<R>::Type X;
+  typedef typename Dune::PDELab::BackendVectorSelector<THGFS,R>::Type X;
   X x(thgfs,0.0);                     // one x for all dofs !
 
   // interpolate from analytic function

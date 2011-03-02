@@ -28,7 +28,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -68,7 +68,7 @@ void test (const GV& gv)
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
   // make coefficent Vector and initialize it from a function
-  typedef typename GFS::template VectorContainer<RF>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
   V x0(gfs);
   x0 = 0.0;
   typedef G_D<GV,RF> GType;

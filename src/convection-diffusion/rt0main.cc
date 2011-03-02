@@ -25,7 +25,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
@@ -115,7 +115,7 @@ void driver (BType& b, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   UType u(rv,g);
 
   // make coefficent Vectors
-  typedef typename MGFS::template VectorContainer<R>::Type X;
+  typedef typename Dune::PDELab::BackendVectorSelector<MGFS,R>::Type X;
   X x(mgfs,0.0);
 
   // do interpolation

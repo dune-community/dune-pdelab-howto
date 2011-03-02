@@ -28,7 +28,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
@@ -101,11 +101,12 @@ void testp0 (const GV& gv)
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
   // make vector for old time step and initialize
-  typedef typename GFS::template VectorContainer<RF>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
   V v(gfs);
 
   // test generic communication
-  for (size_t i=0; i<v.size(); i++) v[i] = 0.1*i;
+  typename V::iterator vi = v.begin();
+  for (size_t i=0; vi!=v.end(); i++, ++vi) *vi = 0.1*i;
   Dune::PDELab::GenericDataHandle<GFS,V,TestGatherScatter> dh(gfs,v,TestGatherScatter());
   //  gv.communicate(dh,Dune::All_All_Interface,Dune::ForwardCommunication);
     
@@ -125,9 +126,10 @@ void testp0 (const GV& gv)
     Dune::PDELab::GridFunctionSpaceLexicographicMapper
   > PGFS;
   PGFS pgfs(gfs);
-  typedef typename PGFS::template VectorContainer<RF>::Type PV;
+  typedef typename Dune::PDELab::BackendVectorSelector<PGFS,RF>::Type PV;
   PV pv(pgfs);
-  for (size_t i=0; i<pv.size(); i++) pv[i] = i;
+  typename PV::iterator pvi = pv.begin();
+  for (size_t i=0; pvi!=pv.end(); i++, ++pvi) *pvi = i;
   Dune::PDELab::GenericDataHandle<PGFS,PV,TestGatherScatter> pdh(pgfs,pv,TestGatherScatter());
   //  gv.communicate(pdh,Dune::All_All_Interface,Dune::ForwardCommunication);
 
@@ -136,9 +138,11 @@ void testp0 (const GV& gv)
     Dune::PDELab::GridFunctionSpaceLexicographicMapper,
 	  GFS,PGFS> CGFS;              
   CGFS cgfs(gfs,pgfs);
-  typedef typename CGFS::template VectorContainer<RF>::Type CV;
+  
+  typedef typename Dune::PDELab::BackendVectorSelector<CGFS,RF>::Type CV;
   CV cv(cgfs);
-  for (size_t i=0; i<cv.size(); i++) cv[i] = 100*i;
+  typename PV::iterator cvi = cv.begin();
+  for (size_t i=0; cvi!=cv.end(); i++, ++cvi) *cvi = 100*i;
   Dune::PDELab::GenericDataHandle<CGFS,CV,TestGatherScatter> cdh(cgfs,cv,TestGatherScatter());
   gv.communicate(cdh,Dune::All_All_Interface,Dune::ForwardCommunication);
 }
@@ -169,11 +173,12 @@ void testp1 (const GV& gv)
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
   // make vector for old time step and initialize
-  typedef typename GFS::template VectorContainer<RF>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
   V v(gfs);
 
   // test generic communication
-  for (size_t i=0; i<v.size(); i++) v[i] = 0.1*i;
+  typename V::iterator vi = v.begin();
+  for (size_t i=0; vi!=v.end(); i++, ++vi) *vi = 0.1*i;
   Dune::PDELab::GenericDataHandle<GFS,V,TestGatherScatter> dh(gfs,v,TestGatherScatter());
   //  gv.communicate(dh,Dune::All_All_Interface,Dune::ForwardCommunication);
 
@@ -193,9 +198,10 @@ void testp1 (const GV& gv)
     //Dune::PDELab::GridFunctionSpaceLexicographicMapper
   > PGFS;
   PGFS pgfs(gfs);
-  typedef typename PGFS::template VectorContainer<RF>::Type PV;
+  typedef typename Dune::PDELab::BackendVectorSelector<PGFS,RF>::Type PV;
   PV pv(pgfs);
-  for (size_t i=0; i<pv.size(); i++) pv[i] = i;
+  typename PV::iterator pvi = pv.begin();
+  for (size_t i=0; pvi!=pv.end(); i++, ++pvi) *pvi = i;
   Dune::PDELab::GenericDataHandle<PGFS,PV,TestGatherScatter> pdh(pgfs,pv,TestGatherScatter());
   gv.communicate(pdh,Dune::All_All_Interface,Dune::ForwardCommunication);
 }

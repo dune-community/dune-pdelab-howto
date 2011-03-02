@@ -175,7 +175,7 @@ void stokes (const GV& gv, std::string filename)
 #endif
     
     // <<<3>>> Make coefficient Vector and initialize it from a function
-    typedef typename GFS::template VectorContainer<RF>::Type V;
+    typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
     V x(gfs);
 
     typedef B_A<GV> BType;

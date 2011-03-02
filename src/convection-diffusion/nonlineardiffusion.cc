@@ -195,7 +195,7 @@ void sequential (const GV& gv)
             << " of " << gfs.globalSize() << std::endl;
 
   // <<<4>>> Compute affine shift
-  typedef typename GFS::template VectorContainer<Real>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
@@ -279,7 +279,7 @@ void parallel_nonoverlapping_Q1 (const GV& gv)
                          << " of " << gfs.globalSize() << std::endl;
 
   // <<<4>>> Compute affine shift
-  typedef typename GFS::template VectorContainer<Real>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
@@ -343,7 +343,7 @@ void parallel_overlapping_Q1 (const GV& gv)
                          << " of " << gfs.globalSize() << std::endl;
 
   // <<<4>>> Compute affine shift
-  typedef typename GFS::template VectorContainer<Real>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);

@@ -574,7 +574,7 @@ void test (const GV& gv, int timesteps, double timestep)
   S_wType s_w_initial(gv,tp);
 
   // make vector for old time step and initialize
-  typedef typename TPGFS::template VectorContainer<RF>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<TPGFS,RF>::Type V;
   V pold(tpgfs);
   pold = 0.0;
   Dune::PDELab::interpolate(p_n_initial,p_n_gfs,pold);

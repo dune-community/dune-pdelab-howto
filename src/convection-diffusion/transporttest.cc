@@ -53,7 +53,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -193,7 +193,7 @@ void stationary (const GV& gv)
             << " of " << gfs.globalSize() << std::endl;
 
   // <<<4>>> Compute affine shift
-  typedef typename GFS::template VectorContainer<Real>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
@@ -207,8 +207,10 @@ void stationary (const GV& gv)
 
   // <<<6>>> Make a linear solver 
 #if HAVE_SUPERLU
-  typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
-  LS ls(false);
+  //typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
+  //LS ls(false);
+  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_AMG_SSOR<GFS> LS;
+  LS ls;
 #else
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
   LS ls(5000,true);
@@ -268,7 +270,7 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
             << " of " << gfs.globalSize() << std::endl;
 
   // <<<4>>> Compute affine shift
-  typedef typename GFS::template VectorContainer<Real>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
@@ -372,7 +374,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
             << " of " << gfs.globalSize() << std::endl;
 
   // <<<4>>> Compute affine shift
-  typedef typename GFS::template VectorContainer<Real>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);

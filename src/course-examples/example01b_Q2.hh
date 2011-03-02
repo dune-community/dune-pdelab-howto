@@ -26,7 +26,7 @@ void example01b_Q2 (const GV& gv)
   LS ls(5000,true);
 
   // <<<5>>> solve nonlinear problem
-  typedef typename GFS::template VectorContainer<Real>::Type U;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
   U u(gfs,2.0); // initial value
   Dune::PDELab::Newton<GOS,LS,U> newton(gos,u,ls);                         // <= NEW
   newton.setReassembleThreshold(0.0);

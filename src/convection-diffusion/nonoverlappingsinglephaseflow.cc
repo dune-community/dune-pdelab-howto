@@ -51,7 +51,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -102,7 +102,7 @@ void driver (const BType& b, const GType& g,
   std::cout << "/" << gv.comm().rank() << "/ " << "constrained dofs=" << cg.size() << std::endl;
 
   // make coefficent Vector and initialize it from a function
-  typedef typename GFS::template VectorContainer<R>::Type V; 
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,R>::Type V; 
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
@@ -155,7 +155,7 @@ void driver (const BType& b, const GType& g,
     Dune::PDELab::SimpleGridFunctionStaticSize
     > GFS0; 
   GFS0 gfs0(gv,fem0);
-  typedef typename GFS0::template VectorContainer<R>::Type V0;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS0,R>::Type V0;
   V0 partition(gfs0,0.0);
   Dune::PDELab::PartitionDataHandle<GFS0,V0> pdh(gfs0,partition);
   if (gfs.gridview().comm().size()>1)

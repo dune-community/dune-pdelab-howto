@@ -188,7 +188,7 @@ void runDG (const GV& gv, const FEM& fem, PROBLEM& problem,
   GFS gfs(gv,fem);
 
   // make a vector of degree of freedom vectors and initialize it with Dirichlet extension
-  typedef typename GFS::template VectorContainer<Real>::Type U;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
   U u(gfs,0.0);
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
   G g(gv,problem);
@@ -266,7 +266,7 @@ void runFEM (const GV& gv, const FEM& fem, PROBLEM& problem, std::string basenam
   GFS gfs(gv,fem);
 
   // make a vector of degree of freedom vectors and initialize it with Dirichlet extension
-  typedef typename GFS::template VectorContainer<Real>::Type U;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
   U u(gfs,0.0);
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
   G g(gv,problem);

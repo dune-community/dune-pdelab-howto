@@ -21,7 +21,7 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   Dune::PDELab::constraints( bctype, gfs, cc );
 
   // <<<3>>> Make FE function with initial value / Dirichlet b.c.
-  typedef typename GFS::template VectorContainer<Real>::Type U;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
   U uold(gfs,0.0);                                              // solution at t^n
   typedef BCExtension<GV,Real> G;                               // defines boundary condition,
   G g(gv);                                                      // extension and initial cond.

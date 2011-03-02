@@ -34,7 +34,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -83,7 +83,7 @@ void driver (const BType& b, const GType& g,
   Dune::PDELab::constraints(b,gfs,cc);
 
   // make coefficent Vector and initialize it from a function
-  typedef typename GFS::template VectorContainer<R>::Type V;
+   typedef typename Dune::PDELab::BackendVectorSelector<GFS,R>::Type V;
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cc,0.0,x);
@@ -125,11 +125,15 @@ void driver (const BType& b, const GType& g,
   SeqPrec seqprec(m,10,1.0);
   typedef Dune::PDELab::OverlappingWrappedPreconditioner<CC,GFS,SeqPrec> WPREC;
   WPREC  wprec(gfs,seqprec,cc,phelper);
+  typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GFS> LS;
+  LS ls (gfs,1, 5000, 3);
+
   int verbose;
   if (gv.comm().rank()==0) verbose=1; else verbose=0;
   Dune::CGSolver<V> solver(pop,psp,wprec,1E-8,40000,verbose);
   Dune::InverseOperatorResult stat;  
-  solver.apply(z,r,stat);
+  ls.apply(m,z,r,1E-8);
+  //solver.apply(z,r,stat);
   x -= z;
 
   // make discrete function object
@@ -164,9 +168,9 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(128);
+      Dune::FieldVector<int,2> N(3);
       Dune::FieldVector<bool,2> B(false);
-      int overlap=4;
+      int overlap=1;
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
       //grid.globalRefine(4);
       

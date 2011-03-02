@@ -31,7 +31,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -55,7 +55,7 @@
 #define MONOM_BASIS_ORDER 2
 #define BLOCK_SIZE 6
 #define GRID_REFINE 1
-#define DG_METHOD 0  // OBB: 0, NIPG: 1, SIPG: 2
+#define DG_METHOD 2  // OBB: 0, NIPG: 1, SIPG: 2
 #define MAKE_VTK_OUTPUT
 //#define CALCULATE_L2_ERROR
 //#define CALCULATE_ABSOLUTE_ERROR
@@ -117,7 +117,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     }
 
     // make coefficient Vector and initialize it from a function
-    typedef typename GFS::template VectorContainer<RF>::Type V;
+    typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
     V x0(gfs);
     x0 = 0.0;
     typedef K_A<GV,RF> KType;
@@ -188,7 +188,12 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     typedef typename M::BaseT ISTLM;
     typedef typename V::BaseT ISTLV;
     typedef  Dune::SeqOverlappingSchwarz<ISTLM,ISTLV,Dune::AdditiveSchwarzMode,
-                                         Dune::ILU0SubdomainSolver<ISTLM,ISTLV,ISTLV> >
+#if defined SUPERLU_SD && HAVE_SUPERLU
+                                         Dune::SuperLU<ISTLM>
+#else
+                                         Dune::ILU0SubdomainSolver<ISTLM,ISTLV,ISTLV>
+#endif
+                                         >
       DGSmoother;
                                          /*#if defined SUPERLU_SD && HAVE_SUPERLU
                                          , Dune::SuperLU<ISTLM>
@@ -205,7 +210,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     dgSmootherArgs.relaxationFactor = .8;
     dgSmootherArgs.onthefly = true; // compute decomposition on the fly
     dgSmootherArgs.overlap=
-      Dune::Amg::SeqOverlappingSchwarzSmootherArgs<typename ISTLM::field_type>::vertex;
+      Dune::Amg::SeqOverlappingSchwarzSmootherArgs<typename ISTLM::field_type>::none;
 
     if(dgSmootherArgs.overlap!=Dune::Amg::SeqOverlappingSchwarzSmootherArgs<typename ISTLM::field_type>::pairwise){
     
@@ -245,7 +250,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     DGSmoother* smoother = Dune::Amg::ConstructionTraits<DGSmoother>::construct(cargs);
 
     Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m);
-    Dune::BiCGSTABSolver<ISTLV> solver(opa,*smoother,1E-10,200,2);//verbose?1:0);
+    Dune::BiCGSTABSolver<ISTLV> solver(opa,*smoother,1E-10,10,2);//verbose?1:0);
     Dune::InverseOperatorResult stat;
     #endif
 

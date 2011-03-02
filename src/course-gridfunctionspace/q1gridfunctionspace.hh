@@ -14,7 +14,7 @@ template<typename GV> void q1GridFunctionSpace (const GV& gv) {
 	Q1LocalFiniteElementMap<D,R> > GFS; /*@\label{q1gfs:GFS}@*/    
   GFS gfs(gv,fem);                   // make grid function space
 
-  typedef typename GFS::template VectorContainer<R>::Type X;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,R>::Type X;
   X x(gfs,0.0);                      // make coefficient vector
   x[4] = 1.0;                        // set a component
 

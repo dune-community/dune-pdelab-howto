@@ -42,7 +42,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -183,7 +183,7 @@ void navierstokes
   MLOP mlop(q);
   Dune::PDELab::FractionalStepParameter<RF> method;
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MatrixBackend;
-  typedef typename GFS::template VectorContainer<RF>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
   typedef Dune::PDELab::InstationaryGridOperatorSpace
     <RF,V,GFS,GFS,LOP,MLOP,C,C,MatrixBackend> IGOS;
   IGOS igos(method,gfs,cg,gfs,cg,lop,mlop);

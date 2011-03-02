@@ -30,7 +30,7 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend) {
   U1SUB u1sub(gfs);
 
   // <<<3>>> Make FE function with initial value
-  typedef typename GFS::template VectorContainer<Real>::Type U;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
   U uold(gfs,0.0);
   typedef U0Initial<GV,Real> U0InitialType;
   U0InitialType u0initial(gv);

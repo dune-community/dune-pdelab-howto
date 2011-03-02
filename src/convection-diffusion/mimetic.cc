@@ -28,7 +28,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/gridfunctionspace/intersectionindexset.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
@@ -246,7 +246,7 @@ void mimetictest(Data& data, std::string filename)
     Dune::PDELab::constraints(bct,gfs,t); // fill container
 
     // make coefficent vector
-    typedef typename GFS::template VectorContainer<double>::Type V;
+    typedef typename Dune::PDELab::BackendVectorSelector<GFS,double>::Type V;
     V x(gfs);
 
     // set Dirichlet boundary conditions

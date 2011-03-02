@@ -241,7 +241,7 @@ void sequential (const GV& gv, int t_level)
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   //Dune::PDELab::FractionalStepParameter<Real> method;
   Dune::PDELab::Alexander3Parameter<Real> method;
-  typedef typename GFS::template VectorContainer<Real>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,MLOP,C,C,MBE> IGOS;
   IGOS igos(method,gfs,cg,gfs,cg,lop,mlop);
 
