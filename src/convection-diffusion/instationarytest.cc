@@ -53,7 +53,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -98,8 +98,10 @@ public:
 //! base class for parameter class
 template<typename GV, typename RF>
 class ConvectionDiffusionProblem : 
-  public Dune::PDELab::ConvectionDiffusionParameterInterface<Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF>, 
-                                                             ConvectionDiffusionProblem<GV,RF> >
+  public Dune::PDELab::ConvectionDiffusionParameterInterface<
+  Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF>, 
+  ConvectionDiffusionProblem<GV,RF> 
+  >
 {
 public:
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
@@ -155,14 +157,17 @@ public:
   }
 
   //! boundary condition type function
-  // 0 means Neumann
-  // 1 means Dirichlet
-  // 2 means Outflow (zero diffusive flux)
-  int
-  bc (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
+  template<typename I>
+  bool isDirichlet(
+				   const I & intersection,               /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
   {
-    return 1;
-    typename Traits::RangeType global = is.geometry().global(x);
+	
+    //Dune::FieldVector<typename I::ctype, I::dimension>
+    //  xg = intersection.geometry().global( coord );
+
+    return true;  // Dirichlet b.c. on all boundaries
   }
 
   //! Dirichlet boundary condition value
@@ -217,15 +222,14 @@ void sequential (const GV& gv, int t_level)
   // <<<2b>>> define problem parameters
   typedef ConvectionDiffusionProblem<GV,Real> Param;
   Param param;
-  typedef Dune::PDELab::BoundaryConditionType_CD<Param> B;
-  B b(gv,param);
+  Dune::PDELab::BCTypeParam_CD<Param> bctype(gv,param);
   typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
   G g(gv,param);
 
   // <<<3>>> Compute constrained space
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
-  Dune::PDELab::constraints(b,gfs,cg);
+  Dune::PDELab::constraints( bctype, gfs, cg );
   std::cout << "constrained dofs=" << cg.size() 
             << " of " << gfs.globalSize() << std::endl;
 

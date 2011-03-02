@@ -33,7 +33,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -111,16 +111,22 @@ public:
   }
 
   //! boundary condition type function
-  // 0 means Neumann
-  // 1 means Dirichlet
-  // 2 means Outflow (zero diffusive flux)
-  int
-  bc (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
+  template<typename I>
+  bool isDirichlet(
+				   const I & intersection,               /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
   {
-    typename Traits::RangeType global = is.geometry().global(x);
-    return 1; 
-    if (global[0]<1E-6 || global[0]>1-1E-6)
-      return 1;
+    return true;  // Dirichlet b.c. everywhere
+    /*
+    Dune::FieldVector<typename I::ctype, I::dimension>
+      xg = intersection.geometry().global( coord );
+
+    if( xg[0]<1E-6 || xg[0]>1-1E-6 )
+      return true;  // Dirichlet b.c.
+    else
+      return false; // Neumann b.c.
+    */
   }
 
   //! Dirichlet boundary condition value
@@ -177,15 +183,14 @@ void sequential (const GV& gv)
   // <<<2b>>> define problem parameters
   typedef ConvectionDiffusionProblem<GV,Real> Param;
   Param param;
-  typedef Dune::PDELab::BoundaryConditionType_CD<Param> B;
-  B b(gv,param);
+  Dune::PDELab::BCTypeParam_CD<Param> bctype(gv,param);
   typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
   G g(gv,param);
 
   // <<<3>>> Compute constrained space
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
-  Dune::PDELab::constraints(b,gfs,cg);
+  Dune::PDELab::constraints( bctype, gfs, cg );
   std::cout << "constrained dofs=" << cg.size() 
             << " of " << gfs.globalSize() << std::endl;
 
@@ -262,15 +267,14 @@ void parallel_nonoverlapping_Q1 (const GV& gv)
   // <<<2b>>> define problem parameters
   typedef ConvectionDiffusionProblem<GV,Real> Param;
   Param param;
-  typedef Dune::PDELab::BoundaryConditionType_CD<Param> B;
-  B b(gv,param);
+  Dune::PDELab::BCTypeParam_CD<Param> bctype(gv,param);
   typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
   G g(gv,param);
 
   // <<<3>>> Compute constrained space
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
-  Dune::PDELab::constraints(b,gfs,cg);
+  Dune::PDELab::constraints( bctype, gfs, cg );
   if (rank==0) std::cout << "/" << gv.comm().rank() << "/ " << "constrained dofs=" << cg.size() 
                          << " of " << gfs.globalSize() << std::endl;
 
@@ -327,15 +331,14 @@ void parallel_overlapping_Q1 (const GV& gv)
   // <<<2b>>> define problem parameters
   typedef ConvectionDiffusionProblem<GV,Real> Param;
   Param param;
-  typedef Dune::PDELab::BoundaryConditionType_CD<Param> B;
-  B b(gv,param);
+  Dune::PDELab::BCTypeParam_CD<Param> bctype(gv,param);
   typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
   G g(gv,param);
   
   // <<<3>>> Compute constrained space
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
-  Dune::PDELab::constraints(b,gfs,cg);
+  Dune::PDELab::constraints( bctype, gfs, cg );
   if (rank==0) std::cout << "/" << gv.comm().rank() << "/ " << "constrained dofs=" << cg.size() 
                          << " of " << gfs.globalSize() << std::endl;
 
