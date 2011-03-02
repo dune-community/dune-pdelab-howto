@@ -31,7 +31,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/common/vtkexport.hh>
@@ -285,7 +285,7 @@ void runFEM (const GV& gv, const FEM& fem, PROBLEM& problem, std::string basenam
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
   GOS gos(gfs,cc,gfs,cc,lop);
-  size_t nmat;
+  //size_t nmat;
 
   // make linear solver and solve problem
   typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
