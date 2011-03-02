@@ -44,6 +44,7 @@
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include<dune/pdelab/localoperator/poisson.hh>
+#include<dune/pdelab/constraints/constraintsparameters.hh>
 
 #include "../utility/gridexamples.hh"
 
@@ -82,47 +83,30 @@ public:
   }
 };
 
-// boundary grid function selecting boundary conditions 
-template<typename GV>
-class B
-  : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::
-                                                  BoundaryGridFunctionTraits<GV,int,1,
-                                                                             Dune::FieldVector<int,1> >,
-                                                  B<GV> >
+
+
+// constraints parameter class for selecting boundary condition type 
+class BCTypeParam
+  : public Dune::PDELab::DirichletConstraintsParameters /*@\label{bcp:base}@*/
 {
-  const GV& gv;
-
 public:
-  typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
-  typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,B<GV> > BaseT;
-
-  B (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
-                        const typename Traits::DomainType& x,
-                        typename Traits::RangeType& y) const
-  {  
-    Dune::FieldVector<typename GV::Grid::ctype,GV::dimension> 
-      xg = ig.geometry().global(x);
-
-    if (xg[1]<1E-6 || xg[1]>1.0-1E-6)
-      {
-        y = 0; // Neumann
-        return;
-      }
-    if (xg[0]>1.0-1E-6 && xg[1]>0.5+1E-6)
-      {
-        y = 0; // Neumann
-        return;
-      }
-    y = 1; // Dirichlet
-  }
-
-  //! get a reference to the GridView
-  inline const GV& getGridView ()
+  bool isDirichlet(
+				   const I & intersection,   /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
   {
-    return gv;
+	
+    Dune::FieldVector<typename I::ctype, I::dimension>
+      xg = intersection.geometry().global( coord );
+	
+    if( xg[1]<1E-6 || xg[1]>1.0-1E-6 )
+      return false; // Neumann b.c.
+    else if( xg[0]>1.0-1E-6 && xg[1]>0.5+1E-6 )
+      return false; // Neumann b.c.
+    else
+      return true;  // Dirichlet b.c. on all other boundaries
   }
 };
 
@@ -196,9 +180,9 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
   C cg;
   cg.clear();
-  typedef B<GV> BType;
-  BType b(gv);
-  Dune::PDELab::constraints(b,gfs,cg);
+
+  BCTypeParam bctype; // boundary condition type
+  Dune::PDELab::constraints(bctype,gfs,cg);
 
   // make coefficent Vector and initialize it from a function
   typedef typename GFS::template VectorContainer<R>::Type V;
@@ -214,8 +198,8 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
   FType f(gv);
   typedef J<GV,R> JType;
   JType j(gv);
-  typedef Dune::PDELab::Poisson<FType,BType,JType,q> LOP; 
-  LOP lop(f,b,j);
+  typedef Dune::PDELab::Poisson<FType,BCTypeParam,JType,q> LOP; 
+  LOP lop(f,bctype,j);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
     LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
@@ -306,9 +290,14 @@ int main(int argc, char** argv)
       FEM fem(gv);
       
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"poisson_ALU_Pk_2d");
+      
+      typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
+      poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_ALU_Pk_2d");
     }
+#endif
 
+
+#if HAVE_ALUGRID
     // unit cube with hanging node refinement
     {
       // make grid 
@@ -349,8 +338,8 @@ int main(int argc, char** argv)
       // We need the boundary function for the hanging nodes
       // constraints engine as we have to distinguish between hanging
       // nodes on dirichlet and on neumann boundaries
-      typedef B<GV> BType;
-      BType b(gv);
+
+      BCTypeParam bctype;
 
       // This is the type of the local constraints assembler that has
       // to be adapted for different local basis spaces and grid types
@@ -358,18 +347,19 @@ int main(int argc, char** argv)
 
       // The type of the constraints engine
       typedef Dune::PDELab::HangingNodesDirichletConstraints
-        <GV::Grid,ConstraintsAssembler,BType> Constraints;
+        <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
 
       // Get constraints engine. We set adaptToIsolateHangingNodes =
       // true as ALU Grid refinement allows for the appearance of
       // multiple hanging nodes per edge.
-      Constraints constraints(grid,true,b);
+      Constraints constraints(grid,true,bctype);
       
       // solve problem
       poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_ALU_Q1_3d",constraints);
     }
 
 #endif
+
 
     // ALU Pk 3D test
 #if HAVE_ALUGRID
@@ -384,6 +374,7 @@ int main(int argc, char** argv)
       const GV& gv=unitcube.grid().leafView(); 
  
       // make finite element map
+      
       typedef UnitCube::GridType::ctype DF;
       typedef double R;
       const int k=4;
@@ -392,12 +383,14 @@ int main(int argc, char** argv)
       FEM fem(gv);
   
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"poisson_ALU_Pk_3d");
+      typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
+      poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_ALU_Pk_3d");
+
     }
 #endif
 
 
-    return 0;
+    //return 0;
 
     // YaspGrid Q1 2D test
     {
@@ -418,7 +411,8 @@ int main(int argc, char** argv)
       FEM fem;
   
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q1_2d");
+      typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
+      poisson<GV,FEM,Constraints,2>(gv,fem,"poisson_yasp_Q1_2d");
     }
 
     // YaspGrid Q2 2D test
@@ -440,7 +434,8 @@ int main(int argc, char** argv)
       FEM fem;
   
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q2_2d");
+      typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
+      poisson<GV,FEM,Constraints,2>(gv,fem,"poisson_yasp_Q2_2d");
     }
 
     // YaspGrid Q1 3D test
@@ -462,7 +457,8 @@ int main(int argc, char** argv)
       FEM fem;
   
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q1_3d");
+      typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
+      poisson<GV,FEM,Constraints,2>(gv,fem,"poisson_yasp_Q1_3d");
     }
 
     // UG Pk 2D test
@@ -486,7 +482,8 @@ int main(int argc, char** argv)
       FEM fem(gv);
   
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"poisson_UG_Pk_2d");
+      typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
+      poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_UG_Pk_2d");
     }
 
     {
@@ -532,8 +529,7 @@ int main(int argc, char** argv)
       // We need the boundary function for the hanging nodes
       // constraints engine as we have to distinguish between hanging
       // nodes on dirichlet and on neumann boundaries
-      typedef B<GV> BType;
-      BType b(gv);
+      BCTypeParam bctype;
 
       // This is the type of the local constraints assembler that has
       // to be adapted for different local basis spaces and grid types
@@ -541,12 +537,12 @@ int main(int argc, char** argv)
 
       // The type of the constraints engine
       typedef Dune::PDELab::HangingNodesDirichletConstraints
-        <GV::Grid,ConstraintsAssembler,BType> Constraints;
+        <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
 
       // Get constraints engine. We set adaptToIsolateHangingNodes =
       // true and therefore the constructor refines the grid until
       // there are fewer than one hanging node per edge.
-      Constraints constraints(grid,true,b);
+      Constraints constraints(grid,true,bctype);
 
       // solve problem
       poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_UG_Q1_3d",constraints);
@@ -574,7 +570,8 @@ int main(int argc, char** argv)
       FEM fem(gv);
       
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"poisson_Alberta_Pk_2d");
+      typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
+      poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_Alberta_Pk_2d");
     }
 #endif
 
