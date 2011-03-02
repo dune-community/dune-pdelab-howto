@@ -171,7 +171,7 @@ void mimeticDirichletBoundaryConditions(const B& b, const G& g, const GFS& gfs, 
     // make local function space
     typedef Dune::PDELab::GridFunctionSubSpace<GFS,1> FaceSpace;
     FaceSpace fs(gfs);
-    typedef typename FaceSpace::LocalFunctionSpace FaceUnknowns;
+    typedef Dune::PDELab::LocalFunctionSpace<FaceSpace> FaceUnknowns;
     FaceUnknowns face_space(fs);
 
     ElementIterator itend = gridview.template end<0>();
