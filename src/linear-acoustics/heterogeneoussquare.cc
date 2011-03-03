@@ -232,7 +232,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   Param param;
 
   // <<<4>>> set initial values
-  typedef typename GFS::template VectorContainer<Real>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
   V xold(gfs,0.0);
   Dune::PDELab::LinearAcousticsInitialValueAdapter<Param> u0(gv,param);
   Dune::PDELab::interpolate(u0,gfs,xold);
@@ -324,7 +324,7 @@ int main(int argc, char** argv)
 	if (argc!=5)
 	  {
 		if(helper.rank()==0)
-		  std::cout << "usage: ./transporttest <end time> <time step> <elements in y> <overlap>" << std::endl;
+		  std::cout << "usage: " << argv[0] << " <end time> <time step> <elements in y> <overlap>" << std::endl;
 		return 1;
 	  }
 
