@@ -1,6 +1,7 @@
 #ifndef DUNE_PARSOLVE_PROBLEMA_HH
 #define DUNE_PARSOLVE_PROBLEMA_HH
 
+
 // function for defining the diffusion tensor
 template<typename GV, typename RF>
 class K_A
@@ -74,6 +75,39 @@ public:
 	y = (2*GV::dimension-4*norm)*exp(-norm); 
   }
 };
+
+
+
+// constraints parameter class for selecting boundary condition type 
+class BCTypeParam_A
+  : public Dune::PDELab::FluxConstraintsParameters,
+	public Dune::PDELab::DirichletConstraintsParameters
+	/*@\label{bcp:base}@*/
+{
+public:
+
+  template<typename I>
+  bool isNeumann(
+				   const I & intersection,   /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
+  {
+    //Dune::FieldVector<typename I::ctype, I::dimension>
+    //  xg = intersection.geometry().global( coord );
+	return true;  // Dirichlet b.c. on ALL boundaries!
+  }
+
+  template<typename I>
+  bool isDirichlet(
+				   const I & intersection,   /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
+  {
+	return !isNeumann( intersection, coord );
+  }
+
+};
+
 
 // boundary grid function selecting boundary conditions 
 template<typename GV>

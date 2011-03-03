@@ -73,11 +73,27 @@
 // set up diffusion problem and solve it
 //===============================================================
 
-template<typename BType, typename GType, typename KType, typename A0Type, typename FType, typename JType,
-         typename GV, typename FEM, typename FEM0> 
-void driver (const BType& b, const GType& g, 
-             const KType& k, const A0Type& a0, const FType& f, const JType& j,
-             const GV& gv, const FEM& fem, const FEM0& fem0, std::string filename, int intorder=1)
+template< typename BCType, 
+          typename GType, 
+          typename KType, 
+          typename A0Type, 
+          typename FType, 
+          typename JType,
+          typename GV, 
+          typename FEM, 
+          typename FEM0
+          > 
+void driver( const BCType& bctype, 
+             const GType& g, 
+             const KType& k, 
+             const A0Type& a0, 
+             const FType& f, 
+             const JType& j,
+             const GV& gv, 
+             const FEM& fem, 
+             const FEM0& fem0, 
+             std::string filename, 
+             int intorder=1 )
 {
   // constants and types and global variables
   typedef typename GV::Grid::ctype DF;
@@ -98,7 +114,7 @@ void driver (const BType& b, const GType& g,
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
   C cg;
   cg.clear();
-  Dune::PDELab::constraints(b,gfs,cg);
+  Dune::PDELab::constraints(bctype,gfs,cg);
   std::cout << "/" << gv.comm().rank() << "/ " << "constrained dofs=" << cg.size() << std::endl;
 
   // make coefficent Vector and initialize it from a function
@@ -108,8 +124,8 @@ void driver (const BType& b, const GType& g,
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
   // make grid function operator
-  typedef Dune::PDELab::Diffusion<KType,A0Type,FType,BType,JType> LOP; 
-  LOP lop(k,a0,f,b,j,intorder);
+  typedef Dune::PDELab::Diffusion<KType,A0Type,FType,BCType,JType> LOP; 
+  LOP lop(k,a0,f,bctype,j,intorder);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
     LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1>,true> GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
@@ -182,42 +198,89 @@ void dispatcher (std::string problem, const GV& gv, const FEM& fem, const FEM0& 
 
   if (problem==A) 
     {
-      driver(B_A<GV>(gv), G_A<GV,RF>(gv),K_A<GV,RF>(gv),
-             A0_A<GV,RF>(gv),F_A<GV,RF>(gv),J_A<GV,RF>(gv),
-             gv,fem,fem0,filename,intorder);
+      driver( BCTypeParam_A(), 
+              G_A<GV,RF>(gv),
+              K_A<GV,RF>(gv),
+              A0_A<GV,RF>(gv),
+              F_A<GV,RF>(gv),
+              J_A<GV,RF>(gv),
+              gv,
+              fem,
+              fem0,
+              filename,
+              intorder );
     }
   if (problem==B) 
     {
-      driver(B_B<GV>(gv), G_B<GV,RF>(gv),K_B<GV,RF>(gv),
-             A0_B<GV,RF>(gv),F_B<GV,RF>(gv),J_B<GV,RF>(gv),
-             gv,fem,fem0,filename,intorder);
+      driver( BCTypeParam_B(), 
+              G_B<GV,RF>(gv),
+              K_B<GV,RF>(gv),
+              A0_B<GV,RF>(gv),
+              F_B<GV,RF>(gv),
+              J_B<GV,RF>(gv),
+              gv,
+              fem,
+              fem0,
+              filename,
+              intorder );
     }
   if (problem==C) 
     {
-      driver(B_C<GV>(gv), G_C<GV,RF>(gv),K_C<GV,RF>(gv),
-             A0_C<GV,RF>(gv),F_C<GV,RF>(gv),J_C<GV,RF>(gv),
-             gv,fem,fem0,filename,intorder);
+      driver( BCTypeParam_C(), 
+              G_C<GV,RF>(gv),
+              K_C<GV,RF>(gv),
+              A0_C<GV,RF>(gv),
+              F_C<GV,RF>(gv),
+              J_C<GV,RF>(gv),
+              gv,
+              fem,
+              fem0,
+              filename,
+              intorder );
     }
   if (problem==D) 
     {
       Dune::FieldVector<RF,GV::Grid::dimension> correlation_length;
       correlation_length = 1.0/64.0;
-      driver(B_D<GV>(gv), G_D<GV,RF>(gv),
-             K_D<GV,RF>(gv,correlation_length,1.0,0.0,5000,-1083),
-             A0_D<GV,RF>(gv),F_D<GV,RF>(gv),J_D<GV,RF>(gv),
-             gv,fem,fem0,filename,intorder);
+      driver( BCTypeParam_D(), 
+              G_D<GV,RF>(gv),
+              K_D<GV,RF>(gv,correlation_length,1.0,0.0,5000,-1083),
+              A0_D<GV,RF>(gv),
+              F_D<GV,RF>(gv),
+              J_D<GV,RF>(gv),
+              gv,
+              fem,
+              fem0,
+              filename,
+              intorder );
     }
   if (problem==E) 
     {
-      driver(B_E<GV>(gv), G_E<GV,RF>(gv),K_E<GV,RF>(gv),
-             A0_E<GV,RF>(gv),F_E<GV,RF>(gv),J_E<GV,RF>(gv),
-             gv,fem,fem0,filename,intorder);
+      driver( BCTypeParam_E(), 
+              G_E<GV,RF>(gv),
+              K_E<GV,RF>(gv),
+              A0_E<GV,RF>(gv),
+              F_E<GV,RF>(gv),
+              J_E<GV,RF>(gv),
+              gv,
+              fem,
+              fem0,
+              filename,
+              intorder );
     }
   if (problem==F) 
     {
-      driver(B_F<GV>(gv), G_F<GV,RF>(gv), K_F<GV,RF>(gv),
-             A0_F<GV,RF>(gv), F_F<GV,RF>(gv), J_F<GV,RF>(gv),
-             gv,fem,fem0,filename,intorder);
+      driver( BCTypeParam_F(), 
+              G_F<GV,RF>(gv), 
+              K_F<GV,RF>(gv),
+              A0_F<GV,RF>(gv), 
+              F_F<GV,RF>(gv), 
+              J_F<GV,RF>(gv),
+              gv,
+              fem,
+              fem0,
+              filename,
+              intorder );
     }
 }
 

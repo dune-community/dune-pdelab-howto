@@ -78,6 +78,37 @@ public:
   }
 };
 
+
+// constraints parameter class for selecting boundary condition type 
+class BCTypeParam_E
+  : public Dune::PDELab::FluxConstraintsParameters,
+	public Dune::PDELab::DirichletConstraintsParameters
+	/*@\label{bcp:base}@*/
+{
+public:
+
+  template<typename I>
+  bool isNeumann(
+				   const I & intersection,   /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
+  {
+    //Dune::FieldVector<typename I::ctype, I::dimension>
+    //  xg = intersection.geometry().global( coord );
+	return true;  // Dirichlet b.c. on ALL boundaries!
+  }
+
+  template<typename I>
+  bool isDirichlet(
+				   const I & intersection,   /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
+  {
+	return !isNeumann( intersection, coord );
+  }
+};
+
+
 // boundary grid function selecting boundary conditions 
 template<typename GV>
 class B_E

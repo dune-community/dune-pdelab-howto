@@ -56,9 +56,9 @@
 // set up diffusion problem and solve it
 //===============================================================
 
-template<typename BType, typename GType, typename KType, typename A0Type, typename FType, typename JType,
+template<typename BCType, typename GType, typename KType, typename A0Type, typename FType, typename JType,
          typename GV, typename FEM> 
-void driver (const BType& b, const GType& g, 
+void driver (const BCType& bctype, const GType& g, 
              const KType& k, const A0Type& a0, const FType& f, const JType& j,
              const GV& gv, const FEM& fem, std::string filename)
 {
@@ -80,7 +80,7 @@ void driver (const BType& b, const GType& g,
   typedef typename GFS::template ConstraintsContainer<R>::Type CC;
   CC cc;
   cc.clear();
-  Dune::PDELab::constraints(b,gfs,cc);
+  Dune::PDELab::constraints( bctype, gfs, cc );
 
   // make coefficent Vector and initialize it from a function
    typedef typename Dune::PDELab::BackendVectorSelector<GFS,R>::Type V;
@@ -89,8 +89,8 @@ void driver (const BType& b, const GType& g,
   Dune::PDELab::set_nonconstrained_dofs(cc,0.0,x);
 
   // make grid function operator
-  typedef Dune::PDELab::Diffusion<KType,A0Type,FType,BType,JType> LOP; 
-  LOP lop(k,a0,f,b,j);
+  typedef Dune::PDELab::Diffusion<KType,A0Type,FType,BCType,JType> LOP; 
+  LOP lop(k,a0,f,bctype,j);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
     LOP,CC,CC,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(gfs,cc,gfs,cc,lop);
@@ -182,10 +182,16 @@ int main(int argc, char** argv)
       correlation_length = 1.0/64.0;
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
-      driver(B_D<GV>(gv), G_D<GV,double>(gv),
-             K_D<GV,double>(gv,correlation_length,0.5,0.0,5000,-1083),
-             A0_D<GV,double>(gv),F_D<GV,double>(gv),J_D<GV,double>(gv),
-             gv,fem,"single_phase_yasp2d_Q1");
+      driver( BCTypeParam_B(), 
+              G_B<GV,double>(gv),
+              K_B<GV,double>(gv),
+              //K_D<GV,double>(gv,correlation_length,0.5,0.0,5000,-1083),
+              A0_B<GV,double>(gv),
+              F_B<GV,double>(gv),
+              J_B<GV,double>(gv),
+              gv,
+              fem,
+              "single_phase_yasp2d_Q1" );
     }
 
     // Q1, 3d
@@ -207,10 +213,15 @@ int main(int argc, char** argv)
       correlation_length = 1.0/64.0;
       typedef Dune::YaspGrid<3>::LeafGridView GV;
       const GV& gv=grid.leafView();
-      driver(B_D<GV>(gv), G_D<GV,double>(gv),
-             K_D<GV,double>(gv,correlation_length,1.0,0.0,5000,-1083),
-             A0_D<GV,double>(gv),F_D<GV,double>(gv),J_D<GV,double>(gv),
-             gv,fem,"single_phase_yasp3d_Q1");
+      driver( BCTypeParam_D(), 
+              G_D<GV,double>(gv),
+              K_D<GV,double>(gv,correlation_length,1.0,0.0,5000,-1083),
+              A0_D<GV,double>(gv),
+              F_D<GV,double>(gv),
+              J_D<GV,double>(gv),
+              gv,
+              fem,
+              "single_phase_yasp3d_Q1" );
     }
 
 	return 0;

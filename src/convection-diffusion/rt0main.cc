@@ -26,6 +26,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/constraints/constraints.hh>
+#include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
@@ -45,30 +46,18 @@
 // dummy boundary condition function for the pressure component
 //===============================================================
 
-template<typename GV>
-class Dummy
-  : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::
-               BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> >,
-               Dummy<GV> >
+class BCTypeParam_Dummy
+  : public Dune::PDELab::DirichletConstraintsParameters /*@\label{bcp:base}@*/
 {
-  const GV& gv;
-
 public:
-  typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
-  typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,Dummy<GV> > BaseT;
-
-  Dummy (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
-                        const typename Traits::DomainType& x,
-                        typename Traits::RangeType& y) const
-  {}
-
-  //! get a reference to the GridView
-  inline const GV& getGridView ()
+  bool isDirichlet(
+				   const I & intersection,   /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
   {
-    return gv;
+	return false;
   }
 };
 
@@ -76,9 +65,9 @@ public:
 // Problem setup and solution 
 //===============================================================
 
-template<typename BType, typename GType, typename KType, typename A0Type, typename FType, typename VType, 
+template<typename BCType, typename GType, typename KType, typename A0Type, typename FType, typename VType, 
          typename GV, typename PFEM, typename VFEM> 
-void driver (BType& b, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
+void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
              const GV& gv, const PFEM& pfem, const VFEM& vfem, std::string filename)
 {
   // types and constants
@@ -98,10 +87,9 @@ void driver (BType& b, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   MGFS mgfs(rt0gfs,p0gfs); // the mixed grid function space
 
   // construct a composite boundary condition type function
-  typedef Dummy<GV> DType;
-  DType d(gv);
-  typedef Dune::PDELab::CompositeGridFunction<BType,DType> BCT;
-  BCT bct(b,d);
+  BCTypeParam_Dummy d;
+  typedef Dune::PDELab::CompositeConstraintsParameters<BCType,BCTypeParam_Dummy> BCT;
+  BCT bct(bctype,d);
 
   // constraints 
   typedef typename RT0GFS::template ConstraintsContainer<R>::Type T;
@@ -123,8 +111,8 @@ void driver (BType& b, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   Dune::PDELab::set_nonconstrained_dofs(t,0.0,x);  // clear interior
 
   // make grid operator space
-  typedef Dune::PDELab::DiffusionMixed<KType,A0Type,FType,BType,GType> LOP; 
-  LOP lop(k,a0,f,b,g,4,2);
+  typedef Dune::PDELab::DiffusionMixed<KType,A0Type,FType,BCType,GType> LOP; 
+  LOP lop(k,a0,f,bctype,g,4,2);
   typedef Dune::PDELab::GridOperatorSpace<MGFS,MGFS,
     LOP,T,T,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(mgfs,t,mgfs,t,lop);
@@ -182,66 +170,66 @@ void dispatcher (std::string problem, const GV& gv, const PFEM& pfem, const VFEM
 
   if (problem==A) 
     {
-      B_A<GV> b(gv); 
+      BCTypeParam_A bctype;
       G_A<GV,RF> g(gv);
       K_A<GV,RF> k(gv);
       A0_A<GV,RF> a0(gv);
       F_A<GV,RF> f(gv);
       V_A<GV,RF> v(gv);
-      driver(b,g,k,a0,f,v,gv,pfem,vfem,filename);
+      driver(bctype,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
   if (problem==B) 
     {
-      B_B<GV> b(gv); 
+      BCTypeParam_B bctype;
       G_B<GV,RF> g(gv);
       K_B<GV,RF> k(gv);
       A0_B<GV,RF> a0(gv);
       F_B<GV,RF> f(gv);
       V_B<GV,RF> v(gv);
-      driver(b,g,k,a0,f,v,gv,pfem,vfem,filename);
+      driver(bctype,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
   if (problem==C) 
     {
-      B_C<GV> b(gv); 
+      BCTypeParam_C bctype;
       G_C<GV,RF> g(gv);
       K_C<GV,RF> k(gv);
       A0_C<GV,RF> a0(gv);
       F_C<GV,RF> f(gv);
       V_C<GV,RF> v(gv);
-      driver(b,g,k,a0,f,v,gv,pfem,vfem,filename);
+      driver(bctype,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
   if (problem==D) 
     {
       Dune::FieldVector<RF,GV::Grid::dimension> correlation_length;
       correlation_length = 1.0/64.0;
 
-      B_D<GV> b(gv); 
+      BCTypeParam_D bctype;
       G_D<GV,RF> g(gv);
       K_D<GV,RF> k(gv,correlation_length,1.0,0.0,5000,-1083);
       A0_D<GV,RF> a0(gv);
       F_D<GV,RF> f(gv);
       V_D<GV,RF> v(gv);
-      driver(b,g,k,a0,f,v,gv,pfem,vfem,filename);
+      driver(bctype,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
   if (problem==E) 
     {
-      B_E<GV> b(gv); 
+      BCTypeParam_E bctype;
       G_E<GV,RF> g(gv);
       K_E<GV,RF> k(gv);
       A0_E<GV,RF> a0(gv);
       F_E<GV,RF> f(gv);
       V_E<GV,RF> v(gv);
-      driver(b,g,k,a0,f,v,gv,pfem,vfem,filename);
+      driver(bctype,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
   if (problem==F) 
     {
-      B_F<GV> b(gv); 
+      BCTypeParam_F bctype;
       G_F<GV,RF> g(gv);
       K_F<GV,RF> k(gv);
       A0_F<GV,RF> a0(gv);
       F_F<GV,RF> f(gv);
       V_F<GV,RF> v(gv);
-      driver(b,g,k,a0,f,v,gv,pfem,vfem,filename);
+      driver(bctype,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
 }
 

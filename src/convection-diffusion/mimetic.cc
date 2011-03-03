@@ -29,6 +29,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/constraints/constraints.hh>
+#include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/gridfunctionspace/intersectionindexset.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
@@ -68,7 +69,7 @@ public:
     enum BCType { bcDirichlet, bcNeumann };
 
     DiffusionData(const GV& gv_)
-        : kfunc(gv_), a0func(gv_), ffunc(gv_), bfunc(gv_), jfunc(gv_), gfunc(gv_), gv(gv_)
+        : kfunc(gv_), a0func(gv_), ffunc(gv_), bfunc(), jfunc(gv_), gfunc(gv_), gv(gv_)
     {}
 
     template<class Entity>
@@ -95,15 +96,15 @@ public:
         return y;
     }
 
-    template<class Intersection>
-    BCType bcType(const Intersection& is, const typename B::Traits::DomainType& x) const
+    template<class I>
+    BCType bcType( const I& is, 
+                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & x
+                   ) const
     {
-        typename B::Traits::RangeType y;
-        bfunc.evaluate(is, x, y);
-        if (y > 0)
-            return bcDirichlet;
-        else
-            return bcNeumann;
+      if( bfunc.isDirichlet( is, x ) )
+        return bcDirichlet;
+      else
+        return bcNeumann;
     }
 
     template<class Intersection>
@@ -130,29 +131,19 @@ private:
     const GV& gv;
 };
 
-template<typename GV>
-class Dummy : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::
-    BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> >,Dummy<GV> >
+class BCTypeParam_Dummy
+  : public Dune::PDELab::DirichletConstraintsParameters /*@\label{bcp:base}@*/
 {
-    const GV& gv;
-
 public:
-    typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
-    typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,Dummy<GV> > BaseT;
 
-    Dummy (const GV& gv_) : gv(gv_) {}
-
-    template<typename I>
-    inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
-                          const typename Traits::DomainType& x,
-                          typename Traits::RangeType& y) const
-    {}
-
-    //! get a reference to the GridView
-    inline const GV& getGridView ()
-    {
-        return gv;
-    }
+  template<typename I>
+  bool isDirichlet(
+				   const I & intersection,   /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
+  {
+	return false;
+  }
 };
 
 template<class B, class G, class GFS, class V>
@@ -163,8 +154,8 @@ void mimeticDirichletBoundaryConditions(const B& b, const G& g, const GFS& gfs, 
     typedef typename GV::IntersectionIterator IntersectionIterator;
     typedef typename GV::Intersection Intersection;
 
-    static const unsigned int dimIntersection = B::Traits::dimDomain;
-    typedef typename B::Traits::DomainFieldType ctype;
+    static const unsigned int dimIntersection = G::Traits::dimDomain - 1;
+    typedef typename G::Traits::DomainFieldType ctype;
 
     const GV& gridview = gfs.gridview();
 
@@ -185,11 +176,11 @@ void mimeticDirichletBoundaryConditions(const B& b, const G& g, const GFS& gfs, 
         for (IntersectionIterator is = gridview.ibegin(*it); is != isend; ++is, ++face)
         {
             Dune::GeometryType gt = is->type();
-            typename B::Traits::DomainType center
-                = Dune::GenericReferenceElements<ctype,dimIntersection>::general(gt).position(0,0);
-            typename B::Traits::RangeType bctype;
-            b.evaluate(Dune::PDELab::IntersectionGeometry<Intersection>(*is, face), center, bctype);
-            if (bctype > 0)
+
+            Dune::FieldVector<ctype,dimIntersection > center
+              = Dune::GenericReferenceElements<ctype,dimIntersection>::general(gt).position(0,0);
+
+            if( b.isDirichlet( Dune::PDELab::IntersectionGeometry<Intersection>(*is, face), center ) )
             {
                 typename G::Traits::DomainType local_face_center
                     = is->geometryInInside().global(center);
@@ -234,10 +225,9 @@ void mimetictest(Data& data, std::string filename)
     GFS gfs(cell_gfs, face_gfs);
 
     // construct a composite boundary condition type function
-    typedef Dummy<GV> DType;
-    DType d(gv);
+    BCTypeParam_Dummy d;
     typedef typename Data::BType BType;
-    typedef Dune::PDELab::CompositeGridFunction<DType,BType> BCT;
+    typedef Dune::PDELab::CompositeConstraintsParameters<BCTypeParam_Dummy,BType> BCT;
     BCT bct(d, data.bfunc);
 
     // constraints
@@ -299,12 +289,12 @@ void mimetictest(Data& data, std::string filename)
 template<class GV>
 struct Data
 {
-    typedef DiffusionData<K_A<GV,double>, A0_A<GV,double>, F_A<GV,double>, B_A<GV>, J_A<GV,double>, G_A<GV,double> > A;
-    typedef DiffusionData<K_B<GV,double>, A0_B<GV,double>, F_B<GV,double>, B_B<GV>, J_B<GV,double>, G_B<GV,double> > B;
-    typedef DiffusionData<K_C<GV,double>, A0_C<GV,double>, F_C<GV,double>, B_C<GV>, J_C<GV,double>, G_C<GV,double> > C;
-    typedef DiffusionData<K_D<GV,double>, A0_D<GV,double>, F_D<GV,double>, B_D<GV>, J_D<GV,double>, G_D<GV,double> > D;
-    typedef DiffusionData<K_E<GV,double>, A0_E<GV,double>, F_E<GV,double>, B_E<GV>, J_E<GV,double>, G_E<GV,double> > E;
-    typedef DiffusionData<K_F<GV,double>, A0_F<GV,double>, F_F<GV,double>, B_F<GV>, J_F<GV,double>, G_F<GV,double> > F;
+    typedef DiffusionData<K_A<GV,double>, A0_A<GV,double>, F_A<GV,double>, BCTypeParam_A, J_A<GV,double>, G_A<GV,double> > A;
+    typedef DiffusionData<K_B<GV,double>, A0_B<GV,double>, F_B<GV,double>, BCTypeParam_B, J_B<GV,double>, G_B<GV,double> > B;
+    typedef DiffusionData<K_C<GV,double>, A0_C<GV,double>, F_C<GV,double>, BCTypeParam_C, J_C<GV,double>, G_C<GV,double> > C;
+    typedef DiffusionData<K_D<GV,double>, A0_D<GV,double>, F_D<GV,double>, BCTypeParam_D, J_D<GV,double>, G_D<GV,double> > D;
+    typedef DiffusionData<K_E<GV,double>, A0_E<GV,double>, F_E<GV,double>, BCTypeParam_E, J_E<GV,double>, G_E<GV,double> > E;
+    typedef DiffusionData<K_F<GV,double>, A0_F<GV,double>, F_F<GV,double>, BCTypeParam_F, J_F<GV,double>, G_F<GV,double> > F;
 };
 
 int main(int argc, char** argv)
