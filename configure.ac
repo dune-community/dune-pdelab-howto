@@ -31,6 +31,7 @@ AC_CONFIG_FILES([
   src/navier-stokes/Makefile
   src/two-phase/Makefile
   src/convection-diffusion/Makefile
+  src/linear-acoustics/Makefile
   dune-pdelab-howto.pc
 ])
 AC_OUTPUT
