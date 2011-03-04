@@ -242,7 +242,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   LOP lop(param);
   typedef Dune::PDELab::DGLinearAcousticsTemporalOperator<Param,FEMDG> TLOP; 
   TLOP tlop(param);
-  typedef VBE::MatrixBackend MBE;
+  typedef typename VBE::MatrixBackend MBE;
   //Dune::PDELab::ExplicitEulerParameter<Real> method;
   Dune::PDELab::HeunParameter<Real> method;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,TLOP,C,C,MBE> IGOS;
