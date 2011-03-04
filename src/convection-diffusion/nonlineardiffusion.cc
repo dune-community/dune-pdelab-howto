@@ -210,7 +210,7 @@ void sequential (const GV& gv)
   // <<<5>>> Make grid operator space
   typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
   LOP lop(param,8);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+  typedef VBE::MatrixBackend MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
 
@@ -287,7 +287,7 @@ void parallel_nonoverlapping_Q1 (const GV& gv)
   // <<<5>>> Make grid operator space
   typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
   LOP lop(param,2);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+  typedef VBE::MatrixBackend MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE,true> GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
 
@@ -351,7 +351,7 @@ void parallel_overlapping_Q1 (const GV& gv)
   // <<<5>>> Make grid operator space
   typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
   LOP lop(param,2);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+  typedef VBE::MatrixBackend MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
 

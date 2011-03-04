@@ -182,7 +182,7 @@ void navierstokes
   typedef Dune::PDELab::NavierStokesMass MLOP; 
   MLOP mlop(q);
   Dune::PDELab::FractionalStepParameter<RF> method;
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MatrixBackend;
+  typedef VectorBackend::MatrixBackend MatrixBackend;
   typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
   typedef Dune::PDELab::InstationaryGridOperatorSpace
     <RF,V,GFS,GFS,LOP,MLOP,C,C,MatrixBackend> IGOS;

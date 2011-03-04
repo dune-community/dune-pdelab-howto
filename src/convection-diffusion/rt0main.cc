@@ -75,11 +75,12 @@ void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   typedef double R;
 
   // make a grid function space
+  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,PFEM,Dune::PDELab::NoConstraints,
-    Dune::PDELab::ISTLVectorBackend<1> > P0GFS; 
+    VBE > P0GFS; 
   P0GFS p0gfs(gv,pfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,VFEM,Dune::PDELab::RT0Constraints,
-    Dune::PDELab::ISTLVectorBackend<1> > RT0GFS; 
+    VBE > RT0GFS; 
   RT0GFS rt0gfs(gv,vfem);
   typedef Dune::PDELab::CompositeGridFunctionSpace<
     Dune::PDELab::GridFunctionSpaceLexicographicMapper,
@@ -114,7 +115,7 @@ void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   typedef Dune::PDELab::DiffusionMixed<KType,A0Type,FType,BCType,GType> LOP; 
   LOP lop(k,a0,f,bctype,g,4,2);
   typedef Dune::PDELab::GridOperatorSpace<MGFS,MGFS,
-    LOP,T,T,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
+    LOP,T,T,VBE::MatrixBackend> GOS;
   GOS gos(mgfs,t,mgfs,t,lop);
 
   // represent operator as a matrix

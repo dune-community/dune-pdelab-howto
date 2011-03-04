@@ -213,11 +213,12 @@ void mimetictest(Data& data, std::string filename)
     FaceFEM face_fem(iis, Dune::GeometryType::cube);
 
     // make function spaces
+    typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
     typedef Dune::PDELab::GridFunctionSpace<GV,CellFEM,
-        Dune::PDELab::NoConstraints,Dune::PDELab::ISTLVectorBackend<1> > CellGFS;
+        Dune::PDELab::NoConstraints,VBE> CellGFS;
     CellGFS cell_gfs(gv, cell_fem);
     typedef Dune::PDELab::GridFunctionSpace<GV,FaceFEM,
-        Dune::PDELab::MimeticConstraints,Dune::PDELab::ISTLVectorBackend<1>,
+        Dune::PDELab::MimeticConstraints,VBE,
         Dune::PDELab::GridFunctionStaticSize<IIS> > FaceGFS;
     FaceGFS face_gfs(gv, face_fem, iis);
     typedef Dune::PDELab::CompositeGridFunctionSpace
@@ -245,7 +246,7 @@ void mimetictest(Data& data, std::string filename)
     typedef Dune::PDELab::DiffusionMFD<Data> LOP;
     LOP lop(data);
     typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
-        LOP,T,T,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
+    LOP,T,T,VBE::MatrixBackend> GOS;
     GOS gos(gfs,t,gfs,t,lop);
 
     // evaluate residual w.r.t initial guess

@@ -46,7 +46,7 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend) {
   LOP lop(d_0,d_1,lambda,sigma,kappa,2);                        // spatial part
   typedef Example05TimeLocalOperator TLOP; 
   TLOP tlop(tau,2);                                             // temporal part
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MBE;
+  typedef VBE::MatrixBackend MBE;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,U,GFS,GFS,LOP,TLOP,CC,CC,MBE> IGOS;
   IGOS igos(gfs,gfs,lop,tlop);
 

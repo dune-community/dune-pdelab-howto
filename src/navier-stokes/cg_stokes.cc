@@ -171,7 +171,7 @@ void navierstokes
     LOP; 
   LOP lop(boundary_function,neumann_flux,parameters);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
-    LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
+    LOP,C,C,VectorBackend::MatrixBackend > GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
 
   //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);

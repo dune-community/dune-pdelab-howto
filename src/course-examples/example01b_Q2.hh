@@ -17,7 +17,7 @@ void example01b_Q2 (const GV& gv)
   // <<<3>>> Make grid operator space
   typedef Example01bLocalOperator LOP;                                     // <= NEW
   LOP lop(4);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+  typedef VBE::MatrixBackend MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
   GOS gos(gfs,gfs,lop);
 

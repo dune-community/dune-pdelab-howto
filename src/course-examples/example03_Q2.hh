@@ -33,7 +33,7 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   LOP lop(bctype,4);                                           // local operator r
   typedef Example03TimeLocalOperator TLOP; 
   TLOP tlop(4);                                                 // local operator m
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+  typedef VBE::MatrixBackend MBE;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,U,GFS,GFS,LOP,TLOP,CC,CC,MBE> IGOS;
   IGOS igos(gfs,cc,gfs,cc,lop,tlop);                            // new grid operator space
 

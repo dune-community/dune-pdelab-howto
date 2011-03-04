@@ -536,12 +536,13 @@ void test (const GV& gv, int timesteps, double timestep)
   FaceFEM face_fem(iis, Dune::GeometryType::cube);
 
   // make function spaces
+  typedef typename Dune::PDELab::ISTLVectorBackend<2> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,CellFEM,
-    Dune::PDELab::NoConstraints,Dune::PDELab::ISTLVectorBackend<2>,
+    Dune::PDELab::NoConstraints,VBE,
     Dune::PDELab::SimpleGridFunctionStaticSize> CellGFS;
   CellGFS cell_gfs(gv, cell_fem);
   typedef Dune::PDELab::GridFunctionSpace<GV,FaceFEM,
-    Dune::PDELab::NoConstraints,Dune::PDELab::ISTLVectorBackend<2>,
+    Dune::PDELab::NoConstraints,VBE,
     Dune::PDELab::GridFunctionStaticSize<IIS> > FaceGFS;
   FaceGFS face_gfs(gv, face_fem, iis);
   typedef Dune::PDELab::CompositeGridFunctionSpace
@@ -590,7 +591,7 @@ void test (const GV& gv, int timesteps, double timestep)
 
   // make grid operator space
   typedef Dune::PDELab::EmptyTransformation C;
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MB;
+  typedef VBE::MatrixBackend MB;
   typedef Dune::PDELab::GridOperatorSpace<TPGFS,TPGFS,LOP,C,C,MB> TPGOS;
   TPGOS tpgos(tpgfs,tpgfs,lop);
 

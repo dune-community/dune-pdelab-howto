@@ -238,7 +238,7 @@ void sequential (const GV& gv, int t_level)
   LOP lop(param,4);
   typedef Dune::PDELab::L2 MLOP; 
   MLOP mlop(4);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+  typedef VBE::MatrixBackend MBE;
   //Dune::PDELab::FractionalStepParameter<Real> method;
   Dune::PDELab::Alexander3Parameter<Real> method;
   typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;

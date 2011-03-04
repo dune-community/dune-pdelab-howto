@@ -103,9 +103,10 @@ void driver( const BCType& bctype,
   Dune::Timer watch;
 
   // make function space
+  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
     Dune::PDELab::NonoverlappingConformingDirichletConstraints,
-    Dune::PDELab::ISTLVectorBackend<1>,
+    VBE,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
   Dune::PDELab::NonoverlappingConformingDirichletConstraints cn;
   GFS gfs(gv,fem,cn);
@@ -128,7 +129,7 @@ void driver( const BCType& bctype,
   typedef Dune::PDELab::Diffusion<KType,A0Type,FType,BCType,JType> LOP; 
   LOP lop(k,a0,f,bctype,j,intorder);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
-    LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1>,true> GOS;
+    LOP,C,C,VBE::MatrixBackend,true> GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
 
   // represent operator as a matrix

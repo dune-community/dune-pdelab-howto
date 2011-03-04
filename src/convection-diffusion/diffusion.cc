@@ -202,7 +202,7 @@ void runDG (const GV& gv, const FEM& fem, PROBLEM& problem,
   if (weights=="OFF") w = Dune::PDELab::ConvectionDiffusionDGWeights::weightsOff;
   typedef Dune::PDELab::ConvectionDiffusionDG<PROBLEM,FEM> LOP;
   LOP lop(problem,m,w,alpha);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<blocksize,blocksize> MBE;
+  typedef VBE::MatrixBackend MBE;
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
@@ -282,7 +282,7 @@ void runFEM (const GV& gv, const FEM& fem, PROBLEM& problem, std::string basenam
   // make local operator
   typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP;
   LOP lop(problem);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+  typedef VBE::MatrixBackend MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
   GOS gos(gfs,cc,gfs,cc,lop);
   //size_t nmat;

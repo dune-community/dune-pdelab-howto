@@ -500,7 +500,7 @@ void test (const GV& gv, int timesteps, double timestep)
   LOP lop(tp);
   typedef Dune::PDELab::TwoPhaseOnePointTemporalOperator<TP> MLOP;
   MLOP mlop(tp);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<2,2> MBE;
+  typedef VBE::MatrixBackend MBE;
   Dune::PDELab::Alexander2Parameter<RF> method;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<RF,V,TPGFS,TPGFS,LOP,MLOP,C,C,MBE> IGOS;
   IGOS igos(method,tpgfs,cg,tpgfs,cg,lop,mlop);

@@ -69,9 +69,10 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     Dune::Timer watch;
 
     // make function space
+    typedef Dune::PDELab::ISTLVectorBackend<BLOCK_SIZE> VBE;
     typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
        Dune::PDELab::NoConstraints,
-       Dune::PDELab::ISTLVectorBackend<BLOCK_SIZE> > GFS;
+       VBE> GFS;
     watch.reset();
     GFS gfs(gv,fem);
     if (verbose)
@@ -103,7 +104,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     LOP la(k,f,bctype,g,j,DG_METHOD);
     typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,
        Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation,
-       Dune::PDELab::ISTLBCRSMatrixBackend<BLOCK_SIZE,BLOCK_SIZE> > GOS;
+       VBE::MatrixBackend> GOS;
     GOS gos(gfs,gfs,la);
 
     // represent operator as a matrix

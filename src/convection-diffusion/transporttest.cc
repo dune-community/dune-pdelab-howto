@@ -201,7 +201,7 @@ void stationary (const GV& gv)
   // <<<5>>> Make grid operator space
   typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP; 
   LOP lop(param);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+  typedef VBE::MatrixBackend MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
 
@@ -280,7 +280,7 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   LOP lop(param);
   typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP; 
   SLOP slop(param);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+  typedef VBE::MatrixBackend MBE;
   Dune::PDELab::FractionalStepParameter<Real> method;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,SLOP,C,C,MBE> IGOS;
   IGOS igos(method,gfs,cg,gfs,cg,lop,slop);
@@ -384,7 +384,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   LOP lop(param);
   typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP; 
   SLOP slop(param);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+  typedef VBE::MatrixBackend MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
   Dune::PDELab::ExplicitEulerParameter<Real> method;

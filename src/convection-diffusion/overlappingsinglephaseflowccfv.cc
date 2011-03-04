@@ -60,9 +60,9 @@ void test (const GV& gv)
   FEM fem(Dune::GeometryType(Dune::GeometryType::cube,dim)); // works only for cubes
   
   // make function space
+  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::P0ParallelConstraints,
-    Dune::PDELab::ISTLVectorBackend<1>,
+    Dune::PDELab::P0ParallelConstraints,VBE,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS; 
   watch.reset();
   GFS gfs(gv,fem);
@@ -102,7 +102,7 @@ void test (const GV& gv)
 
   // grid operator space
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,
-    CC,CC,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
+    CC,CC,VBE::MatrixBackend> GOS;
   GOS gos(gfs,cc,gfs,cc,lop);
 
   // represent operator as a matrix

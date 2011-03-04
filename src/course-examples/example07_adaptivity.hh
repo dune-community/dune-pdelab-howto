@@ -29,7 +29,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   // <<<4>>> Make grid operator space
   typedef Example02LocalOperator<BCTypeParam> LOP;       // operator including boundary
   LOP lop(bctype);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+  typedef VBE::MatrixBackend MBE;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
   GOS gos(gfs,cc,gfs,cc,lop);
 

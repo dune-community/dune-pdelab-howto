@@ -196,7 +196,7 @@ void stokes (const GV& gv, std::string filename)
     LocalDGOperator lop(method, ip_factor, mu, f,b,v,p);
     typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LocalDGOperator,
        Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation,
-       Dune::PDELab::ISTLBCRSMatrixBackend<blockSize,blockSize> > GridOpertorSpace;
+      typename VectorBackend::MatrixBackend> GridOpertorSpace;
     GridOpertorSpace gos(gfs,gfs,lop);
     std::cout << "=== grid operator space setup " <<  watch.elapsed() << " s" << std::endl;
 
