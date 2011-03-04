@@ -94,7 +94,7 @@ public:
   {
     //Dune::FieldVector<typename I::ctype, I::dimension>
     //  xg = intersection.geometry().global( coord );
-	return true;  // Dirichlet b.c. on ALL boundaries!
+	return false;  // Dirichlet b.c. on ALL boundaries!
   }
 
   template<typename I>

@@ -177,9 +177,13 @@ public:
 				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
 				   ) const
   {
-    //Dune::FieldVector<typename I::ctype, I::dimension>
-    //  xg = intersection.geometry().global( coord );
-	return true;  // Dirichlet b.c. on ALL boundaries!
+    Dune::FieldVector<typename I::ctype, I::dimension>
+	  xg = intersection.geometry().global( coord );
+	
+    if (xg[0]<1E-6 || xg[0]>1.0-1E-6)
+	  return false; // Dirichlet
+	else
+	  return true;
   }
 
   template<typename I>

@@ -211,7 +211,7 @@ public:
 	  xg = intersection.geometry().global( coord );
 
     if (xg[0]<1E-6 || xg[0]>1.0-1E-6)
-	  return false;
+	  return false; // Dirichlet
 	else
 	  return true;
   }

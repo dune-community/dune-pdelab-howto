@@ -196,7 +196,7 @@ public:
     Dune::FieldVector<typename I::ctype, I::dimension>
       xg = intersection.geometry().global( coord );
     if (xg[0]<1E-6 || xg[0]>1.0-1E-6)
-	  return false;
+	  return false;  // Dirichlet
 	else
 	  return true;
   }
