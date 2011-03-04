@@ -376,7 +376,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-#if HAVE_UG
+#if HAVE_UG_OFF
     // UG Grid turbulence tube test 2D
     if(example_switch.find("TU2") != std::string::npos)
     {
@@ -447,7 +447,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-#if HAVE_UG
+#if HAVE_UG_OFF
     // UG Grid L-shape domain test 2D
     if(example_switch.find("LU2") != std::string::npos)
     {

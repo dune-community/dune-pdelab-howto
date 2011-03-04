@@ -2,7 +2,7 @@
 
 /** \file 
 
-    \brief Example applications of the local operator TaylorHoodNavierStokesJacobian (stationary case). 
+    \brief Example applications of the local operator TaylorHoodNavierStokesJacobian (instationary case). 
 
     This file provides examples applications of Navier-Stokes flow in
     2- and 3-dimensional tubes with and without obstacles. An L-shape
@@ -38,21 +38,25 @@
 #include<dune/pdelab/finiteelementmap/q22dfem.hh>
 #include<dune/pdelab/finiteelementmap/q1fem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
-//#include<dune/pdelab/finiteelementmap/hangingnodeconstraints.hh>
+#include<dune/pdelab/finiteelementmap/hangingnodeconstraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/constraints/constraints.hh>
-#include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
-//#include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
+#include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include<dune/pdelab/localoperator/cg_stokes.hh>
 #include <dune/common/configparser.hh>
+//#include <dune/common/parametertree.hh>
+
+#include<dune/pdelab/localoperator/l2.hh>
+#include<dune/pdelab/stationary/linearproblem.hh>
+#include<dune/pdelab/instationary/onestep.hh>
 
 #include "../utility/gridexamples.hh"
 #include "cg_stokes_initial.hh"
@@ -61,13 +65,15 @@
 //! required by the local operator. It is initialized with a
 //! Dune::ConfigParser object.
 class NavierStokesParameters 
-  : public Dune::PDELab::TaylorHoodNavierStokesParameters<double>
+  : public Dune::PDELab::InstationaryTaylorHoodNavierStokesParameters<double>
 {
 public:  
   double rho_;
   double mu_;
   double pressure;
   int domain_level;
+  double time_;
+  double tau_;
 
   double rho() const{
     return rho_;
@@ -77,15 +83,26 @@ public:
     return mu_;
   }
 
+  double time() const{
+    return time_;
+  }
+
+  double tau() const{
+    return tau_;
+  }
+
   template <class ConfigParser>
   NavierStokesParameters(ConfigParser & parser)
-    : rho_(1.0), mu_(1.0), pressure(1.0), domain_level(1)
+    : rho_(1.0), mu_(1.0), pressure(1.0), domain_level(1), 
+      time_(1.0), tau_(0.1)
   {
     bool valid = true;
     valid = valid & parser.hasKey("physics.mu");
     valid = valid & parser.hasKey("physics.rho");
     valid = valid & parser.hasKey("boundaries.pressure");
     valid = valid & parser.hasKey("domain.level");
+    valid = valid & parser.hasKey("temporal.tau");
+    valid = valid & parser.hasKey("temporal.time");
 
     if(!valid){
       std::cerr << "Error: The configuration file "
@@ -97,6 +114,8 @@ public:
       mu_ = parser.get("physics.mu",double(1.0));
       pressure = parser.get("boundaries.pressure",double(1.0));
       domain_level = parser.get("domain.level",int(1));
+      tau_ = parser.get("temporal.tau",double(0.1));
+      time_ = parser.get("temporal.time",double(1.0));
     }
   }
 };
@@ -114,12 +133,13 @@ void navierstokes
  V_FEM & vFem, P_FEM & pFem, 
  IF & initial_solution,
  BF & boundary_function,
- NF & neumann_flux )
+ NF & neumann_flux)
 {
   typedef typename GV::Grid::ctype DF;
   static const unsigned int dim = GV::dimension;
 
   typedef double RF;
+  typedef double Real;
   typedef BF BoundaryFunction;
   typedef IF InitializationFunction;
   typedef NF NeumannFlux;
@@ -155,25 +175,19 @@ void navierstokes
   cg.clear();
   Dune::PDELab::constraints(boundary_function,gfs,cg);
 
-  // Make coefficent vector and initialize it from a function
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
-  V x0(gfs);
-  x0 = 0.0;
-  Dune::PDELab::interpolate(initial_solution,gfs,x0);
-  std::cout << "=== Finished interpolation:" << timer.elapsed() << std::endl;
-  timer.reset();
-
-  // Set non constrained dofs to zero
-  Dune::PDELab::set_shifted_dofs(cg,0.0,x0);
-
   // Make grid function operator
   typedef Dune::PDELab::TaylorHoodNavierStokesJacobian
     <BoundaryFunction,NeumannFlux,NavierStokesParameters,true,q> 
     LOP; 
   LOP lop(boundary_function,neumann_flux,parameters);
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
-    LOP,C,C,VectorBackend::MatrixBackend > GOS;
-  GOS gos(gfs,cg,gfs,cg,lop);
+  typedef Dune::PDELab::NavierStokesMass MLOP; 
+  MLOP mlop(q);
+  Dune::PDELab::FractionalStepParameter<RF> method;
+  typedef typename VectorBackend::MatrixBackend MatrixBackend;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
+  typedef Dune::PDELab::InstationaryGridOperatorSpace
+    <RF,V,GFS,GFS,LOP,MLOP,C,C,MatrixBackend> IGOS;
+  IGOS igos(method,gfs,cg,gfs,cg,lop,mlop);
 
   //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
@@ -184,34 +198,78 @@ void navierstokes
   // Solve (possibly) nonlinear problem
   std::cout << "=== Begin Newton:" << std::endl;
   timer.reset();
-  Dune::PDELab::Newton<GOS,LinearSolver,V> newton(gos,x0,ls);
+  typedef Dune::PDELab::Newton<IGOS,LinearSolver,V> PDESolver;
+  PDESolver newton(igos,ls);
   newton.setReassembleThreshold(0.0);
   newton.setVerbosityLevel(2);
-  newton.setMaxIterations(25);
+  newton.setMaxIterations(50);
   newton.setLineSearchMaxIterations(30);
-  newton.apply();
-  std::cout << "=== Finished Newton:" << timer.elapsed() << std::endl;
 
-  // Check residual
-  V r(gfs); r=0.;
-  gos.residual(x0,r);
-  std::cout << "Final Residual: " << r.two_norm() << std::endl;
+  Dune::PDELab::OneStepMethod<Real,IGOS,PDESolver,V,V> osm(method,igos,newton);
+  osm.setVerbosityLevel(2);
 
-  // Generate functions suitable for VTK output
-  typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,0> VelocitySubGFS;
-  VelocitySubGFS velocitySubGfs(gfs);
-  typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,1> PressureSubGFS;
-  PressureSubGFS pressureSubGfs(gfs);
-  typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
-  VDGF vdgf(velocitySubGfs,x0);
-  typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
-  PDGF pdgf(pressureSubGfs,x0);
+  // Make coefficent vector and initialize it from a function
+  V xold(gfs);
+  xold = 0.0;
+  Dune::PDELab::interpolate(initial_solution,gfs,xold);
+  std::cout << "=== Finished interpolation:" << timer.elapsed() << std::endl;
+  timer.reset();
 
-  // Output grid function with SubsamplingVTKWriter
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
-  vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
+  Dune::PDELab::FilenameHelper fn(filename.c_str());
+  {
+    // Generate functions suitable for VTK output
+    typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,0> VelocitySubGFS;
+    VelocitySubGFS velocitySubGfs(gfs);
+    typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,1> PressureSubGFS;
+    PressureSubGFS pressureSubGfs(gfs);
+    typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
+    VDGF vdgf(velocitySubGfs,xold);
+    typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
+    PDGF pdgf(pressureSubGfs,xold);
+
+    // Output grid function with SubsamplingVTKWriter
+    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
+    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
+    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
+    vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+    fn.increment();
+  }
+
+  Real time = 0;
+  Real final_time = parameters.time();
+  Real dt = parameters.tau();
+  Real dt_min = 1e-6;
+  V x(gfs,0.0);
+  Dune::PDELab::interpolate(initial_solution,gfs,x);
+  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
+  while (time < final_time - dt_min*0.5)
+    {
+      // do time step
+      osm.apply(time,dt,xold,x);
+
+      {
+        // Generate functions suitable for VTK output
+        typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,0> VelocitySubGFS;
+        VelocitySubGFS velocitySubGfs(gfs);
+        typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,1> PressureSubGFS;
+        PressureSubGFS pressureSubGfs(gfs);
+        typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
+        VDGF vdgf(velocitySubGfs,x);
+        typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
+        PDGF pdgf(pressureSubGfs,x);
+
+        // Output grid function with SubsamplingVTKWriter
+        Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
+        vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
+        vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
+        vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+        fn.increment();
+      }
+
+      xold = x;
+      time += dt;
+    }
+
 }
 
 //===============================================================
@@ -236,14 +294,10 @@ int main(int argc, char** argv)
                 << "Call with command line parameter to execute examples:" << std::endl << std::endl
                 << "              Setup                      | Parameter" << std::endl
                 << "-----------------------------------------------------" << std::endl 
-                << "Hagen-Pouseuille 2D - YaspGrid   - Q2/Q1 :   HY2" << std::endl
-                << "Hagen-Pouseuille 2D - AluSimplex - P2/P1 :   HA2" << std::endl
-                << "Hagen-Pouseuille 3D - UG - P2/P1         :   HU3" << std::endl
                 << "Turbulence Tube  2D - UG - P2/P1         :   TU2" << std::endl
-                << "Turbulence Tube  3D - UG - P2/P1         :   TU3" << std::endl
                 << "L-Shape Domain   2D - UG - P2/P1         :   LU2" << std::endl
                 << std::endl << std::endl 
-                << "You might also want to take a look at the configuration file \"cg_stokes.ini\"." 
+                << "You might also want to take a look at the configuration file \"cg_stokes_instat.ini\"." 
                 << std::endl << std::endl;
       exit(1);
     }
@@ -252,14 +306,14 @@ int main(int argc, char** argv)
 
     // Initialize Navier Stokes parameter class from file
     Dune::ConfigParser config_parser;
-    const std::string config_filename("cg_stokes.ini");
+    const std::string config_filename("cg_stokes_instat.ini");
     std::cout << "Reading configuration file \""<< config_filename 
               << "\"" << std::endl;
     try{
       config_parser.parseFile(config_filename,false);
     }
     catch(...){
-      std::cerr << "The configuration file \"cg_stokes.ini\" "
+      std::cerr << "The configuration file \"cg_stokes_instat.ini\" "
         "could not be read. Exiting..." << std::endl;
       exit(1);
     }
@@ -267,116 +321,7 @@ int main(int argc, char** argv)
 
   try{
 
-    // Yasp Grid Hagen-Poiseuille test 2D
-    if(example_switch.find("HY2") != std::string::npos)
-    {
-      typedef double RF;
-      // make grid
-      Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
-      grid.globalRefine(parameters.domain_level);
-
-      // get view
-      typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
-
-      const int p=2;
-      const int q=2*p;
-
-      typedef Dune::PDELab::Q22DLocalFiniteElementMap<double,double> V_FEM;
-      typedef Dune::PDELab::Q1LocalFiniteElementMap<double,double,2> P_FEM;
-
-      V_FEM vFem; P_FEM pFem;
-
-      typedef HagenPoiseuilleVelocity<GV,RF,2> InitialVelocity;
-      typedef ZeroScalarFunction<GV,RF> InitialPressure;
-      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
-        InitialSolution;
-
-      InitialVelocity init_velocity(gv);
-      InitialPressure init_pressure(gv);
-      InitialSolution initial_solution(init_velocity,init_pressure);
-
-      typedef BCTypeParam_HagenPoiseuilleVelocity ScalarVelocityBoundaryFunction;
-      typedef Dune::PDELab::PowerConstraintsParameters<ScalarVelocityBoundaryFunction,2> 
-        VelocityBoundaryFunction;
-      typedef BCTypeParam_ScalarNeumann PressureBoundaryFunction;
-      typedef Dune::PDELab::CompositeConstraintsParameters<VelocityBoundaryFunction,PressureBoundaryFunction> 
-        BoundaryFunction;
-
-      ScalarVelocityBoundaryFunction bf_scalar_velocity;
-      VelocityBoundaryFunction bf_velocity(bf_scalar_velocity);
-      PressureBoundaryFunction bf_pressure;
-      BoundaryFunction boundary_function(bf_velocity,bf_pressure);
-
-      typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
-      NeumannFlux neumann_flux(gv);
-
-      // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,BoundaryFunction,NeumannFlux,q>
-        (gv,"hagenpoiseuille_yasp_Q2Q1_2d", parameters, vFem, pFem, initial_solution, 
-         boundary_function, neumann_flux);
-    }
-
-#if HAVE_ALUGRID
-    // ALU Grid Hagen-Poiseuille test 2D
-    if(example_switch.find("HA2") != std::string::npos)
-    {
-      // make grid
-      typedef ALUUnitCube<2> UnitCube;
-      UnitCube unitcube;
-      unitcube.grid().globalRefine(parameters.domain_level);
-
-      // get view
-      typedef UnitCube::GridType::LeafGridView GV;
-      const GV& gv=unitcube.grid().leafView(); 
- 
-      // make finite element map
-      typedef UnitCube::GridType::ctype DF;
-      typedef double R;
-      const int k=2;
-      const int q=2*k;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
-
-      V_FEM vFem(gv); P_FEM pFem(gv);
-
-      typedef double RF;
-
-      typedef HagenPoiseuilleVelocity<GV,RF,2> InitialVelocity;
-      typedef ZeroScalarFunction<GV,RF> InitialPressure;
-      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
-        InitialSolution;
-
-      InitialVelocity init_velocity(gv);
-      InitialPressure init_pressure(gv);
-      InitialSolution initial_solution(init_velocity,init_pressure);
-
-      typedef BCTypeParam_HagenPoiseuilleVelocity ScalarVelocityBoundaryFunction;
-      typedef Dune::PDELab::PowerConstraintsParameters<ScalarVelocityBoundaryFunction,2> 
-        VelocityBoundaryFunction;
-      typedef BCTypeParam_ScalarNeumann PressureBoundaryFunction;
-      typedef Dune::PDELab::CompositeConstraintsParameters<VelocityBoundaryFunction,PressureBoundaryFunction> 
-        BoundaryFunction;
-
-      ScalarVelocityBoundaryFunction bf_scalar_velocity;
-      VelocityBoundaryFunction bf_velocity(bf_scalar_velocity);
-      PressureBoundaryFunction bf_pressure;
-      BoundaryFunction boundary_function(bf_velocity,bf_pressure);
-
-      typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
-      NeumannFlux neumann_flux(gv);
-  
-      // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,BoundaryFunction,NeumannFlux,q>
-        (gv,"hagenpoiseuille_alu_P2P1_2d", parameters, vFem, pFem, initial_solution, 
-         boundary_function, neumann_flux);
-    }
-#endif
-
-#if HAVE_UG
+#if HAVE_UG_OFF
     // UG Grid turbulence tube test 2D
     if(example_switch.find("TU2") != std::string::npos)
     {
@@ -447,7 +392,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-#if HAVE_UG
+#if HAVE_UG_OFF
     // UG Grid L-shape domain test 2D
     if(example_switch.find("LU2") != std::string::npos)
     {
@@ -503,7 +448,7 @@ int main(int argc, char** argv)
       const RF tube_origin = -1.0;
 
 
-      ScalarVelocityBoundaryFunction bf_scalar_velocity(tube_length, tube_origin, tube_direction);
+      ScalarVelocityBoundaryFunction bf_scalar_velocity( tube_length, tube_origin, tube_direction);
       VelocityBoundaryFunction bf_velocity(bf_scalar_velocity);
       PressureBoundaryFunction bf_pressure;
       BoundaryFunction boundary_function(bf_velocity,bf_pressure);
@@ -517,141 +462,6 @@ int main(int argc, char** argv)
          initial_solution, boundary_function,neumann_flux);
     }
 #endif
-
-
-#if HAVE_UG
-    // UG Grid Hagen-Poiseuille test 3D
-    if(example_switch.find("HU3") != std::string::npos)
-    {
-      typedef Dune::UGGrid<3> GridType;
-      GridType grid(400);
-
-      typedef double RF;
-
-      std::vector<int> boundary_index_map;
-      std::vector<int> element_index_map;
-
-      std::string grid_file = "grids/pipe.msh";
-      Dune::GmshReader<GridType> gmsh_reader;
-      gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
-      grid.globalRefine(parameters.domain_level);
-
-      // get view
-      typedef GridType::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
- 
-      // make finite element map
-      typedef GridType::ctype DF;
-      typedef double R;
-      const int k=2;
-      const int q=2*k;
-      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
-
-      V_FEM vFem(gv); P_FEM pFem(gv);
-
-      typedef HagenPoiseuilleVelocity<GV,RF,3> InitialVelocity;
-      typedef ZeroScalarFunction<GV,RF> InitialPressure;
-      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
-        InitialSolution;
-
-      InitialVelocity init_velocity(gv);
-      InitialPressure init_pressure(gv);
-      InitialSolution initial_solution(init_velocity,init_pressure);
-      
-      typedef BCTypeParam_HagenPoiseuilleVelocity ScalarVelocityBoundaryFunction;
-      typedef Dune::PDELab::PowerConstraintsParameters<ScalarVelocityBoundaryFunction,3> 
-        VelocityBoundaryFunction;
-      typedef BCTypeParam_ScalarNeumann PressureBoundaryFunction;
-      typedef Dune::PDELab::CompositeConstraintsParameters<VelocityBoundaryFunction,PressureBoundaryFunction> 
-        BoundaryFunction;
-
-      ScalarVelocityBoundaryFunction bf_scalar_velocity;
-      VelocityBoundaryFunction bf_velocity(bf_scalar_velocity);
-      PressureBoundaryFunction bf_pressure;
-      BoundaryFunction boundary_function(bf_velocity,bf_pressure);
-
-      typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
-      NeumannFlux neumann_flux(gv);
-  
-      // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,BoundaryFunction,NeumannFlux,q>
-        (gv,"hagenpoiseuille_ug_P2P1_3d", parameters, vFem, pFem, 
-         initial_solution, boundary_function,neumann_flux);
-    }
-#endif
-
-#if HAVE_UG
-    // UG Grid turbulence tube test 3D
-    if(example_switch.find("TU3") != std::string::npos)
-    {
-      typedef Dune::UGGrid<3> GridType;
-      GridType grid(400);
-
-      std::vector<int> boundary_index_map;
-      std::vector<int> element_index_map;
-
-      std::string grid_file = "grids/turbtube.msh";
-      Dune::GmshReader<GridType> gmsh_reader;
-      gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
-      grid.globalRefine(parameters.domain_level);
-
-      // get view
-      typedef GridType::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
- 
-      // make finite element map
-      typedef GridType::ctype DF;
-      typedef double R;
-      const int k=2;
-      const int q=2*k;
-      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
-
-      V_FEM vFem(gv); P_FEM pFem(gv);
-  
-      typedef double RF;
-
-      typedef ZeroScalarFunction<GV,RF> ZeroFunction;
-      typedef Dune::PDELab::PowerGridFunction<ZeroFunction,3> 
-        InitialVelocity;
-      typedef ZeroFunction InitialPressure;
-      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
-        InitialSolution;
-
-      ZeroFunction zero_function(gv);
-      InitialVelocity init_velocity(zero_function);
-      InitialPressure init_pressure(gv);
-      InitialSolution initial_solution(init_velocity,init_pressure);
-
-
-      typedef BCTypeParam_PressureDropVelocity<GV> ScalarVelocityBoundaryFunction;
-      typedef Dune::PDELab::PowerConstraintsParameters<ScalarVelocityBoundaryFunction,3> 
-        VelocityBoundaryFunction;
-      typedef BCTypeParam_ScalarNeumann PressureBoundaryFunction;
-      typedef Dune::PDELab::CompositeConstraintsParameters<VelocityBoundaryFunction,PressureBoundaryFunction> 
-        BoundaryFunction;
-
-      // Domain parameters:
-      const int tube_direction = 2; // Tube in z-axes direction
-      const RF tube_length = 5.0;
-      const RF tube_origin = 0.0;
-
-      ScalarVelocityBoundaryFunction bf_scalar_velocity(tube_length, tube_origin, tube_direction);
-      VelocityBoundaryFunction bf_velocity(bf_scalar_velocity);
-      PressureBoundaryFunction bf_pressure;
-      BoundaryFunction boundary_function(bf_velocity,bf_pressure);
-
-      typedef PressureDropFlux<GV,RF> NeumannFlux;
-      NeumannFlux neumann_flux(gv, parameters.pressure, tube_length, tube_origin, tube_direction);
-  
-      // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,BoundaryFunction,NeumannFlux,q>
-        (gv,"turbtube_ug_P2P1_3d", parameters, vFem, pFem, initial_solution, boundary_function, neumann_flux);
-
-    }
-#endif
-
 
 	return 0;
   }

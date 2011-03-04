@@ -363,11 +363,11 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef PressureDropVelocityBoundaryFunction<GV> ScalarVelocityBoundaryFunction;
-      typedef Dune::PDELab::PowerGridFunction<ScalarVelocityBoundaryFunction,2> 
+      typedef BCTypeParam_PressureDropVelocity<GV> ScalarVelocityBoundaryFunction;
+      typedef Dune::PDELab::PowerConstraintsParameters<ScalarVelocityBoundaryFunction,2> 
         VelocityBoundaryFunction;
-      typedef ScalarNeumannBoundaryFunction<GV> PressureBoundaryFunction;
-      typedef Dune::PDELab::CompositeGridFunction<VelocityBoundaryFunction,PressureBoundaryFunction> 
+      typedef BCTypeParam_ScalarNeumann PressureBoundaryFunction;
+      typedef Dune::PDELab::CompositeConstraintsParameters<VelocityBoundaryFunction,PressureBoundaryFunction> 
         BoundaryFunction;
 
       // Domain parameters:
@@ -376,7 +376,7 @@ int main(int argc, char** argv)
       const RF tube_origin = 0.0;
 
 
-      ScalarVelocityBoundaryFunction bf_scalar_velocity(gv, tube_length, tube_origin, tube_direction);
+      ScalarVelocityBoundaryFunction bf_scalar_velocity( tube_length, tube_origin, tube_direction);
       VelocityBoundaryFunction bf_velocity(bf_scalar_velocity);
       PressureBoundaryFunction bf_pressure(gv);
       BoundaryFunction boundary_function(bf_velocity,bf_pressure);
@@ -434,11 +434,11 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef PressureDropVelocityBoundaryFunction<GV> ScalarVelocityBoundaryFunction;
-      typedef Dune::PDELab::PowerGridFunction<ScalarVelocityBoundaryFunction,2> 
+      typedef BCTypeParam_PressureDropVelocity<GV> ScalarVelocityBoundaryFunction;
+      typedef Dune::PDELab::PowerConstraintsParameters<ScalarVelocityBoundaryFunction,2> 
         VelocityBoundaryFunction;
-      typedef ScalarNeumannBoundaryFunction<GV> PressureBoundaryFunction;
-      typedef Dune::PDELab::CompositeGridFunction<VelocityBoundaryFunction,PressureBoundaryFunction> 
+      typedef BCTypeParam_ScalarNeumann PressureBoundaryFunction;
+      typedef Dune::PDELab::CompositeConstraintsParameters<VelocityBoundaryFunction,PressureBoundaryFunction> 
         BoundaryFunction;
 
       // Domain parameters:
@@ -447,7 +447,7 @@ int main(int argc, char** argv)
       const RF tube_origin = -1.0;
 
 
-      ScalarVelocityBoundaryFunction bf_scalar_velocity(gv, tube_length, tube_origin, tube_direction);
+      ScalarVelocityBoundaryFunction bf_scalar_velocity( tube_length, tube_origin, tube_direction);
       VelocityBoundaryFunction bf_velocity(bf_scalar_velocity);
       PressureBoundaryFunction bf_pressure(gv);
       BoundaryFunction boundary_function(bf_velocity,bf_pressure);
