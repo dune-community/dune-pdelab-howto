@@ -38,18 +38,19 @@
 #include<dune/pdelab/finiteelementmap/q22dfem.hh>
 #include<dune/pdelab/finiteelementmap/q1fem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
-#include<dune/pdelab/finiteelementmap/hangingnodeconstraints.hh>
+//#include<dune/pdelab/finiteelementmap/hangingnodeconstraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/constraints/constraints.hh>
+#include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
-#include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
+//#include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include<dune/pdelab/localoperator/cg_stokes.hh>
 #include <dune/common/configparser.hh>
 
@@ -113,7 +114,7 @@ void navierstokes
  V_FEM & vFem, P_FEM & pFem, 
  IF & initial_solution,
  BF & boundary_function,
- NF & neumann_flux)
+ NF & neumann_flux )
 {
   typedef typename GV::Grid::ctype DF;
   static const unsigned int dim = GV::dimension;
@@ -298,16 +299,16 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef HagenPoiseuilleVelocityBoundaryFunction<GV> ScalarVelocityBoundaryFunction;
-      typedef Dune::PDELab::PowerGridFunction<ScalarVelocityBoundaryFunction,2> 
+      typedef BCTypeParam_HagenPoiseuilleVelocity ScalarVelocityBoundaryFunction;
+      typedef Dune::PDELab::PowerConstraintsParameters<ScalarVelocityBoundaryFunction,2> 
         VelocityBoundaryFunction;
-      typedef ScalarNeumannBoundaryFunction<GV> PressureBoundaryFunction;
-      typedef Dune::PDELab::CompositeGridFunction<VelocityBoundaryFunction,PressureBoundaryFunction> 
+      typedef BCTypeParam_ScalarNeumann PressureBoundaryFunction;
+      typedef Dune::PDELab::CompositeConstraintsParameters<VelocityBoundaryFunction,PressureBoundaryFunction> 
         BoundaryFunction;
 
-      ScalarVelocityBoundaryFunction bf_scalar_velocity(gv);
+      ScalarVelocityBoundaryFunction bf_scalar_velocity;
       VelocityBoundaryFunction bf_velocity(bf_scalar_velocity);
-      PressureBoundaryFunction bf_pressure(gv);
+      PressureBoundaryFunction bf_pressure;
       BoundaryFunction boundary_function(bf_velocity,bf_pressure);
 
       typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
@@ -353,16 +354,16 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef HagenPoiseuilleVelocityBoundaryFunction<GV> ScalarVelocityBoundaryFunction;
-      typedef Dune::PDELab::PowerGridFunction<ScalarVelocityBoundaryFunction,2> 
+      typedef BCTypeParam_HagenPoiseuilleVelocity ScalarVelocityBoundaryFunction;
+      typedef Dune::PDELab::PowerConstraintsParameters<ScalarVelocityBoundaryFunction,2> 
         VelocityBoundaryFunction;
-      typedef ScalarNeumannBoundaryFunction<GV> PressureBoundaryFunction;
-      typedef Dune::PDELab::CompositeGridFunction<VelocityBoundaryFunction,PressureBoundaryFunction> 
+      typedef BCTypeParam_ScalarNeumann PressureBoundaryFunction;
+      typedef Dune::PDELab::CompositeConstraintsParameters<VelocityBoundaryFunction,PressureBoundaryFunction> 
         BoundaryFunction;
 
-      ScalarVelocityBoundaryFunction bf_scalar_velocity(gv);
+      ScalarVelocityBoundaryFunction bf_scalar_velocity;
       VelocityBoundaryFunction bf_velocity(bf_scalar_velocity);
-      PressureBoundaryFunction bf_pressure(gv);
+      PressureBoundaryFunction bf_pressure;
       BoundaryFunction boundary_function(bf_velocity,bf_pressure);
 
       typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
@@ -375,7 +376,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-#if HAVE_UG
+#if HAVE_UG_OFF
     // UG Grid turbulence tube test 2D
     if(example_switch.find("TU2") != std::string::npos)
     {
@@ -418,11 +419,11 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef PressureDropVelocityBoundaryFunction<GV> ScalarVelocityBoundaryFunction;
-      typedef Dune::PDELab::PowerGridFunction<ScalarVelocityBoundaryFunction,2> 
+      typedef BCTypeParam_PressureDropVelocity<GV> ScalarVelocityBoundaryFunction;
+      typedef Dune::PDELab::PowerConstraintsParameters<ScalarVelocityBoundaryFunction,2> 
         VelocityBoundaryFunction;
-      typedef ScalarNeumannBoundaryFunction<GV> PressureBoundaryFunction;
-      typedef Dune::PDELab::CompositeGridFunction<VelocityBoundaryFunction,PressureBoundaryFunction> 
+      typedef BCTypeParam_ScalarNeumann PressureBoundaryFunction;
+      typedef Dune::PDELab::CompositeConstraintsParameters<VelocityBoundaryFunction,PressureBoundaryFunction> 
         BoundaryFunction;
 
       // Domain parameters:
@@ -431,9 +432,9 @@ int main(int argc, char** argv)
       const RF tube_origin = 0.0;
 
 
-      ScalarVelocityBoundaryFunction bf_scalar_velocity(gv, tube_length, tube_origin, tube_direction);
+      ScalarVelocityBoundaryFunction bf_scalar_velocity( tube_length, tube_origin, tube_direction);
       VelocityBoundaryFunction bf_velocity(bf_scalar_velocity);
-      PressureBoundaryFunction bf_pressure(gv);
+      PressureBoundaryFunction bf_pressure;
       BoundaryFunction boundary_function(bf_velocity,bf_pressure);
 
       typedef PressureDropFlux<GV,RF> NeumannFlux;
@@ -446,7 +447,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-#if HAVE_UG
+#if HAVE_UG_OFF
     // UG Grid L-shape domain test 2D
     if(example_switch.find("LU2") != std::string::npos)
     {
@@ -489,11 +490,11 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef PressureDropVelocityBoundaryFunction<GV> ScalarVelocityBoundaryFunction;
-      typedef Dune::PDELab::PowerGridFunction<ScalarVelocityBoundaryFunction,2> 
+      typedef BCTypeParam_PressureDropVelocity<GV> ScalarVelocityBoundaryFunction;
+      typedef Dune::PDELab::PowerConstraintsParameters<ScalarVelocityBoundaryFunction,2> 
         VelocityBoundaryFunction;
-      typedef ScalarNeumannBoundaryFunction<GV> PressureBoundaryFunction;
-      typedef Dune::PDELab::CompositeGridFunction<VelocityBoundaryFunction,PressureBoundaryFunction> 
+      typedef BCTypeParam_ScalarNeumann PressureBoundaryFunction;
+      typedef Dune::PDELab::CompositeConstraintsParameters<VelocityBoundaryFunction,PressureBoundaryFunction> 
         BoundaryFunction;
 
       // Domain parameters:
@@ -502,9 +503,9 @@ int main(int argc, char** argv)
       const RF tube_origin = -1.0;
 
 
-      ScalarVelocityBoundaryFunction bf_scalar_velocity(gv, tube_length, tube_origin, tube_direction);
+      ScalarVelocityBoundaryFunction bf_scalar_velocity(tube_length, tube_origin, tube_direction);
       VelocityBoundaryFunction bf_velocity(bf_scalar_velocity);
-      PressureBoundaryFunction bf_pressure(gv);
+      PressureBoundaryFunction bf_pressure;
       BoundaryFunction boundary_function(bf_velocity,bf_pressure);
 
       typedef PressureDropFlux<GV,RF> NeumannFlux;
@@ -557,17 +558,17 @@ int main(int argc, char** argv)
       InitialVelocity init_velocity(gv);
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
-
-      typedef HagenPoiseuilleVelocityBoundaryFunction<GV> ScalarVelocityBoundaryFunction;
-      typedef Dune::PDELab::PowerGridFunction<ScalarVelocityBoundaryFunction,3> 
+      
+      typedef BCTypeParam_HagenPoiseuilleVelocity ScalarVelocityBoundaryFunction;
+      typedef Dune::PDELab::PowerConstraintsParameters<ScalarVelocityBoundaryFunction,3> 
         VelocityBoundaryFunction;
-      typedef ScalarNeumannBoundaryFunction<GV> PressureBoundaryFunction;
-      typedef Dune::PDELab::CompositeGridFunction<VelocityBoundaryFunction,PressureBoundaryFunction> 
+      typedef BCTypeParam_ScalarNeumann PressureBoundaryFunction;
+      typedef Dune::PDELab::CompositeConstraintsParameters<VelocityBoundaryFunction,PressureBoundaryFunction> 
         BoundaryFunction;
 
-      ScalarVelocityBoundaryFunction bf_scalar_velocity(gv);
+      ScalarVelocityBoundaryFunction bf_scalar_velocity;
       VelocityBoundaryFunction bf_velocity(bf_scalar_velocity);
-      PressureBoundaryFunction bf_pressure(gv);
+      PressureBoundaryFunction bf_pressure;
       BoundaryFunction boundary_function(bf_velocity,bf_pressure);
 
       typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
@@ -624,11 +625,11 @@ int main(int argc, char** argv)
       InitialSolution initial_solution(init_velocity,init_pressure);
 
 
-      typedef PressureDropVelocityBoundaryFunction<GV> ScalarVelocityBoundaryFunction;
-      typedef Dune::PDELab::PowerGridFunction<ScalarVelocityBoundaryFunction,3> 
+      typedef BCTypeParam_PressureDropVelocity<GV> ScalarVelocityBoundaryFunction;
+      typedef Dune::PDELab::PowerConstraintsParameters<ScalarVelocityBoundaryFunction,3> 
         VelocityBoundaryFunction;
-      typedef ScalarNeumannBoundaryFunction<GV> PressureBoundaryFunction;
-      typedef Dune::PDELab::CompositeGridFunction<VelocityBoundaryFunction,PressureBoundaryFunction> 
+      typedef BCTypeParam_ScalarNeumann PressureBoundaryFunction;
+      typedef Dune::PDELab::CompositeConstraintsParameters<VelocityBoundaryFunction,PressureBoundaryFunction> 
         BoundaryFunction;
 
       // Domain parameters:
@@ -636,9 +637,9 @@ int main(int argc, char** argv)
       const RF tube_length = 5.0;
       const RF tube_origin = 0.0;
 
-      ScalarVelocityBoundaryFunction bf_scalar_velocity(gv, tube_length, tube_origin, tube_direction);
+      ScalarVelocityBoundaryFunction bf_scalar_velocity(tube_length, tube_origin, tube_direction);
       VelocityBoundaryFunction bf_velocity(bf_scalar_velocity);
-      PressureBoundaryFunction bf_pressure(gv);
+      PressureBoundaryFunction bf_pressure;
       BoundaryFunction boundary_function(bf_velocity,bf_pressure);
 
       typedef PressureDropFlux<GV,RF> NeumannFlux;

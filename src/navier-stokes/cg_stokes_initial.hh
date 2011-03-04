@@ -5,122 +5,96 @@
 // Define parameter functions f,g,j and \partial\Omega_D/N
 //===============================================================
 
-template<typename GV>
-class HagenPoiseuilleVelocityBoundaryFunction : 
-  public Dune::PDELab::BoundaryGridFunctionBase<
-  Dune::PDELab::BoundaryGridFunctionTraits<
-    GV,int,1,Dune::FieldVector<int,1> >, 
-  HagenPoiseuilleVelocityBoundaryFunction<GV> >
+
+
+// constraints parameter class for selecting boundary condition type 
+class BCTypeParam_HagenPoiseuilleVelocity
+  : public Dune::PDELab::DirichletConstraintsParameters
+	/*@\label{bcp:base}@*/
 {
-  const GV& gv;
-
 public:
-  typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
-  typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,HagenPoiseuilleVelocityBoundaryFunction<GV> > BaseT;
-
-    HagenPoiseuilleVelocityBoundaryFunction (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
-                        const typename Traits::DomainType& x,
-                        typename Traits::RangeType& y) const
-  {  
-    Dune::FieldVector<typename GV::Grid::ctype,GV::dimension> 
-      xg = ig.geometry().global(x);
-
-    if(xg[0]<1e-6)
-      y = 0;
-    else
-      y = 1;
-  }
-
-  //! get a reference to the GridView
-  inline const GV& getGridView ()
+  bool isDirichlet(
+				   const I & intersection,   /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
   {
-    return gv;
+    Dune::FieldVector<typename I::ctype, I::dimension>
+      xg = intersection.geometry().global( coord );
+    if( xg[0] < 1e-6 )
+	  return false;  // Neumann b.c.
+	else
+	  return true;   // Dirichlet b.c.
   }
+
 };
 
+
+
+// constraints parameter class for selecting boundary condition type 
 template<typename GV>
-class PressureDropVelocityBoundaryFunction : 
-  public Dune::PDELab::BoundaryGridFunctionBase<
-  Dune::PDELab::BoundaryGridFunctionTraits<
-    GV,int,1,Dune::FieldVector<int,1> >, 
-  PressureDropVelocityBoundaryFunction<GV> >
+class BCTypeParam_PressureDropVelocity
+  : public Dune::PDELab::DirichletConstraintsParameters
+/*@\label{bcp:base}@*/
 {
-  
-public:
-  typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
-  typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,PressureDropVelocityBoundaryFunction<GV> > BaseT;
-
 private:
-  typedef typename Traits::DomainFieldType DFT;
-  const GV& gv;
-
+  typedef typename GV::ctype DFT;
   const DFT length;
   const DFT origin;
   const int direction;
-
+  
 public:
-  PressureDropVelocityBoundaryFunction 
+  
+  BCTypeParam_PressureDropVelocity
   (
-   const GV& gv_, 
    const DFT l_, 
    const DFT o_,
-   const int d_) 
-    : gv(gv_) , length(l_), origin(o_), direction(d_)
-  {}
+   const int d_
+   )
+    : length(l_), origin(o_), direction(d_)
+  {
+  }
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
-                        const typename Traits::DomainType& x,
-                        typename Traits::RangeType& y) const
-  {  
-    Dune::FieldVector<typename GV::Grid::ctype,GV::dimension> 
-      xg = ig.geometry().global(x);
-    const int dim = GV::dimension;
+  bool isDirichlet(
+				   const I & intersection,   /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
+  {
+    Dune::FieldVector<typename I::ctype, I::dimension>
+      xg = intersection.geometry().global( coord );
+
     if(xg[direction]-origin < 1e-6 || xg[direction]-origin > length-1e-6)
-      y = 0;
+	  return false;  // Neumann b.c.
     else
-      y = 1;
+	  return true;   // Dirichlet b.c.
   }
 
-  //! get a reference to the GridView
-  inline const GV& getGridView ()
-  {
-    return gv;
-  }
 };
 
-template<typename GV>
-class ScalarNeumannBoundaryFunction : 
-  public Dune::PDELab::BoundaryGridFunctionBase<
-  Dune::PDELab::BoundaryGridFunctionTraits<
-    GV,int,1,Dune::FieldVector<int,1> >, 
-  ScalarNeumannBoundaryFunction<GV> >
+
+
+
+// constraints parameter class for selecting boundary condition type 
+class BCTypeParam_ScalarNeumann
+  : public Dune::PDELab::DirichletConstraintsParameters
+/*@\label{bcp:base}@*/
 {
-  const GV& gv;
-
 public:
-  typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
-  typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,ScalarNeumannBoundaryFunction<GV> > BaseT;
-
-    ScalarNeumannBoundaryFunction (const GV& gv_) : gv(gv_) {}
-
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
-                        const typename Traits::DomainType& x,
-                        typename Traits::RangeType& y) const
-  {  
-    y = 0; // Neumann
-  }
-
-  //! get a reference to the GridView
-  inline const GV& getGridView ()
+  bool isDirichlet(
+				   const I & intersection,   /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
   {
-    return gv;
+    //Dune::FieldVector<typename I::ctype, I::dimension>
+    //  xg = intersection.geometry().global( coord );
+	return false;  // Neumann b.c. only
   }
 };
+
+
 
 
 template<typename GV, typename RF, int dim>
