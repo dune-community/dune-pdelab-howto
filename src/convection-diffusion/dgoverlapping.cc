@@ -32,6 +32,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/constraints/constraints.hh>
+#include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -124,8 +125,10 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     KType k(gv);
     typedef F_A<GV,RF> FType;
     FType f(gv);
-    typedef B_A<GV> BType;
-    BType b(gv);
+
+    typedef BCTypeParam_A BCType;
+    BCType bctype;
+
     typedef G_A<GV,RF> GType;
     GType g(gv);
     typedef J_A<GV,RF> JType;
@@ -133,8 +136,8 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     Dune::PDELab::interpolate(g,gfs,x0);
 
     // make grid function operator
-    typedef Dune::PDELab::DiffusionDG<KType,FType,BType,GType,JType> LOP;
-    LOP la(k,f,b,g,j,DG_METHOD);
+    typedef Dune::PDELab::DiffusionDG<KType,FType,BCType,GType,JType> LOP;
+    LOP la(k,f,bctype,g,j,DG_METHOD);
     typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,
        Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation,
        Dune::PDELab::ISTLBCRSMatrixBackend<BLOCK_SIZE,BLOCK_SIZE> > GOS;
