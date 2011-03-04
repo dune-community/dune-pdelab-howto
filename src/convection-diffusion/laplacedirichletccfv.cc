@@ -28,6 +28,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/constraints/constraints.hh>
+#include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -60,39 +61,28 @@ public:
   }
 };
 
-// define some boundary grid functions to define boundary conditions
-template<typename GV>
-class B
-  : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,
-                                                                                           Dune::FieldVector<int,1> >,
-                                                  B<GV> >
+// selecting the boundary condition type
+class BCTypeParam
+  : public Dune::PDELab::DirichletConstraintsParameters /*@\label{bcp:base}@*/
 {
-  const GV& gv;
-
 public:
-  typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
-  typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,B<GV> > BaseT;
-
-  B (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
-                        const typename Traits::DomainType& x,
-                        typename Traits::RangeType& y) const
-  {  
-    y = 1; // all is Dirichlet boundary
-  }
-
-  //! get a reference to the GridView
-  inline const GV& getGridView ()
+  bool isDirichlet(
+				   const I & intersection,   /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
   {
-    return gv;
+	
+    //Dune::FieldVector<typename I::ctype, I::dimension>
+    //  xg = intersection.geometry().global( coord );
+    return true;  // Dirichlet b.c. on all boundaries
   }
 };
 
 
 template<class GV> 
-void test (const GV& gv)
+void test (const GV& gv, std::string filename )
 {
   typedef typename GV::Grid::ctype DF;
   typedef double RF;
@@ -179,13 +169,13 @@ void test (const GV& gv)
   x += x0;
 
 //   // make discrete function object
-//   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-//   DGF dgf(gfs,x);
+  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+  DGF dgf(gfs,x);
   
-//   // output grid function with VTKWriter
-//   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
-//   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
-//   vtkwriter.write("testlaplacedirichletccfv",Dune::VTKOptions::ascii);
+  // output grid function with VTKWriter
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
+  vtkwriter.write( filename.c_str() ,Dune::VTKOptions::ascii);
 }
 
 int main(int argc, char** argv)
@@ -204,7 +194,7 @@ int main(int argc, char** argv)
       grid.globalRefine(6);
       
       // solve problem :)
-      test(grid.leafView());
+      test(grid.leafView(),"laplacedirichletccfv_yasp2d");
     }
 
     // UG Q1 2D test
@@ -214,7 +204,7 @@ int main(int argc, char** argv)
       UGUnitSquareQ grid(1000);
       grid.globalRefine(6);
 
-      test(grid.leafView());
+      test(grid.leafView(),"laplacedirichletccfv_ug2d");
     }
 #endif
 
