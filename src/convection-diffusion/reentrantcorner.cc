@@ -33,13 +33,14 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/constraints/constraints.hh>
+#include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
-#include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
+//#include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include<dune/pdelab/localoperator/poisson.hh>
 
 #include"../utility/gridexamples.hh"
@@ -80,34 +81,23 @@ public:
   }
 };
 
-// boundary grid function selecting boundary conditions 
-template<typename GV>
-class B
-  : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::
-                                                  BoundaryGridFunctionTraits<GV,int,1,
-                                                                             Dune::FieldVector<int,1> >,
-                                                  B<GV> >
+
+// selecting the boundary condition type
+class BCTypeParam
+  : public Dune::PDELab::DirichletConstraintsParameters /*@\label{bcp:base}@*/
 {
-  const GV& gv;
-
 public:
-  typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
-  typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,B<GV> > BaseT;
-
-  B (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
-                        const typename Traits::DomainType& x,
-                        typename Traits::RangeType& y) const
-  {  
-    y = 1; // Dirichlet
-  }
-
-  //! get a reference to the GridView
-  inline const GV& getGridView ()
+  bool isDirichlet(
+				   const I & intersection,   /*@\label{bcp:name}@*/
+				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+				   ) const
   {
-    return gv;
+	
+    //Dune::FieldVector<typename I::ctype, I::dimension>
+    //  xg = intersection.geometry().global( coord );
+    return true;  // Dirichlet b.c. on all boundaries
   }
 };
 
@@ -179,9 +169,8 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
   C cg;
   cg.clear();
-  typedef B<GV> BType;
-  BType b(gv);
-  Dune::PDELab::constraints(b,gfs,cg);
+  BCTypeParam bctype;
+  Dune::PDELab::constraints(bctype,gfs,cg);
 
   // make coefficent Vector and initialize it from a function
   typedef typename Dune::PDELab::BackendVectorSelector<GFS,R>::Type V;
@@ -197,8 +186,8 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   FType f(gv);
   typedef J<GV,R> JType;
   JType j(gv);
-  typedef Dune::PDELab::Poisson<FType,BType,JType,q> LOP; 
-  LOP lop(f,b,j);
+  typedef Dune::PDELab::Poisson<FType,BCTypeParam,JType,q> LOP; 
+  LOP lop(f,bctype,j);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
     LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
