@@ -45,6 +45,7 @@
 #include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include<dune/pdelab/localoperator/poisson.hh>
 #include<dune/pdelab/constraints/constraintsparameters.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
 
 #include "../utility/gridexamples.hh"
 
@@ -200,10 +201,13 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
   JType j(gv);
   typedef Dune::PDELab::Poisson<FType,BCTypeParam,JType,q> LOP; 
   LOP lop(f,bctype,j);
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
-    LOP,C,C,VBE::MatrixBackend > GOS;
-  GOS gos(gfs,cg,gfs,cg,lop);
 
+#ifndef USE_NEW_ASSEMBLER
+  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,VBE::MatrixBackend> GOS;
+#else
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,VBE::MatrixBackend,R,R,R,C,C> GOS;
+#endif
+  GOS gos(gfs,cg,gfs,cg,lop);
 
   // represent operator as a matrix
   typedef typename GOS::template MatrixContainer<R>::Type M;
@@ -212,7 +216,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
 
   // For hangingnodes: Interpolate hangingnodes adajcent to dirichlet
   // nodes
-  gos.backtransform(x0);
+  gos.localAssembler().backtransform(x0);
   
   gos.jacobian(x0,m);
   //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
@@ -247,7 +251,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
   x += x0; //affine shift
 
   // Transform solution into standard basis
-  gos.backtransform(x);
+  gos.localAssembler().backtransform(x);
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
