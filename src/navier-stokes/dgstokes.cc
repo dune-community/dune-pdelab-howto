@@ -55,8 +55,9 @@ void stokes (const GV& gv, std::string filename)
     watch.reset();
     typedef Dune::PDELab::MonomLocalFiniteElementMap<DF,RF,dim,vOrder> vFEM;
     typedef Dune::PDELab::MonomLocalFiniteElementMap<DF,RF,dim,pOrder> pFEM;
-    vFEM vFem(Dune::GeometryType(Dune::GeometryType::cube,vOrder));
-    pFEM pFem(Dune::GeometryType(Dune::GeometryType::cube,pOrder));
+
+    vFEM vFem(Dune::GeometryType(Dune::GeometryType::cube,dim));
+    pFEM pFem(Dune::GeometryType(Dune::GeometryType::cube,dim));
     // DOFs per cell
     static const unsigned int vBlockSize = Dune::MonomImp::Size<dim,vOrder>::val;
     static const unsigned int pBlockSize = Dune::MonomImp::Size<dim,pOrder>::val;
