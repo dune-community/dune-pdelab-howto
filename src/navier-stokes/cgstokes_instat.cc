@@ -44,6 +44,7 @@
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
+#include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
@@ -57,6 +58,9 @@
 #include<dune/pdelab/localoperator/l2.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/instationary/onestep.hh>
+
+#include<dune/pdelab/gridoperator/onestep.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
 
 #include "../utility/gridexamples.hh"
 #include "cg_stokes_initial.hh"
@@ -185,9 +189,21 @@ void navierstokes
   Dune::PDELab::FractionalStepParameter<RF> method;
   typedef typename VectorBackend::MatrixBackend MatrixBackend;
   typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
+
+#ifdef USE_OLD_STUFF
   typedef Dune::PDELab::InstationaryGridOperatorSpace
     <RF,V,GFS,GFS,LOP,MLOP,C,C,MatrixBackend> IGOS;
   IGOS igos(method,gfs,cg,gfs,cg,lop,mlop);
+#else
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MatrixBackend,Real,Real,Real,C,C> GO0;
+  GO0 go0(gfs,cg,gfs,cg,lop);
+
+  typedef Dune::PDELab::GridOperator<GFS,GFS,MLOP,MatrixBackend,Real,Real,Real,C,C> GO1;
+  GO1 go1(gfs,cg,gfs,cg,mlop);
+
+  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1,C,C> IGOS;
+  IGOS igos(go0,go1,cg,cg);
+#endif
 
   //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
@@ -270,6 +286,19 @@ void navierstokes
       time += dt;
     }
 
+  // Compute norm of final solution
+  typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,0> VelocitySubGFS;
+  VelocitySubGFS velocitySubGfs(gfs);
+  typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,1> PressureSubGFS;
+  PressureSubGFS pressureSubGfs(gfs);
+  typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
+  PDGF pdgf(pressureSubGfs,x);
+  typename PDGF::Traits::RangeType l1norm(0);
+  Dune::PDELab::integrateGridFunction(pdgf,l1norm,q);
+  std::cout << std::setw(12) << std::setprecision(7) << std::scientific 
+            << "L1 norm: " <<  l1norm << std::endl;
+
+
 }
 
 //===============================================================
@@ -321,12 +350,12 @@ int main(int argc, char** argv)
 
   try{
 
-#if HAVE_UG_OFF
+#if HAVE_UG
     // UG Grid turbulence tube test 2D
     if(example_switch.find("TU2") != std::string::npos)
     {
       typedef Dune::UGGrid<2> GridType;
-      GridType grid(400);
+      GridType grid;
 
       typedef double RF;
 
@@ -392,12 +421,12 @@ int main(int argc, char** argv)
     }
 #endif
 
-#if HAVE_UG_OFF
+#if HAVE_UG
     // UG Grid L-shape domain test 2D
     if(example_switch.find("LU2") != std::string::npos)
     {
       typedef Dune::UGGrid<2> GridType;
-      GridType grid(400);
+      GridType grid;
 
       typedef double RF;
 
