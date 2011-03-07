@@ -376,12 +376,12 @@ int main(int argc, char** argv)
     }
 #endif
 
-#if HAVE_UG_OFF
+#if HAVE_UG
     // UG Grid turbulence tube test 2D
     if(example_switch.find("TU2") != std::string::npos)
     {
       typedef Dune::UGGrid<2> GridType;
-      GridType grid(400);
+      GridType grid;
 
       typedef double RF;
 
@@ -447,12 +447,12 @@ int main(int argc, char** argv)
     }
 #endif
 
-#if HAVE_UG_OFF
+#if HAVE_UG
     // UG Grid L-shape domain test 2D
     if(example_switch.find("LU2") != std::string::npos)
     {
       typedef Dune::UGGrid<2> GridType;
-      GridType grid(400);
+      GridType grid;
 
       typedef double RF;
 
@@ -524,7 +524,7 @@ int main(int argc, char** argv)
     if(example_switch.find("HU3") != std::string::npos)
     {
       typedef Dune::UGGrid<3> GridType;
-      GridType grid(400);
+      GridType grid;
 
       typedef double RF;
 
@@ -586,7 +586,7 @@ int main(int argc, char** argv)
     if(example_switch.find("TU3") != std::string::npos)
     {
       typedef Dune::UGGrid<3> GridType;
-      GridType grid(400);
+      GridType grid;
 
       std::vector<int> boundary_index_map;
       std::vector<int> element_index_map;
