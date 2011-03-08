@@ -201,8 +201,8 @@ void navierstokes
   typedef Dune::PDELab::GridOperator<GFS,GFS,MLOP,MatrixBackend,Real,Real,Real,C,C> GO1;
   GO1 go1(gfs,cg,gfs,cg,mlop);
 
-  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1,C,C> IGOS;
-  IGOS igos(go0,go1,cg,cg);
+  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGOS;
+  IGOS igos(go0,go1);
 #endif
 
   //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
@@ -251,6 +251,8 @@ void navierstokes
     fn.increment();
   }
 
+  timer.reset();
+
   Real time = 0;
   Real final_time = parameters.time();
   Real dt = parameters.tau();
@@ -285,6 +287,8 @@ void navierstokes
       xold = x;
       time += dt;
     }
+
+  std::cout << "=== Total time:" << timer.elapsed() << std::endl;
 
   // Compute norm of final solution
   typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,0> VelocitySubGFS;
