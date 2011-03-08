@@ -216,7 +216,11 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
 
   // For hangingnodes: Interpolate hangingnodes adajcent to dirichlet
   // nodes
+#ifndef USE_NEW_ASSEMBLER  
+  gos.backtransform(x0);
+#else
   gos.localAssembler().backtransform(x0);
+#endif
   
   gos.jacobian(x0,m);
   //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
@@ -251,7 +255,11 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
   x += x0; //affine shift
 
   // Transform solution into standard basis
+#ifndef USE_NEW_ASSEMBLER  
+  gos.backtransform(x);
+#else
   gos.localAssembler().backtransform(x);
+#endif
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
