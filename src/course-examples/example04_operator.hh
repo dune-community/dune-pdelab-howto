@@ -54,7 +54,7 @@ public:
     RF a = 0.0;
     RF f = 0.0;
 
-    r[0] = (a*x[0]-f)*eg.geometry().volume();
+    r[0] += (a*x[0]-f)*eg.geometry().volume();
   }
 
   // skeleton integral depending on test and ansatz functions
