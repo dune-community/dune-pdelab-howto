@@ -57,9 +57,10 @@
 
 #include<dune/pdelab/localoperator/l2.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
-#include<dune/pdelab/instationary/onestep.hh>
+
 
 #include<dune/pdelab/gridoperator/onestep.hh>
+#include<dune/pdelab/instationary/onestep.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
 #include "../utility/gridexamples.hh"
@@ -203,6 +204,7 @@ void navierstokes
 
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGOS;
   IGOS igos(go0,go1);
+  igos.divideMassTermByDeltaT(true);
 #endif
 
   //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
