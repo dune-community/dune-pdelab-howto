@@ -359,8 +359,8 @@ class S_l
                                           S_l<T,PL,PG> >
 {
   const T& t;
-  const PL pl;
-  const PG pg;
+  const PL& pl;
+  const PG& pg;
 
 public:
   typedef Dune::PDELab::GridFunctionTraits<typename PL::Traits::GridViewType,
@@ -395,8 +395,8 @@ class S_g
                                           S_g<T,PL,PG> >
 {
   const T& t;
-  const PL pl;
-  const PG pg;
+  const PL& pl;
+  const PG& pg;
 
 public:
   typedef Dune::PDELab::GridFunctionTraits<typename PL::Traits::GridViewType,
@@ -506,12 +506,12 @@ void test (const GV& gv, int timesteps, double timestep)
   IGOS igos(method,tpgfs,cg,tpgfs,cg,lop,mlop);
 
   // <<<10>>> Make a linear solver 
-  //typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<TPGFS,C> LS;
-  //LS ls(tpgfs,cg,5000,5,1);
+  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<TPGFS,C> LS;
+  LS ls(tpgfs,cg,5000,5,1);
   
   // Comment out above and uncomment to use Parallel AMG
-  typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<TPGFS> LS;
-  LS ls (tpgfs,1, 2000, 1);
+//  typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<TPGFS> LS;
+//  LS ls (tpgfs,1, 2000, 1);
 
   // <<<11>>> make Newton for time-dependent problem
   typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
