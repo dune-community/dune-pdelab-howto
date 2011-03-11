@@ -26,6 +26,7 @@
 #include <dune/pdelab/gridfunctionspace/constraints.hh>
 #include <dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/finiteelementmap/pkfem.hh>
+#include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionfem.hh>
@@ -47,7 +48,7 @@ public:
     typename Traits::PermTensorType I;
     for (std::size_t i=0; i<Traits::dimDomain; i++)
       for (std::size_t j=0; j<Traits::dimDomain; j++)
-        I[i][j] = (i==j) ? 1 : 0;
+        I[i][j] = (i==j) ? 1.0 : 0.0;
     return I;
   }
 
@@ -235,11 +236,12 @@ private:
 
 //! solve the diffusion problem on a given GridView with a given finite element space
 template<class GV, class FEM, class CON>
-void driver (const GV& gv, FEM& fem, std::string filename_base, int& N, double& l2e, double& h1se)
+void driver (const GV& gv, FEM& fem, std::string filename_base, int& N, double& l2e, double& h1se, double& ee)
 {
   // coordinate and result type
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
+  const int dim = GV::dimension;
 
   // make grid function space 
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
@@ -300,6 +302,22 @@ void driver (const GV& gv, FEM& fem, std::string filename_base, int& N, double& 
   Dune::PDELab::integrateGridFunction(graddifferencesquared,h1semierrorsquared,10);
   h1se = sqrt(h1semierrorsquared);
 
+  // compute estimated error
+  typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> P0FEM;
+  P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
+  typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,Dune::PDELab::NoConstraints,VBE> P0GFS; 
+  P0GFS p0gfs(gv,p0fem);
+
+  typedef Dune::PDELab::ConvectionDiffusionFEMResidualEstimator<Problem> ESTLOP;
+  ESTLOP estlop(problem);
+  typedef Dune::PDELab::GridOperatorSpace<GFS,P0GFS,ESTLOP,Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation,MBE> ESTGOS;
+  ESTGOS estgos(gfs,p0gfs,estlop);
+
+  typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,Real>::Type U0;
+  U0 eta(p0gfs,0.0);
+  estgos.residual(u,eta);
+  ee = sqrt(eta.one_norm());
+
   // write vtk file
   // typedef DifferenceAdapter<G,DGF> Difference;
   // Difference difference(g,udgf);
@@ -344,6 +362,7 @@ int main(int argc, char **argv)
       
       std::vector<double> l2(max_level+1,0.0);
       std::vector<double> h1s(max_level+1,0.0);
+      std::vector<double> ee(max_level+1,0.0);
       std::vector<int> N(max_level+1,0);
 
       for (int i=0; i<=max_level; i++)
@@ -357,12 +376,12 @@ int main(int argc, char **argv)
 	  FEM fem(gv);
 	  std::stringstream filename;
 	  filename << "ldomain_" << grid_file << "_l" << i;
-	  driver<GV,FEM,CON>(gv,fem,filename.str(),N[i],l2[i],h1s[i]);
+	  driver<GV,FEM,CON>(gv,fem,filename.str(),N[i],l2[i],h1s[i],ee[i]);
 	  if (i<max_level) grid.globalRefine(1);
 	}
 
     std::cout << "Results on mesh=" << grid_file << std::endl; 
-    std::cout << "N l2 l2rate h1semi h1semirate" << std::endl;
+    std::cout << "N l2 l2rate h1semi h1semirate estimator effectivity" << std::endl;
     for (int i=0; i<=max_level; i++) 
       {
 	double rate1=0.0;
@@ -374,6 +393,8 @@ int main(int argc, char **argv)
 		  << std::setw(12) << std::setprecision(4) << std::scientific << rate1
 		  << std::setw(12) << std::setprecision(4) << std::scientific << h1s[i]
 		  << std::setw(12) << std::setprecision(4) << std::scientific << rate2
+		  << std::setw(12) << std::setprecision(4) << std::scientific << ee[i]
+		  << std::setw(12) << std::setprecision(4) << std::scientific << ee[i]/(h1s[i])
 		  << std::endl;
 	}
     }
