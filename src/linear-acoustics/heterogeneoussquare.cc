@@ -138,7 +138,7 @@ public:
   typedef Dune::PDELab::LinearAcousticsParameterTraits<GV,RF> Traits;
 
   RiemannProblem ()
-    : time(0.0)
+    : time(0.0),  pi(3.141592653589793238462643)
   {
   }
 
@@ -147,8 +147,8 @@ public:
   c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
-    if (xglobal[1]<0.5) return 1.0;
-    if (xglobal[0]>0.5) return 2.0;
+    if ( xglobal[1] < 1-(0.6/0.9)*(xglobal[0]-0.1) ) return 1.0;
+    //    if (xglobal[0]>0.5) return 2.0;
     return 0.5;
   }
 
@@ -179,7 +179,7 @@ public:
     typename Traits::StateType u(0.0);
     if (xglobal[0]>0.45 && xglobal[0]<0.55 && xglobal[1]>0.3 && xglobal[1]<0.4)
       {
-        u[0] = 1;
+        u[0] = sin(pi*(xglobal[0]-0.45)/0.1)*sin(pi*(xglobal[0]-0.45)/0.1)*sin(pi*(xglobal[1]-0.3)/0.1)*sin(pi*(xglobal[1]-0.3)/0.1);
         u[1] = 0;
         u[2] = 0;
       }
@@ -194,6 +194,7 @@ public:
 
 private:
   RF time;
+  RF pi;
 };
 
 
@@ -203,19 +204,17 @@ private:
 
 
 // example using explicit time-stepping
-template<class GV>
-void explicit_scheme (const GV& gv, double Tend, double timestep)
+template<class GV, class FEMDG, int degree>
+void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double timestep, std::string name, int modulo)
 {
+  std::cout << "using degree " << degree << std::endl;
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
   const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
-  const int degree=2;
   const int blocksize = Dune::PB::PkSize<degree,dim>::value;
-  typedef Dune::PDELab::OPBLocalFiniteElementMap<typename GV::Grid::ctype,Real,degree,dim,Dune::GeometryType::cube> FEMDG;
-  FEMDG femdg;
   typedef Dune::PDELab::NoConstraints CON;
   CON con;
   typedef Dune::PDELab::ISTLVectorBackend<blocksize> VBE;
@@ -226,6 +225,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   GFS gfs(gfsdg);
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
+  std::cout << "degrees of freedom: " << gfs.globalSize() << std::endl;
 
   // <<<2b>>> define problem parameters
   typedef RiemannProblem<GV,Real> Param;
@@ -243,10 +243,15 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   typedef Dune::PDELab::DGLinearAcousticsTemporalOperator<Param,FEMDG> TLOP; 
   TLOP tlop(param);
   typedef typename VBE::MatrixBackend MBE;
-  //Dune::PDELab::ExplicitEulerParameter<Real> method;
-  Dune::PDELab::HeunParameter<Real> method;
+  Dune::PDELab::ExplicitEulerParameter<Real> method1;
+  Dune::PDELab::HeunParameter<Real> method2;
+  Dune::PDELab::Shu3Parameter<Real> method3;
+  Dune::PDELab::TimeSteppingParameterInterface<Real> *method;
+  if (degree==0) {method=&method1; std::cout << "setting explicit Euler" << std::endl;}
+  if (degree==1) {method=&method2; std::cout << "setting Heun" << std::endl;}
+  if (degree==2) {method=&method3; std::cout << "setting Shu 3" << std::endl;}
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,TLOP,C,C,MBE> IGOS;
-  IGOS igos(method,gfs,cg,gfs,cg,lop,tlop);
+  IGOS igos(*method,gfs,cg,gfs,cg,lop,tlop);
 
   // <<<6>>> Make a linear solver backend
   //typedef Dune::PDELab::ISTLBackend_SEQ_CG_SSOR LS;
@@ -257,14 +262,12 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   // <<<8>>> time-stepper
   typedef Dune::PDELab::CFLTimeController<Real,IGOS> TC;
   TC tc(0.999,igos);
-  Dune::PDELab::ExplicitOneStepMethod<Real,IGOS,LS,V,V,TC> osm(method,igos,ls,tc);
+  Dune::PDELab::ExplicitOneStepMethod<Real,IGOS,LS,V,V,TC> osm(*method,igos,ls,tc);
   osm.setVerbosityLevel(2);
 
   // <<<10>>> graphics for initial guess
-  std::stringstream fullname;
-  fullname << "riemann" << "_dim" << dim << "_k" << degree;
-  Dune::PDELab::FilenameHelper fn(fullname.str());
-  int counter=0, modulo=20;
+  Dune::PDELab::FilenameHelper fn(name);
+  int counter=0;
   {
     typedef Dune::PDELab::VectorDiscreteGridFunction<GFS,V> DGF;
     DGF xdgf(gfs,xold);
@@ -321,37 +324,113 @@ int main(int argc, char** argv)
 		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
 	  }
 
-	if (argc!=5)
-	  {
-		if(helper.rank()==0)
-		  std::cout << "usage: " << argv[0] << " <end time> <time step> <elements in y> <overlap>" << std::endl;
-		return 1;
-	  }
-
-	double Tend;
-	sscanf(argv[1],"%lg",&Tend);
-
-	double timestep;
-	sscanf(argv[2],"%lg",&timestep);
-
-	int n;
-	sscanf(argv[3],"%d",&n);
-
-	int o;
-	sscanf(argv[4],"%d",&o);
-
-    // parallel overlapping version
-    if (true)
+    if (argc!=7)
       {
+        if(helper.rank()==0)
+          {
+            std::cout << "usage: " << argv[0] << " <end time> <time step> <grid file> <refinement> <degree> <modulo>" << std::endl;
+            std::cout << "         <grid file> = 'yaspgrid' || <a gmsh file>"  << std::endl;
+            std::cout << "         <refinement> = nonnegative integer, initial mesh has h=1/20" << std::endl;
+            std::cout << "         <modulo> = write vtk file every modulo'th time step" << std::endl;
+          }
+        return 1;
+      }
+    
+    double Tend;
+    sscanf(argv[1],"%lg",&Tend);
+    double timestep;
+    sscanf(argv[2],"%lg",&timestep); 
+    std::string grid_file(argv[3]);
+    int max_level; sscanf(argv[4],"%d",&max_level);
+    int p; sscanf(argv[5],"%d",&p);
+    int modulo; sscanf(argv[6],"%d",&modulo);
+
+    // parallel overlapping yaspgrid version
+    if (grid_file=="yaspgrid")
+      {
+        const int dim=2;
         Dune::FieldVector<double,2> L; L[0]=1.0; L[1]=1.0;
-        Dune::FieldVector<int,2> N; N[0]=n; N[1]=n;
+        Dune::FieldVector<int,2> N; N[0]=20; N[1]=20;
         Dune::FieldVector<bool,2> periodic(false);
-        int overlap=o;
+        int overlap=1;
         Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
+        for (int i=0; i<max_level; i++) grid.globalRefine(1);
         typedef Dune::YaspGrid<2>::LeafGridView GV;
         const GV& gv=grid.leafView();
-        explicit_scheme(gv,Tend,timestep);
+        if (p==0)
+          {
+            const int degree=0;
+            typedef Dune::PDELab::OPBLocalFiniteElementMap<GV::Grid::ctype,double,degree,dim,Dune::GeometryType::cube> FEM;
+            FEM fem;
+            std::stringstream fullname;
+            fullname << grid_file << "_l" << max_level << "_k" << p;
+            explicit_scheme<GV,FEM,degree>(gv,fem,Tend,timestep,fullname.str(),modulo);
+          }
+        if (p==1)
+          {
+            const int degree=1;
+            typedef Dune::PDELab::OPBLocalFiniteElementMap<GV::Grid::ctype,double,degree,dim,Dune::GeometryType::cube> FEM;
+            FEM fem;
+            std::stringstream fullname;
+            fullname << grid_file << "_l" << max_level << "_k" << p;
+            explicit_scheme<GV,FEM,degree>(gv,fem,Tend,timestep,fullname.str(),modulo);
+          }
+        if (p==2)
+          {
+            const int degree=2;
+            typedef Dune::PDELab::OPBLocalFiniteElementMap<GV::Grid::ctype,double,degree,dim,Dune::GeometryType::cube> FEM;
+            FEM fem;
+            std::stringstream fullname;
+            fullname << grid_file << "_l" << max_level << "_k" << p;
+            explicit_scheme<GV,FEM,degree>(gv,fem,Tend,timestep,fullname.str(),modulo);
+          }
+        return 0;
       }
+
+#if HAVE_UG
+    if (true)
+      {
+        // make uggrid
+        const int dim=2;
+        typedef Dune::UGGrid<dim> GridType;
+        GridType grid;
+        typedef std::vector<int> GmshIndexMap;
+        GmshIndexMap boundary_index_map;
+        GmshIndexMap element_index_map;
+        Dune::GmshReader<GridType> gmsh_reader;
+        gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
+        for (int i=0; i<max_level; i++) grid.globalRefine(1);
+        typedef GridType::LeafGridView GV;
+        const GV& gv=grid.leafView();
+        if (p==0)
+          {
+            const int degree=0;
+            typedef Dune::PDELab::OPBLocalFiniteElementMap<GV::Grid::ctype,double,degree,dim,Dune::GeometryType::simplex> FEM;
+            FEM fem;
+            std::stringstream fullname;
+            fullname << grid_file << "_l" << max_level << "_k" << p;
+            explicit_scheme<GV,FEM,degree>(gv,fem,Tend,timestep,fullname.str(),modulo);
+          }
+        if (p==1)
+          {
+            const int degree=1;
+            typedef Dune::PDELab::OPBLocalFiniteElementMap<GV::Grid::ctype,double,degree,dim,Dune::GeometryType::simplex> FEM;
+            FEM fem;
+            std::stringstream fullname;
+            fullname << grid_file << "_l" << max_level << "_k" << p;
+            explicit_scheme<GV,FEM,degree>(gv,fem,Tend,timestep,fullname.str(),modulo);
+          }
+        if (p==2)
+          {
+            const int degree=2;
+            typedef Dune::PDELab::OPBLocalFiniteElementMap<GV::Grid::ctype,double,degree,dim,Dune::GeometryType::simplex> FEM;
+            FEM fem;
+            std::stringstream fullname;
+            fullname << grid_file << "_l" << max_level << "_k" << p;
+            explicit_scheme<GV,FEM,degree>(gv,fem,Tend,timestep,fullname.str(),modulo);
+          }
+      }
+#endif
 
   }
   catch (Dune::Exception &e){
