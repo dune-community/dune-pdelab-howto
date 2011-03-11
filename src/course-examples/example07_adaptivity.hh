@@ -34,7 +34,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   GOS gos(gfs,cc,gfs,cc,lop);
 
   // <<<5>>> Select a linear solver backend
-  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
+  typedef Dune::PDELab::ISTLBackend_SEQ_CG_SSOR LS;
   LS ls(5000,true);
   
   // <<<6>>> assemble linear problem
@@ -47,7 +47,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   typedef Dune::PDELab::ResidualErrorEstimation<GFS,U> REE;
   REE ree(gfs);
   typedef Dune::PDELab::EstimationAdaptation<Grid,GFS,U,REE> EA;
-  EA ea(grid,gfs,ree,0.2,0.4,1,maxLevel);
+  EA ea(grid,gfs,ree,0.2,0.0,1,maxLevel);
   typedef Dune::PDELab::GridAdaptor<Grid,GFS,U,EA,Proj> GRA;
   GRA gra(grid,gfs,ea,proj);
 
@@ -58,7 +58,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
     std::string iter;
     s >> iter;
     std::cout << "Iteration: " << iter << "\thighest level in grid: " << grid.maxLevel() << std::endl;
-  std::cout << "constrained dofs=" << cc.size() 
+    std::cout << "constrained dofs=" << cc.size() 
             << " of " << gfs.globalSize() << std::endl;
     
     // <<<8>>> solve linear problem
