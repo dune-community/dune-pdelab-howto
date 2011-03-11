@@ -29,14 +29,14 @@
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/localoperator/twophaseccfv.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/newton/newton.hh>
 #include<dune/pdelab/instationary/onestep.hh>
-
+#include<dune/pdelab/gridoperator/gridoperator.hh>
+#include<dune/pdelab/gridoperator/onestep.hh>
 //==============================================================================
 // Problem definition
 //==============================================================================
@@ -463,7 +463,28 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef TwoPhaseParameter<GV,RF> TP;
   TP tp;
 
-  // <<<4>>> initial value function
+  // <<<4>>> make constraints map and initialize it
+  typedef typename TPGFS::template ConstraintsContainer<RF>::Type C;
+  C cg; cg.clear();
+  Dune::PDELab::constraints(tpgfs,cg,false);
+
+  // <<<5>>> make grid operator space
+  typedef Dune::PDELab::TwoPhaseTwoPointFluxOperator<TP> LOP;
+  LOP lop(tp);
+  typedef Dune::PDELab::TwoPhaseOnePointTemporalOperator<TP> MLOP;
+  MLOP mlop(tp);
+  typedef VBE::MatrixBackend MBE;
+  Dune::PDELab::Alexander2Parameter<RF> method;
+  typedef Dune::PDELab::GridOperator<TPGFS,TPGFS,LOP,MBE,RF,RF,RF,C,C> GO0;
+  GO0 go0(tpgfs,cg,tpgfs,cg,lop);
+   
+  typedef Dune::PDELab::GridOperator<TPGFS,TPGFS,MLOP,MBE,RF,RF,RF,C,C> GO1;
+  GO1 go1(tpgfs,cg,tpgfs,cg,mlop);
+   
+  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGOS;
+  IGOS igos(go0,go1);
+
+  // <<<6>>> initial value function
   typedef P_l<GV,RF> P_lType;
   P_lType p_l_initial(gv,tp);
   typedef P_g<GV,RF> P_gType;
@@ -471,16 +492,16 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef Dune::PDELab::CompositeGridFunction<P_lType,P_gType> PType;
   PType p_initial(p_l_initial,p_g_initial);
 
-  // <<<5>>> make vector for old time step and initialize
-  typedef typename Dune::PDELab::BackendVectorSelector<TPGFS,RF>::Type V;
+  // <<<7>>> make vector for old time step and initialize
+  typedef typename IGOS::Traits::Domain V;
   V pold(tpgfs);
   Dune::PDELab::interpolate(p_initial,tpgfs,pold);
 
-  // <<<6>>> make vector for new time step and initialize
+  // <<<8>>> make vector for new time step and initialize
   V pnew(tpgfs);
   pnew = pold;
 
-  // <<<7>>> make discrete function objects for pnew and saturations
+  // <<<9>>> make discrete function objects for pnew and saturations
   typedef Dune::PDELab::DiscreteGridFunction<P_lSUB,V> P_lDGF;
   P_lDGF p_ldgf(p_lsub,pnew);
   typedef Dune::PDELab::DiscreteGridFunction<P_gSUB,V> P_gDGF;
@@ -490,28 +511,13 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef S_g<TP,P_lDGF,P_gDGF> S_gDGF; 
   S_gDGF s_gdgf(tp,p_ldgf,p_gdgf);
 
-  // <<<8>>> make constraints map and initialize it
-  typedef typename TPGFS::template ConstraintsContainer<RF>::Type C;
-  C cg; cg.clear();
-  Dune::PDELab::constraints(tpgfs,cg,false);
-
-  // <<<9>>> make grid operator space
-  typedef Dune::PDELab::TwoPhaseTwoPointFluxOperator<TP> LOP;
-  LOP lop(tp);
-  typedef Dune::PDELab::TwoPhaseOnePointTemporalOperator<TP> MLOP;
-  MLOP mlop(tp);
-  typedef VBE::MatrixBackend MBE;
-  Dune::PDELab::Alexander2Parameter<RF> method;
-  typedef Dune::PDELab::InstationaryGridOperatorSpace<RF,V,TPGFS,TPGFS,LOP,MLOP,C,C,MBE> IGOS;
-  IGOS igos(method,tpgfs,cg,tpgfs,cg,lop,mlop);
-
   // <<<10>>> Make a linear solver 
   typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<TPGFS,C> LS;
   LS ls(tpgfs,cg,5000,5,1);
   
   // Comment out above and uncomment to use Parallel AMG
-//  typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<TPGFS> LS;
-//  LS ls (tpgfs,1, 2000, 1);
+  //typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<TPGFS> LS;
+  //LS ls (tpgfs,1, 2000, 1);
 
   // <<<11>>> make Newton for time-dependent problem
   typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
