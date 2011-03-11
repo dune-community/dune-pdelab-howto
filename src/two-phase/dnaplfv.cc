@@ -512,12 +512,12 @@ void test (const GV& gv, int timesteps, double timestep)
   S_gDGF s_gdgf(tp,p_ldgf,p_gdgf);
 
   // <<<10>>> Make a linear solver 
-  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<TPGFS,C> LS;
-  LS ls(tpgfs,cg,5000,5,1);
+  // Comment out below and uncomment to use different solver
+  //typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<TPGFS,C> LS;
+  //LS ls(tpgfs,cg,5000,5,1);
   
-  // Comment out above and uncomment to use Parallel AMG
-  //typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<TPGFS> LS;
-  //LS ls (tpgfs,1, 2000, 1);
+  typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<TPGFS> LS;
+  LS ls (tpgfs, 1, 2000, 1);
 
   // <<<11>>> make Newton for time-dependent problem
   typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
