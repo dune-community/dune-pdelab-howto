@@ -44,6 +44,7 @@
 #include<dune/pdelab/localoperator/convectiondiffusiondg.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionfem.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
 
 #include"../utility/gridexamples.hh"
 
@@ -205,7 +206,8 @@ void runDG (const GV& gv, const FEM& fem, PROBLEM& problem,
   typedef typename VBE::MatrixBackend MBE;
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
+
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GOS;
   GOS gos(gfs,cc,gfs,cc,lop);
 
   // make linear solver and solve problem
@@ -283,7 +285,8 @@ void runFEM (const GV& gv, const FEM& fem, PROBLEM& problem, std::string basenam
   typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP;
   LOP lop(problem);
   typedef VBE::MatrixBackend MBE;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
+
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GOS;
   GOS gos(gfs,cc,gfs,cc,lop);
   //size_t nmat;
 
