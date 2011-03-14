@@ -246,10 +246,12 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   Dune::PDELab::ExplicitEulerParameter<Real> method1;
   Dune::PDELab::HeunParameter<Real> method2;
   Dune::PDELab::Shu3Parameter<Real> method3;
+  Dune::PDELab::RK4Parameter<Real> method4;
   Dune::PDELab::TimeSteppingParameterInterface<Real> *method;
   if (degree==0) {method=&method1; std::cout << "setting explicit Euler" << std::endl;}
   if (degree==1) {method=&method2; std::cout << "setting Heun" << std::endl;}
   if (degree==2) {method=&method3; std::cout << "setting Shu 3" << std::endl;}
+  if (degree==3) {method=&method4; std::cout << "setting RK4" << std::endl;}
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,TLOP,C,C,MBE> IGOS;
   IGOS igos(*method,gfs,cg,gfs,cg,lop,tlop);
 
@@ -384,6 +386,15 @@ int main(int argc, char** argv)
             fullname << grid_file << "_l" << max_level << "_k" << p;
             explicit_scheme<GV,FEM,degree>(gv,fem,Tend,timestep,fullname.str(),modulo);
           }
+        if (p==3)
+          {
+            const int degree=3;
+            typedef Dune::PDELab::OPBLocalFiniteElementMap<GV::Grid::ctype,double,degree,dim,Dune::GeometryType::cube> FEM;
+            FEM fem;
+            std::stringstream fullname;
+            fullname << grid_file << "_l" << max_level << "_k" << p;
+            explicit_scheme<GV,FEM,degree>(gv,fem,Tend,timestep,fullname.str(),modulo);
+          }
         return 0;
       }
 
@@ -423,6 +434,15 @@ int main(int argc, char** argv)
         if (p==2)
           {
             const int degree=2;
+            typedef Dune::PDELab::OPBLocalFiniteElementMap<GV::Grid::ctype,double,degree,dim,Dune::GeometryType::simplex> FEM;
+            FEM fem;
+            std::stringstream fullname;
+            fullname << grid_file << "_l" << max_level << "_k" << p;
+            explicit_scheme<GV,FEM,degree>(gv,fem,Tend,timestep,fullname.str(),modulo);
+          }
+        if (p==3)
+          {
+            const int degree=3;
             typedef Dune::PDELab::OPBLocalFiniteElementMap<GV::Grid::ctype,double,degree,dim,Dune::GeometryType::simplex> FEM;
             FEM fem;
             std::stringstream fullname;
