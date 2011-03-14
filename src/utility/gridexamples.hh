@@ -152,12 +152,14 @@ public:
 class AlbertaLDomain : public Dune::AlbertaGrid<2,2>
 {
 public:
+  typedef Dune::AlbertaGrid<2,2> Grid;
   AlbertaLDomain () : Dune::AlbertaGrid<2,2>("grids/ldomain.al") {}
 };
 
 class AlbertaUnitSquare : public Dune::AlbertaGrid<2,2>
 {
 public:
+  typedef Dune::AlbertaGrid<2,2> Grid;
   AlbertaUnitSquare () : Dune::AlbertaGrid<2,2>("grids/2dgrid.al") {}
 };
 
