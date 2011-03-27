@@ -75,7 +75,7 @@ public:
         // compute u at integration point
         RF u=0.0;
         for (size_type i=0; i<lfsu.size(); i++)
-          u += x[i]*phi[i];
+          u += x(lfsu,i)*phi[i];
 
         // evaluate gradient of basis functions on reference element
         std::vector<JacobianType> js(lfsu.size());
@@ -91,7 +91,7 @@ public:
         // compute gradient of u
         Dune::FieldVector<RF,dim> gradu(0.0);
         for (size_type i=0; i<lfsu.size(); i++)
-          gradu.axpy(x[i],gradphi[i]);
+          gradu.axpy(x(lfsu,i),gradphi[i]);
 
         // evaluate parameters; 
         Dune::FieldVector<RF,dim> 
@@ -102,7 +102,7 @@ public:
         // integrate grad u * grad phi_i + a*u*phi_i - f phi_i
         RF factor = it->weight()*eg.geometry().integrationElement(it->position());
         for (size_type i=0; i<lfsu.size(); i++)
-          r[i] += ( gradu*gradphi[i] + a*u*phi[i] - f*phi[i] )*factor;
+          r.accumulate(lfsu,i,(gradu*gradphi[i] + a*u*phi[i] - f*phi[i] )*factor);
       }
   }
 
@@ -150,7 +150,7 @@ public:
         // evaluate u (e.g. flux may depend on u)
         RF u=0.0;
         for (size_type i=0; i<lfsu_s.size(); i++)
-          u += x_s[i]*phi[i];
+          u += x_s(lfsu_s,i)*phi[i];
             
         // evaluate flux boundary condition
         Dune::FieldVector<RF,dim> 
@@ -164,7 +164,7 @@ public:
         // integrate j
         RF factor = it->weight()*ig.geometry().integrationElement(it->position());
         for (size_type i=0; i<lfsv_s.size(); i++)
-          r_s[i] += j*phi[i]*factor;
+          r_s.accumulate(lfsv_s,i,j*phi[i]*factor);
       }
   }
 
