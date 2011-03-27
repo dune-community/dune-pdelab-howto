@@ -56,11 +56,12 @@
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/constraints/constraints.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
+
 
 #include"example02_bctype.hh"
 #include"example02_bcextension.hh"
