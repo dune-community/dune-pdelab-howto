@@ -32,6 +32,7 @@ AC_CONFIG_FILES([
   src/two-phase/Makefile
   src/convection-diffusion/Makefile
   src/linear-acoustics/Makefile
+  src/maxwell/Makefile
   dune-pdelab-howto.pc
 ])
 AC_OUTPUT
