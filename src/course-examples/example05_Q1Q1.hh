@@ -29,8 +29,22 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend) {
   typedef Dune::PDELab::GridFunctionSubSpace<GFS,1> U1SUB;
   U1SUB u1sub(gfs);
 
-  // <<<3>>> Make FE function with initial value
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
+  // <<<3>>> Make instationary grid operator space
+  Real d_0 = 0.00028, d_1 = 0.005, lambda = 1.0, sigma = 1.0, kappa = -0.05, tau = 0.1;
+  typedef Example05LocalOperator LOP; 
+  LOP lop(d_0,d_1,lambda,sigma,kappa,2);                        // spatial part
+  typedef Example05TimeLocalOperator TLOP; 
+  TLOP tlop(tau,2);                                             // temporal part
+  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO0;
+  GO0 go0(gfs,gfs,lop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,CC,CC> GO1;
+  GO1 go1(gfs,gfs,tlop);  
+  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
+  IGO igo(go0,go1);
+
+  // <<<4>>> Make FE function with initial value
+  typedef typename IGO::Traits::Domain U;
   U uold(gfs,0.0);
   typedef U0Initial<GV,Real> U0InitialType;
   U0InitialType u0initial(gv);
@@ -40,23 +54,13 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend) {
   UInitialType uinitial(u0initial,u1initial);
   Dune::PDELab::interpolate(uinitial,gfs,uold);
 
-  // <<<4>>> Make instationary grid operator space
-  Real d_0 = 0.00028, d_1 = 0.005, lambda = 1.0, sigma = 1.0, kappa = -0.05, tau = 0.1;
-  typedef Example05LocalOperator LOP; 
-  LOP lop(d_0,d_1,lambda,sigma,kappa,2);                        // spatial part
-  typedef Example05TimeLocalOperator TLOP; 
-  TLOP tlop(tau,2);                                             // temporal part
-  typedef VBE::MatrixBackend MBE;
-  typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,U,GFS,GFS,LOP,TLOP,CC,CC,MBE> IGOS;
-  IGOS igos(gfs,gfs,lop,tlop);
-
   // <<<5>>> Select a linear solver backend
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
   LS ls(5000,false);
 
   // <<<6>>> Solver for non-linear problem per stage
-  typedef Dune::PDELab::Newton<IGOS,LS,U> PDESOLVER;
-  PDESOLVER pdesolver(igos,ls);
+  typedef Dune::PDELab::Newton<IGO,LS,U> PDESOLVER;
+  PDESOLVER pdesolver(igo,ls);
   pdesolver.setReassembleThreshold(0.0);
   pdesolver.setVerbosityLevel(2);
   pdesolver.setReduction(1e-10);
@@ -66,7 +70,7 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend) {
 
   // <<<7>>> time-stepper
   Dune::PDELab::Alexander2Parameter<Real> method;
-  Dune::PDELab::OneStepMethod<Real,IGOS,PDESOLVER,U,U> osm(method,igos,pdesolver);
+  Dune::PDELab::OneStepMethod<Real,IGO,PDESOLVER,U,U> osm(method,igo,pdesolver);
   osm.setVerbosityLevel(2);
 
   // <<<8>>> graphics for initial guess

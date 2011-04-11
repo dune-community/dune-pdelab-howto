@@ -64,16 +64,18 @@ public:
 
         // compute u_0, u_1 at integration point
         RF u_0=0.0;
-        for (size_type i=0; i<lfsu0.size(); i++) u_0 += x[lfsu0.localIndex(i)]*phi0[i];
+        for (size_type i=0; i<lfsu0.size(); i++)
+	  u_0 += x(lfsu0,i)*phi0[i];
         RF u_1=0.0;
-        for (size_type i=0; i<lfsu1.size(); i++) u_1 += x[lfsu1.localIndex(i)]*phi1[i];
+        for (size_type i=0; i<lfsu1.size(); i++)
+	  u_1 += x(lfsu1,i)*phi1[i];
 
         // integration
         RF factor = it->weight() * eg.geometry().integrationElement(it->position());
         for (size_type i=0; i<lfsu0.size(); i++) 
-          r[lfsu0.localIndex(i)] += u_0*phi0[i]*factor;
+          r.accumulate(lfsu0,i,u_0*phi0[i]*factor);
         for (size_type i=0; i<lfsu1.size(); i++) 
-          r[lfsu1.localIndex(i)] += tau*u_1*phi1[i]*factor;
+          r.accumulate(lfsu1,i,tau*u_1*phi1[i]*factor);
       }
   }
 private:
