@@ -40,10 +40,8 @@
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
-#include<dune/pdelab/localoperator/diffusiondg.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 #include<dune/pdelab/localoperator/convectiondiffusiondg.hh>
-#include<dune/pdelab/localoperator/convectiondiffusionfem.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
@@ -241,7 +239,6 @@ int main(int argc, char** argv)
   if (argc!=6)
     {
       std::cout << "usage: diffusion <problem> <mesh> <dim> <level> <method> <degree>" << std::endl;
-      std::cout << "       <problem> = A | ... | E" << std::endl;
       std::cout << "       <mesh> = cube | simplex" << std::endl;
       std::cout << "       <dim> = 2 | 3" << std::endl;
       std::cout << "       <level> = a nonnegative integer" << std::endl;
