@@ -63,12 +63,12 @@ public:
         // evaluate u
         RF u=0.0;
         for (size_type i=0; i<lfsu.size(); i++)
-          u += x[i]*phi[i];
+          u += x(lfsu,i)*phi[i];
 
         // u*phi_i
         RF factor = it->weight() * eg.geometry().integrationElement(it->position());
         for (size_type i=0; i<lfsu.size(); i++)
-          r[i] += u*phi[i]*factor;
+          r.accumulate(lfsu,i,u*phi[i]*factor);
       }
   }
 private:
