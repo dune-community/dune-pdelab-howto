@@ -19,27 +19,27 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   CC cc;
   Dune::PDELab::constraints( bctype, gfs, cc );               // assemble constraints
 
-  // <<<3>>> Make FE function extending Dirichlet boundary conditions
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
+  // <<<3>>> Make grid operator space
+  typedef Example02LocalOperator<BCTypeParam> LOP;       // operator including boundary
+  LOP lop(bctype);
+  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
+  GO go(gfs,cc,gfs,cc,lop);
+
+  // <<<4>>> Make FE function extending Dirichlet boundary conditions
+  typedef typename GO::Traits::Domain U;
   U u(gfs,0.0);
   typedef BCExtension<GV,Real> G;                        // boundary value + extension
   G g(gv);
   Dune::PDELab::interpolate(g,gfs,u);                    // interpolate coefficient vector
-
-  // <<<4>>> Make grid operator space
-  typedef Example02LocalOperator<BCTypeParam> LOP;       // operator including boundary
-  LOP lop(bctype);
-  typedef VBE::MatrixBackend MBE;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
-  GOS gos(gfs,cc,gfs,cc,lop);
 
   // <<<5>>> Select a linear solver backend
   typedef Dune::PDELab::ISTLBackend_SEQ_CG_SSOR LS;
   LS ls(5000,true);
   
   // <<<6>>> assemble linear problem
-  typedef Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,U> SLP;
-  SLP slp(gos,u,ls,1e-10);
+  typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
+  SLP slp(go,u,ls,1e-10);
 
   // <<<7>>> create GridAdaptor
   typedef Dune::PDELab::L2Projection<GFS,U> Proj;
