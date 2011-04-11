@@ -19,17 +19,17 @@ void example04 (const GV& gv)
   LOP lop;
   typedef VBE::MatrixBackend MBE;
   typedef Dune::PDELab::EmptyTransformation CC;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
-  GOS gos(gfs,gfs,lop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
+  GO go(gfs,gfs,lop);
 
   // <<<4>>> Select a linear solver backend
   typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<GFS> LS;
   LS ls(2,100,2);
 
   // <<<5>>> assemble and solve linear problem
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
+  typedef typename GO::Traits::Domain U;
   U u(gfs,0.0);
-  Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,U> slp(gos,u,ls,1e-10);
+  Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> slp(go,u,ls,1e-10);
   slp.apply();
 
   // <<<6>>> graphical output

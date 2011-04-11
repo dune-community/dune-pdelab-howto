@@ -54,11 +54,11 @@ public:
     RF a = 0.0;
     RF f = 0.0;
 
-    r[0] += (a*x[0]-f)*eg.geometry().volume();
+    r.accumulate(lfsv,0,(a*x(lfsu,0)-f)*eg.geometry().volume());
   }
 
   // skeleton integral depending on test and ansatz functions
-  // each face is only visited ONCE!
+  // each face is only visited ONCE! 
   template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
   void alpha_skeleton (const IG& ig, 
                        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
@@ -82,8 +82,8 @@ public:
     RF face_volume = ig.geometry().volume();
  
     // diffusive flux for both sides
-    r_s[0] -= (x_n[0]-x_s[0])*face_volume/distance;
-    r_n[0] += (x_n[0]-x_s[0])*face_volume/distance;
+    r_s.accumulate(lfsu_s,0,-(x_n(lfsu_n,0)-x_s(lfsu_s,0))*face_volume/distance);
+    r_n.accumulate(lfsu_n,0,(x_n(lfsu_n,0)-x_s(lfsu_s,0))*face_volume/distance);
   }
 
   // skeleton integral depending on test and ansatz functions
@@ -115,7 +115,7 @@ public:
     if (b==0) // Neumann boundary
       {
         RF j; if (face_center[1]<0.5) j = 1.0; else j = -1.0;
-        r_s[0] += j*face_volume;
+        r_s.accumulate(lfsu_s,0,j*face_volume);
         return;
       }
 
@@ -129,7 +129,7 @@ public:
         Dune::FieldVector<DF,dim> inside_global = ig.inside()->geometry().center();
         inside_global -= face_center;
         RF distance = inside_global.two_norm();
-        r_s[0] -= (g-x_s[0])*face_volume/distance;
+        r_s.accumulate(lfsu_s,0,-(g-x_s(lfsu_s,0))*face_volume/distance);
         return;
       }
   }
