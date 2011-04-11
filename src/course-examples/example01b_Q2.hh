@@ -18,17 +18,17 @@ void example01b_Q2 (const GV& gv)
   typedef Example01bLocalOperator LOP;                                     // <= NEW
   LOP lop(4);
   typedef VBE::MatrixBackend MBE;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
-  GOS gos(gfs,gfs,lop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
+  GO go(gfs,gfs,lop);
 
   // <<<4>>> Select a linear solver backend
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
   LS ls(5000,true);
 
   // <<<5>>> solve nonlinear problem
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
+  typedef typename GO::Traits::Domain U;
   U u(gfs,2.0); // initial value
-  Dune::PDELab::Newton<GOS,LS,U> newton(gos,u,ls);                         // <= NEW
+  Dune::PDELab::Newton<GO,LS,U> newton(go,u,ls);                         // <= NEW
   newton.setReassembleThreshold(0.0);
   newton.setVerbosityLevel(2);
   newton.setReduction(1e-10);
