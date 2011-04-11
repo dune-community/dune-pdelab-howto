@@ -20,34 +20,38 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   CC cc;
   Dune::PDELab::constraints( bctype, gfs, cc );
 
+  // <<<3>>> Make instationary grid operator space
+  typedef Example03LocalOperator<BCTypeParam> LOP; 
+  LOP lop(bctype,4);                                           // local operator r
+  typedef Example03TimeLocalOperator TLOP; 
+  TLOP tlop(4);                                                 // local operator m
+  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO0;
+  GO0 go0(gfs,cc,gfs,cc,lop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,CC,CC> GO1;
+  GO1 go1(gfs,cc,gfs,cc,tlop);  
+  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
+  IGO igo(go0,go1);                                             // new grid operator space
+
   // <<<3>>> Make FE function with initial value / Dirichlet b.c.
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
+  typedef typename IGO::Traits::Domain U;
   U uold(gfs,0.0);                                              // solution at t^n
   typedef BCExtension<GV,Real> G;                               // defines boundary condition,
   G g(gv);                                                      // extension and initial cond.
   g.setTime(time);                                              // b.c. depends on time now
   Dune::PDELab::interpolate(g,gfs,uold);
 
-  // <<<4>>> Make instationary grid operator space
-  typedef Example03LocalOperator<BCTypeParam> LOP; 
-  LOP lop(bctype,4);                                           // local operator r
-  typedef Example03TimeLocalOperator TLOP; 
-  TLOP tlop(4);                                                 // local operator m
-  typedef VBE::MatrixBackend MBE;
-  typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,U,GFS,GFS,LOP,TLOP,CC,CC,MBE> IGOS;
-  IGOS igos(gfs,cc,gfs,cc,lop,tlop);                            // new grid operator space
-
   // <<<5>>> Select a linear solver backend
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
   LS ls(5000,false);
 
   // <<<6>>> Solver for linear problem per stage
-  typedef Dune::PDELab::StationaryLinearProblemSolver<IGOS,LS,U> PDESOLVER;
-  PDESOLVER pdesolver(igos,ls,1e-10);
+  typedef Dune::PDELab::StationaryLinearProblemSolver<IGO,LS,U> PDESOLVER;
+  PDESOLVER pdesolver(igo,ls,1e-10);
 
   // <<<7>>> time-stepper
   Dune::PDELab::Alexander2Parameter<Real> method;               // defines coefficients
-  Dune::PDELab::OneStepMethod<Real,IGOS,PDESOLVER,U,U> osm(method,igos,pdesolver);
+  Dune::PDELab::OneStepMethod<Real,IGO,PDESOLVER,U,U> osm(method,igo,pdesolver);
   osm.setVerbosityLevel(2);                                     // time stepping scheme
 
   // <<<8>>> graphics for initial guess
