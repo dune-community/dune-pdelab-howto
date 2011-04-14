@@ -36,7 +36,6 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
@@ -47,7 +46,7 @@
 
 #include"../utility/gridexamples.hh"
 
-#define PROBLEM_D
+#define PROBLEM_A
 
 #ifdef PROBLEM_A
 #include "parameterA.hh"
@@ -148,12 +147,6 @@ void runDG(
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
-  // make a vector of degree of freedom vectors and initialize it with Dirichlet extension
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
-  U u(gfs,0.0);
-  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
-  G g(gv,problem);
-
   // make local operator
   Dune::PDELab::ConvectionDiffusionDGMethod::Type m;
   if (method=="SIPG") m = Dune::PDELab::ConvectionDiffusionDGMethod::SIPG;
@@ -167,9 +160,14 @@ void runDG(
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
 
-  //typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GOS;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
-  GOS gos(gfs,cc,gfs,cc,lop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
+  GO go(gfs,cc,gfs,cc,lop);
+
+  // make a vector of degree of freedom vectors and initialize it with Dirichlet extension
+  typedef typename GO::Traits::Domain U;
+  U u(gfs,0.0);
+  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
+  G g(gv,problem);
 
   // make linear solver and solve problem
   int ls_verbosity = 2;
@@ -183,8 +181,8 @@ void runDG(
 
       typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
       LS ls(10000,ls_verbosity);
-      typedef Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,U> SLP;
-      SLP slp(gos,u,ls,1e-12);
+      typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
+      SLP slp(go,u,ls,1e-12);
       slp.apply();
     }
   else
@@ -193,8 +191,8 @@ void runDG(
       //LS ls(2,10000,ls_verbosity);
       typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LS;
       LS ls(10000,ls_verbosity);
-      typedef Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,U> SLP;
-      SLP slp(gos,u,ls,1e-12);
+      typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
+      SLP slp(go,u,ls,1e-12);
       slp.apply();
     }
 
@@ -238,7 +236,7 @@ int main(int argc, char** argv)
   // read command line arguments
   if (argc!=6)
     {
-      std::cout << "usage: diffusion <problem> <mesh> <dim> <level> <method> <degree>" << std::endl;
+      std::cout << "usage: diffusion <mesh> <dim> <level> <method> <degree>" << std::endl;
       std::cout << "       <mesh> = cube | simplex" << std::endl;
       std::cout << "       <dim> = 2 | 3" << std::endl;
       std::cout << "       <level> = a nonnegative integer" << std::endl;
