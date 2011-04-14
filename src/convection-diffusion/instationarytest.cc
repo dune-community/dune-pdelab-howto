@@ -56,8 +56,10 @@
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
-#include<dune/pdelab/gridoperatorspace/instationarygridoperatorspace.hh>
+//#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+//#include<dune/pdelab/gridoperatorspace/instationarygridoperatorspace.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
+#include<dune/pdelab/gridoperator/onestep.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
@@ -241,29 +243,28 @@ void sequential (const GV& gv, int t_level)
   typedef VBE::MatrixBackend MBE;
   //Dune::PDELab::FractionalStepParameter<Real> method;
   Dune::PDELab::Alexander3Parameter<Real> method;
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
-  typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,MLOP,C,C,MBE> IGOS;
-  IGOS igos(method,gfs,cg,gfs,cg,lop,mlop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
+  GO0 go0(gfs,cg,gfs,cg,lop);   
+  typedef Dune::PDELab::GridOperator<GFS,GFS,MLOP,MBE,Real,Real,Real,C,C> GO1;
+  GO1 go1(gfs,cg,gfs,cg,mlop);
+  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
+  IGO igo(go0,go1);
+  typedef typename IGO::Traits::Domain V;
 
   // <<<6>>> Make a linear solver 
-// #if HAVE_SUPERLU
-//   typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
-//   LS ls(false);
-// #else
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
-  LS ls(5000,false);
-  //#endif
+  LS ls(5000,0);
 
   // <<<7>>> make Newton for time-dependent problem
-  typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
-  PDESOLVER tnewton(igos,ls);
+  typedef Dune::PDELab::Newton<IGO,LS,V> PDESOLVER;
+  PDESOLVER tnewton(igo,ls);
   tnewton.setReassembleThreshold(0.0);
   tnewton.setVerbosityLevel(0);
   tnewton.setReduction(0.9);
   tnewton.setMinLinearReduction(1e-9);
 
   // <<<8>>> time-stepper
-  Dune::PDELab::OneStepMethod<Real,IGOS,PDESOLVER,V,V> osm(method,igos,tnewton);
+  Dune::PDELab::OneStepMethod<Real,IGO,PDESOLVER,V,V> osm(method,igo,tnewton);
   osm.setVerbosityLevel(2);
 
   // <<<9>>> initial value and initial value for first time step with b.c. set
