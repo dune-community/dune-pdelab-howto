@@ -35,11 +35,9 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
-#include<dune/pdelab/localoperator/diffusiondg.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 #include<dune/pdelab/localoperator/convectiondiffusiondg.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionfem.hh>
@@ -193,12 +191,6 @@ void runDG ( const GV& gv,
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
-  // make a vector of degree of freedom vectors and initialize it with Dirichlet extension
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
-  U u(gfs,0.0);
-  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
-  G g(gv,problem);
-
   // make local operator
   Dune::PDELab::ConvectionDiffusionDGMethod::Type m;
   if (method=="SIPG") m = Dune::PDELab::ConvectionDiffusionDGMethod::SIPG;
@@ -211,25 +203,30 @@ void runDG ( const GV& gv,
   typedef typename VBE::MatrixBackend MBE;
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
-  //typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GOS;
-  GOS gos(gfs,cc,gfs,cc,lop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
+  GO go(gfs,cc,gfs,cc,lop);
+
+  // make a vector of degree of freedom vectors and initialize it with Dirichlet extension
+  typedef typename GO::Traits::Domain U;
+  U u(gfs,0.0);
+  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
+  G g(gv,problem);
 
   // make linear solver and solve problem
   if (method=="SIPG")
     {
       typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
       LS ls(10000,1);
-      typedef Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,U> SLP;
-      SLP slp(gos,u,ls,1e-12);
+      typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
+      SLP slp(go,u,ls,1e-12);
       slp.apply();
     }
   else
     {
       typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LS;
       LS ls(10000,1);
-      typedef Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,U> SLP;
-      SLP slp(gos,u,ls,1e-12);
+      typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
+      SLP slp(go,u,ls,1e-12);
       slp.apply();
     }
 
@@ -272,34 +269,35 @@ void runFEM (const GV& gv, const FEM& fem, PROBLEM& problem, std::string basenam
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
-  // make a vector of degree of freedom vectors and initialize it with Dirichlet extension
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
-  U u(gfs,0.0);
-  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
-  G g(gv,problem);
-  Dune::PDELab::interpolate(g,gfs,u);
-
-  // make constraints container and initialize it
+  // make constraints container
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
   Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<PROBLEM> bctype(gv,problem);
-  Dune::PDELab::constraints(bctype,gfs,cc);
-  Dune::PDELab::set_nonconstrained_dofs(cc,0.0,u);
 
   // make local operator
   typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP;
   LOP lop(problem);
   typedef VBE::MatrixBackend MBE;
 
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GOS;
-  GOS gos(gfs,cc,gfs,cc,lop);
-  //size_t nmat;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
+  GO go(gfs,cc,gfs,cc,lop);
+
+  // make a vector of degree of freedom vectors and initialize it with Dirichlet extension
+  typedef typename GO::Traits::Domain U;
+  U u(gfs,0.0);
+  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
+  G g(gv,problem);
+  Dune::PDELab::interpolate(g,gfs,u);
+
+  //initialize constraints container
+  Dune::PDELab::constraints(bctype,gfs,cc);
+  Dune::PDELab::set_nonconstrained_dofs(cc,0.0,u);
 
   // make linear solver and solve problem
   typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
   LS ls(10000,1);
-  typedef Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,U> SLP;
-  SLP slp(gos,u,ls,1e-12);
+  typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
+  SLP slp(go,u,ls,1e-12);
   slp.apply();
 
   // compute L2 error
