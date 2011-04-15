@@ -23,7 +23,7 @@
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
+#include <dune/pdelab/constraints/constraints.hh>
 #include <dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/p1fem.hh>
@@ -411,8 +411,8 @@ int main(int argc, char **argv)
   // start try/catch block to get error messages from dune
   try {
 
-    // UGGrid/Pk2d version
-#if HAVE_UG
+    // Alberta/Pk2d version
+#if HAVE_ALBERTA
     if (true)
     {
       // read command line arguments
