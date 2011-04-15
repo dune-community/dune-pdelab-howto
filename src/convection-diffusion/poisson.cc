@@ -23,11 +23,9 @@
 #include<dune/istl/io.hh>
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
-//#include<dune/pdelab/finiteelementmap/p12dfem.hh>
 #include<dune/pdelab/finiteelementmap/p1fem.hh>
 #include<dune/pdelab/finiteelementmap/pk2dfem.hh>
 #include<dune/pdelab/finiteelementmap/pk3dfem.hh>
-//#include<dune/pdelab/finiteelementmap/q12dfem.hh>
 #include<dune/pdelab/finiteelementmap/q22dfem.hh>
 #include<dune/pdelab/finiteelementmap/q1fem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
@@ -38,7 +36,6 @@
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
@@ -172,7 +169,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
   typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
 
-  // make function space
+  // make grid function space
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS; 
   GFS gfs(gv,fem,con);
@@ -181,20 +178,10 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
   C cg;
   cg.clear();
-
   BCTypeParam bctype; // boundary condition type
   Dune::PDELab::constraints(bctype,gfs,cg);
 
-  // make coefficent Vector and initialize it from a function
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,R>::Type V;
-  V x0(gfs);
-  x0 = 0.0;
-  typedef G<GV,R> GType;
-  GType g(gv);
-  Dune::PDELab::interpolate(g,gfs,x0);
-  Dune::PDELab::set_shifted_dofs(cg,0.0,x0);
-
-  // make grid function operator
+  // make grid operator
   typedef F<GV,R> FType;
   FType f(gv);
   typedef J<GV,R> JType;
@@ -202,34 +189,35 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
   typedef Dune::PDELab::Poisson<FType,BCTypeParam,JType,q> LOP; 
   LOP lop(f,bctype,j);
 
-#ifndef USE_NEW_ASSEMBLER
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,VBE::MatrixBackend> GOS;
-#else
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,VBE::MatrixBackend,R,R,R,C,C> GOS;
-#endif
-  GOS gos(gfs,cg,gfs,cg,lop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,VBE::MatrixBackend,R,R,R,C,C> GO;
+  GO go(gfs,cg,gfs,cg,lop);
+
+  // make coefficent Vector and initialize it from a function
+  typedef typename GO::Traits::Domain V;
+  V x0(gfs);
+  x0 = 0.0;
+  typedef G<GV,R> GType;
+  GType g(gv);
+  Dune::PDELab::interpolate(g,gfs,x0);
+  Dune::PDELab::set_shifted_dofs(cg,0.0,x0);
 
   // represent operator as a matrix
-  typedef typename GOS::template MatrixContainer<R>::Type M;
-  M m(gos);
+  typedef typename GO::template MatrixContainer<R>::Type M;
+  M m(go);
   m = 0.0;
 
   // For hangingnodes: Interpolate hangingnodes adajcent to dirichlet
   // nodes
-#ifndef USE_NEW_ASSEMBLER  
-  gos.backtransform(x0);
-#else
-  gos.localAssembler().backtransform(x0);
-#endif
+  go.localAssembler().backtransform(x0);
   
-  gos.jacobian(x0,m);
+  go.jacobian(x0,m);
   //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // evaluate residual w.r.t initial guess
   V r(gfs);
   r = 0.0;
 
-  gos.residual(x0,r);
+  go.residual(x0,r);
 
   // make ISTL solver
   Dune::MatrixAdapter<M,V,V> opa(m);
@@ -255,11 +243,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
   x += x0; //affine shift
 
   // Transform solution into standard basis
-#ifndef USE_NEW_ASSEMBLER  
-  gos.backtransform(x);
-#else
-  gos.localAssembler().backtransform(x);
-#endif
+  go.localAssembler().backtransform(x);
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
