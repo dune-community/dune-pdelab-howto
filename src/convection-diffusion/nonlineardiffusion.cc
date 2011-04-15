@@ -36,13 +36,12 @@
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
-#include<dune/pdelab/gridoperatorspace/instationarygridoperatorspace.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
+#include<dune/pdelab/gridoperator/onestep.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
-#include<dune/pdelab/localoperator/diffusion.hh>
 #include<dune/pdelab/localoperator/convectiondiffusion.hh>
 #include<dune/pdelab/newton/newton.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
@@ -194,8 +193,15 @@ void sequential (const GV& gv)
   std::cout << "constrained dofs=" << cg.size() 
             << " of " << gfs.globalSize() << std::endl;
 
-  // <<<4>>> Compute affine shift
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
+  // <<<4>>> Make grid operator
+  typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
+  LOP lop(param,8);
+  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
+  GO go(gfs,cg,gfs,cg,lop);
+
+  // <<<5>>> Compute affine shift
+  typedef typename GO::Traits::Domain V;
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
@@ -207,13 +213,6 @@ void sequential (const GV& gv)
     vtkwriter.write("nonlineardiffusion_initial_guess_Q2",Dune::VTKOptions::ascii);
   }
 
-  // <<<5>>> Make grid operator space
-  typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
-  LOP lop(param,8);
-  typedef VBE::MatrixBackend MBE;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
-  GOS gos(gfs,cg,gfs,cg,lop);
-
   // <<<6>>> Make a linear solver 
 #if HAVE_SUPERLU
   typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
@@ -224,13 +223,13 @@ void sequential (const GV& gv)
 #endif
 
   // <<<7>>> solve nonlinear problem
-  Dune::PDELab::Newton<GOS,LS,V> newton(gos,x,ls);
+  Dune::PDELab::Newton<GO,LS,V> newton(go,x,ls);
   newton.setReassembleThreshold(0.0);
   newton.setVerbosityLevel(2);
   newton.apply();
 
   // <<<7b>>> example for solving a linear problem
-  //Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,V> lp(gos,x,ls,1E-10);
+  //Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> lp(go,x,ls,1E-10);
   //lp.apply();
 
   // <<<8>>> graphical output
@@ -278,25 +277,25 @@ void parallel_nonoverlapping_Q1 (const GV& gv)
   if (rank==0) std::cout << "/" << gv.comm().rank() << "/ " << "constrained dofs=" << cg.size() 
                          << " of " << gfs.globalSize() << std::endl;
 
-  // <<<4>>> Compute affine shift
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
-  V x(gfs,0.0);
-  Dune::PDELab::interpolate(g,gfs,x);
-  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
-
-  // <<<5>>> Make grid operator space
+  // <<<4>>> Make grid operator
   typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
   LOP lop(param,2);
   typedef VBE::MatrixBackend MBE;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE,true> GOS;
-  GOS gos(gfs,cg,gfs,cg,lop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C,true> GO;
+  GO go(gfs,cg,gfs,cg,lop);
+
+  // <<<5>>> Compute affine shift
+  typedef typename GO::Traits::Domain V;
+  V x(gfs,0.0);
+  Dune::PDELab::interpolate(g,gfs,x);
+  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
   // <<<6>>> Make a linear solver 
   typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GFS> LS;
   LS ls(gfs,5000,1);
 
   // <<<7>>> solve nonlinear problem
-  Dune::PDELab::Newton<GOS,LS,V> newton(gos,x,ls);
+  Dune::PDELab::Newton<GO,LS,V> newton(go,x,ls);
   newton.setReassembleThreshold(0.0);
   newton.setVerbosityLevel(2);
   newton.apply();
@@ -342,30 +341,30 @@ void parallel_overlapping_Q1 (const GV& gv)
   if (rank==0) std::cout << "/" << gv.comm().rank() << "/ " << "constrained dofs=" << cg.size() 
                          << " of " << gfs.globalSize() << std::endl;
 
+  // <<<4>>> Make grid operator
+  typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
+  LOP lop(param,2);
+  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
+  GO go(gfs,cg,gfs,cg,lop);
+
   // <<<4>>> Compute affine shift
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
+  typedef typename GO::Traits::Domain V;
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
-  // <<<5>>> Make grid operator space
-  typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
-  LOP lop(param,2);
-  typedef VBE::MatrixBackend MBE;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
-  GOS gos(gfs,cg,gfs,cg,lop);
-
   // <<<6>>> Make a linear solver 
 #if HAVE_SUPERLU
   typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SuperLU<GFS,C> LS;
-  LS ls(gfs,cg,5000,2);
+  LS ls(gfs,cg,5000,1);
 #else
   typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,C> LS;
-  LS ls(gfs,cg,5000,10,2);
+  LS ls(gfs,cg,5000,10,1);
 #endif
 
   // <<<7>>> solve nonlinear problem
-  Dune::PDELab::Newton<GOS,LS,V> newton(gos,x,ls);
+  Dune::PDELab::Newton<GO,LS,V> newton(go,x,ls);
   newton.setReassembleThreshold(0.0);
   newton.setVerbosityLevel(2);
   newton.apply();
