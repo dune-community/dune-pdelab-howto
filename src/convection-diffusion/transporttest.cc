@@ -171,7 +171,6 @@ void stationary (const GV& gv)
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem(Dune::GeometryType::cube); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  CON con;
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
@@ -248,7 +247,6 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem(Dune::GeometryType::cube); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  CON con;
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
@@ -352,7 +350,6 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem(Dune::GeometryType::cube); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  CON con;
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
