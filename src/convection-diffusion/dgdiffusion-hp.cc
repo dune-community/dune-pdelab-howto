@@ -37,6 +37,7 @@
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/diffusiondg.hh>
+#include<dune/pdelab/stationary/linearproblem.hh>
 
 #include"../utility/gridexamples.hh"
 
@@ -85,6 +86,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     
     V x0(gfs);
     x0 = 0.0;
+    V v(gfs,0.0);
     typedef K_C<GV,RF> KType;
     KType k(gv);
     typedef F_C<GV,RF> FType;
@@ -107,74 +109,25 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
        VBE::MatrixBackend> GOS;
     GOS gos(gfs,gfs,la);
 
-    // represent operator as a matrix
-    typedef typename GOS::template MatrixContainer<RF>::Type M;
-    watch.reset();
-    M m(gos);
-    if (verbose)
-    {
-        std::cout << "=== matrix setup " <<  watch.elapsed() << " s" << std::endl;
-    }
-    m = 0.0;
-    watch.reset();
-    gos.jacobian(x0,m);
-    if (verbose)
-    {
-        std::cout << "=== jacobian assembly " <<  watch.elapsed() << " s" << std::endl;
-    }
-    //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
-
-    // evaluate residual w.r.t initial guess
-    V r(gfs);
-    r = 0.0;
-    watch.reset();
-    x0 = 0.0;
-    gos.residual(x0,r);
-    //std::cout << "Residuenvektor" << std::endl << r << std::endl;
-    if (verbose)
-    {
-        std::cout << "=== residual evaluation " <<  watch.elapsed() << " s" << std::endl;
-    }
-
-    #ifdef USE_SUPER_LU // use lu decomposition as solver
-    #if HAVE_SUPERLU
-    // make ISTL solver
-    Dune::MatrixAdapter<M,V,V> opa(m);
-    typedef typename M::BaseT ISTLM;
-    Dune::SuperLU<ISTLM> solver(m, verbose?1:0);
-    Dune::InverseOperatorResult stat;
-    #else
-    #error No superLU support, please install and configure it.
-    #endif
-    #else // Use iterative solver
-    // make ISTL solver
-    Dune::MatrixAdapter<M,V,V> opa(m);
-    Dune::SeqILU0<M,V,V> ilu0(m,1.0);
-    typedef typename M::BaseT ISTLM;
-    Dune::BiCGSTABSolver<V> solver(opa,ilu0,1E-10,20000,1);//verbose?1:0);
-    Dune::InverseOperatorResult stat;
-    #endif
-
-    // solve the jacobian system
-    r *= -1.0; // need -residual
-    V x(gfs,0.0);
-    solver.apply(x,r,stat);
-    x += x0;
-    //std::cout << x << std::endl;
+    typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
+    LS ls(1);
+    typedef Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,V> SLP;
+    SLP slp(gos,v,ls,1e-12);
+    slp.apply();
 
     // make discrete function object
     typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-    DGF dgf(gfs,x);
+    DGF dgf(gfs,v);
 
-    #ifdef MAKE_VTK_OUTPUT
+#ifdef MAKE_VTK_OUTPUT
     // output grid function with SubsamplingVTKWriter
     k_C<GV,RF> k2(gv);
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,5);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter< k_C<GV,RF> >(k2,"k"));
     vtkwriter.addCellData(new Dune::PDELab::VTKFiniteElementMapAdapter<Grid,FEM>(fem,"fem order"));
-    vtkwriter.write(filename,Dune::VTKOptions::ascii);
-    #endif
+    vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
+#endif
 }
 
 int main(int argc, char** argv)
