@@ -27,6 +27,7 @@
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/constraints/constraintsparameters.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
@@ -111,18 +112,17 @@ void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   Dune::PDELab::interpolate(u,mgfs,x);
   Dune::PDELab::set_nonconstrained_dofs(t,0.0,x);  // clear interior
 
-  // make grid operator space
+  // make grid operator
   typedef Dune::PDELab::DiffusionMixed<KType,A0Type,FType,BCType,GType> LOP; 
   LOP lop(k,a0,f,bctype,g,4,2);
-  typedef Dune::PDELab::GridOperatorSpace<MGFS,MGFS,
-    LOP,T,T,VBE::MatrixBackend> GOS;
-  GOS gos(mgfs,t,mgfs,t,lop);
+  typedef Dune::PDELab::GridOperator<MGFS,MGFS,LOP,VBE::MatrixBackend,R,R,R,T,T> GO;
+  GO go(mgfs,t,mgfs,t,lop);
 
   // represent operator as a matrix
-  typedef typename GOS::template MatrixContainer<R>::Type M;
-  M m(gos);
+  typedef typename GO::template MatrixContainer<R>::Type M;
+  M m(go);
   m = 0.0;
-  gos.jacobian(x,m);
+  go.jacobian(x,m);
   //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // set up solver
@@ -132,7 +132,7 @@ void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   Dune::InverseOperatorResult stat;
 
   X r(mgfs,0.0);
-  gos.residual(x,r);
+  go.residual(x,r);
   X z(mgfs,0.0);
   solver.apply(z,r,stat);
   x -= z;
