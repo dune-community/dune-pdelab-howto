@@ -31,11 +31,12 @@
 #include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/localoperator/laplacedirichletccfv.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
+#include<dune/pdelab/stationary/linearproblem.hh>
 
 #include"../utility/gridexamples.hh"
 
@@ -102,73 +103,28 @@ void test (const GV& gv, std::string filename )
   GFS gfs(gv,fem);
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
-  // make coefficent Vector and initialize it from a function
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
-  V x0(gfs);
-  x0 = 0.0;
   typedef G<GV,RF> GType;
   GType g(gv);
-  Dune::PDELab::interpolate(g,gfs,x0);
 
   // make grid function operator
   Dune::PDELab::LaplaceDirichletCCFV<GType> la(g);
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,Dune::PDELab::LaplaceDirichletCCFV<GType>,Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation,VBE::MatrixBackend > GOS;
-  GOS gos(gfs,gfs,la);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,Dune::PDELab::LaplaceDirichletCCFV<GType>,VBE::MatrixBackend,RF,RF,RF,Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation > GO;
+  GO go(gfs,gfs,la);
 
-  // represent operator as a matrix
-  typedef typename GOS::template MatrixContainer<RF>::Type M;
-  watch.reset();
-  M m(gos);
-  std::cout << "=== matrix setup " <<  watch.elapsed() << " s" << std::endl;
-  m = 0.0;
-  watch.reset();
-  gos.jacobian(x0,m);
-  std::cout << "=== jacobian assembly " <<  watch.elapsed() << " s" << std::endl;
- //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
+  // make coefficent Vector and initialize it from a function
+  typedef typename GO::Traits::Domain V;
+  V x0(gfs);
+  x0 = 0.0;
+  Dune::PDELab::interpolate(g,gfs,x0);
 
-  // evaluate residual w.r.t initial guess
-  V r(gfs);
-  r = 0.0;
-  watch.reset();
-  gos.residual(x0,r);
-  std::cout << "=== residual evaluation " <<  watch.elapsed() << " s" << std::endl;
 
-  // make ISTL solver
-  Dune::MatrixAdapter<M,V,V> opa(m);
-  typedef Dune::PDELab::OnTheFlyOperator<V,V,GOS> ISTLOnTheFlyOperator;
-  ISTLOnTheFlyOperator opb(gos);
-  Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
-  //  Dune::SeqILU0<M,V,V> ilu0(m,1.0);
-  Dune::Richardson<V,V> richardson(1.0);
-
-  typedef typename M::BaseT ISTLM;
-  typedef typename V::BaseT ISTLV;
-  Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opc(m);
-  typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<ISTLM,Dune::Amg::FirstDiagonal> > Criterion;
-  int maxlevel = 20, coarsenTarget = 100;
-  Criterion criterion(maxlevel, coarsenTarget);
-  criterion.setMaxDistance(2);
-
-  typedef Dune::SeqSSOR<ISTLM,ISTLV,ISTLV> Smoother;
-  typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
-  SmootherArgs smootherArgs;
-  smootherArgs.iterations = 1;
-
-  typedef Dune::Amg::AMG<Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV>,ISTLV,Smoother> AMG;
-  AMG amg(opc,criterion,smootherArgs,1,1);
-
-  Dune::CGSolver<V> solvera(opa,ssor,1E-10,5000,2);
-  Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
-  Dune::CGSolver<ISTLV> solverc(opc,amg,1E-10,5000,2);
-  Dune::InverseOperatorResult stat;
-
-  // solve the jacobian system
-  r *= -1.0; // need -residual
   V x(gfs,0.0);
-  x=1;
-  solverc.apply(x,r,stat);
-  x += x0;
-
+  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_AMG_SSOR<GFS> LS;
+  LS ls (2,5000,2);
+  typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
+  SLP slp(go,x,ls,1e-12);
+  slp.apply();
+  
 //   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   DGF dgf(gfs,x);
