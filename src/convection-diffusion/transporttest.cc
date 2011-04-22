@@ -40,14 +40,6 @@
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/p0constraints.hh>
-#include<dune/pdelab/finiteelementmap/p12dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk2dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk3dfem.hh>
-#include<dune/pdelab/finiteelementmap/q12dfem.hh>
-#include<dune/pdelab/finiteelementmap/q22dfem.hh>
-#include<dune/pdelab/finiteelementmap/q1fem.hh>
-#include<dune/pdelab/finiteelementmap/p1fem.hh>
-#include<dune/pdelab/finiteelementmap/rannacher_turek2dfem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
@@ -56,8 +48,8 @@
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
-#include<dune/pdelab/gridoperatorspace/instationarygridoperatorspace.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
+#include<dune/pdelab/gridoperator/onestep.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
@@ -168,8 +160,10 @@ void stationary (const GV& gv)
   const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
+  Dune::GeometryType gt;
+  gt.makeCube(dim);
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
-  FEM fem(Dune::GeometryType::cube); // works only for cubes
+  FEM fem(gt); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
@@ -191,18 +185,18 @@ void stationary (const GV& gv)
   std::cout << "constrained dofs=" << cg.size() 
             << " of " << gfs.globalSize() << std::endl;
 
-  // <<<4>>> Compute affine shift
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
-  V x(gfs,0.0);
-  Dune::PDELab::interpolate(g,gfs,x);
-  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
-
-  // <<<5>>> Make grid operator space
+  // <<<4>>> Make grid operator
   typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP; 
   LOP lop(param);
   typedef VBE::MatrixBackend MBE;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
-  GOS gos(gfs,cg,gfs,cg,lop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
+  GO go(gfs,cg,gfs,cg,lop);
+
+  // <<<5>>> Compute affine shift
+  typedef typename GO::Traits::Domain V;
+  V x(gfs,0.0);
+  Dune::PDELab::interpolate(g,gfs,x);
+  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
   // <<<6>>> Make a linear solver 
 #if HAVE_SUPERLU
@@ -216,7 +210,7 @@ void stationary (const GV& gv)
 #endif
 
   // <<<7>>> solve nonlinear problem
-  Dune::PDELab::Newton<GOS,LS,V> newton(gos,x,ls);
+  Dune::PDELab::Newton<GO,LS,V> newton(go,x,ls);
   newton.setReassembleThreshold(0.0);
   newton.setVerbosityLevel(2);
   newton.setReduction(0.9);
@@ -244,8 +238,10 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
+  Dune::GeometryType gt;
+  gt.makeCube(dim);
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
-  FEM fem(Dune::GeometryType::cube); // works only for cubes
+  FEM fem(gt); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
@@ -267,36 +263,40 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   std::cout << "constrained dofs=" << cg.size() 
             << " of " << gfs.globalSize() << std::endl;
 
-  // <<<4>>> Compute affine shift
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
-  V x(gfs,0.0);
-  Dune::PDELab::interpolate(g,gfs,x);
-  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
-
-  // <<<5>>> Make grid operator space
+  // <<<4>>> Make grid operator
   typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP; 
   LOP lop(param);
   typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP; 
   SLOP slop(param);
   typedef VBE::MatrixBackend MBE;
   Dune::PDELab::FractionalStepParameter<Real> method;
-  typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,SLOP,C,C,MBE> IGOS;
-  IGOS igos(method,gfs,cg,gfs,cg,lop,slop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
+  GO0 go0(gfs,cg,gfs,cg,lop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,SLOP,MBE,Real,Real,Real,C,C> GO1;
+  GO1 go1(gfs,cg,gfs,cg,slop);
+  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
+  IGO igo(go0,go1);
+
+  // <<<5>>> Compute affine shift
+  typedef typename IGO::Traits::Domain V;
+  V x(gfs,0.0);
+  Dune::PDELab::interpolate(g,gfs,x);
+  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
   // <<<6>>> Make a linear solver
   typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,C> LS;
   LS ls(gfs,cg,5000,1,1); 
 
   // <<<7>>> make Newton for time-dependent problem
-  typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
-  PDESOLVER tnewton(igos,ls);
+  typedef Dune::PDELab::Newton<IGO,LS,V> PDESOLVER;
+  PDESOLVER tnewton(igo,ls);
   tnewton.setReassembleThreshold(0.0);
   tnewton.setVerbosityLevel(0);
   tnewton.setReduction(0.9);
   tnewton.setMinLinearReduction(1e-7);
 
   // <<<8>>> time-stepper
-  Dune::PDELab::OneStepMethod<Real,IGOS,PDESOLVER,V,V> osm(method,igos,tnewton);
+  Dune::PDELab::OneStepMethod<Real,IGO,PDESOLVER,V,V> osm(method,igo,tnewton);
   osm.setVerbosityLevel(2);
 
   // <<<9>>> initial value and initial value for first time step with b.c. set
@@ -347,8 +347,10 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
+  Dune::GeometryType gt;
+  gt.makeCube(dim);
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
-  FEM fem(Dune::GeometryType::cube); // works only for cubes
+  FEM fem(gt); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
@@ -382,8 +384,8 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP; 
   SLOP slop(param);
   typedef VBE::MatrixBackend MBE;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
-  GOS gos(gfs,cg,gfs,cg,lop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
+  GO go(gfs,cg,gfs,cg,lop);
   Dune::PDELab::ExplicitEulerParameter<Real> method;
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,SLOP,C,C,MBE> IGOS;
   IGOS igos(method,gfs,cg,gfs,cg,lop,slop);
