@@ -146,19 +146,19 @@ namespace Dune
                 }
 
                 // extract wetting phase saturation
-                rtype S_w = x[w_cell_space.localIndex(0)];
+                rtype S_w = x(w_cell_space,0);
 
                 if (!init_mode)
                 {
                     // storage term (implicit Euler time discretization)
-                    r[n_cell_space.localIndex(0)] += cell.volume * phi * (1.0 - S_w);
-                    r[w_cell_space.localIndex(0)] += cell.volume * phi * S_w;
+		  r.accumulate(n_cell_space,0,cell.volume * phi * (1.0 - S_w));
+		  r.accumulate(w_cell_space,0,cell.volume * phi * S_w);
                 }
                 else
                 {
                     // trivial equations for the cell centres when in initialisation mode
-                    r[n_cell_space.localIndex(0)] += x[n_cell_space.localIndex(0)];
-                    r[w_cell_space.localIndex(0)] += S_w;
+		  r.accumulate(n_cell_space,0,x(n_cell_space,0));
+		  r.accumulate(w_cell_space,0,S_w);
                 }
             }
 
@@ -194,10 +194,10 @@ namespace Dune
                 FieldVector<ctype,dim> localcenter_n = GenericReferenceElements<ctype,dim>::general(gt_n).position(0,0);
 
                 // extract wetting phase saturation and non-wetting phase pressure
-                rtype S_w_s = x_s[w_cell_space_s.localIndex(0)];
-                rtype S_w_n = x_n[w_cell_space_n.localIndex(0)];
-                rtype p_n_s = x_s[n_cell_space_s.localIndex(0)];
-                rtype p_n_n = x_n[n_cell_space_n.localIndex(0)];
+                rtype S_w_s = x_s(w_cell_space_s,0);
+                rtype S_w_n = x_n(w_cell_space_n,0);
+                rtype p_n_s = x_s(n_cell_space_s,0);
+                rtype p_n_n = x_n(n_cell_space_n,0);
 
                 // get capillary pressure
                 rtype p_c_s = data.pc(*ig.inside(), localcenter_s, S_w_s);
@@ -209,8 +209,8 @@ namespace Dune
                 rtype u_w = 0.0;
                 for(unsigned int f = 0, m = e*cell.num_faces; f < cell.num_faces; ++f, ++m)
                 {
-                    u_n += W[m] * (p_n_s - x_s[n_face_space_s.localIndex(f)]);
-                    u_w += W[m] * (p_n_s - p_c_s - x_s[w_face_space_s.localIndex(f)]);
+		  u_n += W[m] * (p_n_s - x_s(n_face_space_s,f));
+		  u_w += W[m] * (p_n_s - p_c_s - x_s(w_face_space_s,f));
                 }
 
                 // gravity term
@@ -219,8 +219,8 @@ namespace Dune
                 u_w += data.rho_l(*ig.inside(), localcenter_s, p_n_s - p_c_s) * grav_flux;
 
                 // flux continuity on the faces
-                r_s[n_face_space_s.localIndex(e)] -= u_n;
-                r_s[w_face_space_s.localIndex(e)] -= u_w;
+                r_s.accumulate(n_face_space_s,e,-u_n);
+		r_s.accumulate(w_face_space_s,e,-u_w);
 
                 if (init_mode)
                     return;
@@ -298,8 +298,8 @@ namespace Dune
                 // }
 
                 // apply fluxes to cell balance equation
-                r_s[n_cell_space_s.localIndex(0)] += timestep * lambda_n * u_n;
-                r_s[w_cell_space_s.localIndex(0)] += timestep * lambda_w * u_w;
+                r_s.accumulate(n_cell_space_s,0,timestep * lambda_n * u_n);
+		r_s.accumulate(w_cell_space_s,0,timestep * lambda_w * u_w);
             }
 
             template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
@@ -331,8 +331,8 @@ namespace Dune
                 FieldVector<ctype,dim> localcenter_s = GenericReferenceElements<ctype,dim>::general(gt_s).position(0,0);
 
                 // extract wetting phase saturation and non-wetting phase pressure
-                rtype S_w_s = x_s[w_cell_space_s.localIndex(0)];
-                rtype p_n_s = x_s[n_cell_space_s.localIndex(0)];
+                rtype S_w_s = x_s(w_cell_space_s,0);
+                rtype p_n_s = x_s(n_cell_space_s,0);
 
                 // get capillary pressure
                 rtype p_c_s = data.pc(*ig.inside(), localcenter_s, S_w_s);
@@ -342,8 +342,8 @@ namespace Dune
                 rtype u_w = 0.0;
                 for(unsigned int f = 0, m = e*cell.num_faces; f < cell.num_faces; ++f, ++m)
                 {
-                    u_n += W[m] * (p_n_s - x_s[n_face_space_s.localIndex(f)]);
-                    u_w += W[m] * (p_n_s - p_c_s - x_s[w_face_space_s.localIndex(f)]);
+		  u_n += W[m] * (p_n_s - x_s(n_face_space_s,f));
+		  u_w += W[m] * (p_n_s - p_c_s - x_s(w_face_space_s,f));
                 }
 
                 // gravity term
@@ -354,15 +354,15 @@ namespace Dune
                 // consider boundary conditions
                 if (data.bc_g(ig.intersection(), face_center, time) == 0) // Neumann boundary
                 {
-                    r_s[n_face_space_s.localIndex(e)] -= u_n;
+		  r_s.accumulate(n_face_space_s,e,-u_n);
 
                     if (!init_mode)
                         // apply flux to cell balance equation
-                        r_s[n_cell_space_s.localIndex(0)] += timestep * u_n;
+		      r_s.accumulate(n_cell_space_s,0,timestep * u_n);
                 }
                 else // Dirichlet boundary
                 {
-                    r_s[n_face_space_s.localIndex(e)] += 1e-10*x_s[n_face_space_s.localIndex(e)];
+		  r_s.accumulate(n_face_space_s,e,1e-10*x_s(n_face_space_s,e));
 
                     if (!init_mode)
                     {
@@ -370,27 +370,27 @@ namespace Dune
                         rtype lambda_n = data.kr_g(*ig.inside(), localcenter_s, 1.0 - S_w_s)
                             / data.mu_g(*ig.inside(), localcenter_s, p_n_s);
                         // apply flux to cell balance equation
-                        r_s[n_cell_space_s.localIndex(0)] += timestep * lambda_n * u_n;
+                        r_s.accumulate(n_cell_space_s,0,timestep * lambda_n * u_n);
                     }
                 }
                 if (data.bc_l(ig.intersection(), face_center, time) == 0) // Neumann boundary
                 {
-                    r_s[w_face_space_s.localIndex(e)] -= u_w;
+		  r_s.accumulate(w_face_space_s,e,-u_w);
 
                     if (!init_mode)
                         // apply flux to cell balance equation
-                        r_s[w_cell_space_s.localIndex(0)] += timestep * u_w;
+		      r_s.accumulate(w_cell_space_s,0,timestep * u_w);
                 }
                 else // Dirichlet boundary
                 {
-                    r_s[w_face_space_s.localIndex(e)] += 1e-10*x_s[w_face_space_s.localIndex(e)];
-                    // determine mobility
+		  r_s.accumulate(w_face_space_s,e,1e-10*x_s(w_face_space_s,e));
+		  // determine mobility
                     if (!init_mode)
                     {
                         rtype lambda_w = data.kr_l(*ig.inside(), localcenter_s, S_w_s)
                             / data.mu_l(*ig.inside(), localcenter_s, p_n_s - p_c_s);
                         // apply flux to cell balance equation
-                        r_s[w_cell_space_s.localIndex(0)] += timestep * lambda_w * u_w;
+                        r_s.accumulate(w_cell_space_s,0,timestep * lambda_w * u_w);
                     }
                 }
             }
@@ -418,16 +418,16 @@ namespace Dune
 
                 if (!init_mode)
                 {
-                    r[n_cell_space.localIndex(0)] -= cell.volume *
-                        (phi * (1.0 - S_w_old) + data.q_g(eg.entity(), localcenter, time));
-                    r[w_cell_space.localIndex(0)] -= cell.volume *
-                        (phi * S_w_old + data.q_l(eg.entity(), localcenter, time));
+		  r.accumulate(n_cell_space,0,-cell.volume *
+			       (phi * (1.0 - S_w_old) + data.q_g(eg.entity(), localcenter, time)));
+		  r.accumulate(w_cell_space,0,-cell.volume *
+		      (phi * S_w_old + data.q_l(eg.entity(), localcenter, time)));
                 }
                 else
                 {
                     rtype p_n_old = B::access(x_old, n_cell_space.globalIndex(0));
-                    r[n_cell_space.localIndex(0)] -= p_n_old;
-                    r[w_cell_space.localIndex(0)] -= S_w_old;
+                    r.accumulate(n_cell_space,0,-p_n_old);
+		    r.accumulate(w_cell_space,0,-S_w_old);
                 }
             }
 
@@ -451,14 +451,14 @@ namespace Dune
                 FieldVector<ctype,dim-1> center = GenericReferenceElements<ctype,dim-1>::general(gt).position(0,0);
 
                 if (data.bc_g(ig.intersection(), center, time) == 0) // Neumann boundary
-                    r[n_face_space.localIndex(e)] += cell.face_areas[e] * data.j_g(ig.intersection(), center, time);
+		  r.accumulate(n_face_space,e,cell.face_areas[e] * data.j_g(ig.intersection(), center, time));
                 else // Dirichlet boundary
-                    r[n_face_space.localIndex(e)] -= 1e-10*data.g_g(ig.intersection(), center, time);
+		  r.accumulate(n_face_space,e,-1e-10*data.g_g(ig.intersection(), center, time));
  
                 if (data.bc_l(ig.intersection(), center, time) == 0) // Neumann boundary
-                    r[w_face_space.localIndex(e)] += cell.face_areas[e] * data.j_l(ig.intersection(), center, time);
+		  r.accumulate(w_face_space,e,cell.face_areas[e] * data.j_l(ig.intersection(), center, time));
                 else // Dirichlet boundary
-                    r[w_face_space.localIndex(e)] -= 1e-10*data.g_l(ig.intersection(), center, time);
+		  r.accumulate(w_face_space,e,-1e-10*data.g_l(ig.intersection(), center, time));
             }
 
         private:
