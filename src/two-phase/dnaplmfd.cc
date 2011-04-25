@@ -30,14 +30,14 @@
 #include<dune/pdelab/gridfunctionspace/intersectionindexset.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
+#include<dune/pdelab/gridoperator/onestep.hh>
 #include<dune/pdelab/localoperator/twophaseccfv.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/newton/newton.hh>
 
-//#include"twophaseop.hh"
 #include"twophasemfd.hh"
 
 //==============================================================================
@@ -592,8 +592,8 @@ void test (const GV& gv, int timesteps, double timestep)
   // make grid operator space
   typedef Dune::PDELab::EmptyTransformation C;
   typedef VBE::MatrixBackend MB;
-  typedef Dune::PDELab::GridOperatorSpace<TPGFS,TPGFS,LOP,C,C,MB> TPGOS;
-  TPGOS tpgos(tpgfs,tpgfs,lop);
+  typedef Dune::PDELab::GridOperator<TPGFS,TPGFS,LOP,MB,RF,RF,RF,C,C> TPGO;
+  TPGO tpgo(tpgfs,tpgfs,lop);
 
   // initialize face unknowns
   lop.set_time(0.0);
@@ -601,7 +601,7 @@ void test (const GV& gv, int timesteps, double timestep)
   lop.set_init_mode(true);
 
   LinearSolver solver(5000, 0);
-  Dune::PDELab::Newton<TPGOS,LinearSolver,V> newton(tpgos, pnew, solver);
+  Dune::PDELab::Newton<TPGO,LinearSolver,V> newton(tpgo, pnew, solver);
   newton.apply();
 
   lop.set_init_mode(false);
@@ -652,8 +652,8 @@ void test (const GV& gv, int timesteps, double timestep)
                              << " dt=" << timestep << " ++++++++++++++++++" << std::endl;
 
       LinearSolver solver(5000, 0);
-      typedef Dune::PDELab::Newton<TPGOS,LinearSolver,V> Newton;
-      Newton newton(tpgos, pnew, solver);
+      typedef Dune::PDELab::Newton<TPGO,LinearSolver,V> Newton;
+      Newton newton(tpgo, pnew, solver);
       newton.setReassembleThreshold(0.2);
       newton.setAbsoluteLimit(1e-22);
       newton.setReduction(1e-10);
