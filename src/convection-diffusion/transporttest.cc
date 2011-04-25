@@ -1,9 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief Solve transport problem with cell-centered finite volumes in stationary and instationary (explicit and implicit)
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<math.h>
 #include<iostream>
@@ -23,7 +23,7 @@
 #include<dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
 #endif
-#if HAVE_UG 
+#if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
 #if HAVE_ALUGRID
@@ -66,8 +66,8 @@
 
 //! base class for parameter class
 template<typename GV, typename RF>
-class TransportProblem : 
-  public Dune::PDELab::TransportSpatialParameterInterface<Dune::PDELab::TransportParameterTraits<GV,RF>, 
+class TransportProblem :
+  public Dune::PDELab::TransportSpatialParameterInterface<Dune::PDELab::TransportParameterTraits<GV,RF>,
                                                           TransportProblem<GV,RF> >
 {
 public:
@@ -91,7 +91,7 @@ public:
   }
 
   //! source/reaction term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   q (const typename Traits::ElementType& e, const typename Traits::DomainType& ) const
   {
     return 0.0;
@@ -112,7 +112,7 @@ public:
   }
 
   //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::RangeType global = e.geometry().global(x);
@@ -127,14 +127,14 @@ public:
   //! Neumann boundary condition
   // Good: The dependence on u allows us to implement Robin type boundary conditions.
   // Bad: This interface cannot be used for mixed finite elements where the flux is the essential b.c.
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   j (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 0.0;
   }
 
   //! capacity function
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 1.0;
@@ -182,11 +182,11 @@ void stationary (const GV& gv)
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
   Dune::PDELab::constraints(b,gfs,cg);
-  std::cout << "constrained dofs=" << cg.size() 
+  std::cout << "constrained dofs=" << cg.size()
             << " of " << gfs.globalSize() << std::endl;
 
   // <<<4>>> Make grid operator
-  typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP; 
+  typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP;
   LOP lop(param);
   typedef VBE::MatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
@@ -198,7 +198,7 @@ void stationary (const GV& gv)
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
-  // <<<6>>> Make a linear solver 
+  // <<<6>>> Make a linear solver
 #if HAVE_SUPERLU
   //typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
   //LS ls(false);
@@ -260,13 +260,13 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
   Dune::PDELab::constraints(b,gfs,cg);
-  std::cout << "constrained dofs=" << cg.size() 
+  std::cout << "constrained dofs=" << cg.size()
             << " of " << gfs.globalSize() << std::endl;
 
   // <<<4>>> Make grid operator
-  typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP; 
+  typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP;
   LOP lop(param);
-  typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP; 
+  typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP;
   SLOP slop(param);
   typedef VBE::MatrixBackend MBE;
   Dune::PDELab::FractionalStepParameter<Real> method;
@@ -285,7 +285,7 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
 
   // <<<6>>> Make a linear solver
   typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,C> LS;
-  LS ls(gfs,cg,5000,1,1); 
+  LS ls(gfs,cg,5000,1,1);
 
   // <<<7>>> make Newton for time-dependent problem
   typedef Dune::PDELab::Newton<IGO,LS,V> PDESOLVER;
@@ -369,7 +369,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
   Dune::PDELab::constraints(b,gfs,cg);
-  std::cout << "constrained dofs=" << cg.size() 
+  std::cout << "constrained dofs=" << cg.size()
             << " of " << gfs.globalSize() << std::endl;
 
   // <<<4>>> Compute affine shift
@@ -379,9 +379,9 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
   // <<<5>>> Make grid operator space
-  typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP; 
+  typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP;
   LOP lop(param);
-  typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP; 
+  typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP;
   SLOP slop(param);
   typedef VBE::MatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
@@ -449,52 +449,52 @@ int main(int argc, char** argv)
     if(Dune::MPIHelper::isFake)
       std::cout<< "This is a sequential program." << std::endl;
     else
-	  {
-		if(helper.rank()==0)
-		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
-	  }
+      {
+        if(helper.rank()==0)
+          std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
+      }
 
-	if (argc!=5)
-	  {
-		if(helper.rank()==0)
-		  std::cout << "usage: ./transporttest <end time> <time step> <elements on a side> <overlap>" << std::endl;
-		return 1;
-	  }
+    if (argc!=5)
+      {
+        if(helper.rank()==0)
+          std::cout << "usage: ./transporttest <end time> <time step> <elements on a side> <overlap>" << std::endl;
+        return 1;
+      }
 
-	double Tend;
-	sscanf(argv[1],"%lg",&Tend);
+    double Tend;
+    sscanf(argv[1],"%lg",&Tend);
 
-	double timestep;
-	sscanf(argv[2],"%lg",&timestep);
+    double timestep;
+    sscanf(argv[2],"%lg",&timestep);
 
-	int n;
-	sscanf(argv[3],"%d",&n);
+    int n;
+    sscanf(argv[3],"%d",&n);
 
-	int o;
-	sscanf(argv[4],"%d",&o);
+    int o;
+    sscanf(argv[4],"%d",&o);
 
     // parallel overlapping version
     if (true)
-    {
-      Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(n);
-      Dune::FieldVector<bool,2> periodic(false);
-      int overlap=o;
-      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
-      typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
-      stationary(gv);
-      implicit_scheme(gv,Tend,timestep);
-      explicit_scheme(gv,Tend,timestep);
-    }
+      {
+        Dune::FieldVector<double,2> L(1.0);
+        Dune::FieldVector<int,2> N(n);
+        Dune::FieldVector<bool,2> periodic(false);
+        int overlap=o;
+        Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
+        typedef Dune::YaspGrid<2>::LeafGridView GV;
+        const GV& gv=grid.leafView();
+        stationary(gv);
+        implicit_scheme(gv,Tend,timestep);
+        explicit_scheme(gv,Tend,timestep);
+      }
 
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 }
