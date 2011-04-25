@@ -481,8 +481,8 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef Dune::PDELab::GridOperator<TPGFS,TPGFS,MLOP,MBE,RF,RF,RF,C,C> GO1;
   GO1 go1(tpgfs,cg,tpgfs,cg,mlop);
    
-  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGOS;
-  IGOS igos(go0,go1);
+  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
+  IGO igo(go0,go1);
 
   // <<<6>>> initial value function
   typedef P_l<GV,RF> P_lType;
@@ -493,7 +493,7 @@ void test (const GV& gv, int timesteps, double timestep)
   PType p_initial(p_l_initial,p_g_initial);
 
   // <<<7>>> make vector for old time step and initialize
-  typedef typename IGOS::Traits::Domain V;
+  typedef typename IGO::Traits::Domain V;
   V pold(tpgfs);
   Dune::PDELab::interpolate(p_initial,tpgfs,pold);
 
@@ -520,15 +520,15 @@ void test (const GV& gv, int timesteps, double timestep)
   LS ls (tpgfs, 1, 2000, 1);
 
   // <<<11>>> make Newton for time-dependent problem
-  typedef Dune::PDELab::Newton<IGOS,LS,V> PDESOLVER;
-  PDESOLVER tnewton(igos,ls);
+  typedef Dune::PDELab::Newton<IGO,LS,V> PDESOLVER;
+  PDESOLVER tnewton(igo,ls);
   tnewton.setReassembleThreshold(0.0);
   tnewton.setVerbosityLevel(2);
   tnewton.setReduction(1e-8);
   tnewton.setMinLinearReduction(1e-3);
 
   // <<<12>>> time-stepper
-  Dune::PDELab::OneStepMethod<RF,IGOS,PDESOLVER,V,V> osm(method,igos,tnewton);
+  Dune::PDELab::OneStepMethod<RF,IGO,PDESOLVER,V,V> osm(method,igo,tnewton);
   osm.setVerbosityLevel(2);
 
   // <<<13>>> graphics for initial value
