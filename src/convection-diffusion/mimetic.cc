@@ -33,12 +33,11 @@
 #include<dune/pdelab/gridfunctionspace/intersectionindexset.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/diffusionmfd.hh>
-#include<dune/pdelab/localoperator/poisson.hh>
 
 #include "../utility/gridexamples.hh"
 #include "problemA.hh"
@@ -236,33 +235,34 @@ void mimetictest(Data& data, std::string filename)
     T t;                               // container for transformation
     Dune::PDELab::constraints(bct,gfs,t); // fill container
 
+
+
+    typedef Dune::PDELab::DiffusionMFD<Data> LOP;
+    LOP lop(data);
+    typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,VBE::MatrixBackend,double,double,double,T,T> GO;
+    GO go(gfs,t,gfs,t,lop);
+
     // make coefficent vector
-    typedef typename Dune::PDELab::BackendVectorSelector<GFS,double>::Type V;
+    typedef typename GO::Traits::Domain V;
     V x(gfs);
 
     // set Dirichlet boundary conditions
     mimeticDirichletBoundaryConditions(data.bfunc, data.gfunc, gfs, x);
 
-    typedef Dune::PDELab::DiffusionMFD<Data> LOP;
-    LOP lop(data);
-    typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
-    LOP,T,T,VBE::MatrixBackend> GOS;
-    GOS gos(gfs,t,gfs,t,lop);
-
     // evaluate residual w.r.t initial guess
     V r(gfs);
     r = 0.0;
-    gos.residual(x,r);
+    go.residual(x,r);
 
-    typedef typename GOS::template MatrixContainer<double>::Type M;
-    M m(gos);
+    typedef typename GO::template MatrixContainer<double>::Type M;
+    M m(go);
     m = 0.0;
-    gos.jacobian(x,m);
+    go.jacobian(x,m);
 
     // make ISTL solver
     Dune::MatrixAdapter<M,V,V> opa(m);
     Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
-    Dune::CGSolver<V> solver(opa,ssor,1E-10,5000,2);
+    Dune::CGSolver<V> solver(opa,ssor,1E-10,5000,1);
     Dune::InverseOperatorResult stat;
 
     // solve the jacobian system
@@ -325,8 +325,8 @@ int main(int argc, char** argv)
         }
 
 #if HAVE_UG
-
-        {
+        //is not working yet
+        if (false){
             // make grid
             typedef UGUnitSquareQ Grid;
             Grid grid;
