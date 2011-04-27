@@ -32,12 +32,13 @@
 #include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/localoperator/diffusionccfv.hh>
 #include<dune/pdelab/localoperator/laplacedirichletccfv.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
+#include<dune/pdelab/stationary/linearproblem.hh>
 
 #include"../utility/gridexamples.hh"
 #include"problemA.hh"
@@ -68,14 +69,6 @@ void test (const GV& gv)
   GFS gfs(gv,fem);
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
-  // make coefficent Vector and initialize it from a function
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
-  V x0(gfs);
-  x0 = 0.0;
-  typedef G_D<GV,RF> GType;
-  GType g(gv);
-  Dune::PDELab::interpolate(g,gfs,x0);
-
   // local operator
   watch.reset();
   typedef k_D<GV,RF> KType;
@@ -90,6 +83,8 @@ void test (const GV& gv)
   BType b(gv);
   typedef J_D<GV,RF> JType;
   JType j(gv);
+  typedef G_D<GV,RF> GType;
+  GType g(gv);
   typedef Dune::PDELab::DiffusionCCFV<KType,A0Type,FType,BType,JType,GType> LOP;
   LOP lop(k,a0,f,b,j,g);
   std::cout << "=== local operator setup " <<  watch.elapsed() << " s" << std::endl;
@@ -100,53 +95,22 @@ void test (const GV& gv)
   cc.clear();
   Dune::PDELab::constraints(g,gfs,cc,false);
 
-  // grid operator space
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,
-    CC,CC,VBE::MatrixBackend> GOS;
-  GOS gos(gfs,cc,gfs,cc,lop);
+  // grid operator
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,VBE::MatrixBackend,RF,RF,RF,
+    CC,CC> GO;
+  GO go(gfs,cc,gfs,cc,lop);
 
-  // represent operator as a matrix
-  typedef typename GOS::template MatrixContainer<RF>::Type M;
-  watch.reset();
-  M m(gos);
-  std::cout << "=== matrix setup " <<  watch.elapsed() << " s" << std::endl;
-  m = 0.0;
-  watch.reset();
-  gos.jacobian(x0,m);
-  std::cout << "=== jacobian assembly " <<  watch.elapsed() << " s" << std::endl;
-  //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
+  // make coefficent Vector and initialize it from a function
+  typedef typename GO::Traits::Domain V;
+  V x(gfs);
+  x = 0.0;
+  Dune::PDELab::interpolate(g,gfs,x);
 
-  // evaluate residual w.r.t initial guess
-  V r(gfs);
-  r = 0.0;
-  watch.reset();
-  gos.residual(x0,r);
-  std::cout << "=== residual evaluation " <<  watch.elapsed() << " s" << std::endl;
-
-  // set up parallel solver
-  typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
-  PHELPER phelper(gfs);
-  typedef Dune::PDELab::OverlappingOperator<CC,M,V,V> POP;
-  POP pop(cc,m);
-  typedef Dune::PDELab::OverlappingScalarProduct<GFS,V> PSP;
-  PSP psp(gfs,phelper);
-//   typedef Dune::PDELab::SuperLUSubdomainSolver<GFS,M,V,V> PSUBSOLVE;
-//   PSUBSOLVE psubsolve(gfs,m);
-  typedef Dune::SeqSSOR<M,V,V> SeqPrec;
-  SeqPrec seqprec(m,10,1.0);
-  typedef Dune::PDELab::OverlappingWrappedPreconditioner<CC,GFS,SeqPrec> WPREC;
-  WPREC  wprec(gfs,seqprec,cc,phelper);
-  int verbose;
-  if (gv.comm().rank()==0) verbose=1; else verbose=0;
-  Dune::CGSolver<V> solver(pop,psp,wprec,1E-8,40000,verbose);
-  Dune::InverseOperatorResult stat;  
-
-
-  // solve the jacobian system
-  r *= -1.0; // need -residual
-  V x(gfs,0.0);
-  solver.apply(x,r,stat);
-  x += x0;
+  typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GFS> LS;
+  LS ls (gfs,1, 5000, 3);
+  typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
+  SLP slp(go,x,ls,1e-12);
+  slp.apply();
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
@@ -156,7 +120,6 @@ void test (const GV& gv)
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
   vtkwriter.pwrite("single_phase_yasp2d_CCFV","vtk","",Dune::VTKOptions::binaryappended);
-  //  vtkwriter.write("single_phase_yasp2d_CCFV",Dune::VTKOptions::ascii);
 }
 
 int main(int argc, char** argv)
