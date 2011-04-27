@@ -139,10 +139,9 @@ int main(int argc, char** argv)
 {
   try{
     //Maybe initialize Mpi
-    Dune::MPIHelper::instance(argc, argv);
-
+    Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
     // 2D
-    {
+    if(helper.size()==1){
       // make grid
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(1);
@@ -153,10 +152,14 @@ int main(int argc, char** argv)
       // solve problem :)
       test(grid.leafView(),"laplacedirichletccfv_yasp2d");
     }
+    else{
+      if(helper.rank()==0)
+      std::cout<< "This is a sequential program, you cannot run it in parallel." << std::endl;
+    }
 
     // UG Q1 2D test
 #if HAVE_UG
-    {
+    if(helper.size()==1){
       // make grid 
       UGUnitSquareQ grid(1000);
       grid.globalRefine(6);
