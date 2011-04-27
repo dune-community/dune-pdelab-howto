@@ -132,7 +132,7 @@ void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
   Dune::PDELab::constraints(bctype,gfs,cc,false);
   Dune::PDELab::set_nonconstrained_dofs(cc,0.0,x);
 
-  typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_SSORk<GO,R> LS;
+  typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_SSORk<GO> LS;
   LS ls (gfs,5000,3,2);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
   SLP slp(go,x,ls,1e-12);
