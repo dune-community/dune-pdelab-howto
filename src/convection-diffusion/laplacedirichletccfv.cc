@@ -119,8 +119,8 @@ void test (const GV& gv, std::string filename )
 
 
   V x(gfs,0.0);
-  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_AMG_SSOR<GFS> LS;
-  LS ls (2,5000,2);
+  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_AMG_SSOR<GO> LS;
+  LS ls (5000,2);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
   SLP slp(go,x,ls,1e-12);
   slp.apply();

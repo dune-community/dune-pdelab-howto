@@ -202,7 +202,7 @@ void stationary (const GV& gv)
 #if HAVE_SUPERLU
   //typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
   //LS ls(false);
-  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_AMG_SSOR<GFS> LS;
+  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_AMG_SSOR<GO> LS;
   LS ls;
 #else
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;

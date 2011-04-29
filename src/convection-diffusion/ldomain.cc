@@ -301,8 +301,11 @@ void driver (Grid& grid, std::string filename_base, double TOL, int maxsteps, do
       GOS gos(gfs,cc,gfs,cc,lop);
 
       // make linear solver and solve problem
-      typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<GFS> LS;
-      LS ls (2, 5000, 1);
+      // only needed for the old gridoperatorspace,
+      // otherwise use grid operator as template parameter for solver
+      typedef Dune::PDELab::fakeGOTraits<Real,U,GOS> fakeGO;
+      typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<fakeGO> LS;
+      LS ls (5000,1);
       // typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
       // LS ls(10000,1);
       typedef Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,U> SLP;
