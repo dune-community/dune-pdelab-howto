@@ -32,7 +32,6 @@
 #include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-//#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
@@ -54,7 +53,7 @@
 
 #define ProblemC
 
-static const int monom_max_order = 10;
+static const int monom_max_order = 5;
 #define BLOCK_SIZE 1
 #define GRID_REFINE 2
 #define DG_METHOD 0  // OBB: 0, NIPG: 1, SIPG: 2
@@ -135,6 +134,9 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     typedef typename GO::Traits::Domain V;
     V solution(gfs,0.0);
 
+    //Warning: Iterative solver does not work. Please use SuperLU here!
+    //typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LS;
+    //LS ls(10000,2);
     typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
     LS ls(1);
     typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
