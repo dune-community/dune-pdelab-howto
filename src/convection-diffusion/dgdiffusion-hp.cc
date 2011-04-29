@@ -32,12 +32,13 @@
 #include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+//#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/diffusiondg.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
 
 #include"../utility/gridexamples.hh"
 
@@ -50,6 +51,9 @@
 #include"problemF.hh"  // Constant flow with constant permeability with is 1E-6 in x direction
 
 // Define most changed values
+
+#define ProblemC
+
 static const int monom_max_order = 10;
 #define BLOCK_SIZE 1
 #define GRID_REFINE 2
@@ -64,16 +68,51 @@ static const int monom_max_order = 10;
 template<class GV, class FEM>
 void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool verbose)
 {
+  typedef double Real;
     typedef typename GV::Grid Grid;
     typedef typename GV::Grid::ctype DF;
     typedef double RF;
     Dune::Timer watch;
 
-    // make function space
+
+
+    // choose problem parameters
+
+#ifdef ProblemA
+    typedef K_A<GV,RF> KType;
+    typedef F_A<GV,RF> FType;
+    typedef BCTypeParam_A BType;
+    typedef G_A<GV,RF> GType;
+    typedef J_A<GV,RF> JType;
+#endif
+
+#ifdef ProblemB
+    typedef K_B<GV,RF> KType;
+    typedef F_B<GV,RF> FType;
+    typedef BCTypeParam_B BType;
+    typedef G_B<GV,RF> GType;
+    typedef J_B<GV,RF> JType;
+#endif
+
+#ifdef ProblemC
+    typedef K_C<GV,RF> KType;
+    typedef F_C<GV,RF> FType;
+    typedef BCTypeParam_C BType;
+    typedef G_C<GV,RF> GType;
+    typedef J_C<GV,RF> JType;
+#endif
+
+    KType k(gv);
+    FType f(gv);
+    BType bctype;
+    GType g(gv);
+    JType j(gv);
+
+    // make grid function space 
+    typedef Dune::PDELab::NoConstraints CON;
     typedef Dune::PDELab::ISTLVectorBackend<BLOCK_SIZE> VBE;
-    typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-       Dune::PDELab::NoConstraints,
-       VBE> GFS;
+    typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
+
     watch.reset();
     GFS gfs(gv,fem);
     if (verbose)
@@ -81,50 +120,37 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
         std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
     }
 
-    // make coefficient Vector and initialize it from a function
-    typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
+    // make local operator
+    typedef Dune::PDELab::DiffusionDG<KType,FType,BType,GType,JType> LOP;
+    LOP lop(k,f,bctype,g,j,DG_METHOD);
+
+    typedef typename VBE::MatrixBackend MBE;
+    typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
+    CC cc;
     
-    V x0(gfs);
-    x0 = 0.0;
-    V v(gfs,0.0);
-    typedef K_C<GV,RF> KType;
-    KType k(gv);
-    typedef F_C<GV,RF> FType;
-    FType f(gv);
-
-    typedef BCTypeParam_C BCType;
-    BCType bctype;
-
-    typedef G_C<GV,RF> GType;
-    GType g(gv);
-    typedef J_C<GV,RF> JType;
-    JType j(gv);
-    Dune::PDELab::interpolate(g,gfs,x0);
-
-    // make grid function operator
-    typedef Dune::PDELab::DiffusionDG<KType,FType,BCType,GType,JType> LOP;
-    LOP la(k,f,bctype,g,j,DG_METHOD);
-    typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,
-       Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation,
-       VBE::MatrixBackend> GOS;
-    GOS gos(gfs,gfs,la);
+    typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
+    GO go(gfs,cc,gfs,cc,lop);
+    
+    // make a vector of degree of freedom vectors
+    typedef typename GO::Traits::Domain V;
+    V solution(gfs,0.0);
 
     typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
     LS ls(1);
-    typedef Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,V> SLP;
-    SLP slp(gos,v,ls,1e-12);
+    typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
+    SLP slp(go,solution,ls,1e-12);
     slp.apply();
 
     // make discrete function object
     typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-    DGF dgf(gfs,v);
+    DGF dgf(gfs,solution);
 
 #ifdef MAKE_VTK_OUTPUT
     // output grid function with SubsamplingVTKWriter
-    k_C<GV,RF> k2(gv);
-    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,5);
+    //KType<GV,RF> k2(gv);
+    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
-    vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter< k_C<GV,RF> >(k2,"k"));
+    //vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<KType>(k,"k"));
     vtkwriter.addCellData(new Dune::PDELab::VTKFiniteElementMapAdapter<Grid,FEM>(fem,"fem order"));
     vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
 #endif
@@ -141,8 +167,6 @@ int main(int argc, char** argv)
 		if(helper.rank()==0)
             std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
     }
-    
-    std::string problem="C";
 
     try
     {
@@ -150,17 +174,17 @@ int main(int argc, char** argv)
         {
             // make grid
             Dune::FieldVector<double,2> L(1.0);  // L[0]=2.0; L[1]=1.0;
-            Dune::FieldVector<int,2> N(32);       // N[0]=2; N[1]=2;
+            Dune::FieldVector<int,2> N(16);       // N[0]=2; N[1]=2;
             Dune::FieldVector<bool,2> B(false);
             typedef Dune::YaspGrid<2> Grid;
             Grid grid(L,N,B,0);
-            #ifdef REFINE_STEPWISE
+#ifdef REFINE_STEPWISE
             for (int i = 0; i <= GRID_REFINE; ++i)
             {
                 solve_dg(grid.leafView(), false);
                 grid.globalRefine(1);
             }
-            #else
+#else
             // grid.globalRefine(GRID_REFINE);
 
             // instantiate finite element maps
@@ -180,7 +204,7 @@ int main(int argc, char** argv)
             
             // solve problem :)
             solve_dg(grid.leafView(),fem,"DG_Yasp_2d",true);
-            #endif
+#endif
         }
 
     }
