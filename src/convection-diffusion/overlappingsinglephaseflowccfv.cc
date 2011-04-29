@@ -107,7 +107,7 @@ void test (const GV& gv)
   Dune::PDELab::interpolate(g,gfs,x);
 
   typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GO> LS;
-  LS ls(gfs,1,5000,3);
+  LS ls(gfs,5000,3);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
   SLP slp(go,x,ls,1e-12);
   slp.apply();
