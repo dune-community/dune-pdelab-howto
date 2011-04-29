@@ -23,8 +23,8 @@ void example04 (const GV& gv)
   GO go(gfs,gfs,lop);
 
   // <<<4>>> Select a linear solver backend
-  typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<GFS> LS;
-  LS ls(2,100,2);
+  typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<GO> LS;
+  LS ls(100);
 
   // <<<5>>> assemble and solve linear problem
   typedef typename GO::Traits::Domain U;
