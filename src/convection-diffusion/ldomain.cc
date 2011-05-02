@@ -343,7 +343,7 @@ void driver (Grid& grid, std::string filename_base, double TOL, int maxsteps, do
       typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,Real>::Type U0;
       U0 eta(p0gfs,0.0);
       estgos.residual(u,eta);
-      for (int i=0; i<eta.N(); i++) eta[i] = sqrt(eta[i]); 
+      for (unsigned int i=0; i<eta.N(); i++) eta[i] = sqrt(eta[i]); 
       Real estimated_error = eta.two_norm();
       ee.push_back(estimated_error);
 
