@@ -430,9 +430,6 @@ int main(int argc, char **argv)
       int maxsteps; sscanf(argv[4],"%d",&maxsteps);
       double fraction; sscanf(argv[5],"%lg",&fraction);
 
-      // make uggrid
-      const int dim=2;
-
       // make Alberta grid
       typedef AlbertaLDomain::Grid GridType;
       AlbertaLDomain gridp;
