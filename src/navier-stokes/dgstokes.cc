@@ -20,9 +20,8 @@
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/io.hh>
 
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include <dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/localoperator/stokesdg.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
@@ -195,13 +194,15 @@ void stokes (const GV& gv, std::string filename)
     const double mu = 1.0;
     typename Dune::PDELab::DefaultInteriorPenalty<RF> ip_factor(method,mu);
     LocalDGOperator lop(method, ip_factor, mu, f,b,v,p);
-    typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LocalDGOperator,
-       Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation,
-      typename VectorBackend::MatrixBackend> GridOpertorSpace;
-    GridOpertorSpace gos(gfs,gfs,lop);
+
+    typedef Dune::PDELab::EmptyTransformation C;
+    typedef Dune::PDELab::GridOperator
+      <GFS,GFS,LocalDGOperator,typename VectorBackend::MatrixBackend,RF,RF,RF,C,C> GOS;
+    GOS gos(gfs,gfs,lop);
+
     std::cout << "=== grid operator space setup " <<  watch.elapsed() << " s" << std::endl;
 
-    typedef typename GridOpertorSpace::template MatrixContainer<RF>::Type M;
+    typedef typename GOS::Jacobian M;
     watch.reset();
     M m(gos);
     std::cout << "=== matrix setup " <<  watch.elapsed() << " s" << std::endl;
