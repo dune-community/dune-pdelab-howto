@@ -497,6 +497,7 @@ public:
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
         res.reduction  = stat.reduction;
+        res.conv_rate  = stat.conv_rate;
     }
 
     const Dune::PDELab::LinearSolverResult<double>& result() const
