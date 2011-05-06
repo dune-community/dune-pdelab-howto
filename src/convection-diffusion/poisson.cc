@@ -202,7 +202,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
   Dune::PDELab::set_shifted_dofs(cg,0.0,x0);
 
   // represent operator as a matrix
-  typedef typename GO::template MatrixContainer<R>::Type M;
+  typedef typename GO::Jacobian M;
   M m(go);
   m = 0.0;
 

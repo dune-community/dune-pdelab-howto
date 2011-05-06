@@ -254,7 +254,7 @@ void mimetictest(Data& data, std::string filename)
     r = 0.0;
     go.residual(x,r);
 
-    typedef typename GO::template MatrixContainer<double>::Type M;
+    typedef typename GO::Jacobian M;
     M m(go);
     m = 0.0;
     go.jacobian(x,m);

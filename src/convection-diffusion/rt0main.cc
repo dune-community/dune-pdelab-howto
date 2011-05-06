@@ -119,7 +119,7 @@ void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   GO go(mgfs,t,mgfs,t,lop);
 
   // represent operator as a matrix
-  typedef typename GO::template MatrixContainer<R>::Type M;
+  typedef typename GO::Jacobian M;
   M m(go);
   m = 0.0;
   go.jacobian(x,m);
