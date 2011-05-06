@@ -47,7 +47,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/constraints.hh>
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -220,7 +220,6 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   // <<<2>>> Make grid function space
   const int blocksize = Dune::PB::PkSize<degree,dim>::value;
   typedef Dune::PDELab::NoConstraints CON;
-  CON con;
   typedef Dune::PDELab::ISTLVectorBackend<blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEMDG,CON,VBE,Dune::PDELab::SimpleGridFunctionStaticSize> GFSDG;
   GFSDG gfsdg(gv,femdg);
