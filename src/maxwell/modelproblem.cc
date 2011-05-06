@@ -46,8 +46,8 @@
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
-#include<dune/pdelab/gridoperatorspace/instationarygridoperatorspace.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
+#include<dune/pdelab/gridoperator/onestep.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
@@ -180,13 +180,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   typedef MaxwellModelProblem<GV,Real> Param;
   Param param;
 
-  // <<<4>>> set initial values
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
-  V xold(gfs,0.0);
-  Dune::PDELab::MaxwellInitialValueAdapter<Param> u0(gv,param);
-  Dune::PDELab::interpolate(u0,gfs,xold);
-
-  // <<<5>>> Make grid operator space
+  // <<<3>>> Make grid operator space
   typedef Dune::PDELab::DGMaxwellSpatialOperator<Param,FEMDG> LOP; 
   LOP lop(param);
   typedef Dune::PDELab::DGMaxwellTemporalOperator<Param,FEMDG> TLOP; 
@@ -201,22 +195,36 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   if (degree==1) {method=&method2; std::cout << "setting Heun" << std::endl;}
   if (degree==2) {method=&method3; std::cout << "setting Shu 3" << std::endl;}
   if (degree==3) {method=&method4; std::cout << "setting RK4" << std::endl;}
-  typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,TLOP,C,C,MBE> IGOS;
-  IGOS igos(*method,gfs,cg,gfs,cg,lop,tlop);
 
-  // <<<6>>> Make a linear solver backend
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
+  GO0 go0(gfs,cg,gfs,cg,lop);
+ 
+  typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,C,C> GO1;
+  GO1 go1(gfs,cg,gfs,cg,tlop);
+
+  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1,false> IGO;
+  IGO igo(go0,go1);
+  igo.setMethod(*method);
+
+  // <<<4>>> set initial values
+  typedef typename IGO::Traits::Domain V;
+  V xold(gfs,0.0);
+  Dune::PDELab::MaxwellInitialValueAdapter<Param> u0(gv,param);
+  Dune::PDELab::interpolate(u0,gfs,xold);
+
+  // <<<5>>> Make a linear solver backend
   //typedef Dune::PDELab::ISTLBackend_SEQ_CG_SSOR LS;
   //LS ls(10000,1);
   typedef Dune::PDELab::ISTLBackend_OVLP_ExplicitDiagonal<GFS> LS;
   LS ls(gfs);
 
-  // <<<8>>> time-stepper
+  // <<<6>>> time-stepper
   typedef Dune::PDELab::SimpleTimeController<Real> TC;
   TC tc;
-  Dune::PDELab::ExplicitOneStepMethod<Real,IGOS,LS,V,V,TC> osm(*method,igos,ls,tc);
+  Dune::PDELab::ExplicitOneStepMethod<Real,IGO,LS,V,V,TC> osm(*method,igo,ls,tc);
   osm.setVerbosityLevel(2);
 
-  // <<<10>>> graphics for initial guess
+  // <<<7>>> graphics for initial guess
   Dune::PDELab::FilenameHelper fn(name);
   typedef Dune::PDELab::GridFunctionSubSpace<GFS,0> U0SUB;
   U0SUB u0sub(gfs);
@@ -257,7 +265,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
     fn.increment();
   }
 
-  // <<<11>>> time loop
+  // <<<8>>> time loop
   Real time = 0.0;
   Real dt = timestep;
   V x(gfs,0.0);
