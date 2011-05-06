@@ -372,11 +372,6 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   std::cout << "constrained dofs=" << cg.size()
             << " of " << gfs.globalSize() << std::endl;
 
-  // <<<4>>> Compute affine shift
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
-  V x(gfs,0.0);
-  Dune::PDELab::interpolate(g,gfs,x);
-  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
   // <<<5>>> Make grid operator space
   typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP;
@@ -384,20 +379,29 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP;
   SLOP slop(param);
   typedef VBE::MatrixBackend MBE;
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
-  GO go(gfs,cg,gfs,cg,lop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
+  GO0 go0(gfs,cg,gfs,cg,lop);
   Dune::PDELab::ExplicitEulerParameter<Real> method;
-  typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,SLOP,C,C,MBE> IGOS;
-  IGOS igos(method,gfs,cg,gfs,cg,lop,slop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,SLOP,MBE,Real,Real,Real,C,C> GO1;
+  GO1 go1(gfs,cg,gfs,cg,slop);
+  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1,false> IGO;
+  IGO igo(go0,go1);
+  igo.setMethod(method);
 
+  // <<<4>>> Compute affine shift
+  typedef typename IGO::Traits::Domain V;
+  V x(gfs,0.0);
+  Dune::PDELab::interpolate(g,gfs,x);
+  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
+  
   // <<<6>>> Make a linear solver backend
   typedef Dune::PDELab::ISTLBackend_OVLP_ExplicitDiagonal<GFS> LS;
   LS ls(gfs);
 
   // <<<8>>> time-stepper
-  typedef Dune::PDELab::CFLTimeController<Real,IGOS> TC;
-  TC tc(0.999,igos);
-  Dune::PDELab::ExplicitOneStepMethod<Real,IGOS,LS,V,V,TC> osm(method,igos,ls,tc);
+  typedef Dune::PDELab::CFLTimeController<Real,IGO> TC;
+  TC tc(0.999,igo);
+  Dune::PDELab::ExplicitOneStepMethod<Real,IGO,LS,V,V,TC> osm(method,igo,ls,tc);
   osm.setVerbosityLevel(2);
 
   // <<<9>>> initial value and initial value for first time step with b.c. set
