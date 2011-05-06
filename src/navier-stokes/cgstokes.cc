@@ -46,13 +46,14 @@
 #include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+//#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 //#include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include<dune/pdelab/localoperator/cg_stokes.hh>
-#include <dune/common/configparser.hh>
+#include <dune/common/parametertreeparser.hh>
 
 #include "../utility/gridexamples.hh"
 #include "cg_stokes_initial.hh"
@@ -171,9 +172,11 @@ void navierstokes
     <BoundaryFunction,NeumannFlux,NavierStokesParameters,true,q> 
     LOP; 
   LOP lop(boundary_function,neumann_flux,parameters);
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
-    LOP,C,C,VectorBackend::MatrixBackend > GOS;
+
+  typedef Dune::PDELab::GridOperator
+    <GFS,GFS,LOP,VectorBackend::MatrixBackend,RF,RF,RF,C,C> GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
+
 
   //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
@@ -251,19 +254,20 @@ int main(int argc, char** argv)
       example_switch = argv[1];
 
     // Initialize Navier Stokes parameter class from file
-    Dune::ConfigParser config_parser;
+    Dune::ParameterTree configuration;
+
     const std::string config_filename("cg_stokes.ini");
     std::cout << "Reading configuration file \""<< config_filename 
               << "\"" << std::endl;
     try{
-      config_parser.parseFile(config_filename,false);
+      Dune::ParameterTreeParser::readINITree(config_filename, configuration);
     }
     catch(...){
       std::cerr << "The configuration file \"cg_stokes.ini\" "
         "could not be read. Exiting..." << std::endl;
       exit(1);
     }
-    NavierStokesParameters parameters(config_parser);
+    NavierStokesParameters parameters(configuration);
 
   try{
 
@@ -385,12 +389,11 @@ int main(int argc, char** argv)
 
       typedef double RF;
 
-      std::vector<int> boundary_index_map;
-      std::vector<int> element_index_map;
-
       std::string grid_file = "grids/turbtube2d.msh";
-      Dune::GmshReader<GridType> gmsh_reader;
-      gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
+      Dune::GridFactory<GridType> factory(&grid);
+      Dune::GmshReader<GridType>::read(factory,grid_file,true,false);
+      factory.createGrid();
+
       grid.globalRefine(parameters.domain_level);
 
       // get view
@@ -456,12 +459,11 @@ int main(int argc, char** argv)
 
       typedef double RF;
 
-      std::vector<int> boundary_index_map;
-      std::vector<int> element_index_map;
-
       std::string grid_file = "grids/lshape.msh";
-      Dune::GmshReader<GridType> gmsh_reader;
-      gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
+      Dune::GridFactory<GridType> factory(&grid);
+      Dune::GmshReader<GridType>::read(factory,grid_file,true,false);
+      factory.createGrid();
+
       grid.globalRefine(parameters.domain_level);
 
       // get view
@@ -528,12 +530,11 @@ int main(int argc, char** argv)
 
       typedef double RF;
 
-      std::vector<int> boundary_index_map;
-      std::vector<int> element_index_map;
-
       std::string grid_file = "grids/pipe.msh";
-      Dune::GmshReader<GridType> gmsh_reader;
-      gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
+      Dune::GridFactory<GridType> factory(&grid);
+      Dune::GmshReader<GridType>::read(factory,grid_file,true,false);
+      factory.createGrid();
+
       grid.globalRefine(parameters.domain_level);
 
       // get view
@@ -588,12 +589,10 @@ int main(int argc, char** argv)
       typedef Dune::UGGrid<3> GridType;
       GridType grid;
 
-      std::vector<int> boundary_index_map;
-      std::vector<int> element_index_map;
-
       std::string grid_file = "grids/turbtube.msh";
-      Dune::GmshReader<GridType> gmsh_reader;
-      gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
+      Dune::GridFactory<GridType> factory(&grid);
+      Dune::GmshReader<GridType>::read(factory,grid_file,true,false);
+      factory.createGrid();
       grid.globalRefine(parameters.domain_level);
 
       // get view
