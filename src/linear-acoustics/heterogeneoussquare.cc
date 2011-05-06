@@ -58,6 +58,10 @@
 #include<dune/pdelab/instationary/onestep.hh>
 #include<dune/pdelab/localoperator/linearacousticsdg.hh>
 
+#include<dune/pdelab/gridoperator/onestep.hh>
+#include<dune/pdelab/instationary/onestep.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
+
 #include"../utility/gridexamples.hh"
 
 //==============================================================================
@@ -252,8 +256,20 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   if (degree==1) {method=&method2; std::cout << "setting Heun" << std::endl;}
   if (degree==2) {method=&method3; std::cout << "setting Shu 3" << std::endl;}
   if (degree==3) {method=&method4; std::cout << "setting RK4" << std::endl;}
+#ifdef USE_OLD_STUFF
   typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,TLOP,C,C,MBE> IGOS;
   IGOS igos(*method,gfs,cg,gfs,cg,lop,tlop);
+#else
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
+  GO0 go0(gfs,cg,gfs,cg,lop);
+
+  typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,C,C> GO1;
+  GO1 go1(gfs,cg,gfs,cg,tlop);
+
+  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1,false> IGOS;
+  IGOS igos(go0,go1);
+  igos.setMethod(*method);
+#endif
 
   // <<<6>>> Make a linear solver backend
   //typedef Dune::PDELab::ISTLBackend_SEQ_CG_SSOR LS;
