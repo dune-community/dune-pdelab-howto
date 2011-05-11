@@ -24,7 +24,7 @@
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/constraints/constraints.hh>
-#include <dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+#include <dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/p1fem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
@@ -296,20 +296,17 @@ void driver (Grid& grid, std::string filename_base, double TOL, int maxsteps, do
       // make local operator
       typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
       LOP lop(problem);
-      typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
-      typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
-      GOS gos(gfs,cc,gfs,cc,lop);
+      typedef VBE::MatrixBackend MBE;
+      typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
+      GO go(gfs,cc,gfs,cc,lop);
 
       // make linear solver and solve problem
-      // only needed for the old gridoperatorspace,
-      // otherwise use grid operator as template parameter for solver
-      typedef Dune::PDELab::fakeGOTraits<Real,U,GOS> fakeGO;
-      typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<fakeGO> LS;
+      typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<GO> LS;
       LS ls (5000,1);
       // typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
       // LS ls(10000,1);
-      typedef Dune::PDELab::StationaryLinearProblemSolver<GOS,LS,U> SLP;
-      SLP slp(gos,u,ls,1e-10);
+      typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
+      SLP slp(go,u,ls,1e-10);
       slp.apply();
 
       // compute errors
@@ -338,11 +335,11 @@ void driver (Grid& grid, std::string filename_base, double TOL, int maxsteps, do
       typedef Dune::PDELab::ConvectionDiffusionFEMResidualEstimator<Problem> ESTLOP;
       ESTLOP estlop(problem);
       typedef Dune::PDELab::EmptyTransformation NoTrafo;
-      typedef Dune::PDELab::GridOperatorSpace<GFS,P0GFS,ESTLOP,NoTrafo,NoTrafo,MBE> ESTGOS;
-      ESTGOS estgos(gfs,p0gfs,estlop);
+      typedef Dune::PDELab::GridOperator<GFS,P0GFS,ESTLOP,MBE,Real,Real,Real,NoTrafo,NoTrafo> ESTGO;
+      ESTGO estgo(gfs,p0gfs,estlop);
       typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,Real>::Type U0;
       U0 eta(p0gfs,0.0);
-      estgos.residual(u,eta);
+      estgo.residual(u,eta);
       for (unsigned int i=0; i<eta.N(); i++) eta[i] = sqrt(eta[i]); 
       Real estimated_error = eta.two_norm();
       ee.push_back(estimated_error);
@@ -436,6 +433,7 @@ int main(int argc, char **argv)
       GridType &grid = gridp;
 
       // make UG grid
+      // const int dim=2;
       // typedef Dune::UGGrid<dim> GridType;
       // GridType grid;
       // typedef std::vector<int> GmshIndexMap;
