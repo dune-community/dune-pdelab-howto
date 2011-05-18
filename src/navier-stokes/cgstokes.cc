@@ -156,8 +156,18 @@ void navierstokes
   cg.clear();
   Dune::PDELab::constraints(boundary_function,gfs,cg);
 
+  // Make grid function operator
+  typedef Dune::PDELab::TaylorHoodNavierStokesJacobian
+    <BoundaryFunction,NeumannFlux,NavierStokesParameters,true,q> 
+    LOP; 
+  LOP lop(boundary_function,neumann_flux,parameters);
+
+  typedef Dune::PDELab::GridOperator
+    <GFS,GFS,LOP,VectorBackend::MatrixBackend,RF,RF,RF,C,C> GO;
+  GO go(gfs,cg,gfs,cg,lop);
+
   // Make coefficent vector and initialize it from a function
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
+  typedef typename GO::Traits::Domain V;
   V x0(gfs);
   x0 = 0.0;
   Dune::PDELab::interpolate(initial_solution,gfs,x0);
@@ -166,17 +176,6 @@ void navierstokes
 
   // Set non constrained dofs to zero
   Dune::PDELab::set_shifted_dofs(cg,0.0,x0);
-
-  // Make grid function operator
-  typedef Dune::PDELab::TaylorHoodNavierStokesJacobian
-    <BoundaryFunction,NeumannFlux,NavierStokesParameters,true,q> 
-    LOP; 
-  LOP lop(boundary_function,neumann_flux,parameters);
-
-  typedef Dune::PDELab::GridOperator
-    <GFS,GFS,LOP,VectorBackend::MatrixBackend,RF,RF,RF,C,C> GOS;
-  GOS gos(gfs,cg,gfs,cg,lop);
-
 
   //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
@@ -187,7 +186,7 @@ void navierstokes
   // Solve (possibly) nonlinear problem
   std::cout << "=== Begin Newton:" << std::endl;
   timer.reset();
-  Dune::PDELab::Newton<GOS,LinearSolver,V> newton(gos,x0,ls);
+  Dune::PDELab::Newton<GO,LinearSolver,V> newton(go,x0,ls);
   newton.setReassembleThreshold(0.0);
   newton.setVerbosityLevel(2);
   newton.setMaxIterations(25);
@@ -197,7 +196,7 @@ void navierstokes
 
   // Check residual
   V r(gfs); r=0.;
-  gos.residual(x0,r);
+  go.residual(x0,r);
   std::cout << "Final Residual: " << r.two_norm() << std::endl;
 
   // Generate functions suitable for VTK output
