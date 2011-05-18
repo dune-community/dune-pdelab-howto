@@ -234,13 +234,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   typedef RiemannProblem<GV,Real> Param;
   Param param;
 
-  // <<<4>>> set initial values
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type V;
-  V xold(gfs,0.0);
-  Dune::PDELab::LinearAcousticsInitialValueAdapter<Param> u0(gv,param);
-  Dune::PDELab::interpolate(u0,gfs,xold);
-
-  // <<<5>>> Make grid operator space
+  // <<<4>>> Make grid operator
   typedef Dune::PDELab::DGLinearAcousticsSpatialOperator<Param,FEMDG> LOP; 
   LOP lop(param);
   typedef Dune::PDELab::DGLinearAcousticsTemporalOperator<Param,FEMDG> TLOP; 
@@ -255,20 +249,22 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   if (degree==1) {method=&method2; std::cout << "setting Heun" << std::endl;}
   if (degree==2) {method=&method3; std::cout << "setting Shu 3" << std::endl;}
   if (degree==3) {method=&method4; std::cout << "setting RK4" << std::endl;}
-#ifdef USE_OLD_STUFF
-  typedef Dune::PDELab::InstationaryGridOperatorSpace<Real,V,GFS,GFS,LOP,TLOP,C,C,MBE> IGOS;
-  IGOS igos(*method,gfs,cg,gfs,cg,lop,tlop);
-#else
+
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
   GO0 go0(gfs,cg,gfs,cg,lop);
 
   typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,C,C> GO1;
   GO1 go1(gfs,cg,gfs,cg,tlop);
 
-  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1,false> IGOS;
-  IGOS igos(go0,go1);
-  igos.setMethod(*method);
-#endif
+  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1,false> IGO;
+  IGO igo(go0,go1);
+  igo.setMethod(*method);
+
+  // <<<5>>> set initial values
+  typedef typename IGO::Traits::Domain V;
+  V xold(gfs,0.0);
+  Dune::PDELab::LinearAcousticsInitialValueAdapter<Param> u0(gv,param);
+  Dune::PDELab::interpolate(u0,gfs,xold);
 
   // <<<6>>> Make a linear solver backend
   //typedef Dune::PDELab::ISTLBackend_SEQ_CG_SSOR LS;
@@ -277,9 +273,9 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   LS ls(gfs);
 
   // <<<8>>> time-stepper
-  typedef Dune::PDELab::CFLTimeController<Real,IGOS> TC;
-  TC tc(0.999,igos);
-  Dune::PDELab::ExplicitOneStepMethod<Real,IGOS,LS,V,V,TC> osm(*method,igos,ls,tc);
+  typedef Dune::PDELab::CFLTimeController<Real,IGO> TC;
+  TC tc(0.999,igo);
+  Dune::PDELab::ExplicitOneStepMethod<Real,IGO,LS,V,V,TC> osm(*method,igo,ls,tc);
   osm.setVerbosityLevel(2);
 
   // <<<10>>> graphics for initial guess
