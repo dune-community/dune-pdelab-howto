@@ -189,23 +189,17 @@ void navierstokes
   MLOP mlop(q);
   Dune::PDELab::FractionalStepParameter<RF> method;
   typedef typename VectorBackend::MatrixBackend MatrixBackend;
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
 
-#ifdef USE_OLD_STUFF
-  typedef Dune::PDELab::InstationaryGridOperatorSpace
-    <RF,V,GFS,GFS,LOP,MLOP,C,C,MatrixBackend> IGOS;
-  IGOS igos(method,gfs,cg,gfs,cg,lop,mlop);
-#else
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MatrixBackend,Real,Real,Real,C,C> GO0;
   GO0 go0(gfs,cg,gfs,cg,lop);
 
   typedef Dune::PDELab::GridOperator<GFS,GFS,MLOP,MatrixBackend,Real,Real,Real,C,C> GO1;
   GO1 go1(gfs,cg,gfs,cg,mlop);
 
-  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGOS;
-  IGOS igos(go0,go1);
-  igos.divideMassTermByDeltaT();
-#endif
+  typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
+  IGO igo(go0,go1);
+  igo.divideMassTermByDeltaT();
+  typedef typename IGO::Traits::Domain V;
 
   //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
@@ -216,14 +210,14 @@ void navierstokes
   // Solve (possibly) nonlinear problem
   std::cout << "=== Begin Newton:" << std::endl;
   timer.reset();
-  typedef Dune::PDELab::Newton<IGOS,LinearSolver,V> PDESolver;
-  PDESolver newton(igos,ls);
+  typedef Dune::PDELab::Newton<IGO,LinearSolver,V> PDESolver;
+  PDESolver newton(igo,ls);
   newton.setReassembleThreshold(0.0);
   newton.setVerbosityLevel(2);
   newton.setMaxIterations(50);
   newton.setLineSearchMaxIterations(30);
 
-  Dune::PDELab::OneStepMethod<Real,IGOS,PDESolver,V,V> osm(method,igos,newton);
+  Dune::PDELab::OneStepMethod<Real,IGO,PDESolver,V,V> osm(method,igo,newton);
   osm.setVerbosityLevel(2);
 
   // Make coefficent vector and initialize it from a function
