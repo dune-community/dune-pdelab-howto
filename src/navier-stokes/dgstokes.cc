@@ -71,7 +71,7 @@ void stokes (const GV& gv, std::string filename)
     // velocity
     Dune::dinfo << "--- v^dim" << std::endl;
     typedef Dune::PDELab::PowerGridFunctionSpace<vGFS,dim,
-        Dune::PDELab::GridFunctionSpaceComponentBlockwiseMapper<vBlockSize> > velocityGFS;
+        Dune::PDELab::ComponentBlockwiseOrderingTag<vBlockSize> > velocityGFS;
     velocityGFS velocityGfs(vGfs);
     // p
     Dune::dinfo << "--- p" << std::endl;
@@ -82,7 +82,7 @@ void stokes (const GV& gv, std::string filename)
     // GFS
     Dune::dinfo << "--- v^dim,p" << std::endl;
     typedef Dune::PDELab::CompositeGridFunctionSpace<
-    Dune::PDELab::GridFunctionSpaceComponentBlockwiseMapper<dim * vBlockSize, pBlockSize>,
+    Dune::PDELab::ComponentBlockwiseOrderingTag<dim * vBlockSize, pBlockSize>,
         velocityGFS, pGFS> GFS;
     GFS gfs(velocityGfs, pGfs);
     std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
