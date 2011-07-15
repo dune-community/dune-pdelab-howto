@@ -189,11 +189,17 @@ void stokes (const GV& gv, std::string filename)
 
     // <<<4>>> Make grid Function operator
     watch.reset();
-    typedef Dune::PDELab::StokesDG<FType,BType,VType,PType> LocalDGOperator;
     const std::string method = "nipg";
     const double mu = 1.0;
-    typename Dune::PDELab::DefaultInteriorPenalty<RF> ip_factor(method,mu);
-    LocalDGOperator lop(method, ip_factor, mu, f,b,v,p);
+    typedef typename Dune::PDELab::DefaultInteriorPenalty<RF> PenaltyTerm;
+    PenaltyTerm ip_term(method,mu);
+
+    typedef Dune::PDELab::StokesDGParameters<GV,FType,BType,VType,PType,PenaltyTerm>
+      LocalDGOperatorParameters;
+    LocalDGOperatorParameters lop_params(method, mu, f,b,v,p, ip_term);
+    typedef Dune::PDELab::StokesDG<LocalDGOperatorParameters> LocalDGOperator;
+    const int superintegration_order = 0;
+    LocalDGOperator lop(lop_params,superintegration_order);
 
     typedef Dune::PDELab::EmptyTransformation C;
     typedef Dune::PDELab::GridOperator
