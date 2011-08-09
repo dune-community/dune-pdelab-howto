@@ -46,6 +46,11 @@
 
 #include "../utility/gridexamples.hh"
 
+
+
+#define HANGING_NODES_REFINEMENT // Macro to switch on hanging nodes tests
+
+
 //===============================================================
 //===============================================================
 // Solve the Poisson equation
@@ -156,13 +161,23 @@ public:
   }
 };
 
+
+
+
+
+
+
 //===============================================================
 // Problem setup and solution 
 //===============================================================
 
 // generate a P1 function and output it
-template<typename GV, typename FEM, typename CON, int q> 
-void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con = CON())
+template<typename GV, typename FEM, typename BCTYPE, typename CON, int q> 
+void poisson( const GV& gv, 
+              const FEM& fem, 
+              std::string filename, 
+              const BCTYPE& bctype,    // boundary condition type
+              const CON& con = CON() )
 {
   // constants and types
   typedef typename GV::Grid::ctype DF;
@@ -178,7 +193,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
   C cg;
   cg.clear();
-  BCTypeParam bctype; // boundary condition type
+
   Dune::PDELab::constraints(bctype,gfs,cg);
 
   // make grid operator
@@ -251,14 +266,73 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const CON& con
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  //Dune::SubsamplingVTKWriter<GV> vtkwriter( gv, 1 );
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
   vtkwriter.write(filename,Dune::VTKOptions::ascii);
 }
 
 
+
+
+
+
+
+#ifdef HANGING_NODES_REFINEMENT
+
+template<typename Grid, typename Iterator>
+void doSomeRandomRefinement( Grid & grid ){
+
+  // Do some random refinement. The result is a grid that may
+  // contain multiple hanging nodes per edge!
+
+  for(int i=0; i<4;++i){
+    Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
+    Iterator eit = grid.template leafend<0,Dune::All_Partition>();
+    
+    for(;it!=eit;++it){
+      if((double)rand()/(double)RAND_MAX > 0.6)
+        grid.mark(1,*(it));
+    }
+    grid.preAdapt();
+    grid.adapt();
+    grid.postAdapt();
+  }
+
+}
+
+#endif
+
+
+
+
+
+
+
+
+
 //===============================================================
 // Main program with grid setup
 //===============================================================
+// The domain is always the unit square in 2D or the unit cube in 3D
+//
+// Overview:
+//
+// Testcase 1.) ALUGrid 2D triangular cells (hanging nodes refinement) - Pk elements
+// Testcase 2.) ALUGrid 3D cubical cells (hanging nodes refinement) - Q1 elements
+// Testcase 3.) ALUGrid 3D tetrahedral cells (uniform refinement) - Pk elements
+//
+// Testcase 4.) YaspGrid 2D rectangular cells (uniform refinement) - Q1 elements
+// Testcase 5.) YaspGrid 2D rectangular cells (uniform refinement) - Q2 elements
+// Testcase 6.) YaspGrid 3D rectangular cells (uniform refinement) - Q1 elements
+//
+// Testcase  7.) UG 2D triangular cells (hanging nodes refinement) - P1 elements
+// Testcase  8.) UG 2D rectangular cells (hanging nodes refinement) - Q1 elements
+// Testcase  9.) UG 3D cubical cells (hanging nodes refinement) - Q1 elements
+// Testcase 10.) UG 3D tetrahedral cells (hanging nodes refinement) - P1 elements
+//
+// Testcase 11.) Alberta Grid 2D triangular cells (uniform refinement) - Pk elements
+// 
+// Not supported by the Grid: ALUGrid 2D rectangular cells
 
 int main(int argc, char** argv)
 {
@@ -267,37 +341,93 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc, argv);
 
 #if HAVE_ALUGRID
-    // unit square with uniform refinement
     {
+#ifdef HANGING_NODES_REFINEMENT
+      std::cout 
+        << std::endl << std::endl
+        << "Testcase 1.) ALUGrid 2D triangular cells (hanging nodes refinement) - P1 elements" 
+        << std::endl;
+#else
+      std::cout 
+        << std::endl << std::endl
+        << "Testcase 1.) ALUGrid 2D triangular cells (uniform refinement) - P1 elements" 
+        << std::endl;
+#endif
+
       // make grid 
-      ALUUnitSquare grid;
+      typedef ALUUnitSquare Grid;
+      Grid grid;
       grid.globalRefine(4);
 
-      // get view
+      typedef ALUUnitSquare::Codim<0>::Partition<Dune::All_Partition>::LeafIterator Iterator;
+      typedef ALUUnitSquare::LeafIntersectionIterator IntersectionIterator;
       typedef ALUUnitSquare::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
-      
+      typedef ALUUnitSquare::ctype ctype;
+
+      // get view
+      const GV& gv=grid.leafView();
+
+#ifdef HANGING_NODES_REFINEMENT
+      doSomeRandomRefinement<Grid,Iterator>( grid );
+#endif
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
-      const int k=3;
+      const int k=1;
       const int q=2*k;
       typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
       FEM fem(gv);
-      
-      // solve problem
-      
+
+      // We need the boundary function for the hanging nodes
+      // constraints engine as we have to distinguish between hanging
+      // nodes on dirichlet and on neumann boundaries
+      BCTypeParam bctype;
+
+#ifdef HANGING_NODES_REFINEMENT
+      // This is the type of the local constraints assembler that has
+      // to be adapted for different local basis spaces and grid types
+      typedef Dune::PDELab::HangingNodesConstraintsAssemblers::SimplexGridP1Assembler ConstraintsAssembler;
+
+      // The type of the constraints engine
+      typedef Dune::PDELab::HangingNodesDirichletConstraints
+        <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
+
+      // Get constraints engine. We set adaptToIsolateHangingNodes =
+      // true and therefore the constructor refines the grid until
+      // there are less than two hanging nodes per edge.
+      Constraints constraints(grid,true,bctype);
+
+      poisson<GV,FEM,BCTypeParam,Constraints,q>( gv,
+                                                 fem,
+                                                 "poisson_ALU_Pk_2d_hangingNodes",
+                                                 bctype,
+                                                 constraints
+                                                 );
+#else
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_ALU_Pk_2d");
+      poisson<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_ALU_Pk_2d",bctype);
+#endif
     }
 #endif
 
 
 #if HAVE_ALUGRID
-    // unit cube with hanging node refinement
     {
+#ifdef HANGING_NODES_REFINEMENT
+      std::cout 
+        << std::endl << std::endl
+        << "Testcase 2.) ALUGrid 3D cubical cells (hanging nodes refinement) - Q1 elements" 
+        << std::endl;
+#else
+      std::cout 
+        << std::endl << std::endl
+        << "Alternative Testcase 2.) ALUGrid 3D cubical cells (uniform refinement) - Q1 elements" 
+        << std::endl;
+#endif
+
       // make grid 
-      ALUCubeUnitSquare grid;
+      typedef ALUCubeUnitSquare Grid;
+      Grid grid;
       grid.globalRefine(1);
       
       typedef ALUCubeUnitSquare::Codim<0>::Partition<Dune::All_Partition>::LeafIterator 
@@ -308,21 +438,10 @@ int main(int argc, char** argv)
 
       // get view
       const GV& gv=grid.leafView(); 
-      
-      // Do some random refinement. The result is a grid that may
-      // contain multiple hanging nodes per edge.
-      for(int i=0; i<4;++i){
-        Iterator it = grid.leafbegin<0,Dune::All_Partition>();
-        Iterator eit = grid.leafend<0,Dune::All_Partition>();
 
-        for(;it!=eit;++it){
-          if((double)rand()/(double)RAND_MAX > 0.6)
-            grid.mark(1,*(it));
-        }
-        grid.preAdapt();
-        grid.adapt();
-        grid.postAdapt();
-      }
+#ifdef HANGING_NODES_REFINEMENT
+      doSomeRandomRefinement<Grid,Iterator>( grid );
+#endif
 
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -331,35 +450,38 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,R,3> FEM;
       FEM fem;
 
-      // We need the boundary function for the hanging nodes
-      // constraints engine as we have to distinguish between hanging
-      // nodes on dirichlet and on neumann boundaries
-
       BCTypeParam bctype;
-
-      // This is the type of the local constraints assembler that has
-      // to be adapted for different local basis spaces and grid types
+      
+#ifdef HANGING_NODES_REFINEMENT
       typedef Dune::PDELab::HangingNodesConstraintsAssemblers::CubeGridQ1Assembler ConstraintsAssembler;
-
-      // The type of the constraints engine
       typedef Dune::PDELab::HangingNodesDirichletConstraints
         <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
-
-      // Get constraints engine. We set adaptToIsolateHangingNodes =
-      // true as ALU Grid refinement allows for the appearance of
-      // multiple hanging nodes per edge.
+      
       Constraints constraints(grid,true,bctype);
       
       // solve problem
-      poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_ALU_Q1_3d",constraints);
-    }
+      poisson<GV,FEM,BCTypeParam,Constraints,q>( gv,
+                                                 fem,
+                                                 "poisson_ALU_Q1_3d_hangingNodes",
+                                                 bctype,
+                                                 constraints
+                                                 );
+#else
+      typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
+      poisson<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_ALU_Q1_3d",bctype);
+#endif
 
+    }
 #endif
 
 
-    // ALU Pk 3D test
 #if HAVE_ALUGRID
     {
+      std::cout 
+        << std::endl << std::endl
+        << "Testcase 3.) ALUGrid 3D tetrahedral cells (uniform refinement) - Pk elements" 
+        << std::endl;
+
       // make grid
       typedef ALUUnitCube<3> UnitCube;
       UnitCube unitcube;
@@ -377,10 +499,12 @@ int main(int argc, char** argv)
       const int q=2*k;
       typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
+
+      BCTypeParam bctype;
   
       // solve problem
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_ALU_Pk_3d");
+      poisson<GV,FEM,BCTypeParam,Constraints,q>( gv,fem,"poisson_ALU_Pk_3d", bctype );
 
     }
 #endif
@@ -388,8 +512,13 @@ int main(int argc, char** argv)
 
     //return 0;
 
-    // YaspGrid Q1 2D test
+#if HAVE_YASP
     {
+      std::cout 
+        << std::endl << std::endl
+        << "Testcase 4.) YaspGrid 2D rectangular cells (uniform refinement) - Q1 elements" 
+        << std::endl;
+
       // make grid
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(1);
@@ -403,16 +532,22 @@ int main(int argc, char** argv)
 
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double,2> FEM;
+      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double> FEM;
       FEM fem;
   
+      BCTypeParam bctype;
       // solve problem
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson<GV,FEM,Constraints,2>(gv,fem,"poisson_yasp_Q1_2d");
+      poisson<GV,FEM,BCTypeParam,Constraints,2>(gv,fem,"poisson_yasp_Q1_2d",bctype);
     }
 
-    // YaspGrid Q2 2D test
+
     {
+      std::cout 
+        << std::endl << std::endl
+        << "Testcase 5.) YaspGrid 2D rectangular cells (uniform refinement) - Q2 elements" 
+        << std::endl;
+
       // make grid
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(1);
@@ -428,14 +563,19 @@ int main(int argc, char** argv)
       typedef GV::Grid::ctype DF;
       typedef Dune::PDELab::Q22DLocalFiniteElementMap<DF,double> FEM;
       FEM fem;
+      BCTypeParam bctype;
   
       // solve problem
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson<GV,FEM,Constraints,2>(gv,fem,"poisson_yasp_Q2_2d");
+      poisson<GV,FEM,BCTypeParam,Constraints,2>(gv,fem,"poisson_yasp_Q2_2d",bctype);
     }
 
-    // YaspGrid Q1 3D test
     {
+      std::cout 
+        << std::endl << std::endl
+        << "Testcase 6.) YaspGrid 3D rectangular cells (uniform refinement) - Q1 elements" 
+        << std::endl;
+
       // make grid
       Dune::FieldVector<double,3> L(1.0);
       Dune::FieldVector<int,3> N(1);
@@ -451,41 +591,159 @@ int main(int argc, char** argv)
       typedef GV::Grid::ctype DF;
       typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double,3> FEM;
       FEM fem;
+      BCTypeParam bctype;
   
       // solve problem
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson<GV,FEM,Constraints,2>(gv,fem,"poisson_yasp_Q1_3d");
+      poisson<GV,FEM,BCTypeParam,Constraints,2>(gv,fem,"poisson_yasp_Q1_3d",bctype);
     }
+#endif
 
-    // UG Pk 2D test
 #if HAVE_UG
-
     {
+#ifdef HANGING_NODES_REFINEMENT
+      std::cout 
+        << std::endl << std::endl
+        << "Testcase 7.) UG 2D triangular cells (hanging nodes refinement) - P1 elements" 
+        << std::endl;
+#else
+      std::cout 
+        << std::endl << std::endl
+        << "Alternative Testcase 7.) UG 2D triangular cells (uniform refinement) - P1 elements" 
+        << std::endl;
+#endif
+
       // make grid 
-      UGUnitSquare grid;
+      typedef UGUnitSquare Grid;
+      Grid grid;
+      grid.setRefinementType( Grid::LOCAL );
+      grid.setClosureType( Grid::NONE );  // This is needed to get hanging nodes refinement! Otherwise you would get triangles.
       grid.globalRefine(4);
 
-      // get view
+      typedef UGUnitSquare::Codim<0>::Partition<Dune::All_Partition>::LeafIterator Iterator;
+      typedef UGUnitSquare::LeafIntersectionIterator IntersectionIterator;
       typedef UGUnitSquare::LeafGridView GV;
+      typedef UGUnitSquare::ctype ctype;
+
+      // get view
       const GV& gv=grid.leafView(); 
  
+#ifdef HANGING_NODES_REFINEMENT
+      doSomeRandomRefinement<Grid,Iterator>( grid );
+#endif
+
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
-      const int k=3;
+      const int k=1; //k=3;
       const int q=2*k;
       typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
       FEM fem(gv);
   
-      // solve problem
-      typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_UG_Pk_2d");
-    }
+      // We need the boundary function for the hanging nodes
+      // constraints engine as we have to distinguish between hanging
+      // nodes on dirichlet and on neumann boundaries
+      BCTypeParam bctype;
 
+#ifdef HANGING_NODES_REFINEMENT
+      typedef Dune::PDELab::HangingNodesConstraintsAssemblers::SimplexGridP1Assembler ConstraintsAssembler;
+      typedef Dune::PDELab::HangingNodesDirichletConstraints
+        <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
+      Constraints constraints(grid,true,bctype);
+      poisson<GV,FEM,BCTypeParam,Constraints,q>( gv,
+                                                 fem,
+                                                 "poisson_UG_Pk_2d_hangingNodes",
+                                                 bctype,
+                                                 constraints 
+                                                 );
+#else
+      typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
+      poisson<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_UG_Pk_2d",bctype);
+#endif
+
+    }
+#endif // HAVE_UG
+
+
+
+
+
+#if HAVE_UG
     {
+#ifdef HANGING_NODES_REFINEMENT
+      std::cout 
+        << std::endl << std::endl
+        << "Testcase 8.) UG 2D rectangular cells (hanging nodes refinement) - Q1 elements" 
+        << std::endl;
+#else
+      std::cout 
+        << std::endl << std::endl
+        << "Alternative Testcase 8.) UG 2D rectangular cells (uniform refinement) - Q1 elements" 
+        << std::endl;
+#endif
+      // make grid (unitcube made of cubes)
+      typedef UGUnitSquareQ Grid;
+      Grid grid;
+
+      grid.setRefinementType( Grid::LOCAL );
+      grid.setClosureType( Grid::NONE );  // This is needed to get hanging nodes refinement! Otherwise you would get triangles.
+      grid.globalRefine(4);
+
+      typedef UGUnitSquareQ::Codim<0>::Partition<Dune::All_Partition>::LeafIterator Iterator;
+      typedef UGUnitSquareQ::LeafIntersectionIterator IntersectionIterator;
+      typedef UGUnitSquareQ::LeafGridView GV;
+      typedef UGUnitSquareQ::ctype ctype;
+      
+      // get view
+      const GV& gv=grid.leafView();
+
+#ifdef HANGING_NODES_REFINEMENT
+      doSomeRandomRefinement<Grid,Iterator>( grid );
+#endif
+
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,R,2> FEM;
+      FEM fem;
+
+      BCTypeParam bctype;
+
+#ifdef HANGING_NODES_REFINEMENT
+      typedef Dune::PDELab::HangingNodesConstraintsAssemblers::CubeGridQ1Assembler ConstraintsAssembler;
+      typedef Dune::PDELab::HangingNodesDirichletConstraints
+        <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
+      Constraints constraints(grid,true,bctype);
+      poisson<GV,FEM,BCTypeParam,Constraints,2>( gv,
+                                                 fem,
+                                                 "poisson_UG_Q1_2d_hangingNodes",
+                                                 bctype,
+                                                 constraints
+                                                 );
+#else
+      typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
+      poisson<GV,FEM,BCTypeParam,Constraints,2>(gv,fem,"poisson_UG_Q1_2d",bctype);
+#endif
+
+    }
+#endif // HAVE_UG
+
+
+
+
+
+
+#ifdef HAVE_UG
+    {
+#ifdef HANGING_NODES_REFINEMENT
+      std::cout 
+        << std::endl << std::endl
+        << "Testcase 9.) UG 3D cubical cells (hanging nodes refinement) - Q1 elements" 
+        << std::endl;
+#endif
       // get grid and do a single global refine
-      UGUnitCube<3,1> ugunitcube;
       typedef UGUnitCube<3,1>::GridType Grid;
+      UGUnitCube<3,1> ugunitcube;
       Grid & grid = ugunitcube.grid();
       grid.setRefinementType(Grid::LOCAL);
       grid.setClosureType(Grid::NONE);
@@ -500,21 +758,10 @@ int main(int argc, char** argv)
       // get view
       const GV& gv=grid.leafView(); 
 
-      // Do some random refinement. The result is a grid that may
-      // contain multiple hanging nodes per edge.
-      for(int i=0; i<4;++i){
-        Iterator it = grid.leafbegin<0,Dune::All_Partition>();
-        Iterator eit = grid.leafend<0,Dune::All_Partition>();
+#ifdef HANGING_NODES_REFINEMENT
+      doSomeRandomRefinement<Grid,Iterator>( grid );
+#endif
 
-        for(;it!=eit;++it){
-          if((double)rand()/(double)RAND_MAX > 0.6)
-            grid.mark(1,*(it));
-        }
-        grid.preAdapt();
-        grid.adapt();
-        grid.postAdapt();
-      }
- 
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
@@ -522,33 +769,107 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,R,3> FEM;
       FEM fem;
 
-      // We need the boundary function for the hanging nodes
-      // constraints engine as we have to distinguish between hanging
-      // nodes on dirichlet and on neumann boundaries
       BCTypeParam bctype;
 
-      // This is the type of the local constraints assembler that has
-      // to be adapted for different local basis spaces and grid types
+#ifdef HANGING_NODES_REFINEMENT
       typedef Dune::PDELab::HangingNodesConstraintsAssemblers::CubeGridQ1Assembler ConstraintsAssembler;
 
-      // The type of the constraints engine
       typedef Dune::PDELab::HangingNodesDirichletConstraints
         <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
 
-      // Get constraints engine. We set adaptToIsolateHangingNodes =
-      // true and therefore the constructor refines the grid until
-      // there are fewer than one hanging node per edge.
       Constraints constraints(grid,true,bctype);
-
-      // solve problem
-      poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_UG_Q1_3d",constraints);
-      
-    }
+      poisson<GV,FEM,BCTypeParam,Constraints,q>( gv,
+                                                 fem,
+                                                 "poisson_UG_Q1_3d_hangingNodes",
+                                                 bctype,
+                                                 constraints
+                                                 );
 #endif
+
+    }
+#endif// HAVE_UG
+      
+
+
+
+
+
+#ifdef HAVE_UG
+    {
+#ifdef HANGING_NODES_REFINEMENT
+      std::cout 
+        << std::endl << std::endl
+        << "Testcase 10.) UG 3D tetrahedral cells (hanging nodes refinement) - P1 elements" 
+        << std::endl;
+#else
+      std::cout 
+        << std::endl << std::endl
+        << "Alternative Testcase 10.) UG 3D tetrahedral cells (uniform refinement) - P1 elements" 
+        << std::endl;
+#endif
+
+      // UG Grid made of tetrahedrons - test Pk3D with hanging nodes!
+      typedef UGUnitCube<3,2>::GridType Grid;
+      UGUnitCube<3,2> ugunitcube;  
+      Grid & grid = ugunitcube.grid();
+      grid.setRefinementType(Grid::LOCAL);
+      grid.setClosureType(Grid::NONE);
+      grid.globalRefine(1);
+
+      typedef Grid::Codim<0>::Partition<Dune::All_Partition>::LeafIterator Iterator;
+      typedef Grid::LeafIntersectionIterator IntersectionIterator;
+      typedef Grid::LeafGridView GV;
+      typedef Grid::ctype ctype;
+      
+      // get view
+      const GV& gv=grid.leafView(); 
+
+#ifdef HANGING_NODES_REFINEMENT
+      doSomeRandomRefinement<Grid,Iterator>( grid );
+#endif
+ 
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+      const int k=1;     // polynomial degree
+      const int q=2*k;
+      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> FEM;
+      FEM fem(gv);
+      BCTypeParam bctype;
+
+#ifdef HANGING_NODES_REFINEMENT
+      typedef Dune::PDELab::HangingNodesConstraintsAssemblers::SimplexGridP1Assembler ConstraintsAssembler;
+      typedef Dune::PDELab::HangingNodesDirichletConstraints
+        <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
+      Constraints constraints(grid,true,bctype);
+      poisson<GV,FEM,BCTypeParam,Constraints,q>( gv,
+                                                 fem,
+                                                 "poisson_UG_Pk_3d_hangingNodes",
+                                                 bctype,
+                                                 constraints
+                                                 );
+#else
+      typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
+      poisson<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_UG_Pk_3d",bctype);
+#endif
+
+    }
+#endif // HAVE_UG
+
+
+
+
+
+
 
 
 #if HAVE_ALBERTA
     {
+      std::cout 
+        << std::endl << std::endl
+        << "Testcase 11.) Alberta 2D triangular cells (uniform refinement) - Pk elements"
+        << std::endl;
+
       // make grid 
       AlbertaUnitSquare grid;
       grid.globalRefine(8);
@@ -567,7 +888,7 @@ int main(int argc, char** argv)
       
       // solve problem
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson<GV,FEM,Constraints,q>(gv,fem,"poisson_Alberta_Pk_2d");
+      poisson<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_Alberta_Pk_2d",bctype);
     }
 #endif
 
