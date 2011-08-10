@@ -702,9 +702,6 @@ int main(int argc, char** argv)
       grid.setRefinementType( Grid::LOCAL );
       grid.setClosureType( Grid::NONE );  // This is needed to get hanging nodes refinement! Otherwise you would get triangles.
       grid.globalRefine(4);
-      
-      // get view
-      const GV& gv=grid.leafView();
 
 #ifdef HANGING_NODES_REFINEMENT
       doSomeRandomRefinement<Grid>( grid );
