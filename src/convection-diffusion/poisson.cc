@@ -885,6 +885,7 @@ int main(int argc, char** argv)
       const int q=2*k;
       typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
       FEM fem(gv);
+      BCTypeParam bctype;
       
       // solve problem
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
