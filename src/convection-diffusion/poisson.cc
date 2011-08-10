@@ -279,11 +279,14 @@ void poisson( const GV& gv,
 
 #ifdef HANGING_NODES_REFINEMENT
 
-template<typename Grid, typename Iterator>
+template<typename Grid>
 void doSomeRandomRefinement( Grid & grid ){
 
   // Do some random refinement. The result is a grid that may
   // contain multiple hanging nodes per edge!
+
+  typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator 
+    Iterator;
 
   for(int i=0; i<4;++i){
     Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
@@ -357,19 +360,15 @@ int main(int argc, char** argv)
       // make grid 
       typedef ALUUnitSquare Grid;
       Grid grid;
-      grid.globalRefine(4);
-
-      typedef ALUUnitSquare::Codim<0>::Partition<Dune::All_Partition>::LeafIterator Iterator;
-      typedef ALUUnitSquare::LeafIntersectionIterator IntersectionIterator;
-      typedef ALUUnitSquare::LeafGridView GV;
-      typedef ALUUnitSquare::ctype ctype;
-
-      // get view
-      const GV& gv=grid.leafView();
+      grid.globalRefine(2);
 
 #ifdef HANGING_NODES_REFINEMENT
-      doSomeRandomRefinement<Grid,Iterator>( grid );
+      doSomeRandomRefinement<Grid>( grid );
 #endif
+      // get view
+      typedef Grid::LeafGridView GV;
+      const GV& gv=grid.leafView();
+
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
@@ -429,19 +428,13 @@ int main(int argc, char** argv)
       typedef ALUCubeUnitSquare Grid;
       Grid grid;
       grid.globalRefine(1);
-      
-      typedef ALUCubeUnitSquare::Codim<0>::Partition<Dune::All_Partition>::LeafIterator 
-        Iterator;
-      typedef ALUCubeUnitSquare::LeafIntersectionIterator IntersectionIterator;
-      typedef ALUCubeUnitSquare::LeafGridView GV;
-      typedef ALUCubeUnitSquare::ctype ctype;
-
-      // get view
-      const GV& gv=grid.leafView(); 
 
 #ifdef HANGING_NODES_REFINEMENT
-      doSomeRandomRefinement<Grid,Iterator>( grid );
+      doSomeRandomRefinement<Grid>( grid );
 #endif
+      // get view
+      typedef Grid::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
 
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -477,34 +470,60 @@ int main(int argc, char** argv)
 
 #if HAVE_ALUGRID
     {
+#ifdef HANGING_NODES_REFINEMENT
       std::cout 
         << std::endl << std::endl
-        << "Testcase 3.) ALUGrid 3D tetrahedral cells (uniform refinement) - Pk elements" 
+        << "Testcase 3.) ALUGrid 3D tetrahedral cells (hanging nodes refinement) - Pk elements" 
         << std::endl;
-
+#else
+      std::cout 
+        << std::endl << std::endl
+        << "Alternative Testcase 3.) ALUGrid 3D tetrahedral cells (uniform refinement) - Pk elements" 
+        << std::endl;
+#endif
       // make grid
       typedef ALUUnitCube<3> UnitCube;
       UnitCube unitcube;
-      unitcube.grid().globalRefine(2);
+      typedef ALUUnitCube<3>::GridType Grid; 
+      Grid &grid = unitcube.grid();
+      grid.globalRefine(1);
 
+#ifdef HANGING_NODES_REFINEMENT
+      doSomeRandomRefinement<Grid>( grid );
+#endif
       // get view
-      typedef UnitCube::GridType::LeafGridView GV;
-      const GV& gv=unitcube.grid().leafView(); 
+      typedef Grid::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
  
       // make finite element map
       
       typedef UnitCube::GridType::ctype DF;
       typedef double R;
-      const int k=4;
+      const int k=1;
       const int q=2*k;
       typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
 
       BCTypeParam bctype;
   
+
+#ifdef HANGING_NODES_REFINEMENT
+      typedef Dune::PDELab::HangingNodesConstraintsAssemblers::SimplexGridP1Assembler ConstraintsAssembler;
+      typedef Dune::PDELab::HangingNodesDirichletConstraints
+        <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
+      Constraints constraints(grid,true,bctype);
       // solve problem
+      poisson<GV,FEM,BCTypeParam,Constraints,q>( gv,
+                                                 fem,
+                                                 "poisson_ALU_Pk_3d_hangingNodes",
+                                                 bctype,
+                                                 constraints
+                                                 );
+#else
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
       poisson<GV,FEM,BCTypeParam,Constraints,q>( gv,fem,"poisson_ALU_Pk_3d", bctype );
+#endif
+
 
     }
 #endif
@@ -619,18 +638,13 @@ int main(int argc, char** argv)
       grid.setRefinementType( Grid::LOCAL );
       grid.setClosureType( Grid::NONE );  // This is needed to get hanging nodes refinement! Otherwise you would get triangles.
       grid.globalRefine(4);
-
-      typedef UGUnitSquare::Codim<0>::Partition<Dune::All_Partition>::LeafIterator Iterator;
-      typedef UGUnitSquare::LeafIntersectionIterator IntersectionIterator;
-      typedef UGUnitSquare::LeafGridView GV;
-      typedef UGUnitSquare::ctype ctype;
-
-      // get view
-      const GV& gv=grid.leafView(); 
  
 #ifdef HANGING_NODES_REFINEMENT
-      doSomeRandomRefinement<Grid,Iterator>( grid );
+      doSomeRandomRefinement<Grid>( grid );
 #endif
+      // get view
+      typedef Grid::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
 
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -688,18 +702,16 @@ int main(int argc, char** argv)
       grid.setRefinementType( Grid::LOCAL );
       grid.setClosureType( Grid::NONE );  // This is needed to get hanging nodes refinement! Otherwise you would get triangles.
       grid.globalRefine(4);
-
-      typedef UGUnitSquareQ::Codim<0>::Partition<Dune::All_Partition>::LeafIterator Iterator;
-      typedef UGUnitSquareQ::LeafIntersectionIterator IntersectionIterator;
-      typedef UGUnitSquareQ::LeafGridView GV;
-      typedef UGUnitSquareQ::ctype ctype;
       
       // get view
       const GV& gv=grid.leafView();
 
 #ifdef HANGING_NODES_REFINEMENT
-      doSomeRandomRefinement<Grid,Iterator>( grid );
+      doSomeRandomRefinement<Grid>( grid );
 #endif
+      // get view
+      typedef Grid::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
 
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -749,18 +761,12 @@ int main(int argc, char** argv)
       grid.setClosureType(Grid::NONE);
       grid.globalRefine(1);
 
-      typedef Grid::Codim<0>::Partition<Dune::All_Partition>::LeafIterator 
-        Iterator;
-      typedef Grid::LeafIntersectionIterator IntersectionIterator;
-      typedef Grid::LeafGridView GV;
-      typedef Grid::ctype ctype;
-      
-      // get view
-      const GV& gv=grid.leafView(); 
-
 #ifdef HANGING_NODES_REFINEMENT
-      doSomeRandomRefinement<Grid,Iterator>( grid );
+      doSomeRandomRefinement<Grid>( grid );
 #endif
+      // get view
+      typedef Grid::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
 
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -816,17 +822,12 @@ int main(int argc, char** argv)
       grid.setClosureType(Grid::NONE);
       grid.globalRefine(1);
 
-      typedef Grid::Codim<0>::Partition<Dune::All_Partition>::LeafIterator Iterator;
-      typedef Grid::LeafIntersectionIterator IntersectionIterator;
-      typedef Grid::LeafGridView GV;
-      typedef Grid::ctype ctype;
-      
-      // get view
-      const GV& gv=grid.leafView(); 
-
 #ifdef HANGING_NODES_REFINEMENT
-      doSomeRandomRefinement<Grid,Iterator>( grid );
+      doSomeRandomRefinement<Grid>( grid );
 #endif
+      // get view
+      typedef Grid::LeafGridView GV;
+      const GV& gv=grid.leafView(); 
  
       // make finite element map
       typedef GV::Grid::ctype DF;
