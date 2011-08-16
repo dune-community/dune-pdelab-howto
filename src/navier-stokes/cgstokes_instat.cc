@@ -52,8 +52,7 @@
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include<dune/pdelab/localoperator/cg_stokes.hh>
-#include <dune/common/configparser.hh>
-//#include <dune/common/parametertree.hh>
+#include <dune/common/parametertreeparser.hh>
 
 #include<dune/pdelab/localoperator/l2.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
@@ -259,7 +258,7 @@ void navierstokes
   while (time < final_time - dt_min*0.5)
     {
       // do time step
-      osm.apply(time,dt,xold,x);
+      osm.apply(time,dt,xold,initial_solution,x);
 
       {
         // Generate functions suitable for VTK output
@@ -334,12 +333,12 @@ int main(int argc, char** argv)
       example_switch = argv[1];
 
     // Initialize Navier Stokes parameter class from file
-    Dune::ConfigParser config_parser;
+    Dune::ParameterTree config_parser;
     const std::string config_filename("cg_stokes_instat.ini");
     std::cout << "Reading configuration file \""<< config_filename 
               << "\"" << std::endl;
     try{
-      config_parser.parseFile(config_filename,false);
+      Dune::ParameterTreeParser::readINITree(config_filename,config_parser);
     }
     catch(...){
       std::cerr << "The configuration file \"cg_stokes_instat.ini\" "

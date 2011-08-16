@@ -164,7 +164,8 @@ template<typename GV, typename RF>
 class ZeroScalarFunction :
   public Dune::PDELab::AnalyticGridFunctionBase<
   Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-  ZeroScalarFunction<GV,RF> >
+  ZeroScalarFunction<GV,RF> >, public
+  Dune::PDELab::InstationaryFunctionDefaults
 {
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
