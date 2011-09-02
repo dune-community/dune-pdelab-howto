@@ -259,19 +259,21 @@ void driver (Grid& grid, std::string filename_base, double TOL, int maxsteps, do
 
   // make grid function space 
   // note: adaptivity relies on leaf grid view object being updated by the grid on adaptation 
-  typedef Dune::PDELab::ConformingDirichletConstraints CON;
+  typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
-  GFS gfs(grid.leafView(),fem);
+  CON con;
+  GFS gfs(grid.leafView(),fem,con);
   N.push_back(gfs.globalSize());
-
-  // make a degree of freedom vector;
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
-  U u(gfs,0.0);
 
   // refinement loop
   for (int step=0; step<maxsteps; step++)
     {
+      // make a degree of freedom vector;
+      typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
+      U u(gfs,0.0);
+      con.compute_ghosts(gfs);
+      
       // get current leaf view
       const GV& gv=grid.leafView();
 
@@ -279,32 +281,42 @@ void driver (Grid& grid, std::string filename_base, double TOL, int maxsteps, do
       typedef ReentrantCornerProblem<GV,Real> Problem;
       Problem problem;
 
+      // make constraints container and initialize it
+      typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
+      CC cc;
+      Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> bctype(gv,problem);
+      Dune::PDELab::constraints(bctype,gfs,cc);
+      //Dune::PDELab::set_nonconstrained_dofs(cc,0.0,u);
+      std::cout << "constrained dofs=" << cc.size() << " of " << gfs.globalSize() << std::endl;
+
       // initialize DOFS from Dirichlet extension
       // note: currently we start from scratch on every grid
       typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
       G g(gv,problem);
       Dune::PDELab::interpolate(g,gfs,u);
 
-      // make constraints container and initialize it
-      typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
-      CC cc;
-      Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> bctype(gv,problem);
-      Dune::PDELab::constraints(bctype,gfs,cc);
-      Dune::PDELab::set_nonconstrained_dofs(cc,0.0,u);
-      std::cout << "constrained dofs=" << cc.size() << " of " << gfs.globalSize() << std::endl;
+
+      // write vtk file
+      //Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
+      Dune::VTKWriter<GV> vtkwriter2(gv);
+      std::stringstream fullname2;
+      fullname2 << "test" << "_step" << step;
+      vtkwriter2.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<G>(g,"u"));
+      vtkwriter2.write(fullname2.str(),Dune::VTKOptions::binaryappended);
+
 
       // make local operator
       typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
       LOP lop(problem);
       typedef VBE::MatrixBackend MBE;
-      typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
+      typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC,true> GO;
       GO go(gfs,cc,gfs,cc,lop);
 
       // make linear solver and solve problem
-      typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<GO> LS;
-      LS ls (5000,1);
-      // typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
-      // LS ls(10000,1);
+      //typedef Dune::PDELab::ISTLBackend_NOVLP_CG_NOPREC<GFS> LS;
+      //LS ls (gfs,50,2);
+       typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
+       LS ls(10000,1);
       typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
       SLP slp(go,u,ls,1e-10);
       slp.apply();
@@ -365,7 +377,7 @@ void driver (Grid& grid, std::string filename_base, double TOL, int maxsteps, do
       // create grid adaption classes
       typedef Dune::PDELab::L2Projection<GFS,U> Proj;
       Proj proj;
-      typedef Dune::PDELab::ResidualErrorEstimation<GFS,U,ESTLOP> REE;
+      typedef Dune::PDELab::ResidualErrorEstimation<GFS,U,ESTLOP,true> REE;
       REE ree(gfs,estlop);
       typedef Dune::PDELab::EstimationAdaptation<Grid,GFS,U,REE> EA;
       EA ea(grid,gfs,ree,fraction,0.0);
@@ -399,7 +411,6 @@ void driver (Grid& grid, std::string filename_base, double TOL, int maxsteps, do
 		<< std::setw(12) << std::setprecision(4) << std::scientific << ee[i]/(h1s[i])
 		<< std::endl;
     }
-  
 
 }
 
@@ -428,19 +439,20 @@ int main(int argc, char **argv)
       double fraction; sscanf(argv[5],"%lg",&fraction);
 
       // make Alberta grid
-      typedef AlbertaLDomain::Grid GridType;
-      AlbertaLDomain gridp;
-      GridType &grid = gridp;
+     // typedef AlbertaLDomain::Grid GridType;
+     // AlbertaLDomain gridp;
+     // GridType &grid = gridp;
 
       // make UG grid
-      // const int dim=2;
-      // typedef Dune::UGGrid<dim> GridType;
-      // GridType grid;
-      // typedef std::vector<int> GmshIndexMap;
-      // GmshIndexMap boundary_index_map;
-      // GmshIndexMap element_index_map;
-      // Dune::GmshReader<GridType> gmsh_reader;
-      // gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
+       const int dim=2;
+       typedef Dune::UGGrid<dim> GridType;
+       GridType grid;
+       typedef std::vector<int> GmshIndexMap;
+       GmshIndexMap boundary_index_map;
+       GmshIndexMap element_index_map;
+       Dune::GmshReader<GridType> gmsh_reader;
+       gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
+       grid.loadBalance();
 
       for (int i=0; i<start_level; i++) grid.globalRefine(1);
       driver(grid,"ldomain",TOL,maxsteps,fraction);

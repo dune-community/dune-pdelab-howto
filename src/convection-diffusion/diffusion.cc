@@ -429,28 +429,31 @@ int main(int argc, char** argv)
               if (method=="SIPG") {
                 if (degree_dyn==1) {
                   const int degree=1;
-                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::cube> FEMDG;
+                  //use MonomImp to get correct blocksize for OBP
+                  //typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::cube> FEMDG;
+                  //const int blocksize = Dune::MonomImp::Size<dim,degree>::val;
+                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
                   runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"CUBE",i,"SIPG","ON",2.0);
                 }
                 if (degree_dyn==2) {
                   const int degree=2;
-                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::cube> FEMDG;
+                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
                   runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"CUBE",i,"SIPG","ON",2.0);
                 }
                 if (degree_dyn==3) {
                   const int degree=3;
-                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::cube> FEMDG;
+                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
                   runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"CUBE",i,"SIPG","ON",2.0);
                 }
                 if (degree_dyn==4) {
                   const int degree=4;
-                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::cube> FEMDG;
+                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
                   runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"CUBE",i,"SIPG","ON",2.0);
@@ -611,6 +614,7 @@ int main(int argc, char** argv)
             }
         }
 #endif
+
     }
   catch (Dune::Exception &e)
     {
