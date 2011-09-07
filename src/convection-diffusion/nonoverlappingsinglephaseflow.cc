@@ -313,7 +313,7 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
  
-      driver(problem,gv,fem,"UG3d_P1",q);
+      //driver(problem,gv,fem,"UG3d_P1",q);
     }
 #endif
  
