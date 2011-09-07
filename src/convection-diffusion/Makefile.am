@@ -4,7 +4,7 @@
 #LDADD = $(UG_LDFLAGS) $(AMIRAMESH_LDFLAGS) $(UG_LIBS) $(AMIRAMESH_LIBS)
 #AM_CPPFLAGS = $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS)
 dist_noinst_DATA = poisson laplacedirichletccfv
-SUBDIRS = amgzeug
+SUBDIRS = 
 GRIDDIM=2
 
 if SUPERLU
