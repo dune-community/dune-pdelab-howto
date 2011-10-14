@@ -5,38 +5,32 @@
 // Define parameter functions f,g,j and \partial\Omega_D/N
 //===============================================================
 
-
-
-// constraints parameter class for selecting boundary condition type 
-class BCTypeParam_HagenPoiseuilleVelocity
-  : public Dune::PDELab::DirichletConstraintsParameters
-    /*@\label{bcp:base}@*/
+// constraints parameter class for selecting boundary condition type
+class BCTypeParam_HagenPoiseuille
 {
 public:
-
+  typedef Dune::PDELab::StokesBoundaryCondition BC;
+  
+  BCTypeParam_HagenPoiseuille() {}
+  
   template<typename I>
-  bool isDirichlet(
-                   const I & intersection,   /*@\label{bcp:name}@*/
-                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-                   ) const
+  inline void evaluate (
+    const I & intersection,   /*@\label{bcp:name}@*/
+    const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
+    BC::Type& y) const
   {
     Dune::FieldVector<typename I::ctype, I::dimension>
-      xg = intersection.geometry().global( coord );
+        xg = intersection.geometry().global( coord );
     if( xg[0] < 1e-6 )
-      return false;  // Neumann b.c.
+      y = BC::DoNothing;
     else
-      return true;   // Dirichlet b.c.
+      y = BC::VelocityDirichlet;
   }
-
 };
-
-
 
 // constraints parameter class for selecting boundary condition type 
 template<typename GV>
-class BCTypeParam_PressureDropVelocity
-  : public Dune::PDELab::DirichletConstraintsParameters
-/*@\label{bcp:base}@*/
+class BCTypeParam_PressureDrop
 {
 private:
   typedef typename GV::ctype DFT;
@@ -45,57 +39,29 @@ private:
   const int direction;
   
 public:
+  typedef Dune::PDELab::StokesBoundaryCondition BC;
   
-  BCTypeParam_PressureDropVelocity
-  (
-   const DFT l_, 
-   const DFT o_,
-   const int d_
-   )
+  BCTypeParam_PressureDrop (const DFT l_, const DFT o_, const int d_)
     : length(l_), origin(o_), direction(d_)
   {
   }
 
   template<typename I>
-  bool isDirichlet(
-                   const I & intersection,   /*@\label{bcp:name}@*/
-                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-                   ) const
+  inline void evaluate (
+    const I & intersection,   /*@\label{bcp:name}@*/
+    const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
+    BC::Type& y) const
   {
     Dune::FieldVector<typename I::ctype, I::dimension>
       xg = intersection.geometry().global( coord );
-
+    
     if(xg[direction]-origin < 1e-6 || xg[direction]-origin > length-1e-6)
-      return false;  // Neumann b.c.
+      y = BC::DoNothing;
     else
-      return true;   // Dirichlet b.c.
+      y = BC::VelocityDirichlet;
   }
-
+  
 };
-
-
-
-
-// constraints parameter class for selecting boundary condition type 
-class BCTypeParam_ScalarNeumann
-  : public Dune::PDELab::DirichletConstraintsParameters
-/*@\label{bcp:base}@*/
-{
-public:
-  template<typename I>
-  bool isDirichlet(
-                   const I & intersection,   /*@\label{bcp:name}@*/
-                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-                   ) const
-  {
-    //Dune::FieldVector<typename I::ctype, I::dimension>
-    //  xg = intersection.geometry().global( coord );
-    return false;  // Neumann b.c. only
-  }
-};
-
-
-
 
 template<typename GV, typename RF, int dim>
 class HagenPoiseuilleVelocity :
@@ -164,8 +130,8 @@ template<typename GV, typename RF>
 class ZeroScalarFunction :
   public Dune::PDELab::AnalyticGridFunctionBase<
   Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-  ZeroScalarFunction<GV,RF> >, public
-  Dune::PDELab::InstationaryFunctionDefaults
+  ZeroScalarFunction<GV,RF> >,
+  public Dune::PDELab::InstationaryFunctionDefaults
 {
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
@@ -195,7 +161,7 @@ public:
 
   HagenPoiseuilleZeroFlux (const GV& gv) : BaseT(gv) {}
 
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
                               typename Traits::RangeType& y) const
   {
     y = 0;
@@ -225,13 +191,11 @@ public:
   PressureDropFlux (const GV& gv, const RF p_, const RF l_, const RF o_, const int d_) 
     : BaseT(gv), pressure(p_), length(l_), origin(o_), direction(d_)
   {
-#ifndef NDEBUG
     const int dim = GV::dimension;
     assert(direction >=0 && direction <dim);
-#endif
   }
 
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
                               typename Traits::RangeType& y) const
   {
     if(x[direction]-origin < 1e-6)
