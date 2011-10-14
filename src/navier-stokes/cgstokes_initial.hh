@@ -10,22 +10,22 @@
 // constraints parameter class for selecting boundary condition type 
 class BCTypeParam_HagenPoiseuilleVelocity
   : public Dune::PDELab::DirichletConstraintsParameters
-	/*@\label{bcp:base}@*/
+    /*@\label{bcp:base}@*/
 {
 public:
 
   template<typename I>
   bool isDirichlet(
-				   const I & intersection,   /*@\label{bcp:name}@*/
-				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-				   ) const
+                   const I & intersection,   /*@\label{bcp:name}@*/
+                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                   ) const
   {
     Dune::FieldVector<typename I::ctype, I::dimension>
       xg = intersection.geometry().global( coord );
     if( xg[0] < 1e-6 )
-	  return false;  // Neumann b.c.
-	else
-	  return true;   // Dirichlet b.c.
+      return false;  // Neumann b.c.
+    else
+      return true;   // Dirichlet b.c.
   }
 
 };
@@ -58,17 +58,17 @@ public:
 
   template<typename I>
   bool isDirichlet(
-				   const I & intersection,   /*@\label{bcp:name}@*/
-				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-				   ) const
+                   const I & intersection,   /*@\label{bcp:name}@*/
+                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                   ) const
   {
     Dune::FieldVector<typename I::ctype, I::dimension>
       xg = intersection.geometry().global( coord );
 
     if(xg[direction]-origin < 1e-6 || xg[direction]-origin > length-1e-6)
-	  return false;  // Neumann b.c.
+      return false;  // Neumann b.c.
     else
-	  return true;   // Dirichlet b.c.
+      return true;   // Dirichlet b.c.
   }
 
 };
@@ -84,13 +84,13 @@ class BCTypeParam_ScalarNeumann
 public:
   template<typename I>
   bool isDirichlet(
-				   const I & intersection,   /*@\label{bcp:name}@*/
-				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-				   ) const
+                   const I & intersection,   /*@\label{bcp:name}@*/
+                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                   ) const
   {
     //Dune::FieldVector<typename I::ctype, I::dimension>
     //  xg = intersection.geometry().global( coord );
-	return false;  // Neumann b.c. only
+    return false;  // Neumann b.c. only
   }
 };
 

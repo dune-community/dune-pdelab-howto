@@ -56,7 +56,7 @@
 #include <dune/common/parametertreeparser.hh>
 
 #include "../utility/gridexamples.hh"
-#include "cg_stokes_initial.hh"
+#include "cgstokes_initial.hh"
 
 //! A simple parameter class which complies with the interface
 //! required by the local operator. It is initialized with a
@@ -245,7 +245,7 @@ int main(int argc, char** argv)
                 << "Turbulence Tube  3D - UG - P2/P1         :   TU3" << std::endl
                 << "L-Shape Domain   2D - UG - P2/P1         :   LU2" << std::endl
                 << std::endl << std::endl 
-                << "You might also want to take a look at the configuration file \"cg_stokes.ini\"." 
+                << "You might also want to take a look at the configuration file \"cgstokes.ini\"." 
                 << std::endl << std::endl;
       exit(1);
     }
@@ -255,14 +255,14 @@ int main(int argc, char** argv)
     // Initialize Navier Stokes parameter class from file
     Dune::ParameterTree configuration;
 
-    const std::string config_filename("cg_stokes.ini");
+    const std::string config_filename("cgstokes.ini");
     std::cout << "Reading configuration file \""<< config_filename 
               << "\"" << std::endl;
     try{
       Dune::ParameterTreeParser::readINITree(config_filename, configuration);
     }
     catch(...){
-      std::cerr << "The configuration file \"cg_stokes.ini\" "
+      std::cerr << "The configuration file \"cgstokes.ini\" "
         "could not be read. Exiting..." << std::endl;
       exit(1);
     }
