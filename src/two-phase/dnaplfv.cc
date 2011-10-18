@@ -517,7 +517,7 @@ void test (const GV& gv, int timesteps, double timestep)
   //LS ls(tpgfs,cg,5000,5,1);
   
   typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<IGO> LS;
-  LS ls (tpgfs, 1, 2000, 1);
+  LS ls (tpgfs, 2000, 1);
 
   // <<<11>>> make Newton for time-dependent problem
   typedef Dune::PDELab::Newton<IGO,LS,V> PDESOLVER;
