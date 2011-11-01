@@ -38,6 +38,7 @@
 #include<dune/istl/io.hh>
 #include<dune/istl/superlu.hh>
 
+#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/finiteelementmap/opbfem.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
@@ -402,15 +403,16 @@ int main(int argc, char** argv)
         // make uggrid
         const int dim=3;
         typedef Dune::UGGrid<dim> GridType;
-        GridType grid;
         typedef std::vector<int> GmshIndexMap;
         GmshIndexMap boundary_index_map;
         GmshIndexMap element_index_map;
         Dune::GmshReader<GridType> gmsh_reader;
-        gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
-        for (int i=0; i<max_level; i++) grid.globalRefine(1);
+        Dune::shared_ptr<GridType>
+          gridp(gmsh_reader.read(grid_file,boundary_index_map,
+                                 element_index_map,true,false));
+        for (int i=0; i<max_level; i++) gridp->globalRefine(1);
         typedef GridType::LeafGridView GV;
-        const GV& gv=grid.leafView();
+        const GV& gv=gridp->leafView();
         if (p==0)
           {
             const int degree=0;
