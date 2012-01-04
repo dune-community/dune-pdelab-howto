@@ -59,8 +59,8 @@ class TwoPhaseParameter
   : public Dune::PDELab::TwoPhaseParameterInterface<Dune::PDELab::TwoPhaseFullTensorParameterTraits<GV,RF>,
                                                     TwoPhaseParameter<GV,RF> >
 {
-  static const RF eps1 = 1E-6;
-  static const RF eps2 = 1E-5;
+  static const RF eps1;
+  static const RF eps2;
 
 public:
   typedef Dune::PDELab::TwoPhaseFullTensorParameterTraits<GV,RF> Traits;
@@ -310,6 +310,13 @@ private:
   typename Traits::RangeType gvector;
   typename Traits::PermTensorType K_lens, K;
 };
+
+// Initialize static members. Has to be done out of clas
+template<typename GV, typename RF>
+const RF TwoPhaseParameter<GV,RF>::eps1 = 1E-6;
+
+template<typename GV, typename RF>
+const RF TwoPhaseParameter<GV,RF>::eps2 = 1E-5;
 
 //==============================================================================
 // initial conditions for s_w and p_n
