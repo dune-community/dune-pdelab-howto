@@ -1,8 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
-#include<dune/common/geometrytype.hh>
-#include<dune/grid/common/quadraturerules.hh>
+#include<dune/geometry/type.hh>
+#include<dune/geometry/quadraturerules.hh>
 template<class U, class GFS, class X> 
 double l2interpolationerror (const U& u, const GFS& gfs, X& x, 
 							 int qorder=1) {

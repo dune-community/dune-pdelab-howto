@@ -1,4 +1,4 @@
-#include<dune/common/geometrytype.hh>
+#include<dune/geometry/type.hh>
 #include<dune/localfunctions/common/localfiniteelementtraits.hh>
 
 #include"q1localbasis.hh"
