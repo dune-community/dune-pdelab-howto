@@ -763,18 +763,18 @@ int main(int argc, char** argv)
 #endif
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
 
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
-      const int q=2;
       typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,R,3> FEM;
       FEM fem;
 
       BCTypeParam bctype;
 
 #ifdef HANGING_NODES_REFINEMENT
+      const GV& gv=grid.leafView(); 
+      const int q=2;
       typedef Dune::PDELab::HangingNodesConstraintsAssemblers::CubeGridQ1Assembler ConstraintsAssembler;
 
       typedef Dune::PDELab::HangingNodesDirichletConstraints
