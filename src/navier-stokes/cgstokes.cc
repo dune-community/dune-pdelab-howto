@@ -131,10 +131,10 @@ void navierstokes
   ///////////////////////////////////////////////////////
   // Construct grid function spaces
   typedef Dune::PDELab::ISTLVectorBackend<1> VectorBackend;
-  typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
+  typedef Dune::PDELab::ConformingDirichletConstraints ConstraintsAssembler;
   typedef Dune::PDELab::SimpleGridFunctionStaticSize GFSSize;
   typedef Dune::PDELab::GridFunctionSpace
-    <GV, V_FEM, Constraints, VectorBackend, GFSSize> V_GFS;
+    <GV, V_FEM, ConstraintsAssembler, VectorBackend, GFSSize> V_GFS;
   V_GFS vGfs(gv,vFem);
 
   typedef Dune::PDELab::GridFunctionSpaceLexicographicMapper GFMapper;
@@ -142,7 +142,7 @@ void navierstokes
   PGFS_V_GFS powerVGfs(vGfs);
 
   typedef Dune::PDELab::GridFunctionSpace
-    <GV, P_FEM, Constraints, VectorBackend, GFSSize> P_GFS;
+    <GV, P_FEM, ConstraintsAssembler, VectorBackend, GFSSize> P_GFS;
   P_GFS pGfs(gv,pFem);
 
   typedef Dune::PDELab::CompositeGridFunctionSpace<GFMapper,PGFS_V_GFS, P_GFS> GFS;
@@ -162,14 +162,14 @@ void navierstokes
   typedef Dune::PDELab::StokesPressureDirichletConstraints<BoundaryFunction>
     PressureConstraints;
   typedef Dune::PDELab::CompositeConstraintsParameters<VelocityConstraints,PressureConstraints>
-    TaylorHoodConstraints;
+    Constraints;
 
   ScalarVelocityConstraints scalarvelocity_constraints(boundary_function);
   VelocityConstraints velocity_constraints(scalarvelocity_constraints);
   PressureConstraints pressure_constraints(boundary_function);
-  TaylorHoodConstraints th_constraints(velocity_constraints,pressure_constraints);
-  
-  Dune::PDELab::constraints(th_constraints,gfs,cg);
+  Constraints constraints(velocity_constraints,pressure_constraints);
+
+  Dune::PDELab::constraints(constraints,gfs,cg);
 
   // Make grid function operator
   typedef Dune::PDELab::TaylorHoodNavierStokesJacobian

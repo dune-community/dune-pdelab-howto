@@ -200,8 +200,8 @@ void navierstokes
     <BoundaryFunction,NeumannFlux,NavierStokesParameters,true,q> 
     LOP; 
   LOP lop(boundary_function,neumann_flux,parameters);
-  typedef Dune::PDELab::NavierStokesMass MLOP; 
-  MLOP mlop(q);
+  typedef Dune::PDELab::NavierStokesMass<NavierStokesParameters> MLOP; 
+  MLOP mlop(parameters,q);
   Dune::PDELab::FractionalStepParameter<RF> method;
   typedef typename VectorBackend::MatrixBackend MatrixBackend;
 
@@ -378,8 +378,9 @@ int main(int argc, char** argv)
       std::vector<int> element_index_map;
 
       std::string grid_file = "grids/turbtube2d.msh";
-      Dune::GmshReader<GridType> gmsh_reader;
-      gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
+      Dune::GridFactory<GridType> factory(&grid);
+      Dune::GmshReader<GridType>::read(factory,grid_file,boundary_index_map,element_index_map,true,false);
+      factory.createGrid();
       grid.globalRefine(parameters.domain_level);
 
       // get view
@@ -439,8 +440,9 @@ int main(int argc, char** argv)
       std::vector<int> element_index_map;
 
       std::string grid_file = "grids/lshape.msh";
-      Dune::GmshReader<GridType> gmsh_reader;
-      gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
+      Dune::GridFactory<GridType> factory(&grid);
+      Dune::GmshReader<GridType>::read(factory,grid_file,boundary_index_map,element_index_map,true,false);
+      factory.createGrid();
       grid.globalRefine(parameters.domain_level);
 
       // get view
