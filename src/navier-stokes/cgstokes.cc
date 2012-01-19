@@ -57,72 +57,24 @@
 #include "../utility/gridexamples.hh"
 #include "cgstokes_initial.hh"
 
-//! A simple parameter class which complies with the interface
-//! required by the local operator. It is initialized with a
-//! Dune::ConfigParser object.
-class NavierStokesParameters 
-  : public Dune::PDELab::TaylorHoodNavierStokesParameters<double>
-{
-public:  
-  double rho_;
-  double mu_;
-  double pressure;
-  int domain_level;
-
-  double rho() const{
-    return rho_;
-  }
-
-  double mu() const{
-    return mu_;
-  }
-
-  template <class ConfigParser>
-  NavierStokesParameters(ConfigParser & parser)
-    : rho_(1.0), mu_(1.0), pressure(1.0), domain_level(1)
-  {
-    bool valid = true;
-    valid = valid & parser.hasKey("physics.mu");
-    valid = valid & parser.hasKey("physics.rho");
-    valid = valid & parser.hasKey("boundaries.pressure");
-    valid = valid & parser.hasKey("domain.level");
-
-    if(!valid){
-      std::cerr << "Error: The configuration file "
-                << "was not valid. Default values will be used."
-                << std::endl;
-    }
-    else{
-      rho_ = parser.get("physics.rho",double(1.0));
-      mu_ = parser.get("physics.mu",double(1.0));
-      pressure = parser.get("boundaries.pressure",double(1.0));
-      domain_level = parser.get("domain.level",int(1));
-    }
-  }
-};
-
 //===============================================================
 // The driver for all examples
 //===============================================================
 
-template<typename GV, typename V_FEM, typename P_FEM, typename IF, typename BF, typename NF, int q> 
+template<typename GV, typename V_FEM, typename P_FEM, typename IF, typename PRM, int q> 
 void navierstokes 
 (
  const GV& gv, 
  std::string filename, 
- const NavierStokesParameters & parameters,
+ const PRM & parameters,
  V_FEM & vFem, P_FEM & pFem, 
- IF & initial_solution,
- BF & boundary_function,
- NF & neumann_flux )
+ IF & initial_solution )
 {
   typedef typename GV::Grid::ctype DF;
   static const unsigned int dim = GV::dimension;
 
   typedef double RF;
-  typedef BF BoundaryFunction;
   typedef IF InitializationFunction;
-  typedef NF NeumannFlux;
 
   Dune::Timer timer;
   std::cout << "=== Initialize:" << timer.elapsed() << std::endl;
@@ -155,27 +107,25 @@ void navierstokes
   cg.clear();
 
   // create Taylor-Hood constraints from boundary-type
-  typedef Dune::PDELab::StokesVelocityDirichletConstraints<BoundaryFunction>
+  typedef Dune::PDELab::StokesVelocityDirichletConstraints<PRM>
     ScalarVelocityConstraints;
   typedef Dune::PDELab::PowerConstraintsParameters<ScalarVelocityConstraints,dim>
     VelocityConstraints;
-  typedef Dune::PDELab::StokesPressureDirichletConstraints<BoundaryFunction>
+  typedef Dune::PDELab::StokesPressureDirichletConstraints<PRM>
     PressureConstraints;
   typedef Dune::PDELab::CompositeConstraintsParameters<VelocityConstraints,PressureConstraints>
     Constraints;
 
-  ScalarVelocityConstraints scalarvelocity_constraints(boundary_function);
+  ScalarVelocityConstraints scalarvelocity_constraints(parameters);
   VelocityConstraints velocity_constraints(scalarvelocity_constraints);
-  PressureConstraints pressure_constraints(boundary_function);
+  PressureConstraints pressure_constraints(parameters);
   Constraints constraints(velocity_constraints,pressure_constraints);
 
   Dune::PDELab::constraints(constraints,gfs,cg);
 
   // Make grid function operator
-  typedef Dune::PDELab::TaylorHoodNavierStokesJacobian
-    <BoundaryFunction,NeumannFlux,NavierStokesParameters,true,q> 
-    LOP; 
-  LOP lop(boundary_function,neumann_flux,parameters);
+  typedef Dune::PDELab::TaylorHoodNavierStokesJacobian<PRM,true,q> LOP; 
+  LOP lop(parameters);
 
   typedef Dune::PDELab::GridOperator
     <GFS,GFS,LOP,VectorBackend::MatrixBackend,RF,RF,RF,C,C> GO;
@@ -281,7 +231,6 @@ int main(int argc, char** argv)
         "could not be read. Exiting..." << std::endl;
       exit(1);
     }
-    NavierStokesParameters parameters(configuration);
 
   try{
 
@@ -294,7 +243,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<int,2> N(1);
       Dune::FieldVector<bool,2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
-      grid.globalRefine(parameters.domain_level);
+      grid.globalRefine(configuration.get<int>("domain.level"));
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
@@ -323,10 +272,13 @@ int main(int argc, char** argv)
       BoundaryFunction boundary_function;
       NeumannFlux neumann_flux(gv);
 
+      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
+        LOPParameters;
+      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux);
+        
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,BoundaryFunction,NeumannFlux,q>
-        (gv,"hagenpoiseuille_yasp_Q2Q1_2d", parameters, vFem, pFem, initial_solution, 
-         boundary_function, neumann_flux);
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+        (gv,"hagenpoiseuille_yasp_Q2Q1_2d", parameters, vFem, pFem, initial_solution);
     }
 
 #if HAVE_ALUGRID
@@ -336,7 +288,7 @@ int main(int argc, char** argv)
       // make grid
       typedef ALUUnitCube<2> UnitCube;
       UnitCube unitcube;
-      unitcube.grid().globalRefine(parameters.domain_level);
+      unitcube.grid().globalRefine(configuration.get<int>("domain.level"));
 
       // get view
       typedef UnitCube::GridType::LeafGridView GV;
@@ -367,11 +319,14 @@ int main(int argc, char** argv)
       typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
       BoundaryFunction boundary_function;
       NeumannFlux neumann_flux(gv);
+
+      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
+        LOPParameters;
+      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,BoundaryFunction,NeumannFlux,q>
-        (gv,"hagenpoiseuille_alu_P2P1_2d", parameters, vFem, pFem, initial_solution, 
-         boundary_function, neumann_flux);
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+        (gv,"hagenpoiseuille_alu_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
 #endif
 
@@ -389,7 +344,7 @@ int main(int argc, char** argv)
       Dune::GmshReader<GridType>::read(factory,grid_file,true,false);
       factory.createGrid();
 
-      grid.globalRefine(parameters.domain_level);
+      grid.globalRefine(configuration.get<int>("domain.level"));
 
       // get view
       typedef GridType::LeafGridView GV;
@@ -425,13 +380,17 @@ int main(int argc, char** argv)
       const RF tube_length = 5.0;
       const RF tube_origin = 0.0;
 
+      const RF boundary_pressure = configuration.get<double>("boundaries.pressure");
       BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
-      NeumannFlux neumann_flux(gv, parameters.pressure, tube_length, tube_origin, tube_direction);
+      NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
+
+      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
+        LOPParameters;
+      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,BoundaryFunction,NeumannFlux,q>
-        (gv,"turbtube_ug_P2P1_2d", parameters, vFem, pFem, 
-         initial_solution, boundary_function,neumann_flux);
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+        (gv,"turbtube_ug_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
 #endif
 
@@ -449,7 +408,7 @@ int main(int argc, char** argv)
       Dune::GmshReader<GridType>::read(factory,grid_file,true,false);
       factory.createGrid();
 
-      grid.globalRefine(parameters.domain_level);
+      grid.globalRefine(configuration.get<int>("domain.level"));
 
       // get view
       typedef GridType::LeafGridView GV;
@@ -485,13 +444,17 @@ int main(int argc, char** argv)
       const RF tube_length = 6.0;
       const RF tube_origin = -1.0;
 
+      const RF boundary_pressure = configuration.get<double>("boundaries.pressure");
       BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
-      NeumannFlux neumann_flux(gv, parameters.pressure, tube_length, tube_origin, tube_direction);
+      NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
+
+      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
+        LOPParameters;
+      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,BoundaryFunction,NeumannFlux,q>
-        (gv,"lshape_ug_P2P1_2d", parameters, vFem, pFem, 
-         initial_solution, boundary_function,neumann_flux);
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+        (gv,"lshape_ug_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
 #endif
 
@@ -510,7 +473,7 @@ int main(int argc, char** argv)
       Dune::GmshReader<GridType>::read(factory,grid_file,true,false);
       factory.createGrid();
 
-      grid.globalRefine(parameters.domain_level);
+      grid.globalRefine(configuration.get<int>("domain.level"));
 
       // get view
       typedef GridType::LeafGridView GV;
@@ -540,11 +503,14 @@ int main(int argc, char** argv)
 
       BoundaryFunction boundary_function;
       NeumannFlux neumann_flux(gv);
+
+      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
+        LOPParameters;
+      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,BoundaryFunction,NeumannFlux,q>
-        (gv,"hagenpoiseuille_ug_P2P1_3d", parameters, vFem, pFem, 
-         initial_solution, boundary_function,neumann_flux);
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+        (gv,"hagenpoiseuille_ug_P2P1_3d", parameters, vFem, pFem, initial_solution);
     }
 #endif
 
@@ -559,7 +525,7 @@ int main(int argc, char** argv)
       Dune::GridFactory<GridType> factory(&grid);
       Dune::GmshReader<GridType>::read(factory,grid_file,true,false);
       factory.createGrid();
-      grid.globalRefine(parameters.domain_level);
+      grid.globalRefine(configuration.get<int>("domain.level"));
 
       // get view
       typedef GridType::LeafGridView GV;
@@ -598,12 +564,17 @@ int main(int argc, char** argv)
       const RF tube_length = 5.0;
       const RF tube_origin = 0.0;
 
+      const RF boundary_pressure = configuration.get<double>("boundaries.pressure");
       BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
-      NeumannFlux neumann_flux(gv, parameters.pressure, tube_length, tube_origin, tube_direction);
+      NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
+
+      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
+        LOPParameters;
+      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,BoundaryFunction,NeumannFlux,q>
-        (gv,"turbtube_ug_P2P1_3d", parameters, vFem, pFem, initial_solution, boundary_function, neumann_flux);
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+        (gv,"turbtube_ug_P2P1_3d", parameters, vFem, pFem, initial_solution);
 
     }
 #endif
