@@ -20,7 +20,7 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   CC cc;
   Dune::PDELab::constraints( bctype, gfs, cc );
 
-  // <<<3>>> Make instationary grid operator space
+  // <<<3>>> Make instationary grid operator
   typedef Example03LocalOperator<BCTypeParam> LOP; 
   LOP lop(bctype,4);                                           // local operator r
   typedef Example03TimeLocalOperator TLOP; 
@@ -31,7 +31,7 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,CC,CC> GO1;
   GO1 go1(gfs,cc,gfs,cc,tlop);  
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
-  IGO igo(go0,go1);                                             // new grid operator space
+  IGO igo(go0,go1);                                             // new grid operator
 
   // <<<3>>> Make FE function with initial value / Dirichlet b.c.
   typedef typename IGO::Traits::Domain U;

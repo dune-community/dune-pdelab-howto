@@ -14,7 +14,7 @@ void example01a_RT (const GV& gv)
   GFS gfs(gv,fem);
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
 
-  // <<<3>>> Make grid operator space
+  // <<<3>>> Make grid operator
   typedef Example01aLocalOperator LOP; 
   LOP lop;
   typedef VBE::MatrixBackend MBE;

@@ -25,7 +25,7 @@ void example05_Q2Q2 (const GV& gv, double dtstart, double dtmax, double tend)
   typedef Dune::PDELab::GridFunctionSubSpace<GFS,1> U1SUB;
   U1SUB u1sub(gfs);
 
-  // <<<3>>> Make instationary grid operator space
+  // <<<3>>> Make instationary grid operator
   Real d_0 = 0.00028;
   Real d_1 = 0.005;
   Real lambda = 1.0;

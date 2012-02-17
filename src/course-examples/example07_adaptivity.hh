@@ -19,7 +19,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   CC cc;
   Dune::PDELab::constraints( bctype, gfs, cc );               // assemble constraints
 
-  // <<<3>>> Make grid operator space
+  // <<<3>>> Make grid operator
   typedef Example02LocalOperator<BCTypeParam> LOP;       // operator including boundary
   LOP lop(bctype);
   typedef VBE::MatrixBackend MBE;

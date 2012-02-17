@@ -20,8 +20,8 @@ void example02_Q1 (const GV& gv)
   std::cout << "constrained dofs=" << cc.size() 
             << " of " << gfs.globalSize() << std::endl;
 
-  // <<<3>>> Make grid operator space
-  typedef Example02LocalOperator<BCTypeParam> LOP;                        // operator including boundary
+  // <<<3>>> Make grid operator
+  typedef Example02LocalOperator<BCTypeParam> LOP;             // operator including boundary
   LOP lop( bctype );
   typedef VBE::MatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;

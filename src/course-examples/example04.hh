@@ -14,7 +14,7 @@ void example04 (const GV& gv)
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
-  // <<<3>>> Make grid operator space
+  // <<<3>>> Make grid operator
   typedef Example04LocalOperator LOP;                           // our new operator
   LOP lop;
   typedef VBE::MatrixBackend MBE;
