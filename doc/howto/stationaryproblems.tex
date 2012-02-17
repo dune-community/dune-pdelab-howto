@@ -280,11 +280,13 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01_main.hh}
 \item a method to set up \textit{constraints} on the function space (empty here).
 \item a suitable vector backend.
 \end{itemize}
-\item Make \textit{grid operator space} computing $\mathcal{R}(\mathbf{u})$, $\nabla\mathcal{R}(\mathbf{u})$. It requires
+\item Make \textit{grid operator} computing $\mathcal{R}(\mathbf{u})$, $\nabla\mathcal{R}(\mathbf{u})$. It requires
 \begin{itemize}
-\item a local operator which provides $\bm{\alpha}_{h,e}^{\text{vol}}$.
-\item trial and test grid function spaces, possibly with constraints.
-\item a suitable matrix backend.
+\item a local operator which provides $\bm{\alpha}_{h,e}^{\text{vol}}$,
+\item trial and test grid function spaces, possibly with constraints,
+\item a suitable matrix backend,
+\item the field types for the domain and range of the operator (also
+  the field type for its jacobian matrix may be set separately).
 \end{itemize}
 \item Select a linear solver backend (see vector/matrix backend).
 \item Solve the linear problem given with the selected solver backend.
@@ -317,7 +319,7 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01a_Q1.hh}
 \frametitle{Local Operator}
 \begin{itemize}
 \item The local operator implements $\bm{\alpha}_{h,e}^{\text{vol}}$ (and more).
-\item Class template \lstinline{GridOperatorSpace} builds on a local operator and
+\item Class template \lstinline{GridOperator} builds on a local operator and
 provides $\mathcal{R}(\mathbf{u})$, $\nabla\mathcal{R}(\mathbf{u})$ \textit{generically}.
 \item Works for many different discretizations (see below).
 \item Works as well for systems of PDEs (see below).
@@ -385,7 +387,7 @@ type from the implementation of the local operator.
 
 \begin{center}
 \begin{tikzpicture}[scale=1.0]
-\draw (5,4) node {\lstinline{GridOperatorSpace}};
+\draw (5,4) node {\lstinline{GridOperator}};
 \draw[black,thick] (3,3.5) rectangle (7,4.5);
 \draw (5,2) node {\lstinline{LocalOperator}};
 \draw[black,thick] (3,1.5) rectangle (7,2.5);
@@ -469,7 +471,7 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01a_Q2.hh}
 \begin{itemize}
 \item Make a new local operator where the coefficients $a$ and $f$ depend on the solution $u$,
 see \lstinline{example01b_operator}.
-\item Use this new local operator in the grid operator space.
+\item Use this new local operator in the grid operator.
 \item Use class \lstinline{Newton} to solve the nonlinear algebraic problem.
 \item Use a new name for the output file :-).
 \end{itemize}
@@ -766,7 +768,7 @@ finite-dimensional function space:
 \begin{itemize}
 \item \lstinline{gfs} $+$ \lstinline{u} $\quad\leftrightarrow\quad$ $u_h\in U_h(E_h^0)$.
 \end{itemize}
-\item A \textit{grid operator space} realizes computations with residual forms:
+\item A \textit{grid operator} realizes computations with residual forms:
 \begin{itemize}
 \item \lstinline{gos.residual(u,r)} $\quad\leftrightarrow\quad$ $\mathbf{r} = \mathcal{R}(\mathbf{u})$.
 \item \lstinline{gos.jacobian(u,A)} $\quad\leftrightarrow\quad$ $\mathbf{A} = \nabla\mathcal{R}(\mathbf{u})$.

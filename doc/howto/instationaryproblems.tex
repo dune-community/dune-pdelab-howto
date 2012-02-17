@@ -238,7 +238,11 @@ Major extensions from the stationary \lstinline{example03} are:
 \item Another for $m(u,v;t)$.
 \item Same idea: keep interface, add \lstinline{setTime()} method.
 \end{itemize}
-\item Class \lstinline{InstationaryGridOperatorSpace} takes two local operators.
+\item Class \lstinline{InstationaryGridOperator} combines two grid
+  operators representing the spatial discretizations of the time
+  derivatives of order one and zero. This allows for very general
+  implementations of discretizations using the \textit{method of
+    lines}.
 \item Class \lstinline{OneStepMethod} implements time-stepping scheme.
 \item Time loop is under user control.
 \end{itemize}

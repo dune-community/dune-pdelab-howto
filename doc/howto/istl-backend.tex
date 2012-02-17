@@ -98,7 +98,7 @@ class MatrixContainer{
     // The backend we are associated with
     typedef ISTLMatrixBackend<ROWBLOCKSIZE,COLBLOCKSIZE> Backend;
       
-    //constructor with grid operator space t
+    //constructor with grid operator t
     // Needs to setup the whole sparsity pattern.
     MatrixContainer (const T& t_);
       
@@ -118,7 +118,7 @@ class MatrixContainer{
   \item First step is performed by the contructor of the matrix
     container.
   \item Second step is performed by the member function
-    \lstinline!jacobian! of the grid operator space.
+    \lstinline!jacobian! of the grid operator.
   \end{itemize}
 
 \end{frame}
@@ -362,6 +362,7 @@ typedef Dune::YaspGrid<2>::LeafGridView GV;
 const GV& gv=grid.leafView();
 
 // 2. Create correctly constrained grid function space
+typedef double Real;
 typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
 FEM fem;
 typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
@@ -393,12 +394,14 @@ V x(gfs,0.0);
 Dune::PDELab::interpolate(g,gfs,x);
 Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
-// Make grid operator space
+// Make grid operator
 typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
 LOP lop(param,2);
 typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
-typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE,true> GOS;
-GOS gos(gfs,cg,gfs,cg,lop);
+const bool non_overlapping_mode = true;
+typedef Dune::PDELab::GridOperator
+<GFS,GFS,LOP,MBE,Real,Real,Real,C,C,non_overlapping_mode> GO;
+GO go(gfs,cg,gfs,cg,lop);
 
 // 3. Choose a linear solver 
 typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GFS> LS;
@@ -446,17 +449,19 @@ G g(gv,param);
 typedef typename GFS::template ConstraintsContainer<Real>::Type C;
 C cg;
 Dune::PDELab::constraints(b,gfs,cg);
+
 //  Compute affine shift
 typedef typename GFS::template VectorContainer<Real>::Type V;
 V x(gfs,0.0);
 Dune::PDELab::interpolate(g,gfs,x);
 Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
-// Make grid operator space
+
+// Make grid operator
 typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
 LOP lop(param,2);
 typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
-typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
-GOS gos(gfs,cg,gfs,cg,lop);
+typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
+GO go(gfs,cg,gfs,cg,lop);
 
 // 3. Choose a linear solver 
 typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SuperLU<GFS,C> LS;

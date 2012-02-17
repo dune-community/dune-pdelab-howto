@@ -29,11 +29,11 @@ void cadsample_P1 (const GV& gv, const M& m, const B& b, const G& g,
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
 
-  // <<<4>>> Make grid operator space
+  // <<<4>>> Make grid operator
   typedef CADLocalOperator<M,B,J> LOP;                                  // NEW
   LOP lop(m, b, j);
   typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,CC,CC,MBE> GOS;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
   GOS gos(gfs,cc,gfs,cc,lop);
 
   // <<<5>>> Select a linear solver backend
