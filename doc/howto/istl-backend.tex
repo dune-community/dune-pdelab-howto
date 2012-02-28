@@ -399,7 +399,7 @@ LOP lop(param,2);
 typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
 const bool non_overlapping_mode = true;
 typedef Dune::PDELab::GridOperator
-<GFS,GFS,LOP,MBE,Real,Real,Real,C,C,non_overlapping_mode> GO;
+    <GFS,GFS,LOP,MBE,Real,Real,Real,C,C,non_overlapping_mode> GO;
 GO go(gfs,cg,gfs,cg,lop);
 
 // 3. Choose a linear solver 
