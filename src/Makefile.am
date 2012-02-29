@@ -1,3 +1,12 @@
-SUBDIRS = utility course-examples course-gridfunctionspace navier-stokes two-phase convection-diffusion linear-acoustics maxwell
+SUBDIRS =					\
+	benchmark				\
+	convection-diffusion			\
+	course-examples				\
+	course-gridfunctionspace		\
+	linear-acoustics			\
+	maxwell					\
+	navier-stokes				\
+	two-phase				\
+	utility
 
 include $(top_srcdir)/am/global-rules
