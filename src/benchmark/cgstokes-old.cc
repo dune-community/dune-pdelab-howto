@@ -59,6 +59,7 @@ void navierstokes(const GV& gv,
                   V_FEM & vFem, P_FEM & pFem,
                   IF & initial_solution,
                   bool solve,
+                  bool io,
                   std::size_t runs)
 {
 
@@ -212,21 +213,24 @@ void navierstokes(const GV& gv,
 
       bh.start("IO",std::cout);
 
-      // Generate functions suitable for VTK output
-      typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,0> VelocitySubGFS;
-      VelocitySubGFS velocitySubGfs(gfs);
-      typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,1> PressureSubGFS;
-      PressureSubGFS pressureSubGfs(gfs);
-      typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
-      VDGF vdgf(velocitySubGfs,x0);
-      typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
-      PDGF pdgf(pressureSubGfs,x0);
+      if (io)
+        {
+          // Generate functions suitable for VTK output
+          typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,0> VelocitySubGFS;
+          VelocitySubGFS velocitySubGfs(gfs);
+          typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,1> PressureSubGFS;
+          PressureSubGFS pressureSubGfs(gfs);
+          typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
+          VDGF vdgf(velocitySubGfs,x0);
+          typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
+          PDGF pdgf(pressureSubGfs,x0);
 
-      // Output grid function with SubsamplingVTKWriter
-      Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
-      vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
+          // Output grid function with SubsamplingVTKWriter
+          Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
+          vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
+          vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
+          vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
+        }
 
       bh.end("IO",std::cout);
 
@@ -269,13 +273,14 @@ void merge_sub_trees(const Dune::ParameterTree& source, Dune::ParameterTree& tar
 
 
 template<typename Grid>
-std::string name(std::string problem, const Grid& grid, std::size_t level, bool solve)
+std::string name(std::string problem, const Grid& grid, std::size_t level, bool solve, bool io)
 {
   std::stringstream n;
   n << "cgstokes-old_" << problem
     << "_" << Grid::dimension << "D"
     << "_l" << level
-    << (solve ? "_solve" : "_nosolve");
+    << (solve ? "_solve" : "_nosolve")
+    << (io ? "_io" : "_noio");
 
   return n.str();
 }
@@ -314,6 +319,7 @@ int main(int argc, char** argv)
 
     const std::size_t global_runs = params.get("global.runs",5);
     const bool global_solve = params.get("global.solve",false);
+    const bool global_io = params.get("global.io",false);
     std::string grid_base_dir = params["global.griddirectory"];
 
     // Yasp Grid Hagen-Poiseuille test 2D
@@ -324,6 +330,7 @@ int main(int argc, char** argv)
         const int level = lp.get<int>("level");
         const int runs = lp.get("runs",global_runs);
         const bool solve = lp.get("solve",global_solve);
+        const bool io = lp.get("io",global_io);
 
         merge_sub_trees(params.sub("physics"),lp,"physics");
 
@@ -368,7 +375,7 @@ int main(int argc, char** argv)
 
         // solve problem
         navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
-          (gv,name("HY2",grid,level,solve),parameters,vFem,pFem,initial_solution,solve,runs);
+          (gv,name("HY2",grid,level,solve,io),parameters,vFem,pFem,initial_solution,solve,io,runs);
       }
 
 #if HAVE_ALUGRID
@@ -380,6 +387,7 @@ int main(int argc, char** argv)
         const int level = lp.get<int>("level");
         const int runs = lp.get("runs",global_runs);
         const bool solve = lp.get("solve",global_solve);
+        const bool io = lp.get("io",global_io);
 
         merge_sub_trees(params.sub("physics"),lp,"physics");
 
@@ -424,7 +432,7 @@ int main(int argc, char** argv)
 
         // solve problem
         navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
-          (gv,name("HA2",unitcube.grid(),level,solve),parameters,vFem,pFem,initial_solution,solve,runs);
+          (gv,name("HA2",unitcube.grid(),level,solve,io),parameters,vFem,pFem,initial_solution,solve,io,runs);
       }
 #endif
 
@@ -437,6 +445,7 @@ int main(int argc, char** argv)
         const int level = lp.get<int>("level");
         const int runs = lp.get("runs",global_runs);
         const bool solve = lp.get("solve",global_solve);
+        const bool io = lp.get("io",global_io);
 
         merge_sub_trees(params.sub("physics"),lp,"physics");
         merge_sub_trees(params.sub("boundaries"),lp,"boundaries");
@@ -497,7 +506,7 @@ int main(int argc, char** argv)
 
         // solve problem
         navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
-          (gv,name("TU2",grid,level,solve),parameters,vFem,pFem,initial_solution,solve,runs);
+          (gv,name("TU2",grid,level,solve,io),parameters,vFem,pFem,initial_solution,solve,io,runs);
       }
 #endif
 
@@ -510,6 +519,7 @@ int main(int argc, char** argv)
         const int level = lp.get<int>("level");
         const int runs = lp.get("runs",global_runs);
         const bool solve = lp.get("solve",global_solve);
+        const bool io = lp.get("io",global_io);
 
         merge_sub_trees(params.sub("physics"),lp,"physics");
         merge_sub_trees(params.sub("boundaries"),lp,"boundaries");
@@ -570,7 +580,7 @@ int main(int argc, char** argv)
 
         // solve problem
         navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
-          (gv,name("LU2",grid,level,solve),parameters,vFem,pFem,initial_solution,solve,runs);
+          (gv,name("LU2",grid,level,solve,io),parameters,vFem,pFem,initial_solution,solve,io,runs);
       }
 #endif
 
@@ -583,6 +593,7 @@ int main(int argc, char** argv)
         const int level = lp.get<int>("level");
         const int runs = lp.get("runs",global_runs);
         const bool solve = lp.get("solve",global_solve);
+        const bool io = lp.get("io",global_io);
 
         merge_sub_trees(params.sub("physics"),lp,"physics");
         merge_sub_trees(params.sub("boundaries"),lp,"boundaries");
@@ -634,7 +645,7 @@ int main(int argc, char** argv)
 
         // solve problem
         navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
-          (gv,name("HU3",grid,level,solve),parameters,vFem,pFem,initial_solution,solve,runs);
+          (gv,name("HU3",grid,level,solve,io),parameters,vFem,pFem,initial_solution,solve,io,runs);
       }
 #endif
 
@@ -647,6 +658,7 @@ int main(int argc, char** argv)
         const int level = lp.get<int>("level");
         const int runs = lp.get("runs",global_runs);
         const bool solve = lp.get("solve",global_solve);
+        const bool io = lp.get("io",global_io);
 
         merge_sub_trees(params.sub("physics"),lp,"physics");
         merge_sub_trees(params.sub("boundaries"),lp,"boundaries");
@@ -707,7 +719,7 @@ int main(int argc, char** argv)
 
         // solve problem
         navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
-          (gv,name("TU3",grid,level,solve),parameters,vFem,pFem,initial_solution,solve,runs);
+          (gv,name("TU3",grid,level,solve,io),parameters,vFem,pFem,initial_solution,solve,io,runs);
       }
 #endif
 
