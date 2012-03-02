@@ -22,6 +22,29 @@ LDADD =						\
 # THIS IS A SEPARATION MARKER TO MINIMIZE SVN MERGE CONFLICTS
 # TRUNK TARGETS FOLLOW
 
+if SUPERLU
+
+MOSTLYCLEANFILES += cgstokes_*.vtu cgstokes_*_timings.txt
+
+SUPERLUPROGRAMS += cgstokes-old
+cgstokes_old_SOURCES = cgstokes-old.cc
+cgstokes_old_CPPFLAGS =				\
+	$(AM_CPPFLAGS)				\
+	$(SUPERLU_CPPFLAGS)			\
+	$(UG_CPPFLAGS)				\
+	$(ALUGRID_CPPFLAGS)
+cgstokes_old_LDFLAGS =				\
+	$(AM_LDFLAGS)				\
+	$(SUPERLU_LDFLAGS)			\
+	$(UG_LDFLAGS)				\
+	$(ALUGRID_LDFLAGS)
+cgstokes_old_LDADD =				\
+	$(SUPERLU_LIBS)				\
+	$(ALUGRID_LIBS)				\
+	$(UG_LIBS)
+
+endif
+
 # THIS IS A SEPARATION MARKER TO MINIMIZE SVN MERGE CONFLICTS
 # BRANCH TARGETS FOLLOW
 
