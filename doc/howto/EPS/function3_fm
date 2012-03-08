@@ -1,0 +1,9 @@
+% fmclass: article
+% fmclassopt: 12pt
+%
+\psfrag{0}{{\tiny $0$}}
+\psfrag{1}{{\tiny $1$}}
+\psfrag{h}{{\tiny $\frac12$}}
+\psfrag{vi}{$v_i$}
+\psfrag{vj}{$v_j$}
+\psfrag{vk}{$v_k$}

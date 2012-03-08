@@ -1,0 +1,8 @@
+% fmclass: article
+% fmclassopt: 12pt
+% fmopt: height=4cm
+%
+\psfrag{bi}{$c_i$}
+\psfrag{vi}{$z_i$}
+\psfrag{bj}{$c_j$}
+\psfrag{vj}{$z_j$}
