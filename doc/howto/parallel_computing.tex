@@ -162,7 +162,7 @@ Computation time for one time step with BiCGStab + AMG preconditioner:
 \begin{center}
 \begin{tabular}{r|rrr|rr|rr}
 \hline
-P  & \#IT(max) & $T_{it}$ & S & $T_{ass}$ & S & $T_{total}$ & S \\
+P  & \#IT(max) & $T_{it}$ & S & $T_{asm}$ & S & $T_{total}$ & S \\
 \hline
  1  &  6.5 & 4.60 &      - &  43.7 &      - & 713.8 &    - \\
  4  &  10  & 1.85 &   2.5 &  17.5 &   2.5 & 295.9 & 2.4 \\
@@ -195,7 +195,7 @@ Machine  & Cells & Time steps & Newton steps & $T_{total}$ \\
   \begin{itemize}
   \item partition a problem by splitting the domain it into small subdomains
   \item each part is solved by a different processor
-  \item goes back to an idea of H.A. Schwarz who presented 1890 a method to prove existence of
+  \item goes back to an idea of H.A. Schwarz who in 1890 presented a method to prove the existence of
         solutions of the Laplace equation on ``complicated'' domains.
   \item Different variants:
     \begin{itemize}
