@@ -587,7 +587,8 @@ d\hat{x} \text{ $+$ error} .
 \end{equation*}
 \end{frame}
 
-\begin{frame}<article>
+\mode<article>{
+\begin{frame}
 \frametitle<presentation>{Interpolation Error Example}
 In the following code example the
 function \lstinline{l2interpolationerror} is parametrized by
@@ -608,6 +609,7 @@ exported by a grid function space which
 \lstinline{Dune::QuadratureRule} in line \ref{l2int:quad} provides
 quadrature rules for many element types, dimensions and orders.
 \end{frame}
+} % end mode
 
 %\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 %\frametitle<presentation>{Interpolation Error Listing}
@@ -658,7 +660,8 @@ interpolation error:  1048576 elements 4.78590858e-07
 Obviously, we get second order approximation.
 \end{frame}
 
-\begin{frame}<article>
+\mode<article>{
+\begin{frame}
 \frametitle{Modification for $Q_2$}
 Now it is very easy to compute the interpolation error for other
 function spaces.
@@ -667,6 +670,7 @@ Just replace \lstinline{Q1LocalFiniteElementMap}
 with \lstinline{Dune::PDELab::Q22DLocalFiniteElementMap} in
 lines \ref{l2int:q2} and \ref{l2int:q22}!
 \end{frame}
+}
 
 %\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 %\frametitle<presentation>{$Q_2$ Interpolation Error Driver Listing}
