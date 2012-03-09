@@ -418,8 +418,8 @@ Grid::template Codim<c>::template Partition<ptype>::Iterator it = gridView.templ
 \frametitle<presentation>{Additional Remarks}
 \begin{itemize}
 \item On each intersection there exists a method \lstinline!neighbor()!. This method returns \lstinline!true! if there is a 
-neighbor available on the same process and if the partition type of the entity inside is not ghost.
-\item The method \lstinline!boundary()! only returns \lstinline!true! at the domain boundary not at a process boundary.
+neighbor available on the same process.
+\item The method \lstinline!boundary()! only returns \lstinline!true! at the domain boundary (even if the grid is periodic at this boundary) not at a process boundary.
 \end{itemize}
 \end{frame}
 
@@ -604,7 +604,9 @@ a \lstinline!ScalarProduct!. These versions of these components have to fit toge
 are choosen matching the type of domain decomposition.
 \item Different solver backends are provided for overlapping and nonoverlapping domain
 decomposition.
-\item The solver backends can be found in header \lstinline!dune/pdelab/backend/istlsolverbackend.hh!.
+\item The solver backends can be found in the headers \lstinline!dune/pdelab/backend/istlsolverbackend.hh!.
+\lstinline!dune/pdelab/backend/ovlpistlsolverbackend.hh!.
+\lstinline!dune/pdelab/backend/novlpistlsolverbackend.hh!.
 \end{itemize}
 
 \only<2>{
