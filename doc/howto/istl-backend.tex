@@ -153,7 +153,8 @@ apply(M& A, V& z, W& r, typename V::ElementType reduction);
 
 \subsubsection{Block Structure in FE Matrices}
 \label{sec:motivation}
-\begin{frame} \frametitle{PDE Systems}
+\begin{frame} \frametitle{The Iterative Template Library}
+  \framesubtitle{PDE Systems}
   \begin{block}{}
       We have several unknowns and therefore several grid functions
       when dealing with PDE Systems.
@@ -202,6 +203,130 @@ and point-wise blocking, respectively.
 
 \subsubsection{Matrix Vector Components}
 \label{sec:matr-vect-comp}
+\begin{frame}
+\frametitle<presentation>{Matrix Vector Components in
+  ISTL}
+ \framesubtitle{Vector-Matrix Concept}
+\begin{columns}[t]
+\begin{column}{0.5\textwidth}
+\begin{itemize}
+\item Vector
+\begin{itemize}
+\item Is a one-dimensional container
+\item Sequential access
+\item Random access
+\item Vector space operations: Addition, scaling
+\item Scalar product
+\item Various norms
+\item Sizes
+\end{itemize}
+\end{itemize}
+\end{column}
+\pause
+\begin{column}{0.5\textwidth}
+\begin{itemize}
+\item Matrix
+\begin{itemize}
+\item Is a two-dimensional container
+\item Sequential access using iterators
+\item Random access
+\item Organization is row-wise
+\item Mappings $y = y+Ax; y = y+A^Tx; y = y+A^Hx;$
+\item Solve, inverse, left multiplication
+\item Various norms
+\item Sizes
+\end{itemize}
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+\begin{frame}\frametitle{Recursive Construction}
+  \begin{block}{Vector Space}
+      \begin{itemize}
+      \item Let $V_i$, $i=1, 2, \ldots,  n$, be a normed vector space of dimension
+        $n_i$ with a
+        scalar product, then the $n$-nary Cartesian product
+      \item The vector space $V$ 
+        \begin{equation*}
+          V :=  V_1\times V_2 \times \ldots \times V_n = \{(\vec v_1, \vec v_2,
+          \ldots, \vec v_n) | \vec v_1 \in V_1,
+          \ldots, \vec v_n \in V_n\}
+        \end{equation*}
+        is again a normed vector space of dimension $\sum_{i=1}^n n_i$
+        with the canonical norm and scalar product.
+      \item Procedure can be applied recursively.
+      \end{itemize}
+  \end{block}\pause
+  \begin{block}{Linear Mapping}
+    \begin{itemize}
+    \item  Linear map $A: V \mapsto
+W$ from vector space $V$ to vector space $W$.
+    \item Recursive construction follows immediately from the construction
+    of the range and domain.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame} \frametitle{Vector Classes}
+  \begin{block}{\lstinline!template<class K, int n> FieldVector<K,n>!}
+    \begin{itemize}
+    \item Represents vector space $V=K^n$
+    \item Field \lstinline!K! may be any numeric type (e.g.  
+      \lstinline!double!, \lstinline!float!,
+      \lstinline!complex<double>!)
+    \end{itemize}
+  \end{block}
+  \begin{block}{\lstinline!template<class B> BlockVector<B>!}
+    \begin{itemize}
+  \item Represents vector space $V=B^n$.
+  \item ``Block type'' \lstinline!B! has to implement the vector
+    interface.
+\end{itemize}
+  \end{block}
+  \begin{block}{\lstinline!template<class B> VariableBlockVector<B>!}
+    \begin{itemize}
+    \item Represents a vector space having a two-level
+      block structure:
+      $$V=B^{n_1}\times B^{n_2}\times\ldots \times B^{n_m}\,,$$
+      \mode<article>{($m$ blocks with block $i=1,\ldots,m$ consisting of $n_i$ blocks
+      given by the type \lstinline!B!.}
+    \item More efficient than resembled by vector classes above.
+      (interpretation as $V=B^N$,  $N={\sum_{i=1}^{m} n_i}$ possible!).
+    \end{itemize}
+  \end{block}
+\end{frame}
+\begin{frame} \frametitle{Matrix Classes}
+  \begin{block}{\lstinline!template<class K, int n> FieldMatrix<K,n,m>!}
+    \begin{itemize}
+    \item Represents linear map $M: V_1 \to V_2$, with$V_1=K^n$ and
+      $V_2=K^m$.
+      \item Field \lstinline!K! may be any numeric type (e.g.  
+        \lstinline!double!, \lstinline!float!,
+        \lstinline!complex<double>!)
+    \end{itemize}
+  \end{block}
+  \begin{block}{ \lstinline!template<class B> BCRSMatrix<B>!}
+    \begin{itemize}
+    \item Sparse Matrix with block compressed row storage.
+    \item ``Block type'' \lstinline!B! must implement the matrix interface.
+    \end{itemize}
+  \end{block}
+  \begin{block}{\lstinline!template<class B> VariableBCRSMatrix<B>!}
+    \begin{itemize}
+    \item Sparse Matrix of dense Matrices with varying block size.
+    \item Represents a linear map between two vector spaces having a two-level
+block structure $V=B^{n_1}\times B^{n_2}\times\ldots \times B^{n_m}$
+and $W=B^{m_1}\times B^{m_2}\times\ldots \times B^{m_k}$
+    \end{itemize}
+  \end{block}
+%   \begin{block}{``Fusion Matrix'' (Martin Weiser, ZIB Berlin)}
+%     \begin{itemize}
+%     \item Dense Matrix of sparse Matrices.
+%     \item Size of dense matrix known at compile time.
+%     \item Suitable e.g for variable-based Stokes.
+%     \end{itemize}
+%   \end{block}
+\end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Block Structure in ISTL Matrices}
@@ -213,13 +338,13 @@ and point-wise blocking, respectively.
   \begin{itemize}
   \item  Point block matrix is a sparse matrix with small dense
 blocks.
-\item Realized by \lstinline!BCRSMatrix< FieldMatrix<E,2,2> >!. 
+\item Realized by \lstinline[basicstyle=\tiny]!BCRSMatrix< FieldMatrix<E,2,2> >!. 
   \end{itemize}
 \end{minipage}
 \begin{minipage}{0.48\textwidth}
   \begin{itemize}
   \item Sparse matrix of scalars.
-  \item Realized by \lstinline!BCRSMatrix< FieldMatrix<E,1,1> >!.
+  \item Realized by \lstinline[basicstyle=\tiny]!BCRSMatrix< FieldMatrix<E,1,1> >!.
   \end{itemize}
 \end{minipage}
 \end{block}
@@ -248,7 +373,7 @@ blocks.
     \item \lstinline!template<int brows,int bcols> class ISTLBCRSMatrixBackend!
       is the currently available backend for ISTL sparse
       matrices.
-    \item \lstinline!brows! is the number rows and \lstinline!bcols!
+    \item \lstinline!brows! is the number of rows and \lstinline!bcols!
       is the number of columns of each matrix block.
   \item The backend uses
     \lstinline!BCRSMatrix<FieldMatrix<E,brows,bcols> >! as the
@@ -266,9 +391,9 @@ blocks.
     \item \lstinline!ISTLBackend_SEQ_SuperLU!: SuperLU, a sparse
       direct solver
     \item \lstinline!template<class T> class ISTLBackend_SEQ_CG_AMG_SSOR! and
-      \lstinline!template<class T> class ISTLBackend_SEQ_BICGS_AMG_SSOR! the
-      above methods 
-      preconditioned point-block AMG based on aggregation smoothed by SSOR.
+      \lstinline!template<class T> class
+      ISTLBackend_SEQ_BICGS_AMG_SSOR! use a point-block AMG based on
+      aggregation smoothed by SSOR as the preconditioner
     \end{itemize}
     Currently these sequential solvers are just a subset of the ones
   available in ISTL directly. More will follow in due time.
@@ -278,7 +403,7 @@ blocks.
 \label{sec:parallelization}
 
 \begin{frame}
-  \frametitle<presentatio>{Parallel PDELab}
+  \frametitle<presentation>{Parallel PDELab}
   \begin{itemize}
   \item Go parallel by choosing
     \begin{enumerate}
@@ -321,154 +446,149 @@ blocks.
   \end{itemize}
 \end{frame}
 
-\begin{frame}
-  \frametitle<presentation>{Building Blocks for Parallel Solvers}
-  \includegraphics[width=\textwidth]{EPS/istlsolver}
-\end{frame}
+% \begin{frame}
+%   \frametitle<presentation>{Building Blocks for Parallel Solvers}
+%   \includegraphics[width=\textwidth]{EPS/istlsolver}
+% \end{frame}
 
-\begin{frame}
-  \frametitle{Some Parallel Solver Backends}
-  The solver backends can be found in header
-  dune/pdelab/backend/istlsolverbackend.hh. Template parameter GFS is
-  the type of the grid function space, template parameter C the type
-  of the parallel constraints used.
-  \begin{itemize}
-  \item \lstinline!template<class GFS> class ISTLBackend_NOVLP_BCGS_NOPREC!:
-    parallel unpreconditioned
-    stabilized bi-conjugate gradient method for nonoverlapping grids.
-    \item \lstinline!template<class GFS> class ISTLBackend_OVLP_BCGS_SSORk!:
-      the above preconditioned with $k$ steps of SSOR.
-    \item \lstinline!template<class GFS, class C> class ISTLBackend_OVLP_BCGS_SuperLU!:
-      the first method preconditioned by an overlapping domain
-      decomposition method with SuperLU for the problems local to the
-      processors.
-      \item \lstinline!template<class GFS> ISTLBackend_BCGS_AMG_SSOR!:
-        the first method preconsitioned by parallel AMG smoothed by
-        SSOR. Requires an overlapping grid!
-  \end{itemize}
-\end{frame}
+% \begin{frame}
+%   \frametitle{Some Parallel Solver Backends}
+%   The solver backends can be found in header
+%   dune/pdelab/backend/istlsolverbackend.hh. Template parameter GFS is
+%   the type of the grid function space, template parameter C the type
+%   of the parallel constraints used.
+%   \begin{itemize}
+%   \item \lstinline!template<class GFS> class ISTLBackend_NOVLP_BCGS_NOPREC!:
+%     parallel unpreconditioned
+%     stabilized bi-conjugate gradient method for nonoverlapping grids.
+%     \item \lstinline!template<class GFS> class ISTLBackend_OVLP_BCGS_SSORk!:
+%       the above preconditioned with $k$ steps of SSOR.
+%     \item \lstinline!template<class GFS, class C> class ISTLBackend_OVLP_BCGS_SuperLU!:
+%       the first method preconditioned by an overlapping domain
+%       decomposition method with SuperLU for the problems local to the
+%       processors.
+%       \item \lstinline!template<class GFS> ISTLBackend_BCGS_AMG_SSOR!:
+%         the first method preconsitioned by parallel AMG smoothed by
+%         SSOR. Requires an overlapping grid!
+%   \end{itemize}
+% \end{frame}
 
-\begin{frame}[fragile]
-  \frametitle{Nonoverlapping example}
-  \begin{lstlisting}[basicstyle=\tiny]
-// 1. Create an non-overlapping grid
-Dune::FieldVector<double,2> L(1.0);
-Dune::FieldVector<int,2> N(16);
-Dune::FieldVector<bool,2> periodic(false);
-int overlap=0; // needs overlap 0 because overlap elements are not assembled
-Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
-typedef Dune::YaspGrid<2>::LeafGridView GV;
-const GV& gv=grid.leafView();
+% \begin{frame}[fragile]
+%   \frametitle{Nonoverlapping example}
+%   \begin{lstlisting}[basicstyle=\tiny]
+% // 1. Create an non-overlapping grid
+% Dune::FieldVector<double,2> L(1.0);
+% Dune::FieldVector<int,2> N(16);
+% Dune::FieldVector<bool,2> periodic(false);
+% int overlap=0; // needs overlap 0 because overlap elements are not assembled
+% Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
+% typedef Dune::YaspGrid<2>::LeafGridView GV;
+% const GV& gv=grid.leafView();
 
-// 2. Create correctly constrained grid function space
-typedef double Real;
-typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
-FEM fem;
-typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
-CON con;
-typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
-GFS gfs(gv,fem,con);
-con.compute_ghosts(gfs); // con stores indices of ghost dofs
-typedef ConvectionDiffusionProblem<GV,Real> Param;
-Param param;
-typedef Dune::PDELab::BoundaryConditionType_CD<Param> B;
-B b(gv,param);
-typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
-G g(gv,param);
-\end{lstlisting}
-\end{frame}
-\begin{frame}[fragile]
-\frametitle<presentation>{Nonoverlapping Example Continued}
-  \begin{lstlisting}[basicstyle=\tiny]
-// Compute constrained space
-typedef typename GFS::template ConstraintsContainer<Real>::Type C;
-C cg;
-Dune::PDELab::constraints(b,gfs,cg);
+% // 2. Create correctly constrained grid function space
+% typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
+% FEM fem;
+% typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
+% CON con;
+% typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+% typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
+% Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+% GFS gfs(gv,fem,con);
+% con.compute_ghosts(gfs); // con stores indices of ghost dofs
+% typedef ConvectionDiffusionProblem<GV,Real> Param;
+% Param param;
+% typedef Dune::PDELab::BoundaryConditionType_CD<Param> B;
+% B b(gv,param);
+% typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
+% G g(gv,param);
+% \end{lstlisting}
+% \end{frame}
+% \begin{frame}[fragile]
+% \frametitle<presentation>{Nonoverlapping Example Continued}
+%   \begin{lstlisting}[basicstyle=\tiny]
+% // Compute constrained space
+% typedef typename GFS::template ConstraintsContainer<Real>::Type C;
+% C cg;
+% Dune::PDELab::constraints(b,gfs,cg);
 
-// Compute affine shift
-typedef typename GFS::template VectorContainer<Real>::Type V;
-V x(gfs,0.0);
-Dune::PDELab::interpolate(g,gfs,x);
-Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
+% // Compute affine shift
+% typedef typename GFS::template VectorContainer<Real>::Type V;
+% V x(gfs,0.0);
+% Dune::PDELab::interpolate(g,gfs,x);
+% Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
-// Make grid operator
-typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
-LOP lop(param,2);
-typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
-const bool non_overlapping_mode = true;
-typedef Dune::PDELab::GridOperator
-    <GFS,GFS,LOP,MBE,Real,Real,Real,C,C,non_overlapping_mode> GO;
-GO go(gfs,cg,gfs,cg,lop);
+% // Make grid operator space
+% typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
+% LOP lop(param,2);
+% typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+% typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE,true> GOS;
+% GOS gos(gfs,cg,gfs,cg,lop);
 
-// 3. Choose a linear solver 
-typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GFS> LS;
-LS ls(gfs,5000,1);
-...
-\end{lstlisting}
+% // 3. Choose a linear solver 
+% typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GFS> LS;
+% LS ls(gfs,5000,1);
+% ...
+% \end{lstlisting}
   
-\end{frame}
+% \end{frame}
 
-\begin{frame}[fragile]
-  \frametitle{Overlapping Example}
-  \begin{lstlisting}[basicstyle=\tiny]
-// 1. Create an overlapping grid
-Dune::FieldVector<double,2> L(1.0);
-Dune::FieldVector<int,2> N(16);
-Dune::FieldVector<bool,2> periodic(false);
-int overlap=2; 
-Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
-typedef Dune::YaspGrid<2>::LeafGridView GV;
-const GV& gv=grid.leafView();
+% \begin{frame}[fragile]
+%   \frametitle{Overlapping Example}
+%   \begin{lstlisting}[basicstyle=\tiny]
+% // 1. Create an overlapping grid
+% Dune::FieldVector<double,2> L(1.0);
+% Dune::FieldVector<int,2> N(16);
+% Dune::FieldVector<bool,2> periodic(false);
+% int overlap=2; 
+% Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
+% typedef Dune::YaspGrid<2>::LeafGridView GV;
+% const GV& gv=grid.leafView();
 
-// 2. Create correctly constrained grid function space
-typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
-FEM fem;
-typedef Dune::PDELab::OverlappingConformingDirichletConstraints CON;
-typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
-GFS gfs(gv,fem);
+% // 2. Create correctly constrained grid function space
+% typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
+% FEM fem;
+% typedef Dune::PDELab::OverlappingConformingDirichletConstraints CON;
+% typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+% typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
+% Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+% GFS gfs(gv,fem);
 
-//  define problem parameters
-typedef ConvectionDiffusionProblem<GV,Real> Param;
-Param param;
-typedef Dune::PDELab::BoundaryConditionType_CD<Param> B;
-B b(gv,param);
-typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
-G g(gv,param);
-\end{lstlisting}  
-\end{frame}
-\begin{frame}[fragile]
-\frametitle<presentation>{Overlapping Example Continued}
-  \begin{lstlisting}[basicstyle=\tiny]
+% //  define problem parameters
+% typedef ConvectionDiffusionProblem<GV,Real> Param;
+% Param param;
+% typedef Dune::PDELab::BoundaryConditionType_CD<Param> B;
+% B b(gv,param);
+% typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
+% G g(gv,param);
+% \end{lstlisting}  
+% \end{frame}
+% \begin{frame}[fragile]
+% \frametitle<presentation>{Overlapping Example Continued}
+%   \begin{lstlisting}[basicstyle=\tiny]
 
-//  Compute constrained space
-typedef typename GFS::template ConstraintsContainer<Real>::Type C;
-C cg;
-Dune::PDELab::constraints(b,gfs,cg);
+% //  Compute constrained space
+% typedef typename GFS::template ConstraintsContainer<Real>::Type C;
+% C cg;
+% Dune::PDELab::constraints(b,gfs,cg);
+% //  Compute affine shift
+% typedef typename GFS::template VectorContainer<Real>::Type V;
+% V x(gfs,0.0);
+% Dune::PDELab::interpolate(g,gfs,x);
+% Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
+% // Make grid operator space
+% typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
+% LOP lop(param,2);
+% typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+% typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
+% GOS gos(gfs,cg,gfs,cg,lop);
 
-//  Compute affine shift
-typedef typename GFS::template VectorContainer<Real>::Type V;
-V x(gfs,0.0);
-Dune::PDELab::interpolate(g,gfs,x);
-Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
-
-// Make grid operator
-typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
-LOP lop(param,2);
-typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
-typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
-GO go(gfs,cg,gfs,cg,lop);
-
-// 3. Choose a linear solver 
-typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SuperLU<GFS,C> LS;
-LS ls(gfs,cg,5000,2);
-...
-\end{lstlisting}
+% // 3. Choose a linear solver 
+% typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SuperLU<GFS,C> LS;
+% LS ls(gfs,cg,5000,2);
+% ...
+% \end{lstlisting}
   
-\end{frame}
+% \end{frame}
 %\lstset{breakatwhitespace=false,breaklines=false}
 
 \cleardoublepage
