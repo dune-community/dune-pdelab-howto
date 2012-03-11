@@ -1,8 +1,8 @@
-\only<presentation>{
+%\only<presentation>{
 
-\lstset{language=C++, basicstyle=\ttfamily, 
-  keywordstyle=\color{red}\bfseries, tabsize=4, stringstyle=\ttfamily,
-  commentstyle=\it, extendedchars=true, escapeinside={/*@}{@*/}}
+%\lstset{language=C++, basicstyle=\ttfamily, 
+%  keywordstyle=\color{red}\bfseries, tabsize=4, stringstyle=\ttfamily,
+%  commentstyle=\it, extendedchars=true, escapeinside={/*@}{@*/}}
 
 %\lstset{language=C++, basicstyle=\scriptsize\ttfamily,
 %  stringstyle=\ttfamily, commentstyle=\it, extendedchars=true,
@@ -15,11 +15,11 @@
 %        emph={bool,int,unsigned,char,true,false,void}, emphstyle=\color{blue},
 %        emph={[2]\#include,\#define,\#ifdef,\#endif}, emphstyle={[2]\color{violet}},
 %        }
-}
-\only<article>{
-\lstset{language=C++, basicstyle=\small, 
-  keywordstyle=\bfseries, tabsize=4, stringstyle=\ttfamily,
-  commentstyle=\it, extendedchars=true, escapeinside={/*@}{@*/}}
+%}
+%\only<article>{
+%\lstset{language=C++, basicstyle=\small, 
+%  keywordstyle=\bfseries, tabsize=4, stringstyle=\ttfamily,
+%  commentstyle=\it, extendedchars=true, escapeinside={/*@}{@*/}}
 
 %\lstset{language=C++, basicstyle=\small\ttfamily,
 %  stringstyle=\ttfamily, commentstyle=\it, extendedchars=true,
@@ -32,7 +32,7 @@
 %        emph={bool,int,unsigned,char,true,false,void}, emphstyle=\color{blue},
 %        emph={[2]\#include,\#define,\#ifdef,\#endif}, emphstyle={[2]\color{violet}},
 %        }
-        }
+%        }
 
 \section{Parallel PDELab}
 \subsection{Introduction}
@@ -675,7 +675,7 @@ constraints container (usually \lstinline!OverlappingConformingDirichletConstrai
 
 \begin{frame}[fragile]
   \frametitle{Overlapping Example}
-  \begin{lstlisting}[basicstyle=\tiny]
+  \begin{lstlisting}[basicstyle=\small]
 // 1. Create an overlapping grid
 Dune::FieldVector<double,2> L(1.0);
 Dune::FieldVector<int,2> N(16);
@@ -705,7 +705,7 @@ G g(gv,param);
 \end{frame}
 \begin{frame}[fragile]
 \frametitle<presentation>{Overlapping Example Continued}
-  \begin{lstlisting}[basicstyle=\tiny]
+  \begin{lstlisting}[basicstyle=\small]
 
 //  Compute constrained space
 typedef typename GFS::template ConstraintsContainer<Real>::Type C;
@@ -753,7 +753,7 @@ and \lstinline!Scalar! the type of a scalar value in the matrix.
 
 \begin{frame}[fragile]
   \frametitle{Nonoverlapping example}
-  \begin{lstlisting}[basicstyle=\tiny]
+  \begin{lstlisting}[basicstyle=\small]
 // 1. Create an non-overlapping grid
 Dune::FieldVector<double,2> L(1.0);
 Dune::FieldVector<int,2> N(16);
@@ -783,7 +783,7 @@ G g(gv,param);
 \end{frame}
 \begin{frame}[fragile]
 \frametitle<presentation>{Nonoverlapping Example Continued}
-  \begin{lstlisting}[basicstyle=\tiny]
+  \begin{lstlisting}[basicstyle=\small]
 // Compute constrained space
 typedef typename GFS::template ConstraintsContainer<Real>::Type C;
 C cg;
