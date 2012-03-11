@@ -205,7 +205,7 @@ blocks.
 \end{block}
 \end{frame}
 
-
+\subsubsection{Parallel ISTL}
 \begin{frame}
   \frametitle{Building Blocks for Parallel Solvers}
 
@@ -222,7 +222,48 @@ blocks.
   \end{itemize}
 \end{frame}
 
+\begin{frame}[fragile]
+  \frametitle{A parallel example}
+  \scriptsize
+  \begin{lstlisting}{}
+typedef Dune::OverlappingSchwarzScalarProduct<Vector,
+                                    Communication> ScalarProduct;
+typedef Dune::SeqJac<BCRSMat,Vector,Vector> SeqPrec;
+typedef Dune::BlockPreconditioner<Vector,Vector,
+                           Communication,SeqPrec> ParPrec;
+ScalarProduct sp(comm);
+SeqPrec sprec(fop.getmat(),1,1);
+ParSmoother pprec(sprec,comm);
+Dune::CGSolver<Vector> cg(fop, sp, pprec, 10e-08, 10, 0);
+cg.apply(x,b,r);
+\end{lstlisting}
+\end{frame}
 
+\begin{frame}
+    \frametitle{A Clipped Log-Random Model Problem}
+      \begin{center}
+    \includegraphics[width=.4\textwidth]{EPS/aggregates_problem_f_2d_65536_cl015_var8_mean0}
+  \end{center}
+  
+    \begin{itemize}
+    \item $-\nabla \cdot (k(x) \nabla u) = f \text{ in }\Omega$
+    \item $\kappa (x)$ realization of log-random field with variance
+      $\sigma^2$, mean $0$, and correlation length $\lambda$.
+    \item $k(x)$: binary medium constructed from $\kappa (x)$.
+    \item Weak scaling: $\lambda$ scales with mesh width $h$.
+    \end{itemize}
+  \end{frame}
+\begin{frame}[fragile]
+  \frametitle{Weak Scalability Results (Possion vs. Clipped)}
+  \begin{center}
+      \includegraphics[width=.6\textwidth]{EPS/solve_build.jpg}
+  \end{center}
+  \begin{itemize}
+  \item BiCGStab precondition with parallel AMG 
+  \item $1.34\cdot 10^{11}$ unknowns.
+  \item Machine: IBM Blue Gene/P in J\"ulich with 294,849 cores
+  \end{itemize}
+\end{frame}
 \subsection{PDELab Backends}
 \label{sec:pdelab-backends-1}
 
@@ -242,8 +283,6 @@ blocks.
   \frametitle{PDELab backend in UML}
   \includegraphics[width=\textwidth]{./EPS/backend}
 \end{frame}
-\subsection{Interface}
-\label{sec:interface}
 
 \subsubsection{The Vector Backend}
 \label{sec:vector-backend}
@@ -413,7 +452,7 @@ apply(M& A, V& z, W& r, typename V::ElementType reduction);
     \item \lstinline!ISTLBackend_SEQ_SuperLU!: SuperLU, a sparse
       direct solver
     \item \lstinline!template<class T> class ISTLBackend_SEQ_CG_AMG_SSOR! and
-      \lstinline!template<class T> class ISTLBackend_SEQ_BICGS_AMG_SSOR! 
+      \lstinline!template<class T> class ISTLBackend_SEQ_BCGS_AMG_SSOR! 
       use a point-block AMG based on aggregation smoothed by SSOR as
       the preconditioner
     \end{itemize}
@@ -421,6 +460,35 @@ apply(M& A, V& z, W& r, typename V::ElementType reduction);
   available in ISTL directly. More will follow in due time.
 \end{frame}
 
+\begin{frame}[fragile]
+  \frametitle{Putting it all together}
+  \scriptsize
+  \begin{lstlisting}
+  // make grid function space 
+  typedef Dune::PDELab::NoConstraints CON;
+  typedef Dune::PDELab::ISTLVectorBackend<blocksize> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
+  GFS gfs(gv,fem);
+
+  // make local operator
+  Dune::PDELab::ConvectionDiffusionDGMethod::Type m
+    = Dune::PDELab::ConvectionDiffusionDGMethod::SIPG;
+  Dune::PDELab::ConvectionDiffusionDGWeights::Type w
+    = Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn;
+  typedef Dune::PDELab::ConvectionDiffusionDG<PROBLEM,FEM> LOP;
+  LOP lop(problem,m,w,alpha);
+  typedef typename VBE::MatrixBackend MBE;
+  typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
+  CC cc;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
+  GO go(gfs,cc,gfs,cc,lop);
+  typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
+  LS ls(10000,1);
+  typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
+  SLP slp(go,u,ls,1e-12);
+  slp.apply();
+  \end{lstlisting}
+\end{frame}
 % \subsection{Parallel PDELab}
 % \label{sec:parallelization}
 
