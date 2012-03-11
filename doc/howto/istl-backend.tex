@@ -1,152 +1,7 @@
 %\lstset{breakatwhitespace=true,breaklines=true}
-\section{PDELab backends}
+\section{ISTL and PDELab Backends}
 \label{sec:pdelab-backends}
 
-\begin{frame}
-  \frametitle<presentation>{PDELab backend}
-  \begin{itemize}
-  \item Linear algebra is decoupled from the discretization.
-  \item Provides unique access interface for matrices, vectors and
-    solvers.
-  \item (Often) easily extensible for use of other libraries.
-  \item Minimal knowledge of the underlying libraries required.
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{PDELab backend in UML}
-  \includegraphics[width=\textwidth]{./EPS/backend}
-\end{frame}
-\subsection{Interface}
-\label{sec:interface}
-
-\subsubsection{The Vector Backend}
-\label{sec:vector-backend}
-
-\begin{frame}
-  \frametitle<presentation>{The Vector Backend}
-  \begin{itemize}
-  \item It is a class not a namespace to allow template parameterization!
-  \item Provides the actual container type as
-    \lstinline!template<class T, class E> Vector!.
-  \item Associated type \lstinline!size_type! used for index access.
-  \item Const and mutable data access with 
-    \lstinline!access(Vector<T,E>& cont, size_type i)!
-  \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
-  \frametitle{Sample Vector Container}
-  \begin{itemize}
-  \item Template parameter T is the type of the grid function used.
-  \item Template parameter E is the value type (e.g. double, float).
-  \end{itemize}
-  \begin{lstlisting}[basicstyle=\scriptsize]
-    template<typename T, typename E>
-    class VectorContainer 
-    {
-      public:
-      // The stored element type
-      typedef E ElementType;
-      // The backend we are associated with
-      typedef ISTLVectorBackend<BLOCKSIZE> Backend;
-      
-      //constructor with grid function space t
-      VectorContainer (const T& t_);
-
-      //constructor with grid function space t, initial value e
-      VectorContainer (const T& t_, const E& e);
-      
-      // assignment
-      VectorContainer& operator= (const E& e);
-    };
-  \end{lstlisting}
-\end{frame}
-\subsubsection{The Matrix Backend}
-\label{sec:matrix-backend}
-
-\begin{frame}
-  \frametitle<presentation>{The Matrix Backend}
-  \begin{itemize}
-  \item It is a class not a namespace to allow template
-    parameterization!
-  \item Provides the actual container type as
-    \lstinline!template<class T, class E> Matrix!.
-%  \item Provides associated type \lstinline!Pattern! for setting up
-%    the sparsity pattern.
-  \item Provides method \lstinline!clearRow(RI i, C& c)! for setting
-    the values of row with index $i$ of container \lstinline!c! to
-    zero.
-    \item Const and mutable data access with 
-    \lstinline!access(Matrix<T,E>& cont, size_type i, size_type j)!
-  \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
-  \frametitle{The Matrix Container}
-\begin{itemize}
-  \item Template parameter T is the type of the grid function used.
-  \item Template parameter E is the value type (e.g. double, float).
-  \end{itemize}
-  \begin{lstlisting}[basicstyle=\scriptsize]
-template<class T, class E>
-class MatrixContainer{
-  public:
-    // The stored element type
-    typedef typename E ElementType;
-    // The backend we are associated with
-    typedef ISTLMatrixBackend<ROWBLOCKSIZE,COLBLOCKSIZE> Backend;
-      
-    //constructor with grid operator t
-    // Needs to setup the whole sparsity pattern.
-    MatrixContainer (const T& t_);
-      
-    // assignment
-    MatrixContainer& operator= (const E& e);
-};
-  \end{lstlisting}
-\end{frame}
-\begin{frame}[fragile]
-  \frametitle{Sparse Matrix Setup in PDELab}
-  \begin{itemize}
-  \item Setting up a sparse matrix is a two step procedure:
-    \begin{enumerate}
-    \item Setting up the sparsity pattern.
-    \item Filling the matrix with the values.
-    \end{enumerate}
-  \item First step is performed by the contructor of the matrix
-    container.
-  \item Second step is performed by the member function
-    \lstinline!jacobian! of the grid operator.
-  \end{itemize}
-
-\end{frame}
-
-\subsubsection{The Linear Solver Backend}
-\label{sec:line-solv-back}
-
-\begin{frame}[fragile]
-  \frametitle<presentation>{The Linear Solver Backend}
-  \begin{itemize}
-  \item Provides vector norm method needed by nonlinear PDELab solvers:
-      \begin{lstlisting}
-template<class V>
-typename V::ElementType norm(const V& v) const;
-      \end{lstlisting}
-    \item Member function \lstinline!result()! returns statistics
-      about the solution phase in an instance of the
-      \lstinline!template<class T> LinearSolverResult! class template.
-\item Use member function 
-  \begin{lstlisting}
-template<class M.class V,class W>
-apply(M& A, V& z, W& r, typename V::ElementType reduction);
-  \end{lstlisting}
-  to (iteratively) solve $Az=r$ until the prescribed relative defect
-  reduction is achieved.
-  \item For ISTL it hides a lot of the compexity that heavy usage of
-    templates imposes on the user.
-  \end{itemize}
-\end{frame}
 
 \subsection{The Iterative Solver Template Library}
 \label{sec:iter-solv-templ}
@@ -351,6 +206,173 @@ blocks.
 \end{frame}
 
 
+\begin{frame}
+  \frametitle{Building Blocks for Parallel Solvers}
+
+  \begin{itemize}
+  \item The solvers in ISTL do not use matrix and vector structures
+    directly,
+  \item but implementations of \lstinline!Preconditioner!,
+    \lstinline!LinearOperator! and \lstinline!ScalarProduct!.
+  \item These components must match in the solver category
+    (e.g. sequential, overlapping, nonoverlapping) and thus support
+    the same data decomposition.
+  \item Simply plug in parallel instances of the components to get
+    parallel solvers.
+  \end{itemize}
+\end{frame}
+
+
+\subsection{PDELab Backends}
+\label{sec:pdelab-backends-1}
+
+
+\begin{frame}
+  \frametitle<presentation>{PDELab backend}
+  \begin{itemize}
+  \item Linear algebra is decoupled from the discretization.
+  \item Provides unique access interface for matrices, vectors and
+    solvers.
+  \item (Often) easily extensible for use of other libraries.
+  \item Minimal knowledge of the underlying libraries required.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{PDELab backend in UML}
+  \includegraphics[width=\textwidth]{./EPS/backend}
+\end{frame}
+\subsection{Interface}
+\label{sec:interface}
+
+\subsubsection{The Vector Backend}
+\label{sec:vector-backend}
+
+\begin{frame}
+  \frametitle<presentation>{The Vector Backend}
+  \begin{itemize}
+  \item It is a class not a namespace to allow template parameterization!
+  \item Provides the actual container type as
+    \lstinline!template<class T, class E> Vector!.
+  \item Associated type \lstinline!size_type! used for index access.
+  \item Const and mutable data access with 
+    \lstinline!access(Vector<T,E>& cont, size_type i)!
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Sample Vector Container}
+  \begin{itemize}
+  \item Template parameter T is the type of the grid function used.
+  \item Template parameter E is the value type (e.g. double, float).
+  \end{itemize}
+  \begin{lstlisting}[basicstyle=\scriptsize]
+    template<typename T, typename E>
+    class VectorContainer 
+    {
+      public:
+      // The stored element type
+      typedef E ElementType;
+      // The backend we are associated with
+      typedef ISTLVectorBackend<BLOCKSIZE> Backend;
+      
+      //constructor with grid function space t
+      VectorContainer (const T& t_);
+
+      //constructor with grid function space t, initial value e
+      VectorContainer (const T& t_, const E& e);
+      
+      // assignment
+      VectorContainer& operator= (const E& e);
+    };
+  \end{lstlisting}
+\end{frame}
+\subsubsection{The Matrix Backend}
+\label{sec:matrix-backend}
+
+\begin{frame}
+  \frametitle<presentation>{The Matrix Backend}
+  \begin{itemize}
+  \item It is a class not a namespace to allow template
+    parameterization!
+  \item Provides the actual container type as
+    \lstinline!template<class T, class E> Matrix!.
+%  \item Provides associated type \lstinline!Pattern! for setting up
+%    the sparsity pattern.
+  \item Provides method \lstinline!clearRow(RI i, C& c)! for setting
+    the values of row with index $i$ of container \lstinline!c! to
+    zero.
+    \item Const and mutable data access with 
+    \lstinline!access(Matrix<T,E>& cont, size_type i, size_type j)!
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{The Matrix Container}
+\begin{itemize}
+  \item Template parameter T is the type of the grid function used.
+  \item Template parameter E is the value type (e.g. double, float).
+  \end{itemize}
+  \begin{lstlisting}[basicstyle=\scriptsize]
+template<class T, class E>
+class MatrixContainer{
+  public:
+    // The stored element type
+    typedef typename E ElementType;
+    // The backend we are associated with
+    typedef ISTLMatrixBackend<ROWBLOCKSIZE,COLBLOCKSIZE> Backend;
+      
+    //constructor with grid operator t
+    // Needs to setup the whole sparsity pattern.
+    MatrixContainer (const T& t_);
+      
+    // assignment
+    MatrixContainer& operator= (const E& e);
+};
+  \end{lstlisting}
+\end{frame}
+\begin{frame}[fragile]
+  \frametitle{Sparse Matrix Setup in PDELab}
+  \begin{itemize}
+  \item Setting up a sparse matrix is a two step procedure:
+    \begin{enumerate}
+    \item Setting up the sparsity pattern.
+    \item Filling the matrix with the values.
+    \end{enumerate}
+  \item First step is performed by the contructor of the matrix
+    container.
+  \item Second step is performed by the member function
+    \lstinline!jacobian! of the grid operator.
+  \end{itemize}
+
+\end{frame}
+
+\subsubsection{The Linear Solver Backend}
+\label{sec:line-solv-back}
+
+\begin{frame}[fragile]
+  \frametitle<presentation>{The Linear Solver Backend}
+  \begin{itemize}
+  \item Provides vector norm method needed by nonlinear PDELab solvers:
+      \begin{lstlisting}
+template<class V>
+typename V::ElementType norm(const V& v) const;
+      \end{lstlisting}
+    \item Member function \lstinline!result()! returns statistics
+      about the solution phase in an instance of the
+      \lstinline!template<class T> LinearSolverResult! class template.
+\item Use member function 
+  \begin{lstlisting}
+template<class M.class V,class W>
+apply(M& A, V& z, W& r, typename V::ElementType reduction);
+  \end{lstlisting}
+  to (iteratively) solve $Az=r$ until the prescribed relative defect
+  reduction is achieved.
+  \item For ISTL it hides a lot of the compexity that heavy usage of
+    templates imposes on the user.
+  \end{itemize}
+\end{frame}
+
 \subsubsection{The Backend}
 \label{sec:backend}
 
@@ -399,52 +421,36 @@ blocks.
   available in ISTL directly. More will follow in due time.
 \end{frame}
 
-\subsection{Parallel PDELab}
-\label{sec:parallelization}
+% \subsection{Parallel PDELab}
+% \label{sec:parallelization}
 
-\begin{frame}
-  \frametitle<presentation>{Parallel PDELab}
-  \begin{itemize}
-  \item Go parallel by choosing
-    \begin{enumerate}
-    \item a suitable parallel grid (e.g. an overlapping one for
-      overlapping domain decomposition methods),
-    \item the correct constraints for the discretization of
-      the PDE, and
-    \item a suitable and matching parallel solver backend of the
-      PDELab backend.
-    \end{enumerate}
-  \end{itemize}
-\end{frame}
+% \begin{frame}
+%   \frametitle<presentation>{Parallel PDELab}
+%   \begin{itemize}
+%   \item Go parallel by choosing
+%     \begin{enumerate}
+%     \item a suitable parallel grid (e.g. an overlapping one for
+%       overlapping domain decomposition methods),
+%     \item the correct constraints for the discretization of
+%       the PDE, and
+%     \item a suitable and matching parallel solver backend of the
+%       PDELab backend.
+%     \end{enumerate}
+%   \end{itemize}
+% \end{frame}
 
-\begin{frame}
-  \frametitle<presentation>{Parallel Solver Backends}
+% \begin{frame}
+%   \frametitle<presentation>{Parallel Solver Backends}
   
-  There are three different kinds of parallel solvers classes
-  available in the ISTL backend:
-  \begin{itemize}
-  \item Nonoverlapping domain decomposition
-    methods.
-  \item Overlapping domain decomposition metods.
-  \item Data parallel solvers (e.g. AMG).
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Building Blocks for Parallel Solvers}
-
-  \begin{itemize}
-  \item The solvers in ISTL do not use matrix and vector structures
-    directly,
-  \item but implementations of \lstinline!Preconditioner!,
-    \lstinline!LinearOperator! and \lstinline!ScalarProduct!.
-  \item These components must match in the solver category
-    (e.g. sequential, overlapping, nonoverlapping) and thus support
-    the same data decomposition.
-  \item Simply plugin parallel instances of the components to get
-    parallel solvers.
-  \end{itemize}
-\end{frame}
+%   There are three different kinds of parallel solvers classes
+%   available in the ISTL backend:
+%   \begin{itemize}
+%   \item Nonoverlapping domain decomposition
+%     methods.
+%   \item Overlapping domain decomposition metods.
+%   \item Data parallel solvers (e.g. AMG).
+%   \end{itemize}
+% \end{frame}
 
 % \begin{frame}
 %   \frametitle<presentation>{Building Blocks for Parallel Solvers}
