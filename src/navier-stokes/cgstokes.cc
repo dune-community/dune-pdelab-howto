@@ -61,20 +61,18 @@
 // The driver for all examples
 //===============================================================
 
-template<typename GV, typename V_FEM, typename P_FEM, typename IF, typename PRM, int q> 
+template<typename GV, typename V_FEM, typename P_FEM, typename PRM, int q> 
 void navierstokes 
 (
  const GV& gv, 
  std::string filename, 
- const PRM & parameters,
- V_FEM & vFem, P_FEM & pFem, 
- IF & initial_solution )
+ PRM & parameters,
+ V_FEM & vFem, P_FEM & pFem)
 {
   typedef typename GV::Grid::ctype DF;
   static const unsigned int dim = GV::dimension;
 
   typedef double RF;
-  typedef IF InitializationFunction;
 
   Dune::Timer timer;
   std::cout << "=== Initialize:" << timer.elapsed() << std::endl;
@@ -135,7 +133,10 @@ void navierstokes
   typedef typename GO::Traits::Domain V;
   V x0(gfs);
   x0 = 0.0;
-  Dune::PDELab::interpolate(initial_solution,gfs,x0);
+
+  Dune::PDELab::NavierStokesDirichletFunctionAdapterFactory<PRM> 
+    dirichletFunctionFactory(parameters);
+  Dune::PDELab::interpolate(dirichletFunctionFactory.dirichletFunction(),gfs,x0);
   std::cout << "=== Finished interpolation:" << timer.elapsed() << std::endl;
   timer.reset();
 
@@ -272,13 +273,14 @@ int main(int argc, char** argv)
       BoundaryFunction boundary_function;
       NeumannFlux neumann_flux(gv);
 
-      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
+      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters
+        <GV,BoundaryFunction,NeumannFlux,InitialSolution,RF>
         LOPParameters;
-      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux);
+      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux,initial_solution);
         
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
-        (gv,"hagenpoiseuille_yasp_Q2Q1_2d", parameters, vFem, pFem, initial_solution);
+      navierstokes<GV,V_FEM,P_FEM,LOPParameters,q>
+        (gv,"hagenpoiseuille_yasp_Q2Q1_2d", parameters, vFem, pFem);
     }
 
 #if HAVE_ALUGRID
@@ -320,13 +322,15 @@ int main(int argc, char** argv)
       BoundaryFunction boundary_function;
       NeumannFlux neumann_flux(gv);
 
-      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
+      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters
+        <GV,BoundaryFunction,NeumannFlux,InitialSolution,RF>
         LOPParameters;
-      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux);
+      LOPParameters parameters
+        (configuration.sub("physics"),boundary_function,neumann_flux,initial_solution);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
-        (gv,"hagenpoiseuille_alu_P2P1_2d", parameters, vFem, pFem, initial_solution);
+      navierstokes<GV,V_FEM,P_FEM,LOPParameters,q>
+        (gv,"hagenpoiseuille_alu_P2P1_2d", parameters, vFem, pFem);
     }
 #endif
 
@@ -384,13 +388,14 @@ int main(int argc, char** argv)
       BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
       NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
 
-      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
+      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters
+        <GV,BoundaryFunction,NeumannFlux,InitialSolution,RF>
         LOPParameters;
-      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux);
+      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux,initial_solution);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
-        (gv,"turbtube_ug_P2P1_2d", parameters, vFem, pFem, initial_solution);
+      navierstokes<GV,V_FEM,P_FEM,LOPParameters,q>
+        (gv,"turbtube_ug_P2P1_2d", parameters, vFem, pFem);
     }
 #endif
 
@@ -448,13 +453,14 @@ int main(int argc, char** argv)
       BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
       NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
 
-      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
+      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters
+        <GV,BoundaryFunction,NeumannFlux,InitialSolution,RF>
         LOPParameters;
-      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux);
+      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux,initial_solution);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
-        (gv,"lshape_ug_P2P1_2d", parameters, vFem, pFem, initial_solution);
+      navierstokes<GV,V_FEM,P_FEM,LOPParameters,q>
+        (gv,"lshape_ug_P2P1_2d", parameters, vFem, pFem);
     }
 #endif
 
@@ -504,13 +510,15 @@ int main(int argc, char** argv)
       BoundaryFunction boundary_function;
       NeumannFlux neumann_flux(gv);
 
-      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
+      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters
+        <GV,BoundaryFunction,NeumannFlux,InitialSolution,RF>
         LOPParameters;
-      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux);
+      LOPParameters parameters
+        (configuration.sub("physics"),boundary_function,neumann_flux,initial_solution);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
-        (gv,"hagenpoiseuille_ug_P2P1_3d", parameters, vFem, pFem, initial_solution);
+      navierstokes<GV,V_FEM,P_FEM,LOPParameters,q>
+        (gv,"hagenpoiseuille_ug_P2P1_3d", parameters, vFem, pFem);
     }
 #endif
 
@@ -568,13 +576,15 @@ int main(int argc, char** argv)
       BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
       NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
 
-      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
+      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters
+        <GV,BoundaryFunction,NeumannFlux,InitialSolution,RF>
         LOPParameters;
-      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux);
+      LOPParameters parameters
+        (configuration.sub("physics"),boundary_function,neumann_flux,initial_solution);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
-        (gv,"turbtube_ug_P2P1_3d", parameters, vFem, pFem, initial_solution);
+      navierstokes<GV,V_FEM,P_FEM,LOPParameters,q>
+        (gv,"turbtube_ug_P2P1_3d", parameters, vFem, pFem);
 
     }
 #endif
