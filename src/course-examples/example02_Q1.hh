@@ -17,14 +17,21 @@ void example02_Q1 (const GV& gv)
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
   Dune::PDELab::constraints( bctype, gfs, cc ); // assemble constraints
-  std::cout << "constrained dofs=" << cc.size() 
+  std::cout << "constrained dofs=" << cc.size()
             << " of " << gfs.globalSize() << std::endl;
 
   // <<<3>>> Make grid operator
   typedef Example02LocalOperator<BCTypeParam> LOP;             // operator including boundary
   LOP lop( bctype );
   typedef VBE::MatrixBackend MBE;
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
+
+  typedef Dune::PDELab::GridOperator<
+    GFS,GFS,        /* ansatz and test space */
+    LOP,            /* local operator */
+    MBE,            /* matrix backend */
+    Real,Real,Real, /* field types for domain, range and jacobian */
+    CC,CC           /* constraints transformation  for ansatz and test space */
+    > GO;
   GO go(gfs,cc,gfs,cc,lop);
 
   // <<<4>>> Make FE function extending Dirichlet boundary conditions
