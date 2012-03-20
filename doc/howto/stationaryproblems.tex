@@ -130,23 +130,24 @@ For linear PDEs $\mathcal{R}$ is affine linear: $\mathcal{R}(\mathbf{u}) = \math
 
 \begin{frame}
 \frametitle{Residual Assembly}
+{\small
 \begin{equation*}
 \begin{split}
 &(\mathcal{R}(\mathbf{u}) )_i  = r\left(\text{FE}(\mathbf{u}),\phi_i\right)
 = \sum_{e\in E_h^0} \int_{\Omega_e} \nabla \text{FE}(\mathbf{u}) \cdot \nabla\phi_i 
 + a \, \text{FE}_{\Phi_{U_h^k}}(\mathbf{u}) \phi_i - f \phi_i \,dx\\
-&= \sum_{e\in E_h^0} \int_{\Omega_e} 
+&= \sum_{(e,m) : g(e,m)=i} \int_{\Omega_e} 
 \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \nabla_x \hat\phi_{e,l}(\mu_e^{-1}(x))\right]
-\cdot \nabla_x \underbrace{\hat\phi_{e,m}}_{g(e,m)=i}(\mu_e^{-1}(x))\\
-& + a \, \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \hat\phi_{e,l}(\mu_e^{-1}(x)) \right] \hat\phi_{e,m}(\mu_e^{-1}(x))
+\cdot \nabla_x \hat\phi_{e,m}(\mu_e^{-1}(x))\\
+& + a \, \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \hat\phi_{e,l}(\mu_e^{-1}(x))\right] \hat\phi_{e,m}(\mu_e^{-1}(x))
 - f \hat\phi_{e,m}(\mu_e^{-1}(x)) \, dx\\
-&= \sum_{e\in E_h^0} \int_{\hat\Omega_e} 
+&= \sum_{(e,m) : g(e,m)=i} \int_{\hat\Omega_e} 
 \Biggl\{\left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} (\nabla \mu_e(\hat{x}))^{-T}\nabla_{\hat{x}} \hat\phi_{e,l}(\hat{x})\right]
 \cdot (\nabla \mu_e(\hat{x}))^{-T} \nabla_{\hat{x}} \hat\phi_{e,m}(\hat{x})\\
 & + a \, \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \hat\phi_{e,l}(\hat{x}) \right] \hat\phi_{e,m}(\hat{x})
 - f \hat\phi_{e,m}(\hat{x}) \Biggr\} \text{det} \nabla\mu_e(\hat{x}) \, d\hat{x} .
 \end{split}
-\end{equation*}
+\end{equation*}}
 \end{frame}
 
 \begin{frame}
@@ -155,13 +156,12 @@ Define restriction to local degrees of freedom
 \begin{align*}
 \mathbf{U}_e &= \mathbb{R}^{n(e)}, &
 \mathbf{R}_e &: \mathbf{U} \to \mathbf{U}_e, &
-\left(\mathbf{U}_e(\mathbf{u})\right)_l &= (\mathbf{u})_{g(e,l)} \quad 0\leq l < n(e).
+\left(\mathbf{R}_e(\mathbf{u})\right)_l &= (\mathbf{u})_{g(e,l)} \quad 0\leq l < n(e).
 \end{align*}
 Define \textit{local operator} $\bm{\alpha}^{\text{vol}}_{h,e} : \mathbf{U}_e \to \mathbf{U}_e$ (user part):
-\begin{equation*}
+{\small\begin{equation*}
 \begin{split}
-&\bigl(\bm{\alpha}^{\text{vol}}_{h,e}({\color{cyan}\mathbf{u}})\bigr)_m  = \\
-&\int_{\hat\Omega_e} 
+&\bigl(\bm{\alpha}^{\text{vol}}_{h,e}({\color{cyan}\mathbf{u}})\bigr)_m  = \int_{\hat\Omega_e} 
 \Biggl\{\left[ \sum_{l=0}^{n(e)-1} ({\color{cyan}\mathbf{u}})_{l} {\color{purple}
 (\nabla \mu_e(\hat{x}))^{-T}} {\color{blue}\nabla_{\hat{x}} \hat\phi_{e,l}(\hat{x})} \right]
 \cdot {\color{purple}(\nabla \mu_e(\hat{x}))^{-T}} {\color{blue}\nabla_{\hat{x}} \hat\phi_{e,m}(\hat{x})}\\
@@ -169,11 +169,12 @@ Define \textit{local operator} $\bm{\alpha}^{\text{vol}}_{h,e} : \mathbf{U}_e \t
  {\color{blue}\hat\phi_{e,l}(\hat{x})} \right] {\color{blue}\hat\phi_{e,m}(\hat{x})}
 - {\color{olive} f} {\color{blue}\hat\phi_{e,m}(\hat{x})} \Biggr\} {\color{purple}\text{det} \nabla\mu_e(\hat{x})} \, d\hat{x} .
 \end{split}
-\end{equation*}
-Residual assembly is written generically:
+\end{equation*}}
+Residual assembly is written generically as:
 \begin{equation*}
 \mathcal{R}(\mathbf{u}) = \sum_{e\in E_h^0} \mathbf{R}_e^T \bm{\alpha}^{\text{vol}}_{h,e} (\mathbf{R}_e \mathbf{u})
 \end{equation*}
+$\bm{\alpha}^{\text{vol}}_{h,e}$: \textbf{compute all residual contributions of one element}.
 \end{frame}
 
 
@@ -199,15 +200,14 @@ We need methods to compute $\mathcal{R}(\mathbf{u})$ and $\nabla\mathcal{R}(\mat
 \frametitle{Jacobian}
 The Jacobian matrix is defined as
 \begin{equation*}
-(\mathbf{A}^k)_{i,j} = (\nabla\mathcal{R}(\mathbf{u}^k))_{i,j} 
-= \frac{\partial (\mathcal{R})_i}{\partial (\mathbf{u})_j}(\mathbf{u}^k)
-= \sum_{e\in E_h^0} \frac{\partial (\bm{\alpha}_{h,e}^{\text{vol}})_m }{\partial (\mathbf{u})_l } (\mathbf{R}_e \mathbf{u}),
+(\mathbf{A})_{i,j} = (\nabla\mathcal{R}(\mathbf{u}))_{i,j} 
+= \frac{\partial (\mathcal{R})_i}{\partial (\mathbf{u})_j}(\mathbf{u})
+= \sum_{(e,m,l) : g(e,m)=i \wedge g(e,l)=j} \frac{\partial (\bm{\alpha}_{h,e}^{\text{vol}})_m }{\partial (\mathbf{u})_l } (\mathbf{R}_e \mathbf{u}).
 \end{equation*}
-where $g(e,m)=l, g(e,l)=j$.
 
 Again, the Jacobian can be computed from local contributions:
 \begin{equation*}
-\mathbf{A}^k = \sum_{e\in E_h^0} \mathbf{R}_e^T \nabla\bm{\alpha}_{h,e}^{\text{vol}}(\mathbf{R}_e \mathbf{u}) \, \mathbf{R}_e.
+\mathbf{A} = \sum_{e\in E_h^0} \mathbf{R}_e^T \nabla\bm{\alpha}_{h,e}^{\text{vol}}(\mathbf{R}_e \mathbf{u}) \, \mathbf{R}_e.
 \end{equation*}
 
 The local Jacobians can be
