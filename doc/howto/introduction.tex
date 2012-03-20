@@ -33,6 +33,38 @@ discretizations and solvers for systems of PDEs based on DUNE.
 \end{frame}
 
 \begin{frame}
+\frametitle<presentation>{Coding Effort}
+\begin{center}
+\small\begin{tabular}{|p{0.5\textwidth}|p{0.3\textwidth}|r|}
+\hline
+Problem & Scheme & LOC \\
+\hline
+\hline
+$\nabla\cdot\{v u - K\nabla u\}=f$ & $P_k, Q_k$ & 643 \\
+ & DG & 1034 \\
+\hline
+$-\nabla\cdot\{K\nabla u\}=f$ & CCFV & 223 \\
+ & RT$_0$ & 289 \\
+ & Mimetic & 278 \\
+\hline
+Two-phase flow in porous media & $p_l, p_c$, CCFV & 700 \\
+& $p_l, p_c$, DG & 931 \\  
+& CCFV, 2c & 986 \\
+\hline
+Navier-Stokes & $P_2/P_1$, $Q_2/Q_1$ & 539 \\
+           & DG & 1122 \\
+\hline
+Linear acoustics & DG & 700 \\
+\hline
+Maxwell in time domain & DG & 857 \\
+ & Nedelec & 488 \\
+\hline
+\end{tabular}
+\end{center}
+This does \textbf{not} include finite element spaces and problem setup.
+\end{frame}
+
+\begin{frame}
 \frametitle<presentation>{DUNE Module Architecture}
 Major DUNE modules are:
 \begin{center}

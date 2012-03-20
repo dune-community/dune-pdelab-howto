@@ -33,10 +33,10 @@ We demonstrate these concepts in the following.
 \frametitle{Problem and Weak Formulation}
 Consider the following model problem:
 \begin{subequations} \label{Eq:Example01}
-\begin{align*}
+\begin{align}
 -\Delta u + a u &= f &&\text{in $\Omega\subset\mathbb{R}^d$ (open, connected)},\\
 \nabla u \cdot n &= 0 &&\text{on $\partial\Omega$}.
-\end{align*}
+\end{align}
 \end{subequations}
 \medskip
 Weak formulation. Set $U = H^1(\Omega)$.
@@ -497,11 +497,11 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01b_Q2.hh}
 \frametitle{Problem and Weak Formulation}
 Consider now the following model problem:
 \begin{subequations} \label{Eq:Example02}
-\begin{align*}
+\begin{align}
  -\Delta u + a u  &= f &&\text{in $\Omega\subset\mathbb{R}^d$},\\
                 u &= g &&\text{on $\Gamma_D\subseteq\partial\Omega$},\\
 -\nabla u \cdot n &= j &&\text{on $\Gamma_N=\partial\Omega\setminus\Gamma_D$},
-\end{align*}
+\end{align}
 \end{subequations}
 where $a>0$ when $\Gamma_D=\emptyset$.
 
@@ -619,7 +619,7 @@ and coefficients $\omega_{i,j}$.
 
 \begin{frame}
 \frametitle{Example 2 Overview}
-The first example implements model problem \eqref{Eq:Example01}.
+The first example implements model problem \eqref{Eq:Example02}.
 
 It consists of the following files:
 \begin{itemize}
@@ -770,8 +770,8 @@ finite-dimensional function space:
 \end{itemize}
 \item A \textit{grid operator} realizes computations with residual forms:
 \begin{itemize}
-\item \lstinline{gos.residual(u,r)} $\quad\leftrightarrow\quad$ $\mathbf{r} = \mathcal{R}(\mathbf{u})$.
-\item \lstinline{gos.jacobian(u,A)} $\quad\leftrightarrow\quad$ $\mathbf{A} = \nabla\mathcal{R}(\mathbf{u})$.
+\item \lstinline{go.residual(u,r)} $\quad\leftrightarrow\quad$ $\mathbf{r} = \mathcal{R}(\mathbf{u})$.
+\item \lstinline{go.jacobian(u,A)} $\quad\leftrightarrow\quad$ $\mathbf{A} = \nabla\mathcal{R}(\mathbf{u})$.
 \end{itemize}
 \item A \textit{matrix container} represents a linear map (not shown yet):
 \begin{itemize}
@@ -788,11 +788,11 @@ We wish to demonstrate that PDELab allows also the implementation of Finite Volu
 
 Consider again the elliptic model problem:
 \begin{subequations} \label{Eq:Example04}
-\begin{align*}
+\begin{align}
  -\Delta u + a u  &= q &&\text{in $\Omega\subset\mathbb{R}^d$},\\
                 u &= g &&\text{on $\Gamma_D\subseteq\partial\Omega$},\\
 -\nabla u \cdot n &= j &&\text{on $\Gamma_N=\partial\Omega\setminus\Gamma_D$},
-\end{align*}
+\end{align}
 \end{subequations}
 where $a>0$ when $\Gamma_D=\emptyset$.
 
@@ -803,7 +803,7 @@ We show how to formulate this method in the framework of residual forms.
 \frametitle{Discrete Weak Formulation I}
 For a grid $E_h^0$ define $W_h = \{ u \in L_2(\Omega) \,:\, 
 u|_{\Omega_e} = \text{const} \ \forall e\in E_h^0\}$. $v\in W_h$:
-\begin{equation*}
+{\small\begin{equation*}
 \begin{split}
 & \sum_{e\in E_h^0} \int_{\Omega_e} (-\Delta u + au - q) v \, dx = 
 \sum_{e\in E_h^0} \biggl\{ \int_{\Omega_e} (au - q) v \, dx - 
@@ -817,7 +817,7 @@ u|_{\Omega_e} = \text{const} \ \forall e\in E_h^0\}$. $v\in W_h$:
 &\hspace{30mm} - \sum_{f\in B_h^1} \int_{\Omega_f\cap\Gamma_D} (\nabla u\cdot n) v \, ds
 + \sum_{f\in B_h^1} \int_{\Omega_f\cap\Gamma_N} j v \, ds .
 \end{split}
-\end{equation*}
+\end{equation*}}
 $E_h^1$: interior faces, $B_h^1$: boundary faces, $n_f$ pointing from $e^-_f$ to $e^+_f$,
 $x_f^-$ center of $e_f^-$, $x_f^+$ center of $e_f^+$, $[v]|_f = v(x_f^-) - v(x_f^+)$.
 \end{frame}
