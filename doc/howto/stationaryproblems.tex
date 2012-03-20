@@ -188,7 +188,7 @@ Iterate until convergence:
 \begin{enumerate}
 \item Assemble Jacobian System $\mathbf{A}^k = \nabla\mathcal{R}(\mathbf{u}^k)$.
 \item Solve $\mathbf{A}^k \mathbf{z}^k = \mathbf{r}^k$ with some linear solver.
-\item Update $\mathbf{u}^{k+1} = \mathbf{u}^{k} - \sigma^k \mathbf{z}^{k+1}$. $\sigma\in(0,1]$.
+\item Update $\mathbf{u}^{k+1} = \mathbf{u}^{k} - \sigma^k \mathbf{z}^{k}$. $\sigma\in(0,1]$.
 \item Compute new residual $\mathbf{r}^{k+1} = \mathcal{R}(\mathbf{u}^{k+1})$.
 \item Set $k = k +1$.
 \end{enumerate}
@@ -809,7 +809,7 @@ u|_{\Omega_e} = \text{const} \ \forall e\in E_h^0\}$. $v\in W_h$:
 \sum_{e\in E_h^0} \biggl\{ \int_{\Omega_e} (au - q) v \, dx - 
 \int_{\partial\Omega_e} (\nabla u\cdot n) v \, ds \biggr\}\\
 &\quad = \sum_{e\in E_h^0} \biggl\{ \int_{\Omega_e} (au - q) v \, dx
-- \int_{\partial\Omega_e\cap\Omega_e} (\nabla u\cdot n) v \, ds\\
+- \int_{\partial\Omega_e\cap\Omega} (\nabla u\cdot n) v \, ds\\
 &\hspace{30mm} - \int_{\partial\Omega_e\cap\Gamma_D} (\nabla u\cdot n) v \, ds
 + \int_{\partial\Omega_e\cap\Gamma_N} j v \, ds \biggr\}\\
 &\quad = \sum_{e\in E_h^0} \int_{\Omega_e} (au - q) v \, dx
