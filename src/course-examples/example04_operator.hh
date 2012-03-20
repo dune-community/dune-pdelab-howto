@@ -43,9 +43,9 @@ public:
 		     R& r) const
   {
     // domain and range field type
-    typedef typename LFSV::Traits::FiniteElementType::
+    typedef typename LFSU::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::DomainFieldType DF;
-    typedef typename LFSV::Traits::FiniteElementType::
+    typedef typename LFSU::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::RangeFieldType RF;
     const int dim = EG::Geometry::dimension;
 
@@ -54,7 +54,7 @@ public:
     RF a = 0.0;
     RF f = 0.0;
 
-    r.accumulate(lfsv,0,(a*x(lfsu,0)-f)*eg.geometry().volume());
+    r.accumulate(lfsu,0,(a*x(lfsu,0)-f)*eg.geometry().volume());
   }
 
   // skeleton integral depending on test and ansatz functions

@@ -99,8 +99,8 @@ public:
 
         // integrate grad u * grad phi_i + a*u*phi_i - f phi_i
         RF factor = it->weight()*eg.geometry().integrationElement(it->position());
-        for (size_type i=0; i<lfsv.size(); ++i)
-          r.accumulate(lfsv, i, (gradu*gradphi[i] + a*u*phi[i] - f*phi[i]) * factor);
+        for (size_type i=0; i<lfsu.size(); ++i)
+          r.accumulate(lfsu, i, (gradu*gradphi[i] + a*u*phi[i] - f*phi[i]) * factor);
       }
   }
 
@@ -110,13 +110,13 @@ public:
                        const LFSV& lfsv_s, R& r_s) const
   {
     // some types
-    typedef typename LFSV::Traits::FiniteElementType::
+    typedef typename LFSU::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::DomainFieldType DF;
-    typedef typename LFSV::Traits::FiniteElementType::
+    typedef typename LFSU::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::RangeFieldType RF;
-    typedef typename LFSV::Traits::FiniteElementType::
+    typedef typename LFSU::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::RangeType Range;
-    typedef typename LFSV::Traits::SizeType size_type;
+    typedef typename LFSU::Traits::SizeType size_type;
 
     // dimensions
     const int dim = IG::dimension;
@@ -157,11 +157,10 @@ public:
 
         // integrate j
         RF factor = it->weight()*ig.geometry().integrationElement(it->position());
-        for (size_type i=0; i<lfsv_s.size(); ++i)
-          r_s.accumulate(lfsv_s, i, j*phi[i]*factor);
+        for (size_type i=0; i<lfsu_s.size(); ++i)
+          r_s.accumulate(lfsu_s, i, j*phi[i]*factor);
       }
   }
-
 private:
   const BCType& bctype;
   unsigned int intorder;
