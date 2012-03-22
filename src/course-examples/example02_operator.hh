@@ -41,6 +41,11 @@ public:
   template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
   void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
   {
+    // assume Galerkin: lfsu == lfsv
+    // This yields more efficient code since the local functionspace only
+    // needs to be evaluated once, but would be incorrect for a finite volume
+    // method
+
     // dimensions
     const int dim = EG::Geometry::dimension;
     const int dimw = EG::Geometry::dimensionworld;
@@ -109,6 +114,11 @@ public:
   void alpha_boundary (const IG& ig, const LFSU& lfsu_s, const X& x_s,
                        const LFSV& lfsv_s, R& r_s) const
   {
+    // assume Galerkin: lfsu_s == lfsv_s
+    // This yields more efficient code since the local functionspace only
+    // needs to be evaluated once, but would be incorrect for a finite volume
+    // method
+
     // some types
     typedef typename LFSU::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::DomainFieldType DF;
@@ -158,9 +168,10 @@ public:
         // integrate j
         RF factor = it->weight()*ig.geometry().integrationElement(it->position());
         for (size_type i=0; i<lfsu_s.size(); ++i)
-          r_s.accumulate(lfsu_s, i, j*phi[i]*factor);
+          r_s.accumulate(lfsu_s,i,j*phi[i]*factor);
       }
   }
+
 private:
   const BCType& bctype;
   unsigned int intorder;
