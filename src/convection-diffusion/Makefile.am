@@ -10,6 +10,7 @@ GRIDDIM=2
 if SUPERLU
 SUPERLUPROGRAMS = dgdiffusion \
 	dgdiffusion-hp \
+	dgoverlapping \
 	rt0main
 endif
 
@@ -17,7 +18,6 @@ noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
 	overlappingsinglephaseflowccfv \
 	overlappingsinglephaseflow \
 	nonoverlappingsinglephaseflow \
-	dgoverlapping \
 	nonlineardiffusion \
 	transporttest \
 	instationarytest \
