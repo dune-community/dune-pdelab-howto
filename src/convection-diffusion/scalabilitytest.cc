@@ -67,15 +67,11 @@ void test (const GV& gv)
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS; 
   watch.reset();
   GFS gfs(gv,fem);
-  std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
   // local operator
   watch.reset();
   typedef k_A<GV,RF> KType;
   KType k(gv);
-  // Dune::FieldVector<double,dim> correlation_length;
-  // correlation_length = 1.0/64.0;
-  // KType k(gv,correlation_length,0.5,0.0,5000,-1083);
   typedef A0_A<GV,RF> A0Type;
   A0Type a0(gv);
   typedef F_A<GV,RF> FType;
@@ -88,7 +84,6 @@ void test (const GV& gv)
   GType g(gv);
   typedef Dune::PDELab::DiffusionCCFV<KType,A0Type,FType,BType,JType,GType> LOP;
   LOP lop(k,a0,f,b,j,g);
-  std::cout << "=== local operator setup " <<  watch.elapsed() << " s" << std::endl;
 
   // make constraints map and initialize it from a function
   typedef typename GFS::template ConstraintsContainer<RF>::Type CC;
