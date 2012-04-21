@@ -71,19 +71,20 @@ void test (const GV& gv)
 
   // local operator
   watch.reset();
-  typedef k_D<GV,RF> KType;
-  Dune::FieldVector<double,dim> correlation_length;
-  correlation_length = 1.0/64.0;
-  KType k(gv,correlation_length,0.5,0.0,5000,-1083);
-  typedef A0_D<GV,RF> A0Type;
+  typedef k_A<GV,RF> KType;
+  KType k(gv);
+  // Dune::FieldVector<double,dim> correlation_length;
+  // correlation_length = 1.0/64.0;
+  // KType k(gv,correlation_length,0.5,0.0,5000,-1083);
+  typedef A0_A<GV,RF> A0Type;
   A0Type a0(gv);
-  typedef F_D<GV,RF> FType;
+  typedef F_A<GV,RF> FType;
   FType f(gv);
-  typedef B_D<GV> BType;
+  typedef B_A<GV> BType;
   BType b(gv);
-  typedef J_D<GV,RF> JType;
+  typedef J_A<GV,RF> JType;
   JType j(gv);
-  typedef G_D<GV,RF> GType;
+  typedef G_A<GV,RF> GType;
   GType g(gv);
   typedef Dune::PDELab::DiffusionCCFV<KType,A0Type,FType,BType,JType,GType> LOP;
   LOP lop(k,a0,f,b,j,g);
@@ -111,7 +112,7 @@ void test (const GV& gv)
   typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,CC> LS;
   LS ls(gfs,cc,5000,5,1);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
-  SLP slp(go,x,ls,1e-12);
+  SLP slp(go,x,ls,1e-8);
   slp.apply();
 
   // make discrete function object
@@ -132,13 +133,13 @@ int main(int argc, char** argv)
     if(Dune::MPIHelper::isFake)
       std::cout<< "This is a sequential program." << std::endl;
     else
-	  {
-		if(helper.rank()==0)
-		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
-	  }
+      {
+        if(helper.rank()==0)
+          std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
+      }
 
     // 2D
-    if (true)
+    if (false)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
@@ -153,13 +154,13 @@ int main(int argc, char** argv)
     }
 
     // Q1, 3d
-    if (false)
+    if (true)
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
       Dune::FieldVector<int,3> N(64);
       Dune::FieldVector<bool,3> B(false);
-      int overlap=4;
+      int overlap=1;
       Dune::YaspGrid<3> grid(helper.getCommunicator(),L,N,B,overlap);
 
       // solve problem :)
@@ -178,16 +179,16 @@ int main(int argc, char** argv)
     }
 #endif
 
-	// test passed
-	return 0;
+    // test passed
+    return 0;
 
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 } 
