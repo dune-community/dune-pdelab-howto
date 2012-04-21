@@ -105,7 +105,7 @@ void test (const GV& gv)
   // typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GO> LS;
   // LS ls(gfs,5000,3);
   typedef Dune::PDELab::ISTLBackend_OVLP_CG_SSORk<GFS,CC> LS;
-  LS ls(gfs,cc,100,5,1);
+  LS ls(gfs,cc,10,5,1);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
   SLP slp(go,x,ls,1e-6);
   slp.apply();
@@ -243,7 +243,7 @@ void runDG ( const GV& gv,
   if (method=="SIPG")
     {
       typedef Dune::PDELab::ISTLBackend_OVLP_CG_SSORk<GFS,CC> LS;
-      LS ls(gfs,cc,100,5,verbose);
+      LS ls(gfs,cc,10,5,verbose);
       // typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
       // LS ls(10000,1);
       typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
@@ -253,7 +253,7 @@ void runDG ( const GV& gv,
   else
     {
       typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,CC> LS;
-      LS ls(gfs,cc,100,5,verbose);
+      LS ls(gfs,cc,10,5,verbose);
       // typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LS;
       // LS ls(10000,1);
       typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
