@@ -138,27 +138,37 @@ int main(int argc, char** argv)
           std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
       }
 
+    if (argc!=4)
+      {
+        std::cout << "usage: " << argv[0] << " <nx> <ny> <nz>" << std::endl;
+        return 0;
+      }
+    int nx; sscanf(argv[1],"%d",&nx);
+    int ny; sscanf(argv[2],"%d",&ny);
+    int nz; sscanf(argv[3],"%d",&nz);
+
     // 2D
-    if (false)
-    {
-      // make grid
-      Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(128);
-      Dune::FieldVector<bool,2> B(false);
-      int overlap=4;
-      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
-      //      grid.globalRefine(6);
+    // if (false)
+    // {
+    //   // make grid
+    //   Dune::FieldVector<double,2> L(1.0);
+    //   Dune::FieldVector<int,2> N(128);
+    //   Dune::FieldVector<bool,2> B(false);
+    //   int overlap=4;
+    //   Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
+    //   //      grid.globalRefine(6);
       
-      // solve problem :)
-      test(grid.leafView());
-    }
+    //   // solve problem :)
+    //   test(grid.leafView());
+    // }
 
     // Q1, 3d
     if (true)
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(64);
+      Dune::FieldVector<int,3> N;
+      N[0] = nx; N[1] = ny; N[2] = nz;
       Dune::FieldVector<bool,3> B(false);
       int overlap=1;
       Dune::YaspGrid<3> grid(helper.getCommunicator(),L,N,B,overlap);
@@ -168,16 +178,16 @@ int main(int argc, char** argv)
     }
 
     // UG Q1 2D test
-#if HAVE_UG
-    if (false)
-    {
-      // make grid 
-      UGUnitSquareQ grid(1000);
-      grid.globalRefine(6);
+// #if HAVE_UG
+//     if (false)
+//     {
+//       // make grid 
+//       UGUnitSquareQ grid(1000);
+//       grid.globalRefine(6);
 
-      test(grid.leafView());
-    }
-#endif
+//       test(grid.leafView());
+//     }
+// #endif
 
     // test passed
     return 0;
