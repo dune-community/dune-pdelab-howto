@@ -110,7 +110,7 @@ void test (const GV& gv)
   // typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GO> LS;
   // LS ls(gfs,5000,3);
   typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,CC> LS;
-  LS ls(gfs,cc,500,5,1);
+  LS ls(gfs,cc,100,5,1);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
   SLP slp(go,x,ls,1e-6);
   slp.apply();
