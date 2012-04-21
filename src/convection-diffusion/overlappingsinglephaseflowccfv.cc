@@ -120,9 +120,9 @@ void test (const GV& gv)
   DGF dgf(gfs,x);
 
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  vtkwriter.pwrite("single_phase_yasp2d_CCFV","vtk","",Dune::VTKOptions::binaryappended);
+  // Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
+  // vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
+  // vtkwriter.pwrite("single_phase_yasp2d_CCFV","vtk","",Dune::VTKOptions::binaryappended);
 }
 
 int main(int argc, char** argv)
