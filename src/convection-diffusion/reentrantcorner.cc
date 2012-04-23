@@ -281,7 +281,6 @@ int main(int argc, char** argv)
       // make grid
       AlbertaReentrantCorner gridp;
       Grid &grid = *gridp;
-      /*
       grid.globalRefine(0);
 
       // get view
@@ -298,7 +297,6 @@ int main(int argc, char** argv)
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"reentrantcorner_Alberta_Pk_2d");
-      */
     }
 #endif
 
