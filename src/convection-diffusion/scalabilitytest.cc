@@ -316,19 +316,24 @@ int main(int argc, char** argv)
         std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
     }
 
-  if (argc!=8)
-    {
-      std::cout << "usage: " << argv[0] << " <order> <nx> <ny> <nz> <px> <py> <pz>" << std::endl;
-      return 0;
+  if (argc!=8 && argc!=5) {
+    if(helper.rank()==0) {
+      std::cout << "usage option 1: " << argv[0] << " <order> <nx> <ny> <nz>" << std::endl;
+      std::cout << "usage option 2: " << argv[0] << " <order> <nx> <ny> <nz> <px> <py> <pz>" << std::endl;
     }
+    return 0;
+  }
   int degree_dyn; sscanf(argv[1],"%d",&degree_dyn);
   int nx; sscanf(argv[2],"%d",&nx);
   int ny; sscanf(argv[3],"%d",&ny);
   int nz; sscanf(argv[4],"%d",&nz);
 
-  int px; sscanf(argv[5],"%d",&px);
-  int py; sscanf(argv[6],"%d",&py);
-  int pz; sscanf(argv[7],"%d",&pz);
+  int px=0; int py=0; int pz=0;
+  if (argc==8){
+    sscanf(argv[5],"%d",&px);
+    sscanf(argv[6],"%d",&py);
+    sscanf(argv[7],"%d",&pz);
+  }
 
   try
     {
@@ -339,25 +344,34 @@ int main(int argc, char** argv)
       Dune::FieldVector<bool,dim> B(false);
       int overlap=1;
 
-      //Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
 
-      // If px*py*pz is not equal to the available number of processors
-      // choose a trivial partition
-      if( px*py*pz != helper.size() ){
-        px=helper.size();
-        py=1;
-        pz=1;
+      typedef YaspPartition<dim,Dune::FieldVector<int,dim>> YP;
+      YP* yp = (YP*) Dune::YaspGrid<dim>::defaultLoadbalancer();
+      if( px*py*pz==0 ){
+        // If px,py,pz were not specified choose the default load balancer        
+        if( helper.rank() == 0 )
+          std::cout << "Using default partitioning of YASP." << std::endl;
       }
-      Dune::FieldVector<int,dim> yasppartitions;
-      yasppartitions[0] = px; 
-      yasppartitions[1] = py; 
-      yasppartitions[2] = pz;
+      
+      else if( px*py*pz != helper.size() ){
+        // If px*py*pz is not equal to the available number of processors
+        // wrong input, stop and output warning!
+        if( helper.rank()==0 )
+          std::cerr << "Wrong input: px*py*pz != np" << std::endl;
+        exit(1);
+      }
 
-      if( helper.rank() == 0 )
-        std::cout << "Partitioning of YASP: " << yasppartitions << std::endl;
+      else {
+        Dune::FieldVector<int,dim> yasppartitions;
+        yasppartitions[0] = px; 
+        yasppartitions[1] = py; 
+        yasppartitions[2] = pz;
+        yp = new YP(yasppartitions);
+        if( helper.rank() == 0 )
+          std::cout << "Partitioning of YASP: " << yasppartitions << std::endl;
+      }
 
-      YaspPartition<dim,Dune::FieldVector<int,dim>> yp(yasppartitions);
-      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap,&yp);
+      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap,yp);
 
       typedef Dune::YaspGrid<dim> Grid;
       typedef Grid::LeafGridView GV;
