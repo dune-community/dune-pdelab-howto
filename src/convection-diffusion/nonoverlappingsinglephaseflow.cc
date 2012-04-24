@@ -5,10 +5,8 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
-#include<math.h>
 #include<iostream>
 #include<vector>
-#include<map>
 #include<string>
 
 #include<dune/common/mpihelper.hh>
@@ -17,12 +15,6 @@
 #include<dune/common/static_assert.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
-#include<dune/grid/io/file/gmshreader.hh>
-#include<dune/istl/bvector.hh>
-#include<dune/istl/operators.hh>
-#include<dune/istl/solvers.hh>
-#include<dune/istl/preconditioners.hh>
-#include<dune/istl/io.hh>
 #include<dune/grid/yaspgrid.hh>
 #if HAVE_ALBERTA
 #include<dune/grid/albertagrid.hh>

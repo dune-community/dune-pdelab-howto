@@ -7,7 +7,6 @@
 #endif
 #include<iostream>
 #include<vector>
-#include<map>
 #include<dune/common/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
