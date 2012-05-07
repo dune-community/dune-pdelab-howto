@@ -28,11 +28,11 @@
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/localoperator/laplacedirichletccfv.hh>
 // eigen
-#define EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
+#if HAVE_EIGEN
 #include<dune/pdelab/backend/eigenvectorbackend.hh>
 #include<dune/pdelab/backend/eigenmatrixbackend.hh>
 #include<dune/pdelab/backend/eigensolverbackend.hh>
-#define USE_EIGEN
+#endif
 // istl
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
@@ -132,10 +132,11 @@ void test (const GV& gv, std::string filename )
   V x(gfs,0.0);
 #ifdef USE_EIGEN
   typedef Dune::PDELab::EigenBackend_BiCGSTAB_Diagonal LS;
+  LS ls (5000);
 #else
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_AMG_SSOR<GO> LS;
-#endif
   LS ls (5000,2);
+#endif
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
   SLP slp(go,x,ls,1e-12);
   slp.apply();
@@ -155,6 +156,13 @@ int main(int argc, char** argv)
   try{
     //Maybe initialize Mpi
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
+
+    std::string basename = "laplacedirichletccfv";
+#ifdef USE_EIGEN
+    basename += "_eigen";
+#endif
+    
+    
     // 2D
     if(helper.size()==1){
       // make grid
@@ -165,7 +173,7 @@ int main(int argc, char** argv)
       grid.globalRefine(6);
       
       // solve problem :)
-      test(grid.leafView(),"laplacedirichletccfv_yasp2d");
+      test(grid.leafView(),basename+"_yasp2d");
     }
     else{
       if(helper.rank()==0)
@@ -179,7 +187,7 @@ int main(int argc, char** argv)
       UGUnitSquareQ grid(1000);
       grid.globalRefine(6);
 
-      test(grid.leafView(),"laplacedirichletccfv_ug2d");
+      test(grid.leafView(),basename+"_ug2d");
     }
 #endif
 

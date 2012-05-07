@@ -1,20 +1,23 @@
 # $Id: duneproject 5425 2009-02-10 09:31:08Z sander $
 
-# possible options
-#LDADD = $(UG_LDFLAGS) $(AMIRAMESH_LDFLAGS) $(UG_LIBS) $(AMIRAMESH_LIBS)
-#AM_CPPFLAGS = $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS)
-dist_noinst_DATA = poisson laplacedirichletccfv
 SUBDIRS = 
-GRIDDIM=2
+
+if EIGEN
+EIGENPROGRAMS =	\
+    laplacedirichletccfv-eigen
+endif
 
 if SUPERLU
-SUPERLUPROGRAMS = dgdiffusion \
+SUPERLUPROGRAMS = \
+    dgdiffusion \
 	dgdiffusion-hp \
 	dgoverlapping \
 	rt0main
 endif
 
-noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
+noinst_PROGRAMS = \
+    $(EIGENPROGRAMS) \
+    $(SUPERLUPROGRAMS) \
 	overlappingsinglephaseflowccfv \
 	overlappingsinglephaseflow \
 	nonoverlappingsinglephaseflow \
@@ -28,17 +31,6 @@ noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
 	diffusion \
 	scalabilitytest \
 	ldomain
-
-# novlp_test_SOURCES = novlp_test.cc
-# novlp_test_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) \
-# $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) \
-# $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS) $(PARMETIS_CPPFLAGS) 
-# novlp_test_LDADD = $(PARMETIS_LIBS) $(DUNEMPILDFLAGS) $(DUNEMPILIBS) \
-# $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) \
-# $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) \
-# $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS) 
-# novlp_test_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS) $(PARMETIS_LDFLAGS)
-# novlp_test_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
 if SUPERLU
 dgdiffusion_SOURCES = dgdiffusion.cc
@@ -110,8 +102,14 @@ mimetic_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
 laplacedirichletccfv_SOURCES = laplacedirichletccfv.cc
 laplacedirichletccfv_CPPFLAGS = $(AM_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS)
-laplacedirichletccfv_CXXFLAGS = $(EIGEN_CXXFLAGS)
 laplacedirichletccfv_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(UG_LDFLAGS) $(UG_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+
+if EIGEN
+laplacedirichletccfv_eigen_SOURCES = laplacedirichletccfv.cc
+laplacedirichletccfv_eigen_CPPFLAGS = $(laplacedirichletccfv_CPPFLAGS) -DUSE_EIGEN
+laplacedirichletccfv_eigen_CXXFLAGS = $(EIGEN_CXXFLAGS)
+laplacedirichletccfv_eigen_LDADD = $(laplacedirichletccfv_LDADD)
+endif
 
 reentrantcorner_SOURCES = reentrantcorner.cc
 reentrantcorner_CXXFLAGS = $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
