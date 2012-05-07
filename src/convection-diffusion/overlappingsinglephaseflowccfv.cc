@@ -86,7 +86,7 @@ void test (const GV& gv)
   typedef typename GFS::template ConstraintsContainer<RF>::Type CC;
   CC cc;
   cc.clear();
-  Dune::PDELab::constraints(g,gfs,cc,false);
+  Dune::PDELab::constraints(gfs,cc,false);
 
   // grid operator
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,VBE::MatrixBackend,RF,RF,RF,
