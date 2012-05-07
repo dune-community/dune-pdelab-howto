@@ -27,9 +27,17 @@
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/localoperator/laplacedirichletccfv.hh>
+// eigen
+#define EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
+#include<dune/pdelab/backend/eigenvectorbackend.hh>
+#include<dune/pdelab/backend/eigenmatrixbackend.hh>
+#include<dune/pdelab/backend/eigensolverbackend.hh>
+#define USE_EIGEN
+// istl
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
+
 #include<dune/pdelab/stationary/linearproblem.hh>
 
 #include"../utility/gridexamples.hh"
@@ -75,7 +83,6 @@ public:
   }
 };
 
-
 template<class GV> 
 void test (const GV& gv, std::string filename )
 {
@@ -89,7 +96,11 @@ void test (const GV& gv, std::string filename )
   FEM fem(Dune::GeometryType(Dune::GeometryType::cube,dim)); // works only for cubes
   
   // make function space
+#ifdef USE_EIGEN
+  typedef Dune::PDELab::EigenVectorBackend VBE;
+#else
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+#endif
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
     Dune::PDELab::NoConstraints,VBE,
     Dune::PDELab::SimpleGridFunctionStaticSize> GFS; 
@@ -102,7 +113,13 @@ void test (const GV& gv, std::string filename )
 
   // make grid function operator
   Dune::PDELab::LaplaceDirichletCCFV<GType> la(g);
-  typedef Dune::PDELab::GridOperator<GFS,GFS,Dune::PDELab::LaplaceDirichletCCFV<GType>,VBE::MatrixBackend,RF,RF,RF,Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation > GO;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,Dune::PDELab::LaplaceDirichletCCFV<GType>,
+#ifdef USE_EIGEN
+    Dune::PDELab::SparseEigenMatrixBackend,
+#else
+    VBE::MatrixBackend,
+#endif
+    RF,RF,RF,Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation > GO;
   GO go(gfs,gfs,la);
 
   // make coefficent Vector and initialize it from a function
@@ -113,13 +130,17 @@ void test (const GV& gv, std::string filename )
 
 
   V x(gfs,0.0);
+#ifdef USE_EIGEN
+  typedef Dune::PDELab::EigenBackend_BiCGSTAB_Diagonal LS;
+#else
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_AMG_SSOR<GO> LS;
+#endif
   LS ls (5000,2);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
   SLP slp(go,x,ls,1e-12);
   slp.apply();
   
-//   // make discrete function object
+  // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   DGF dgf(gfs,x);
   

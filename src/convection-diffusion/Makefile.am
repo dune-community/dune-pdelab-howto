@@ -109,7 +109,8 @@ mimetic_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 mimetic_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
 laplacedirichletccfv_SOURCES = laplacedirichletccfv.cc
-laplacedirichletccfv_CXXFLAGS = $(AM_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS)
+laplacedirichletccfv_CPPFLAGS = $(AM_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS)
+laplacedirichletccfv_CXXFLAGS = $(EIGEN_CXXFLAGS)
 laplacedirichletccfv_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(UG_LDFLAGS) $(UG_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 
 reentrantcorner_SOURCES = reentrantcorner.cc
