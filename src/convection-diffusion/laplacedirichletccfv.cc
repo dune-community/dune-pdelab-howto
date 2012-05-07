@@ -14,12 +14,6 @@
 #include<dune/common/static_assert.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/yaspgrid.hh>
-#include<dune/istl/bvector.hh>
-#include<dune/istl/operators.hh>
-#include<dune/istl/solvers.hh>
-#include<dune/istl/preconditioners.hh>
-#include<dune/istl/io.hh>
-#include<dune/istl/paamg/amg.hh>
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/p12dfem.hh>
