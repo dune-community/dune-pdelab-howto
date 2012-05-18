@@ -15,6 +15,7 @@
 #include<dune/common/static_assert.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include<dune/grid/io/file/gmshreader.hh>
 #include<dune/grid/yaspgrid.hh>
 #if HAVE_ALBERTA
 #include<dune/grid/albertagrid.hh>
