@@ -46,7 +46,7 @@
 
 // generate a P1 function and output it
 template<typename GV, typename RF, int vOrder, int pOrder>
-void stokes (const GV& gv, std::string filename)
+void stokes (const GV& gv, std::string filename, const std::string method)
 {
     // <<<1>>> constants and types
     typedef typename GV::Grid::ctype DF;
@@ -62,10 +62,10 @@ void stokes (const GV& gv, std::string filename)
     vFEM vFem(Dune::GeometryType(Dune::GeometryType::cube,dim));
     pFEM pFem(Dune::GeometryType(Dune::GeometryType::cube,dim));
     // DOFs per cell
+#if 0
     static const unsigned int vBlockSize = Dune::MonomImp::Size<dim,vOrder>::val;
     static const unsigned int pBlockSize = Dune::MonomImp::Size<dim,pOrder>::val;
     static const unsigned int blockSize = dim * vBlockSize + pBlockSize;
-#if 0
     typedef Dune::PDELab::ISTLVectorBackend<
         Dune::PDELab::ISTLParameters::static_blocking, vBlockSize> VVectorBackend;
     typedef Dune::PDELab::ISTLVectorBackend<
@@ -82,8 +82,7 @@ void stokes (const GV& gv, std::string filename)
 #endif
     // velocity
     Dune::dinfo << "--- v^dim" << std::endl;
-//    typedef Dune::PDELab::EntityBlockedOrderingTag VelocityOrderingTag;
-    typedef Dune::PDELab::LexicographicOrderingTag VelocityOrderingTag;
+    typedef Dune::PDELab::EntityBlockedOrderingTag VelocityOrderingTag;
     typedef Dune::PDELab::VectorGridFunctionSpace<
         GV,vFEM,dim,
         VelocityVectorBackend,
@@ -101,8 +100,7 @@ void stokes (const GV& gv, std::string filename)
     pGfs.name("p");
     // GFS
     Dune::dinfo << "--- v^dim,p" << std::endl;
-//    typedef Dune::PDELab::EntityBlockedOrderingTag StokesOrderingTag;
-    typedef Dune::PDELab::LexicographicOrderingTag StokesOrderingTag;
+    typedef Dune::PDELab::EntityBlockedOrderingTag StokesOrderingTag;
     typedef Dune::PDELab::CompositeGridFunctionSpace<
         VectorBackend, StokesOrderingTag,
         velocityGFS, pGFS> GFS;
@@ -124,7 +122,6 @@ void stokes (const GV& gv, std::string filename)
 
     // <<<4>>> Make grid Function operator
     watch.reset();
-    const std::string method = "nipg";
     const double mu = 1.0;
     typedef typename Dune::PDELab::DefaultInteriorPenalty<RF> PenaltyTerm;
     PenaltyTerm ip_term(method,mu);
@@ -163,9 +160,6 @@ void stokes (const GV& gv, std::string filename)
     gos.residual(x,r);
     std::cout << "=== residual evaluation " <<  watch.elapsed() << " s" << std::endl;
 
-    for (size_t i = 0; i < r.base().N(); i++)
-        for (size_t j = 0; j < r.base()[i].N(); j++)
-            std::cout << i << "," << j << "\t" << r.base()[i][j] << "\n";
     bool verbose = true;
 
     typedef typename M::BaseT ISTLM;
@@ -192,33 +186,10 @@ void stokes (const GV& gv, std::string filename)
     r *= -1.0; // need -residual
     x = r;
     solver.apply(x.base(),r.base(),stat);
-    //std::cout << x << std::endl;
 
-    for (size_t i = 0; i < x.base().N(); i++)
-        for (size_t j = 0; j < x.base()[i].N(); j++)
-            std::cout << i << "," << j << "\t" << x.base()[i][j] << "\n";
-
-    /*
-    // make discrete function object
-    // Important! We have to get the subspaces via GridFunctionSubSpace
-    // the original (pre-composition) ones are not possible!
-    typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,0> velocitySubGFS;
-    velocitySubGFS velocitySubGfs(gfs);
-    typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,1> pSubGFS;
-    pSubGFS pSubGfs(gfs);
-    typedef Dune::PDELab::VectorDiscreteGridFunction<velocitySubGFS,V> VDGF;
-    VDGF vdgf(velocitySubGfs,x);
-    typedef Dune::PDELab::DiscreteGridFunction<pSubGFS,V> PDGF;
-    PDGF pdgf(pSubGfs,x);
-    */
     #ifdef MAKE_VTK_OUTPUT
     // output grid function with SubsamplingVTKWriter
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-    /*
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VType>(v,"v0"));
-    */
     Dune::PDELab::add_solution_to_vtk_writer(
         vtkwriter, gfs, x);
     vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
@@ -238,12 +209,15 @@ int main(int argc, char** argv)
         int x=2;
         int y=2;
         int z=2;
+        std::string method = "nipg";
         if (argc > 1)
             x = atoi(argv[1]);
         if (argc > 2)
             y = atoi(argv[2]);
         if (argc > 3)
             z = atoi(argv[3]);
+        if (argc > 4)
+            method = argv[4];
 
         // YaspGrid P1/P2 2D test
         if(1){
@@ -252,7 +226,6 @@ int main(int argc, char** argv)
             Dune::FieldVector<int,2> N(x); N[1] = y;
             Dune::FieldVector<bool,2> B(false);
             Dune::YaspGrid<2> grid(L,N,B,0);
-//            grid.globalRefine(4);
 
             // get view
             typedef Dune::YaspGrid<2>::LeafGridView GV;
@@ -262,18 +235,18 @@ int main(int argc, char** argv)
             typedef GV::Grid::ctype DF;
             // solve problem
             Dune::dinfo.push(false);
-            stokes<GV,double,2,1>(gv,"dgstokes-2D-2-1");
+            stokes<GV,double,2,1>(gv,"dgstokes-2D-2-1", method);
         }
 
 
         // YaspGrid P2/P3 2D test
-        if(0){
+#if 0
+        {
             // make grid
             Dune::FieldVector<double,3> L(1.0);
             Dune::FieldVector<int,3> N(x); N[1] = y; N[2] = z;
             Dune::FieldVector<bool,3> B(false);
             Dune::YaspGrid<3> grid(L,N,B,0);
-            grid.globalRefine(0);
 
             // get view
             typedef Dune::YaspGrid<3>::LeafGridView GV;
@@ -282,8 +255,9 @@ int main(int argc, char** argv)
             // make finite element map
             typedef GV::Grid::ctype DF;
             // solve problem
-            stokes<GV,double,2,1>(gv,"dgstokes-2D-3-2");
+            stokes<GV,double,2,1>(gv,"dgstokes-2D-3-2", method);
         }
+#endif
 
         // test passed
         return 0;
