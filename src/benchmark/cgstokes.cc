@@ -85,13 +85,13 @@ void navierstokes(const GV& gv,
 
       ///////////////////////////////////////////////////////
       // Construct grid function spaces
-      typedef Dune::PDELab::ISTLFieldVectorBackend<1> FieldVectorBackend;
-      typedef Dune::PDELab::ISTLVectorBackend<false> VelocityVectorBackend;
+      typedef Dune::PDELab::ISTLVectorBackend<> VectorBackend;
+      typedef Dune::PDELab::ISTLVectorBackend<> VelocityVectorBackend;
 
 #ifdef CGSTOKES_MACRO_BLOCKS
-      typedef Dune::PDELab::ISTLVectorBackend<true> TaylorHoodVectorBackend;
+      typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::dynamic_blocking> TaylorHoodVectorBackend;
 #else
-      typedef Dune::PDELab::ISTLVectorBackend<false> TaylorHoodVectorBackend;
+      typedef Dune::PDELab::ISTLVectorBackend<> TaylorHoodVectorBackend;
 #endif
 
 #if CGSTOKES_BLOCK_LEVEL > 0
@@ -116,7 +116,7 @@ void navierstokes(const GV& gv,
       typedef Dune::PDELab::VectorGridFunctionSpace<
         GV,V_FEM,dim,
         VelocityVectorBackend,
-        FieldVectorBackend,
+        VectorBackend,
         ConstraintsAssembler,
         VelocityOrderingTag> PGFS_V_GFS;
       PGFS_V_GFS powerVGfs(gv,vFem);
@@ -125,7 +125,7 @@ void navierstokes(const GV& gv,
       typedef Dune::PDELab::GridFunctionSpace<
         GV, P_FEM,
         ConstraintsAssembler,
-        FieldVectorBackend> P_GFS;
+        VectorBackend> P_GFS;
       P_GFS pGfs(gv,pFem);
       pGfs.name("p");
 
