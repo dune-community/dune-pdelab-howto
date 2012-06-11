@@ -21,7 +21,11 @@
 #include <dune/istl/io.hh>
 
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include<dune/pdelab/gridoperator/gridoperator.hh>
+#include <dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/vtk.hh>
+#include <dune/pdelab/gridfunctionspace/entityblockedlocalordering.hh>
+#include <dune/pdelab/gridfunctionspace/leaflocalordering.hh>
+#include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/localoperator/stokesdg.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
@@ -33,7 +37,7 @@
 
 #include "sproblemA.hh"
 
-// #define USE_SUPER_LU
+#define USE_SUPER_LU
 #define MAKE_VTK_OUTPUT
 
 //===============================================================
@@ -61,119 +65,48 @@ void stokes (const GV& gv, std::string filename)
     static const unsigned int vBlockSize = Dune::MonomImp::Size<dim,vOrder>::val;
     static const unsigned int pBlockSize = Dune::MonomImp::Size<dim,pOrder>::val;
     static const unsigned int blockSize = dim * vBlockSize + pBlockSize;
-    typedef Dune::PDELab::ISTLVectorBackend<blockSize> VectorBackend;
-    // v
-    Dune::dinfo << "--- v" << std::endl;
-    typedef Dune::PDELab::GridFunctionSpace<GV,vFEM,
-        Dune::PDELab::NoConstraints, VectorBackend,
-        Dune::PDELab::SimpleGridFunctionStaticSize> vGFS;
-    vGFS vGfs(gv,vFem);
+#if 0
+    typedef Dune::PDELab::ISTLVectorBackend<
+        Dune::PDELab::ISTLParameters::static_blocking, vBlockSize> VVectorBackend;
+    typedef Dune::PDELab::ISTLVectorBackend<
+        Dune::PDELab::ISTLParameters::static_blocking, pBlockSize> PVectorBackend;
+    typedef Dune::PDELab::ISTLVectorBackend<
+        Dune::PDELab::ISTLParameters::static_blocking, dim*vBlockSize> VelocityVectorBackend;
+    typedef Dune::PDELab::ISTLVectorBackend<
+        Dune::PDELab::ISTLParameters::static_blocking, blockSize> VectorBackend;
+#else
+    typedef Dune::PDELab::ISTLVectorBackend<> VVectorBackend;
+    typedef Dune::PDELab::ISTLVectorBackend<> PVectorBackend;
+    typedef Dune::PDELab::ISTLVectorBackend<> VelocityVectorBackend;
+    typedef Dune::PDELab::ISTLVectorBackend<> VectorBackend;
+#endif
     // velocity
     Dune::dinfo << "--- v^dim" << std::endl;
-    typedef Dune::PDELab::PowerGridFunctionSpace<vGFS,dim,
-        Dune::PDELab::ComponentBlockwiseOrderingTag<vBlockSize> > velocityGFS;
-    velocityGFS velocityGfs(vGfs);
+//    typedef Dune::PDELab::EntityBlockedOrderingTag VelocityOrderingTag;
+    typedef Dune::PDELab::LexicographicOrderingTag VelocityOrderingTag;
+    typedef Dune::PDELab::VectorGridFunctionSpace<
+        GV,vFEM,dim,
+        VelocityVectorBackend,
+        VVectorBackend,
+        Dune::PDELab::NoConstraints,
+        VelocityOrderingTag
+      > velocityGFS;
+    velocityGFS velocityGfs(gv,vFem);
     // p
     Dune::dinfo << "--- p" << std::endl;
     typedef Dune::PDELab::GridFunctionSpace<GV,pFEM,
-        Dune::PDELab::NoConstraints, VectorBackend,
-        Dune::PDELab::SimpleGridFunctionStaticSize> pGFS;
+        Dune::PDELab::NoConstraints, PVectorBackend> pGFS;
     pGFS pGfs(gv,pFem);
     // GFS
     Dune::dinfo << "--- v^dim,p" << std::endl;
+//    typedef Dune::PDELab::EntityBlockedOrderingTag StokesOrderingTag;
+    typedef Dune::PDELab::LexicographicOrderingTag StokesOrderingTag;
     typedef Dune::PDELab::CompositeGridFunctionSpace<
-    Dune::PDELab::ComponentBlockwiseOrderingTag<dim * vBlockSize, pBlockSize>,
+        VectorBackend, StokesOrderingTag,
         velocityGFS, pGFS> GFS;
     GFS gfs(velocityGfs, pGfs);
     std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
-#if 0
-    // Iterater Grid
-    typedef typename GFS::LocalFunctionSpace LFS;
-    LFS lfs(gfs);
-    typename GV::template Codim<0>::Iterator it = gv.template begin<0>();
-    std::cout << "BlockSize " << blockSize << "\n";
-    for (; it != gv.template end<0>(); ++it)
-    {
-        static int i = 0;
-        lfs.bind(*it);
-        std::cout << "Element " << i << " has " << lfs.size() << " DOFs\n Gobal Indices:";
-        for (size_t j=0; j<lfs.size(); j++)
-            std::cout << "    " << lfs.globalIndex(j);
-        std::cout << "\n";
-
-        typedef typename LFS::template Child<0>::Type LFSVelocity;
-        const LFSVelocity& lfsvelocity = lfs.template getChild<0>();
-        typedef typename LFSVelocity::template Child<0>::Type LFSv0;
-        const LFSv0& lfsv0 = lfsvelocity.template getChild<0>();
-        typedef typename LFSVelocity::template Child<1>::Type LFSv1;
-        const LFSv1& lfsv1 = lfsvelocity.template getChild<1>();
-        typedef typename LFS::template Child<1>::Type LFSP;
-        const LFSP& lfsp = lfs.template getChild<1>();
-
-        std::cout << "Element " << i << " has " << lfsvelocity.size() << " Velocity DOFs\n Gobal Indices:";
-        for (size_t j=0; j<lfsvelocity.size(); j++)
-            std::cout << "    " << lfsvelocity.globalIndex(j);
-        std::cout << "\n Local Indices:";
-        for (size_t j=0; j<lfsvelocity.size(); j++)
-            std::cout << "    " << lfsvelocity.localIndex(j);
-        std::cout << "\n";
-
-        std::cout << "Element " << i << " has " << lfsv0.size() << " v0 DOFs\n Gobal Indices:";
-        for (size_t j=0; j<lfsv0.size(); j++)
-            std::cout << "    " << lfsv0.globalIndex(j);
-        std::cout << "\n Local Indices:";
-        for (size_t j=0; j<lfsv0.size(); j++)
-            std::cout << "    " << lfsv0.localIndex(j);
-        std::cout << "\n";
-                
-        std::cout << "Element " << i << " has " << lfsv1.size() << " v1 DOFs\n Gobal Indices:";
-        for (size_t j=0; j<lfsv1.size(); j++)
-            std::cout << "    " << lfsv1.globalIndex(j);
-        std::cout << "\n Local Indices:";
-        for (size_t j=0; j<lfsv1.size(); j++)
-            std::cout << "    " << lfsv1.localIndex(j);
-        std::cout << "\n";
-                
-        std::cout << "Element " << i << " has " << lfsp.size() << " pressure DOFs\n Gobal Indices:";
-        for (size_t j=0; j<lfsp.size(); j++)
-            std::cout << "    " << lfsp.globalIndex(j);
-        std::cout << "\n Local Indices:";
-        for (size_t j=0; j<lfsp.size(); j++)
-            std::cout << "    " << lfsp.localIndex(j);
-        std::cout << "\n";
-
-        std::cout << "-------------------\n";
-        
-        i++;        
-    }
-    
-    // Iterater Grid 2
-    typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,0> velocitySubGFS;
-    velocitySubGFS velocitySubGfs(gfs);
-    typedef typename velocitySubGFS::LocalFunctionSpace velocitySubLFS;
-    velocitySubLFS sublfsvelocity(velocitySubGfs);
-    it = gv.template begin<0>();
-    std::cout << "BlockSize " << blockSize << "\n";
-    for (; it != gv.template end<0>(); ++it)
-    {
-        static int i = 0;
-        sublfsvelocity.bind(*it);
-
-        std::cout << "Element " << i << " has " << sublfsvelocity.size() << " Velocity DOFs\n Gobal Indices:";
-        for (size_t j=0; j<sublfsvelocity.size(); j++)
-            std::cout << "    " << sublfsvelocity.globalIndex(j);
-        std::cout << "\n Local Indices:";
-        for (size_t j=0; j<sublfsvelocity.size(); j++)
-            std::cout << "    " << sublfsvelocity.localIndex(j);
-        std::cout << "\n";
-
-        std::cout << "-------------------\n";
-        
-        i++;        
-    }
-#endif
-    
     // <<<3>>> Make coefficient Vector and initialize it from a function
     typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
     V x(gfs);
@@ -194,7 +127,7 @@ void stokes (const GV& gv, std::string filename)
     typedef typename Dune::PDELab::DefaultInteriorPenalty<RF> PenaltyTerm;
     PenaltyTerm ip_term(method,mu);
 
-    typedef Dune::PDELab::StokesDGParameters<GV,FType,BType,VType,PType,PenaltyTerm>
+    typedef Dune::PDELab::StokesDGParameters<GV,RF,FType,BType,VType,PType,PenaltyTerm>
       LocalDGOperatorParameters;
     LocalDGOperatorParameters lop_params(method, mu, f,b,v,p, ip_term);
     typedef Dune::PDELab::StokesDG<LocalDGOperatorParameters> LocalDGOperator;
@@ -203,7 +136,7 @@ void stokes (const GV& gv, std::string filename)
 
     typedef Dune::PDELab::EmptyTransformation C;
     typedef Dune::PDELab::GridOperator
-      <GFS,GFS,LocalDGOperator,typename VectorBackend::MatrixBackend,RF,RF,RF,C,C> GOS;
+        <GFS,GFS,LocalDGOperator, Dune::PDELab::ISTLMatrixBackend,RF,RF,RF,C,C> GOS;
     GOS gos(gfs,gfs,lop);
 
     std::cout << "=== grid operator space setup " <<  watch.elapsed() << " s" << std::endl;
@@ -233,35 +166,37 @@ void stokes (const GV& gv, std::string filename)
             std::cout << i << "," << j << "\t" << r.base()[i][j] << "\n";
     bool verbose = true;
     
+    typedef typename M::BaseT ISTLM;
+    typedef typename V::BaseT ISTLV;
     #ifdef USE_SUPER_LU // use lu decomposition as solver
     #if HAVE_SUPERLU
     // make ISTL solver
-    Dune::MatrixAdapter<M,V,V> opa(m);
-    typedef typename M::BaseT ISTLM;
-    Dune::SuperLU<ISTLM> solver(m, verbose?1:0);
+    Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
+    Dune::SuperLU<ISTLM> solver(m.base(), verbose?1:0);
     Dune::InverseOperatorResult stat;
     #else
     #error No superLU support, please install and configure it.
     #endif
     #else // Use iterative solver
     // make ISTL solver
-    Dune::MatrixAdapter<M,V,V> opa(m);
-    Dune::SeqILU0<M,V,V> ilu0(m,1.0);
+    Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
+    Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(m.base(),1.0);
     typedef typename M::BaseT ISTLM;
-    Dune::BiCGSTABSolver<V> solver(opa,ilu0,1E-10,20000, verbose?2:1);
+    Dune::BiCGSTABSolver<ISTLV> solver(opa,ilu0,1E-10,20000, verbose?2:1);
     Dune::InverseOperatorResult stat;
     #endif
 
     // solve the jacobian system
     r *= -1.0; // need -residual
     x = r;
-    solver.apply(x,r,stat);
+    solver.apply(x.base(),r.base(),stat);
     //std::cout << x << std::endl;
 
     for (size_t i = 0; i < x.base().N(); i++)
         for (size_t j = 0; j < x.base()[i].N(); j++)
             std::cout << i << "," << j << "\t" << x.base()[i][j] << "\n";
-    
+
+    /*
     // make discrete function object
     // Important! We have to get the subspaces via GridFunctionSubSpace
     // the original (pre-composition) ones are not possible!
@@ -273,13 +208,17 @@ void stokes (const GV& gv, std::string filename)
     VDGF vdgf(velocitySubGfs,x);
     typedef Dune::PDELab::DiscreteGridFunction<pSubGFS,V> PDGF;
     PDGF pdgf(pSubGfs,x);
-
+    */
     #ifdef MAKE_VTK_OUTPUT
     // output grid function with SubsamplingVTKWriter
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
+    /*
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VType>(v,"v0"));
+    */
+    Dune::PDELab::add_solution_to_vtk_writer(
+        vtkwriter, gfs, x);
     vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
     #endif
 }
