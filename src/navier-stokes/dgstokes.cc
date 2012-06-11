@@ -92,11 +92,13 @@ void stokes (const GV& gv, std::string filename)
         VelocityOrderingTag
       > velocityGFS;
     velocityGFS velocityGfs(gv,vFem);
+    velocityGfs.name("v");
     // p
     Dune::dinfo << "--- p" << std::endl;
     typedef Dune::PDELab::GridFunctionSpace<GV,pFEM,
         Dune::PDELab::NoConstraints, PVectorBackend> pGFS;
     pGFS pGfs(gv,pFem);
+    pGfs.name("p");
     // GFS
     Dune::dinfo << "--- v^dim,p" << std::endl;
 //    typedef Dune::PDELab::EntityBlockedOrderingTag StokesOrderingTag;
