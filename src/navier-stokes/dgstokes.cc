@@ -42,7 +42,7 @@
 
 // generate a P1 function and output it
 template<typename GV, typename RF, int vOrder, int pOrder> 
-void stokes (const GV& gv, std::string filename)
+void stokes (const GV& gv, std::string filename, const std::string method)
 {
     // <<<1>>> constants and types
     typedef typename GV::Grid::ctype DF;
@@ -87,93 +87,6 @@ void stokes (const GV& gv, std::string filename)
     GFS gfs(velocityGfs, pGfs);
     std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
-#if 0
-    // Iterater Grid
-    typedef typename GFS::LocalFunctionSpace LFS;
-    LFS lfs(gfs);
-    typename GV::template Codim<0>::Iterator it = gv.template begin<0>();
-    std::cout << "BlockSize " << blockSize << "\n";
-    for (; it != gv.template end<0>(); ++it)
-    {
-        static int i = 0;
-        lfs.bind(*it);
-        std::cout << "Element " << i << " has " << lfs.size() << " DOFs\n Gobal Indices:";
-        for (size_t j=0; j<lfs.size(); j++)
-            std::cout << "    " << lfs.globalIndex(j);
-        std::cout << "\n";
-
-        typedef typename LFS::template Child<0>::Type LFSVelocity;
-        const LFSVelocity& lfsvelocity = lfs.template getChild<0>();
-        typedef typename LFSVelocity::template Child<0>::Type LFSv0;
-        const LFSv0& lfsv0 = lfsvelocity.template getChild<0>();
-        typedef typename LFSVelocity::template Child<1>::Type LFSv1;
-        const LFSv1& lfsv1 = lfsvelocity.template getChild<1>();
-        typedef typename LFS::template Child<1>::Type LFSP;
-        const LFSP& lfsp = lfs.template getChild<1>();
-
-        std::cout << "Element " << i << " has " << lfsvelocity.size() << " Velocity DOFs\n Gobal Indices:";
-        for (size_t j=0; j<lfsvelocity.size(); j++)
-            std::cout << "    " << lfsvelocity.globalIndex(j);
-        std::cout << "\n Local Indices:";
-        for (size_t j=0; j<lfsvelocity.size(); j++)
-            std::cout << "    " << lfsvelocity.localIndex(j);
-        std::cout << "\n";
-
-        std::cout << "Element " << i << " has " << lfsv0.size() << " v0 DOFs\n Gobal Indices:";
-        for (size_t j=0; j<lfsv0.size(); j++)
-            std::cout << "    " << lfsv0.globalIndex(j);
-        std::cout << "\n Local Indices:";
-        for (size_t j=0; j<lfsv0.size(); j++)
-            std::cout << "    " << lfsv0.localIndex(j);
-        std::cout << "\n";
-                
-        std::cout << "Element " << i << " has " << lfsv1.size() << " v1 DOFs\n Gobal Indices:";
-        for (size_t j=0; j<lfsv1.size(); j++)
-            std::cout << "    " << lfsv1.globalIndex(j);
-        std::cout << "\n Local Indices:";
-        for (size_t j=0; j<lfsv1.size(); j++)
-            std::cout << "    " << lfsv1.localIndex(j);
-        std::cout << "\n";
-                
-        std::cout << "Element " << i << " has " << lfsp.size() << " pressure DOFs\n Gobal Indices:";
-        for (size_t j=0; j<lfsp.size(); j++)
-            std::cout << "    " << lfsp.globalIndex(j);
-        std::cout << "\n Local Indices:";
-        for (size_t j=0; j<lfsp.size(); j++)
-            std::cout << "    " << lfsp.localIndex(j);
-        std::cout << "\n";
-
-        std::cout << "-------------------\n";
-        
-        i++;        
-    }
-    
-    // Iterater Grid 2
-    typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,0> velocitySubGFS;
-    velocitySubGFS velocitySubGfs(gfs);
-    typedef typename velocitySubGFS::LocalFunctionSpace velocitySubLFS;
-    velocitySubLFS sublfsvelocity(velocitySubGfs);
-    it = gv.template begin<0>();
-    std::cout << "BlockSize " << blockSize << "\n";
-    for (; it != gv.template end<0>(); ++it)
-    {
-        static int i = 0;
-        sublfsvelocity.bind(*it);
-
-        std::cout << "Element " << i << " has " << sublfsvelocity.size() << " Velocity DOFs\n Gobal Indices:";
-        for (size_t j=0; j<sublfsvelocity.size(); j++)
-            std::cout << "    " << sublfsvelocity.globalIndex(j);
-        std::cout << "\n Local Indices:";
-        for (size_t j=0; j<sublfsvelocity.size(); j++)
-            std::cout << "    " << sublfsvelocity.localIndex(j);
-        std::cout << "\n";
-
-        std::cout << "-------------------\n";
-        
-        i++;        
-    }
-#endif
-    
     // <<<3>>> Make coefficient Vector and initialize it from a function
     typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
     V x(gfs);
@@ -189,7 +102,6 @@ void stokes (const GV& gv, std::string filename)
 
     // <<<4>>> Make grid Function operator
     watch.reset();
-    const std::string method = "nipg";
     const double mu = 1.0;
     typedef typename Dune::PDELab::DefaultInteriorPenalty<RF> PenaltyTerm;
     PenaltyTerm ip_term(method,mu);
@@ -217,8 +129,8 @@ void stokes (const GV& gv, std::string filename)
     gos.jacobian(x,m);
     std::cout << "=== jacobian assembly " <<  watch.elapsed() << " s" << std::endl;
 
-    std::ofstream matrix("Matrix");
-    Dune::printmatrix(matrix, m.base(), "M", "r", 6, 3);
+    // std::ofstream matrix("Matrix");
+    // Dune::printmatrix(matrix, m.base(), "M", "r", 6, 3);
     
     // evaluate residual w.r.t initial guess
     V r(gfs);
@@ -228,9 +140,9 @@ void stokes (const GV& gv, std::string filename)
     gos.residual(x,r);
     std::cout << "=== residual evaluation " <<  watch.elapsed() << " s" << std::endl;
 
-    for (size_t i = 0; i < r.base().N(); i++)
-        for (size_t j = 0; j < r.base()[i].N(); j++)
-            std::cout << i << "," << j << "\t" << r.base()[i][j] << "\n";
+    // for (size_t i = 0; i < r.base().N(); i++)
+    //     for (size_t j = 0; j < r.base()[i].N(); j++)
+    //         std::cout << i << "," << j << "\t" << r.base()[i][j] << "\n";
     bool verbose = true;
     
     #ifdef USE_SUPER_LU // use lu decomposition as solver
@@ -254,13 +166,13 @@ void stokes (const GV& gv, std::string filename)
 
     // solve the jacobian system
     r *= -1.0; // need -residual
-    x = r;
+    x = 0;
     solver.apply(x,r,stat);
     //std::cout << x << std::endl;
 
-    for (size_t i = 0; i < x.base().N(); i++)
-        for (size_t j = 0; j < x.base()[i].N(); j++)
-            std::cout << i << "," << j << "\t" << x.base()[i][j] << "\n";
+    // for (size_t i = 0; i < x.base().N(); i++)
+    //     for (size_t j = 0; j < x.base()[i].N(); j++)
+    //         std::cout << i << "," << j << "\t" << x.base()[i][j] << "\n";
     
     // make discrete function object
     // Important! We have to get the subspaces via GridFunctionSubSpace
@@ -297,12 +209,15 @@ int main(int argc, char** argv)
         int x=2;
         int y=2;
         int z=2;
+        std::string method = "nipg";
         if (argc > 1)
             x = atoi(argv[1]);
         if (argc > 2)
             y = atoi(argv[2]);
         if (argc > 3)
             z = atoi(argv[3]);
+        if (argc > 4)
+            method = argv[4];
 
         // YaspGrid P1/P2 2D test
         if(1){
@@ -321,12 +236,13 @@ int main(int argc, char** argv)
             typedef GV::Grid::ctype DF;
             // solve problem
             Dune::dinfo.push(false);
-            stokes<GV,double,2,1>(gv,"dgstokes-2D-2-1");
+            stokes<GV,double,2,1>(gv,"dgstokes-2D-2-1", method);
         }
 
     
         // YaspGrid P2/P3 2D test
-        if(0){
+#if 0
+        {
             // make grid
             Dune::FieldVector<double,3> L(1.0);
             Dune::FieldVector<int,3> N(x); N[1] = y; N[2] = z;
@@ -341,8 +257,9 @@ int main(int argc, char** argv)
             // make finite element map
             typedef GV::Grid::ctype DF;
             // solve problem
-            stokes<GV,double,2,1>(gv,"dgstokes-2D-3-2");
+            stokes<GV,double,2,1>(gv,"dgstokes-2D-3-2", method);
         }
+#endif
 
         // test passed
         return 0;
