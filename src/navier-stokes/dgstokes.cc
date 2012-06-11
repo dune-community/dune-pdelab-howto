@@ -1,9 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
-    \brief Solve Stokes with DG method (stationary case). 
+/** \file
+    \brief Solve Stokes with DG method (stationary case).
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include <iostream>
 #include <vector>
@@ -41,11 +41,11 @@
 #define MAKE_VTK_OUTPUT
 
 //===============================================================
-// Problem setup and solution 
+// Problem setup and solution
 //===============================================================
 
 // generate a P1 function and output it
-template<typename GV, typename RF, int vOrder, int pOrder> 
+template<typename GV, typename RF, int vOrder, int pOrder>
 void stokes (const GV& gv, std::string filename)
 {
     // <<<1>>> constants and types
@@ -53,7 +53,7 @@ void stokes (const GV& gv, std::string filename)
     static const unsigned int dim = GV::dimension;
     Dune::Timer watch;
     std::cout << "=== Initialize" << std::endl;
-    
+
     // <<<2>>> Make grid function space
     watch.reset();
     typedef Dune::PDELab::MonomLocalFiniteElementMap<DF,RF,dim,vOrder> vFEM;
@@ -154,7 +154,7 @@ void stokes (const GV& gv, std::string filename)
 
     std::ofstream matrix("Matrix");
     Dune::printmatrix(matrix, m.base(), "M", "r", 6, 3);
-    
+
     // evaluate residual w.r.t initial guess
     V r(gfs);
     r = 0.0;
@@ -167,7 +167,7 @@ void stokes (const GV& gv, std::string filename)
         for (size_t j = 0; j < r.base()[i].N(); j++)
             std::cout << i << "," << j << "\t" << r.base()[i][j] << "\n";
     bool verbose = true;
-    
+
     typedef typename M::BaseT ISTLM;
     typedef typename V::BaseT ISTLV;
     #ifdef USE_SUPER_LU // use lu decomposition as solver
@@ -256,7 +256,7 @@ int main(int argc, char** argv)
 
             // get view
             typedef Dune::YaspGrid<2>::LeafGridView GV;
-            const GV& gv=grid.leafView(); 
+            const GV& gv=grid.leafView();
 
             // make finite element map
             typedef GV::Grid::ctype DF;
@@ -265,7 +265,7 @@ int main(int argc, char** argv)
             stokes<GV,double,2,1>(gv,"dgstokes-2D-2-1");
         }
 
-    
+
         // YaspGrid P2/P3 2D test
         if(0){
             // make grid
@@ -277,7 +277,7 @@ int main(int argc, char** argv)
 
             // get view
             typedef Dune::YaspGrid<3>::LeafGridView GV;
-            const GV& gv=grid.leafView(); 
+            const GV& gv=grid.leafView();
 
             // make finite element map
             typedef GV::Grid::ctype DF;
