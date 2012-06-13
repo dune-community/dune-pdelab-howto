@@ -62,23 +62,19 @@ void stokes (const GV& gv, std::string filename, const std::string method)
     vFEM vFem(Dune::GeometryType(Dune::GeometryType::cube,dim));
     pFEM pFem(Dune::GeometryType(Dune::GeometryType::cube,dim));
     // DOFs per cell
-#if 0
     static const unsigned int vBlockSize = Dune::MonomImp::Size<dim,vOrder>::val;
     static const unsigned int pBlockSize = Dune::MonomImp::Size<dim,pOrder>::val;
-    static const unsigned int blockSize = dim * vBlockSize + pBlockSize;
-    typedef Dune::PDELab::ISTLVectorBackend<
-        Dune::PDELab::ISTLParameters::static_blocking, vBlockSize> VVectorBackend;
-    typedef Dune::PDELab::ISTLVectorBackend<
-        Dune::PDELab::ISTLParameters::static_blocking, pBlockSize> PVectorBackend;
-    typedef Dune::PDELab::ISTLVectorBackend<
-        Dune::PDELab::ISTLParameters::static_blocking, dim*vBlockSize> VelocityVectorBackend;
-    typedef Dune::PDELab::ISTLVectorBackend<
-        Dune::PDELab::ISTLParameters::static_blocking, blockSize> VectorBackend;
-#else
-    typedef Dune::PDELab::ISTLVectorBackend<> VVectorBackend;
-    typedef Dune::PDELab::ISTLVectorBackend<> PVectorBackend;
+
+    typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking,vBlockSize> VVectorBackend;
+    typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking,pBlockSize> PVectorBackend;
     typedef Dune::PDELab::ISTLVectorBackend<> VelocityVectorBackend;
-    typedef Dune::PDELab::ISTLVectorBackend<> VectorBackend;
+
+#if 0
+    // this creates a flat backend (i.e. blocksize == 1)
+    typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking> VectorBackend;
+#else
+    // this creates a backend with static blocks matching the size of the LFS
+    typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking> VectorBackend;
 #endif
     // velocity
     Dune::dinfo << "--- v^dim" << std::endl;
@@ -106,6 +102,20 @@ void stokes (const GV& gv, std::string filename, const std::string method)
         velocityGFS, pGFS> GFS;
     GFS gfs(velocityGfs, pGfs);
     std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
+
+#if 0
+    // enable for output of DOFIndices and mapped container indices
+    {
+      Dune::PDELab::LocalFunctionSpace<GFS> lfs(gfs);
+      for (auto it = gv.template begin<0>(); it != gv.template end<0>(); ++it)
+        {compile
+          lfs.bind(*it);
+          for (int i = 0; i < lfs.size(); ++i)
+            std::cout << lfs.dofIndex(i) << "  " << gfs.ordering().map_index(lfs.dofIndex(i)) << std::endl;
+          std::cout << std::endl;
+        }
+    }
+#endif
 
     // <<<3>>> Make coefficient Vector and initialize it from a function
     typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
