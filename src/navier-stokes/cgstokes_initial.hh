@@ -11,6 +11,11 @@ class BCTypeParam_HagenPoiseuille
 public:
   typedef Dune::PDELab::StokesBoundaryCondition BC;
   
+  struct Traits
+  {
+    typedef BC::Type RangeType;
+  };
+
   BCTypeParam_HagenPoiseuille() {}
   
   template<typename I>
@@ -41,6 +46,12 @@ private:
 public:
   typedef Dune::PDELab::StokesBoundaryCondition BC;
   
+  struct Traits
+  {
+    typedef BC::Type RangeType;
+  };
+
+
   BCTypeParam_PressureDrop (const DFT l_, const DFT o_, const int d_)
     : length(l_), origin(o_), direction(d_)
   {
@@ -126,26 +137,36 @@ public:
 };
 
 
-template<typename GV, typename RF>
-class ZeroScalarFunction :
+template<typename GV, typename RF, std::size_t dim_range>
+class ZeroVectorFunction :
   public Dune::PDELab::AnalyticGridFunctionBase<
-  Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-  ZeroScalarFunction<GV,RF> >,
+  Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim_range>,
+  ZeroVectorFunction<GV,RF,dim_range> >,
   public Dune::PDELab::InstationaryFunctionDefaults
 {
 public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits, ZeroScalarFunction<GV,RF> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim_range> Traits;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits, ZeroVectorFunction> BaseT;
 
   typedef typename Traits::DomainType DomainType;
   typedef typename Traits::RangeType RangeType;
 
-  ZeroScalarFunction(const GV & gv) : BaseT(gv) {}
+  ZeroVectorFunction(const GV & gv) : BaseT(gv) {}
 
   inline void evaluateGlobal(const DomainType & x, RangeType & y) const
   {
     y=0;
   }
+};
+
+template<typename GV, typename RF>
+class ZeroScalarFunction
+  : public ZeroVectorFunction<GV,RF,1>
+{
+public:
+
+  ZeroScalarFunction(const GV & gv) : ZeroVectorFunction<GV,RF,1>(gv) {}
+
 };
 
 // function for defining the flux boundary condition
