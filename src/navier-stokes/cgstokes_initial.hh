@@ -10,14 +10,14 @@ class BCTypeParam_HagenPoiseuille
 {
 public:
   typedef Dune::PDELab::StokesBoundaryCondition BC;
-  
+
   struct Traits
   {
     typedef BC::Type RangeType;
   };
 
   BCTypeParam_HagenPoiseuille() {}
-  
+
   template<typename I>
   inline void evaluate (
     const I & intersection,   /*@\label{bcp:name}@*/
@@ -33,7 +33,7 @@ public:
   }
 };
 
-// constraints parameter class for selecting boundary condition type 
+// constraints parameter class for selecting boundary condition type
 template<typename GV>
 class BCTypeParam_PressureDrop
 {
@@ -42,10 +42,10 @@ private:
   const DFT length;
   const DFT origin;
   const int direction;
-  
+
 public:
   typedef Dune::PDELab::StokesBoundaryCondition BC;
-  
+
   struct Traits
   {
     typedef BC::Type RangeType;
@@ -65,13 +65,13 @@ public:
   {
     Dune::FieldVector<typename I::ctype, I::dimension>
       xg = intersection.geometry().global( coord );
-    
+
     if(xg[direction]-origin < 1e-6 || xg[direction]-origin > length-1e-6)
       y = BC::DoNothing;
     else
       y = BC::VelocityDirichlet;
   }
-  
+
 };
 
 template<typename GV, typename RF, int dim>
@@ -202,14 +202,14 @@ public:
 
 private:
   typedef typename Traits::DomainFieldType DFT;
-  
+
   const DFT pressure;
   const DFT length;
   const DFT origin;
   const int direction;
 
 public:
-  PressureDropFlux (const GV& gv, const RF p_, const RF l_, const RF o_, const int d_) 
+  PressureDropFlux (const GV& gv, const RF p_, const RF l_, const RF o_, const int d_)
     : BaseT(gv), pressure(p_), length(l_), origin(o_), direction(d_)
   {
     const int dim = GV::dimension;
