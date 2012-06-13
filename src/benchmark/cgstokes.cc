@@ -158,14 +158,14 @@ void navierstokes(const GV& gv,
         ScalarVelocityConstraints;
       typedef Dune::PDELab::PowerConstraintsParameters<ScalarVelocityConstraints,dim>
         VelocityConstraints;
-      typedef Dune::PDELab::StokesPressureDirichletConstraints<PRM>
+      typedef Dune::PDELab::NoDirichletConstraintsParameters
         PressureConstraints;
       typedef Dune::PDELab::CompositeConstraintsParameters<VelocityConstraints,PressureConstraints>
         Constraints;
 
       ScalarVelocityConstraints scalarvelocity_constraints(parameters);
       VelocityConstraints velocity_constraints(scalarvelocity_constraints);
-      PressureConstraints pressure_constraints(parameters);
+      PressureConstraints pressure_constraints;
       Constraints constraints(velocity_constraints,pressure_constraints);
 
       Dune::PDELab::constraints(constraints,gfs,cg);
@@ -174,8 +174,8 @@ void navierstokes(const GV& gv,
       bh.start("LOP construction",std::cout);
 
       // Make grid function operator
-      typedef Dune::PDELab::TaylorHoodNavierStokesJacobian<PRM,true,q> LOP;
-      LOP lop(parameters);
+      typedef Dune::PDELab::TaylorHoodNavierStokes<PRM> LOP;
+      LOP lop(parameters,q);
 
       bh.end("LOP construction",std::cout);
       bh.start("GOP construction",std::cout);
@@ -399,13 +399,25 @@ int main(int argc, char** argv)
 
         typedef BCTypeParam_HagenPoiseuille BoundaryFunction;
         typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
+        typedef ZeroVectorFunction<GV,RF,2> ExternalForce;
 
         BoundaryFunction boundary_function;
         NeumannFlux neumann_flux(gv);
+        ExternalForce externalForce(gv);
 
-        typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
-          LOPParameters;
-        LOPParameters parameters(lp.sub("physics"),boundary_function,neumann_flux);
+        typedef Dune::PDELab::NavierStokesDefaultParameters<
+          GV,
+          RF,
+          ExternalForce,
+          BoundaryFunction,
+          InitialVelocity,
+          NeumannFlux
+          > LOPParameters;
+        LOPParameters parameters(lp.sub("physics"),
+                                 externalForce,
+                                 boundary_function,
+                                 init_velocity,
+                                 neumann_flux);
 
         // solve problem
         navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
@@ -457,12 +469,25 @@ int main(int argc, char** argv)
 
         typedef BCTypeParam_HagenPoiseuille BoundaryFunction;
         typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
+        typedef ZeroVectorFunction<GV,RF,2> ExternalForce;
+
         BoundaryFunction boundary_function;
         NeumannFlux neumann_flux(gv);
+        ExternalForce externalForce(gv);
 
-        typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
-          LOPParameters;
-        LOPParameters parameters(lp.sub("physics"),boundary_function,neumann_flux);
+        typedef Dune::PDELab::NavierStokesDefaultParameters<
+          GV,
+          RF,
+          ExternalForce,
+          BoundaryFunction,
+          InitialVelocity,
+          NeumannFlux
+          > LOPParameters;
+        LOPParameters parameters(lp.sub("physics"),
+                                 externalForce,
+                                 boundary_function,
+                                 init_velocity,
+                                 neumann_flux);
 
         // solve problem
         navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
@@ -524,6 +549,7 @@ int main(int argc, char** argv)
 
         typedef BCTypeParam_PressureDrop<GV> BoundaryFunction;
         typedef PressureDropFlux<GV,RF> NeumannFlux;
+        typedef ZeroVectorFunction<GV,RF,2> ExternalForce;
 
         // Domain parameters:
         const int tube_direction = 0; // Tube in x-axes direction
@@ -533,10 +559,21 @@ int main(int argc, char** argv)
         const RF boundary_pressure = lp.get<double>("boundaries.pressure");
         BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
         NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
+        ExternalForce externalForce(gv);
 
-        typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
-          LOPParameters;
-        LOPParameters parameters(lp.sub("physics"),boundary_function,neumann_flux);
+        typedef Dune::PDELab::NavierStokesDefaultParameters<
+          GV,
+          RF,
+          ExternalForce,
+          BoundaryFunction,
+          InitialVelocity,
+          NeumannFlux
+          > LOPParameters;
+        LOPParameters parameters(lp.sub("physics"),
+                                 externalForce,
+                                 boundary_function,
+                                 init_velocity,
+                                 neumann_flux);
 
         // solve problem
         navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
@@ -598,6 +635,7 @@ int main(int argc, char** argv)
 
         typedef BCTypeParam_PressureDrop<GV> BoundaryFunction;
         typedef PressureDropFlux<GV,RF> NeumannFlux;
+        typedef ZeroVectorFunction<GV,RF,2> ExternalForce;
 
         // Domain parameters:
         const int tube_direction = 0; // Tube in x-axes direction
@@ -607,10 +645,21 @@ int main(int argc, char** argv)
         const RF boundary_pressure = lp.get<double>("boundaries.pressure");
         BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
         NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
+        ExternalForce externalForce(gv);
 
-        typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
-          LOPParameters;
-        LOPParameters parameters(lp.sub("physics"),boundary_function,neumann_flux);
+        typedef Dune::PDELab::NavierStokesDefaultParameters<
+          GV,
+          RF,
+          ExternalForce,
+          BoundaryFunction,
+          InitialVelocity,
+          NeumannFlux
+          > LOPParameters;
+        LOPParameters parameters(lp.sub("physics"),
+                                 externalForce,
+                                 boundary_function,
+                                 init_velocity,
+                                 neumann_flux);
 
         // solve problem
         navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
@@ -669,13 +718,25 @@ int main(int argc, char** argv)
 
         typedef BCTypeParam_HagenPoiseuille BoundaryFunction;
         typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
+        typedef ZeroVectorFunction<GV,RF,3> ExternalForce;
 
         BoundaryFunction boundary_function;
         NeumannFlux neumann_flux(gv);
+        ExternalForce externalForce(gv);
 
-        typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
-          LOPParameters;
-        LOPParameters parameters(lp.sub("physics"),boundary_function,neumann_flux);
+        typedef Dune::PDELab::NavierStokesDefaultParameters<
+          GV,
+          RF,
+          ExternalForce,
+          BoundaryFunction,
+          InitialVelocity,
+          NeumannFlux
+          > LOPParameters;
+        LOPParameters parameters(lp.sub("physics"),
+                                 externalForce,
+                                 boundary_function,
+                                 init_velocity,
+                                 neumann_flux);
 
         // solve problem
         navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
@@ -737,6 +798,7 @@ int main(int argc, char** argv)
 
         typedef BCTypeParam_PressureDrop<GV> BoundaryFunction;
         typedef PressureDropFlux<GV,RF> NeumannFlux;
+        typedef ZeroVectorFunction<GV,RF,3> ExternalForce;
 
         // Domain parameters:
         const int tube_direction = 2; // Tube in z-axes direction
@@ -746,10 +808,21 @@ int main(int argc, char** argv)
         const RF boundary_pressure = lp.get<double>("boundaries.pressure");
         BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
         NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
+        ExternalForce externalForce(gv);
 
-        typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
-          LOPParameters;
-        LOPParameters parameters(lp.sub("physics"),boundary_function,neumann_flux);
+        typedef Dune::PDELab::NavierStokesDefaultParameters<
+          GV,
+          RF,
+          ExternalForce,
+          BoundaryFunction,
+          InitialVelocity,
+          NeumannFlux
+          > LOPParameters;
+        LOPParameters parameters(lp.sub("physics"),
+                                 externalForce,
+                                 boundary_function,
+                                 init_velocity,
+                                 neumann_flux);
 
         // solve problem
         navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
