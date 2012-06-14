@@ -113,9 +113,9 @@ void driver (PROBLEM& problem,
   DGF dgf(gfs,x);
   
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  vtkwriter.pwrite(filename.c_str(),"vtk","",Dune::VTKOptions::binaryappended);
+  vtkwriter.pwrite(filename.c_str(),"vtk","",Dune::VTK::appendedraw);
 }
 
 //===============================================================

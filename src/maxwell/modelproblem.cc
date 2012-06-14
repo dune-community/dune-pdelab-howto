@@ -262,7 +262,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U3DGF>(u3dgf,"B_x"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U4DGF>(u4dgf,"B_y"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U5DGF>(u5dgf,"B_z"));
-    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
+    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
     fn.increment();
   }
 
@@ -300,7 +300,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
           vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U3DGF>(u3dgf,"B_x"));
           vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U4DGF>(u4dgf,"B_y"));
           vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U5DGF>(u5dgf,"B_z"));
-          vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
+          vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
           fn.increment();
         }
 

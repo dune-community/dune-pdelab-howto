@@ -302,7 +302,7 @@ void driver (Grid& grid, std::string filename_base, double TOL, int maxsteps, do
       std::stringstream fullname2;
       fullname2 << "test" << "_step" << step;
       vtkwriter2.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<G>(g,"u"));
-      vtkwriter2.write(fullname2.str(),Dune::VTKOptions::binaryappended);
+      vtkwriter2.write(fullname2.str(),Dune::VTK::appendedraw);
 
 
       // make local operator
@@ -369,7 +369,7 @@ void driver (Grid& grid, std::string filename_base, double TOL, int maxsteps, do
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<G>(g,"u"));
       vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<Difference>(difference,"u-u_h"));
       vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(udgf0,"estimated error"));
-      vtkwriter.write(fullname.str(),Dune::VTKOptions::binaryappended);
+      vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
 
       // error control
       if (estimated_error <= TOL) break;

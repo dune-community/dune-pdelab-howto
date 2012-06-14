@@ -53,7 +53,7 @@ void example02_Q1 (const GV& gv)
   // <<<7>>> graphical output
   typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
   DGF udgf(gfs,u);
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"solution"));
-  vtkwriter.write("example02_Q1",Dune::VTKOptions::binaryappended);
+  vtkwriter.write("example02_Q1",Dune::VTK::appendedraw);
 }

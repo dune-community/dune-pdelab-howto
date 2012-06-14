@@ -247,7 +247,7 @@ void runDG ( const GV& gv,
       Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,degree-1);
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<UDGF>(udgf,"u_h"));
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<G>(g,"u"));
-      vtkwriter.write(fullname.str(),Dune::VTKOptions::binaryappended);
+      vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
     }
 }
 
@@ -317,7 +317,7 @@ void runFEM (const GV& gv, const FEM& fem, PROBLEM& problem, std::string basenam
       Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,degree-1);
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<UDGF>(udgf,"u_h"));
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<G>(g,"u"));
-      vtkwriter.write(fullname.str(),Dune::VTKOptions::binaryappended);
+      vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
     }
 }
 

@@ -297,7 +297,7 @@ void runDG ( const GV& gv,
     UDGF udgf(gfs,u);
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,std::max(0,degree-1));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<UDGF>(udgf,"u_h"));
-    vtkwriter.write(fullname.str(),Dune::VTKOptions::binaryappended);
+    vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
   }
 
 }

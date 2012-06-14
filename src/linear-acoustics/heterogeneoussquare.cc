@@ -288,7 +288,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
     if (degree>=2) refinement+=2;
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,refinement);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"u"));
-    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
+    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
     fn.increment();
   }
 
@@ -311,7 +311,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
           if (degree>=2) refinement+=2;
           Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,refinement);
           vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"u"));
-          vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
+          vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
           fn.increment();
         }
 

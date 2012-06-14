@@ -67,9 +67,9 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
     // <<<9>>> graphical output
     typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
     DGF udgf(gfs,u);
-    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"solution"));
-    vtkwriter.write("adaptivity_"+iter,Dune::VTKOptions::binaryappended);
+    vtkwriter.write("adaptivity_"+iter,Dune::VTK::appendedraw);
     
     // <<<10>>> adapt the grid
     gra.adapt(u);

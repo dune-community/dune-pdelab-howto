@@ -273,9 +273,9 @@ void sequential (const GV& gv, int t_level)
   {
     typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
     DGF xdgf(gfs,xold);
-    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-    vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+    vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
     fn.increment();
   }
 
@@ -295,9 +295,9 @@ void sequential (const GV& gv, int t_level)
       // graphics
       typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
       DGF xdgf(gfs,x);
-      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-      vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+      vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
       fn.increment();
 
       // advance time step
@@ -315,9 +315,9 @@ void sequential (const GV& gv, int t_level)
 			<< std::setw(8) << gv.size(0) << " elements " 
 			<< std::scientific << l2interpolationerror(u,gfs,x,8) << std::endl;
   {
-    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U<GV,Real> >(u,"exact solution"));
-    vtkwriter.write("instationarytest_exact",Dune::VTKOptions::binaryappended);
+    vtkwriter.write("instationarytest_exact",Dune::VTK::appendedraw);
   }
 }
 

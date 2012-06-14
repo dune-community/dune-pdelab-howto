@@ -286,7 +286,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
   // output grid function with SubsamplingVTKWriter
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
-  vtkwriter.write(filename,Dune::VTKOptions::ascii);
+  vtkwriter.write(filename,Dune::VTK::ascii);
 #endif
 
 #ifdef ANALYTIC_SOLUTION_PROVIDED

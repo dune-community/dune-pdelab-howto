@@ -154,7 +154,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
     //vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<KType>(k,"k"));
     vtkwriter.addCellData(new Dune::PDELab::VTKFiniteElementMapAdapter<GV,FEM>(fem,"fem order"));
-    vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
+    vtkwriter.write(filename,Dune::VTK::appendedraw);
 #endif
 }
 

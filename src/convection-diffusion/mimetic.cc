@@ -277,9 +277,9 @@ void mimetictest(Data& data, std::string filename)
     DGF dgf(psub, x);
 
     // output grid function with VTKWriter
-    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-    vtkwriter.write(filename,Dune::VTKOptions::ascii);
+    vtkwriter.write(filename,Dune::VTK::ascii);
 }
 
 
@@ -363,8 +363,8 @@ int main(int argc, char** argv)
             typedef Grid::LeafGridView GV;
             const GV& gv=grid.leafView();
 
-            Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
-            vtkwriter.write("ug",Dune::VTKOptions::ascii);
+            Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
+            vtkwriter.write("ug",Dune::VTK::ascii);
 
             // choose problem data
             Data<GV>::C data(gv);

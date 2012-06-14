@@ -229,7 +229,7 @@ void navierstokes(const GV& gv,
           Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
           vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
           vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
-          vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
+          vtkwriter.write(filename,Dune::VTK::appendedraw);
         }
 
       bh.end("IO",std::cout);

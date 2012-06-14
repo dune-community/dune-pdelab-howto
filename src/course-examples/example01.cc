@@ -38,7 +38,7 @@
 #include<dune/istl/preconditioners.hh>
 #include<dune/istl/io.hh>
 #include<dune/istl/superlu.hh>
-
+#include<dune/pdelab/newton/newton.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/p12dfem.hh>
 #include<dune/pdelab/finiteelementmap/pk2dfem.hh>

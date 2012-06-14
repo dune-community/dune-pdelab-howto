@@ -31,7 +31,7 @@
 #include<dune/istl/superlu.hh>
 #include<dune/istl/preconditioners.hh>
 #include<dune/istl/io.hh>
-
+#include<dune/pdelab/newton/newton.hh>
 #include<dune/pdelab/finiteelementmap/pk2dfem.hh>
 #include<dune/pdelab/finiteelementmap/pk3dfem.hh>
 #include<dune/pdelab/finiteelementmap/q12dfem.hh>
@@ -195,7 +195,7 @@ void navierstokes
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
-    vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+    vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
     fn.increment();
   }
 
@@ -228,7 +228,7 @@ void navierstokes
         Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
         vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
         vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
-        vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+        vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
         fn.increment();
       }
 

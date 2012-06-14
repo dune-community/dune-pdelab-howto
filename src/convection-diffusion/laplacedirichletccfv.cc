@@ -146,9 +146,9 @@ void test (const GV& gv, std::string filename )
   DGF dgf(gfs,x);
   
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
-  vtkwriter.write( filename.c_str() ,Dune::VTKOptions::ascii);
+  vtkwriter.write( filename.c_str() ,Dune::VTK::ascii);
 }
 
 int main(int argc, char** argv)

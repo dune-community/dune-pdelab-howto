@@ -545,12 +545,12 @@ void test (const GV& gv, int timesteps, double timestep)
   Dune::PDELab::FilenameHelper fn(basename);
   if (graphics)
   {
-    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_lDGF>(p_ldgf,"p_l"));
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
-    vtkwriter.pwrite(fn.getName(),"","",Dune::VTKOptions::binaryappended);
+    vtkwriter.pwrite(fn.getName(),"","",Dune::VTK::appendedraw);
     fn.increment();
   }
 
@@ -564,12 +564,12 @@ void test (const GV& gv, int timesteps, double timestep)
       // graphical output
       if (graphics)
         {
-          Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+          Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_lDGF>(p_ldgf,"p_l"));
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_gDGF>(p_gdgf,"p_g"));
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_lDGF>(s_ldgf,"s_l"));
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_gDGF>(s_gdgf,"s_g"));
-          vtkwriter.pwrite(fn.getName(),"","",Dune::VTKOptions::binaryappended);
+          vtkwriter.pwrite(fn.getName(),"","",Dune::VTK::appendedraw);
           fn.increment();
         }
 

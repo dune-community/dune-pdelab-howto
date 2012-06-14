@@ -137,7 +137,7 @@ void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
 
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
+  vtkwriter.write(filename,Dune::VTK::appendedraw);
 }
 
 //===============================================================

@@ -99,10 +99,11 @@ void test (const GV& gv)
   x = 0.0;
   Dune::PDELab::interpolate(g,gfs,x);
 
-  // typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GO> LS;
-  // LS ls(gfs,5000,3);
-  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,CC> LS;
-  LS ls(gfs,cc,100,5,1);
+  typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GO> LS;
+  LS ls(gfs,5000,3);
+  
+  //typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,CC> LS;
+  //LS ls(gfs,cc,100,5,1);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
   SLP slp(go,x,ls,1e-6);
   slp.apply();
@@ -112,9 +113,9 @@ void test (const GV& gv)
   DGF dgf(gfs,x);
 
   // output grid function with VTKWriter
-  // Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
+  // Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
   // vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  // vtkwriter.pwrite("single_phase_yasp2d_CCFV","vtk","",Dune::VTKOptions::binaryappended);
+  // vtkwriter.pwrite("single_phase_yasp2d_CCFV","vtk","",Dune::VTK::appendedraw);
 }
 
 int main(int argc, char** argv)

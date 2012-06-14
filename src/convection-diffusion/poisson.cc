@@ -265,10 +265,10 @@ void poisson( const GV& gv,
   DGF dgf(gfs,x);
 
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   //Dune::SubsamplingVTKWriter<GV> vtkwriter( gv, 1 );
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  vtkwriter.write(filename,Dune::VTKOptions::ascii);
+  vtkwriter.write(filename,Dune::VTK::ascii);
 }
 
 

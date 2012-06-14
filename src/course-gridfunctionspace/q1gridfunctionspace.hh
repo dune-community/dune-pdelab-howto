@@ -24,5 +24,5 @@ template<typename GV> void q1GridFunctionSpace (const GV& gv) {
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);  // plot result
   vtkwriter.addVertexData(new Dune::PDELab::
 						  VTKGridFunctionAdapter<DGF>(dgf,"q1"));
-  vtkwriter.write("q1gridfunctionspace",Dune::VTKOptions::ascii);
+  vtkwriter.write("q1gridfunctionspace",Dune::VTK::ascii);
 }

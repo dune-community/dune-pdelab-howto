@@ -61,7 +61,7 @@ void example03_Q2 (const GV& gv, double dt, double tend)
     DGF udgf(gfs,uold);
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"solution"));
-    vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+    vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
     fn.increment();                                             // increase file number
   }
 
@@ -79,7 +79,7 @@ void example03_Q2 (const GV& gv, double dt, double tend)
       DGF udgf(gfs,unew);
       Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"solution"));
-      vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+      vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
       fn.increment();
 
       uold = unew;                                              // advance time step

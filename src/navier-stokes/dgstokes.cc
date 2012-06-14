@@ -192,7 +192,7 @@ void stokes (const GV& gv, std::string filename, const std::string method)
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VType>(v,"v0"));
-    vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
+    vtkwriter.write(filename,Dune::VTK::appendedraw);
     #endif
 }
 
