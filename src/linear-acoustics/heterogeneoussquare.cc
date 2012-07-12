@@ -419,8 +419,9 @@ int main(int argc, char** argv)
         typedef std::vector<int> GmshIndexMap;
         GmshIndexMap boundary_index_map;
         GmshIndexMap element_index_map;
+        Dune::GridFactory<GridType> factory(&grid);
         Dune::GmshReader<GridType> gmsh_reader;
-        gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
+        gmsh_reader.read(factory,grid_file,boundary_index_map,element_index_map,true,false);
         for (int i=0; i<max_level; i++) grid.globalRefine(1);
         typedef GridType::LeafGridView GV;
         const GV& gv=grid.leafView();
