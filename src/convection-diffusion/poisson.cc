@@ -235,22 +235,22 @@ void poisson( const GV& gv,
   go.residual(x0,r);
 
   // make ISTL solver
-  Dune::MatrixAdapter<M,V,V> opa(m);
+    Dune::MatrixAdapter<typename M::BaseT,typename V::BaseT,typename V::BaseT> opa(m.base());
 //   typedef Dune::PDELab::OnTheFlyOperator<V,V,GOS> ISTLOnTheFlyOperator;
 //   ISTLOnTheFlyOperator opb(gos);
-  Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
+  Dune::SeqSSOR<typename M::BaseT,typename V::BaseT,typename V::BaseT> ssor(m.base(),1,1.0);
 //   Dune::SeqILU0<M,V,V> ilu0(m,1.0);
 //   Dune::Richardson<V,V> richardson(1.0);
 
-  Dune::CGSolver<V> solvera(opa,ssor,1E-10,5000,2);
+  Dune::CGSolver<typename V::BaseT> solvera(opa,ssor,1E-10,5000,2);
   //  Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
-  Dune::BiCGSTABSolver<V> solverc(opa,ssor,1E-10,5000,2);
+  Dune::BiCGSTABSolver<typename V::BaseT> solverc(opa,ssor,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
   // solve the jacobian system
   r *= -1.0; // need -residual
   V x(gfs,0.0);
-  solvera.apply(x,r,stat);
+  solvera.apply(x.base(),r.base(),stat);
 
   // For hangingnodes: Set values of hangingnodes to zero
   Dune::PDELab::set_shifted_dofs(cg,0.0,x0);
