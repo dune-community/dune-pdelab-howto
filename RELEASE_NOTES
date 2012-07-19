@@ -1,0 +1,51 @@
+PDELab Howto 1.0
+================
+
+This is the first public release of PDELab, a PDE discretization toolkit built
+on top of the DUNE framework [0]. License information can be found in the file
+COPYING.
+
+If you need help, please ask on our mailinglist [1]. Bugs can also be submitted
+to the PDELab bugtracker at [2] instead.
+
+This release of PDELab is designed to work with the 2.2 release of the DUNE
+libraries.
+
+The dune-pdelab-howto package only contains example programs. You also need the
+actual library package dune-pdelab.
+
+
+Caveats
+=======
+
+The following list is a non-exhaustive overview of possible problems you might
+encounter with this release. This only lists problems specific to the
+Howto. Please take a look at the release notes of dune-pdelab for issues
+regarding the actual library.
+
+Stokes
+--------
+
+* The cgstokes_instat example is currently broken (it does not even compile)
+  and has been removed from the build process.
+
+General
+-------
+
+* Compile times can be really long for non-trivial problems. Some developers
+  have had good success with using the clang compiler instead of GCC during
+  development and bug-testing to reduce compile times.
+
+* If you are still using a *really* ancient version of PDELab, have a look at
+  doc/README.changes for an overview of the major API changes that might keep
+  your code from compiling.
+
+
+Links
+=====
+
+0. http://www.dune-project.org
+1. mailing list
+2. bugtracker
+3. petsc
+4. eigen
