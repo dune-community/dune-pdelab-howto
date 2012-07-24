@@ -1,4 +1,5 @@
-PDELab Howto ============
+PDELab Howto
+============
 
 PDELab is a PDE solver toolbox built on top of DUNE, the Distributed and Unified
 Numerics Environment [0].
@@ -11,7 +12,8 @@ specific simulation scenarios.
 This package contains PDELab examples and and introduction. The actual library
 is contained in the package dune-pdelab.
 
-Dependencies ------------
+Dependencies
+------------
 
 PDELab-Howto depends on the following software packages:
 
@@ -29,12 +31,23 @@ PDELab-Howto depends on the following software packages:
 For a full explanation of the DUNE installation process please read the
 installation notes [1].
 
-Installation ------------
+License
+-------
+
+The PDELab HOWTO documentation and example programs are free open-source software,
+licensed under the BSD 3-clause license for the software and the Creative Commons
+Attribution-ShareAlike License Version 3 for the documentation.
+
+See the file COPYING for full copying permissions.
+
+Installation
+------------
 
 Short installation instructions can be found in file INSTALL. For the full
 instructions please see [1].
 
-Links -----
+Links
+-----
 
 0. http://www.dune-project.org
 1. http://www.dune-project.org/doc/installation-notes.html
