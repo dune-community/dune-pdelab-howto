@@ -1,7 +1,11 @@
 # $Id: duneproject 5425 2009-02-10 09:31:08Z sander $
 
 # we need the module file to be able to build via dunecontrol
-EXTRA_DIST=dune.module
+EXTRA_DIST =		\
+	dune.module	\
+	BSD		\
+	CC-BY-SA	\
+	RELEASE_NOTES
 
 SUBDIRS = doc m4 src
 
@@ -14,4 +18,3 @@ DISTCHECK_CONFIGURE_FLAGS = --with-dune-common=$(DUNE_COMMON_ROOT) --with-dune-g
 
 include $(top_srcdir)/am/top-rules
 include $(top_srcdir)/am/global-rules
-
