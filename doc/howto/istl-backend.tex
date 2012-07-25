@@ -101,7 +101,7 @@ and point-wise blocking, respectively.
       \item Let $V_i$, $i=1, 2, \ldots,  n$, be a normed vector space of dimension
         $n_i$ with a
         scalar product, then the $n$-nary Cartesian product
-      \item The vector space $V$ 
+      \item The vector space $V$
         \begin{equation*}
           V :=  V_1\times V_2 \times \ldots \times V_n = \{(\vec v_1, \vec v_2,
           \ldots, \vec v_n) | \vec v_1 \in V_1,
@@ -126,7 +126,7 @@ W$ from vector space $V$ to vector space $W$.
   \begin{block}{\lstinline!template<class K, int n> FieldVector<K,n>!}
     \begin{itemize}
     \item Represents vector space $V=K^n$
-    \item Field \lstinline!K! may be any numeric type (e.g.  
+    \item Field \lstinline!K! may be any numeric type (e.g.
       \lstinline!double!, \lstinline!float!,
       \lstinline!complex<double>!)
     \end{itemize}
@@ -155,7 +155,7 @@ W$ from vector space $V$ to vector space $W$.
     \begin{itemize}
     \item Represents linear map $M: V_1 \to V_2$, with$V_1=K^n$ and
       $V_2=K^m$.
-      \item Field \lstinline!K! may be any numeric type (e.g.  
+      \item Field \lstinline!K! may be any numeric type (e.g.
         \lstinline!double!, \lstinline!float!,
         \lstinline!complex<double>!)
     \end{itemize}
@@ -193,7 +193,7 @@ and $W=B^{m_1}\times B^{m_2}\times\ldots \times B^{m_k}$
   \begin{itemize}
   \item  Point block matrix is a sparse matrix with small dense
 blocks.
-\item Realized by \lstinline[basicstyle=\tiny]!BCRSMatrix< FieldMatrix<E,2,2> >!. 
+\item Realized by \lstinline[basicstyle=\tiny]!BCRSMatrix< FieldMatrix<E,2,2> >!.
   \end{itemize}
 \end{minipage}
 \begin{minipage}{0.48\textwidth}
@@ -244,7 +244,7 @@ cg.apply(x,b,r);
       \begin{center}
     \includegraphics[width=.4\textwidth]{EPS/aggregates_problem_f_2d_65536_cl015_var8_mean0}
   \end{center}
-  
+
     \begin{itemize}
     \item $-\nabla \cdot (k(x) \nabla u) = f \text{ in }\Omega$
     \item $\kappa (x)$ realization of log-random field with variance
@@ -256,10 +256,10 @@ cg.apply(x,b,r);
 \begin{frame}[fragile]
   \frametitle{Weak Scalability Results (Possion vs. Clipped)}
   \begin{center}
-      \includegraphics[width=.6\textwidth]{EPS/solve_build.jpg}
+      \includegraphics[width=.6\textwidth]{EPS/solve_build}
   \end{center}
   \begin{itemize}
-  \item BiCGStab precondition with parallel AMG 
+  \item BiCGStab precondition with parallel AMG
   \item $1.34\cdot 10^{11}$ unknowns.
   \item Machine: IBM Blue Gene/P in J\"ulich with 294,849 cores
   \end{itemize}
@@ -294,7 +294,7 @@ cg.apply(x,b,r);
   \item Provides the actual container type as
     \lstinline!template<class T, class E> Vector!.
   \item Associated type \lstinline!size_type! used for index access.
-  \item Const and mutable data access with 
+  \item Const and mutable data access with
     \lstinline!access(Vector<T,E>& cont, size_type i)!
   \end{itemize}
 \end{frame}
@@ -307,20 +307,20 @@ cg.apply(x,b,r);
   \end{itemize}
   \begin{lstlisting}[basicstyle=\scriptsize]
     template<typename T, typename E>
-    class VectorContainer 
+    class VectorContainer
     {
       public:
       // The stored element type
       typedef E ElementType;
       // The backend we are associated with
       typedef ISTLVectorBackend<BLOCKSIZE> Backend;
-      
+
       //constructor with grid function space t
       VectorContainer (const T& t_);
 
       //constructor with grid function space t, initial value e
       VectorContainer (const T& t_, const E& e);
-      
+
       // assignment
       VectorContainer& operator= (const E& e);
     };
@@ -341,7 +341,7 @@ cg.apply(x,b,r);
   \item Provides method \lstinline!clearRow(RI i, C& c)! for setting
     the values of row with index $i$ of container \lstinline!c! to
     zero.
-    \item Const and mutable data access with 
+    \item Const and mutable data access with
     \lstinline!access(Matrix<T,E>& cont, size_type i, size_type j)!
   \end{itemize}
 \end{frame}
@@ -360,11 +360,11 @@ class MatrixContainer{
     typedef typename E ElementType;
     // The backend we are associated with
     typedef ISTLMatrixBackend<ROWBLOCKSIZE,COLBLOCKSIZE> Backend;
-      
+
     //constructor with grid operator t
     // Needs to setup the whole sparsity pattern.
     MatrixContainer (const T& t_);
-      
+
     // assignment
     MatrixContainer& operator= (const E& e);
 };
@@ -400,7 +400,7 @@ typename V::ElementType norm(const V& v) const;
     \item Member function \lstinline!result()! returns statistics
       about the solution phase in an instance of the
       \lstinline!template<class T> LinearSolverResult! class template.
-\item Use member function 
+\item Use member function
   \begin{lstlisting}
 template<class M.class V,class W>
 apply(M& A, V& z, W& r, typename V::ElementType reduction);
@@ -430,7 +430,7 @@ apply(M& A, V& z, W& r, typename V::ElementType reduction);
 
 \begin{frame}
   \frametitle{ISTL Matrix Backend}
-  \begin{itemize} 
+  \begin{itemize}
     \item \lstinline!template<int brows,int bcols> class ISTLBCRSMatrixBackend!
       is the currently available backend for ISTL sparse
       matrices.
@@ -452,7 +452,7 @@ apply(M& A, V& z, W& r, typename V::ElementType reduction);
     \item \lstinline!ISTLBackend_SEQ_SuperLU!: SuperLU, a sparse
       direct solver
     \item \lstinline!template<class T> class ISTLBackend_SEQ_CG_AMG_SSOR! and
-      \lstinline!template<class T> class ISTLBackend_SEQ_BCGS_AMG_SSOR! 
+      \lstinline!template<class T> class ISTLBackend_SEQ_BCGS_AMG_SSOR!
       use a point-block AMG based on aggregation smoothed by SSOR as
       the preconditioner
     \end{itemize}
@@ -464,7 +464,7 @@ apply(M& A, V& z, W& r, typename V::ElementType reduction);
   \frametitle{Putting it all together}
   \scriptsize
   \begin{lstlisting}
-  // make grid function space 
+  // make grid function space
   typedef Dune::PDELab::NoConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
@@ -509,7 +509,7 @@ apply(M& A, V& z, W& r, typename V::ElementType reduction);
 
 % \begin{frame}
 %   \frametitle<presentation>{Parallel Solver Backends}
-  
+
 %   There are three different kinds of parallel solvers classes
 %   available in the ISTL backend:
 %   \begin{itemize}
@@ -592,18 +592,18 @@ apply(M& A, V& z, W& r, typename V::ElementType reduction);
 % Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
 % // Make grid operator space
-% typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
+% typedef Dune::PDELab::ConvectionDiffusion<Param> LOP;
 % LOP lop(param,2);
 % typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
 % typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE,true> GOS;
 % GOS gos(gfs,cg,gfs,cg,lop);
 
-% // 3. Choose a linear solver 
+% // 3. Choose a linear solver
 % typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GFS> LS;
 % LS ls(gfs,5000,1);
 % ...
 % \end{lstlisting}
-  
+
 % \end{frame}
 
 % \begin{frame}[fragile]
@@ -613,7 +613,7 @@ apply(M& A, V& z, W& r, typename V::ElementType reduction);
 % Dune::FieldVector<double,2> L(1.0);
 % Dune::FieldVector<int,2> N(16);
 % Dune::FieldVector<bool,2> periodic(false);
-% int overlap=2; 
+% int overlap=2;
 % Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
 % typedef Dune::YaspGrid<2>::LeafGridView GV;
 % const GV& gv=grid.leafView();
@@ -634,7 +634,7 @@ apply(M& A, V& z, W& r, typename V::ElementType reduction);
 % B b(gv,param);
 % typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
 % G g(gv,param);
-% \end{lstlisting}  
+% \end{lstlisting}
 % \end{frame}
 % \begin{frame}[fragile]
 % \frametitle<presentation>{Overlapping Example Continued}
@@ -650,24 +650,24 @@ apply(M& A, V& z, W& r, typename V::ElementType reduction);
 % Dune::PDELab::interpolate(g,gfs,x);
 % Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 % // Make grid operator space
-% typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
+% typedef Dune::PDELab::ConvectionDiffusion<Param> LOP;
 % LOP lop(param,2);
 % typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
 % typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
 % GOS gos(gfs,cg,gfs,cg,lop);
 
-% // 3. Choose a linear solver 
+% // 3. Choose a linear solver
 % typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SuperLU<GFS,C> LS;
 % LS ls(gfs,cg,5000,2);
 % ...
 % \end{lstlisting}
-  
+
 % \end{frame}
 %\lstset{breakatwhitespace=false,breaklines=false}
 
 \cleardoublepage
 
-%%% Local Variables: 
+%%% Local Variables:
 %%% mode: latex
-%%% TeX-master: 
-%%% End: 
+%%% TeX-master:
+%%% End:
