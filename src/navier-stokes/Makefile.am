@@ -9,8 +9,7 @@ GRIDDIM=2
 
 if SUPERLU
 SUPERLUPROGRAMS = dgstokes \
-	cgstokes \
-	cgstokes_instat
+	cgstokes
 endif
 
 noinst_PROGRAMS = $(SUPERLUPROGRAMS) 
