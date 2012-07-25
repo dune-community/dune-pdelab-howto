@@ -1,16 +1,36 @@
 PDELab Howto
 ============
 
-PDELab is a PDE solver toolbox built on top of DUNE, the Distributed and Unified
-Numerics Environment [0].
+PDELab[0] is a PDE solver toolbox built on top of DUNE, the Distributed and
+Unified Numerics Environment [1].
 
 The main intention is to provide a good set of high-level abstractions to allow
 for a reasonably quick development of simulation codes, while at the same time
 offering the flexibility to implement new numerical methods and optimize for
 specific simulation scenarios.
 
-This package contains PDELab examples and and introduction. The actual library
-is contained in the package dune-pdelab.
+This package contains PDELab examples and introductory documentation. The actual
+library is contained in the package dune-pdelab, which this package depends on.
+
+To get started with PDELab, you can
+
+* take a look at the documentation in doc/howto, where you can find the PDELab
+  HOWTO in a number of different file formats. There are two versions, one
+  optimized for screen presentations (pdelab-howto-beamer.*) and one optimized
+  for printing out and using as a reference book (pdelab-howto-article.*). As
+  this package is already pretty large in this current form, the sources for
+  those documents are not included in the release tarball, but you can always
+  obtain them by checking out dune-pdelab-howto from Subversion (see our
+
+* familiarize yourself with the example programs from the HOWTO document, which
+  you can find in the directory src/course-examples. These examples are fully
+  functional; you can compile them, run them, play around with their runtime
+  parameters and try changing some things in the source code to get started with
+  writing your first PDELab programs. They also make great templates for
+  starting your first real project.
+
+* look around in the other subdirectories of src/, where you will find a number
+  of more advanced example programs.
 
 Dependencies
 ------------
@@ -29,7 +49,7 @@ PDELab-Howto depends on the following software packages:
   regularly tested with ICC, but we also support the clang compiler (3.1+).
 
 For a full explanation of the DUNE installation process please read the
-installation notes [1].
+installation notes [2] or the build system HOWTO [3].
 
 License
 -------
@@ -44,12 +64,12 @@ Installation
 ------------
 
 Short installation instructions can be found in file INSTALL. For the full
-instructions please see [1].
+instructions please see [2].
 
 Links
 -----
 
-0. http://www.dune-project.org
-1. http://www.dune-project.org/doc/installation-notes.html
-2. http://dune-project.org/doc/buildsystem/buildsystem.pdf
-3. http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
+0. http://www.dune-project.org/pdelab/
+1. http://www.dune-project.org
+2. http://www.dune-project.org/doc/installation-notes.html
+3. http://dune-project.org/doc/buildsystem/buildsystem.pdf
