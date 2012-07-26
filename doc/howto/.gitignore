@@ -1,0 +1,15 @@
+*.aux
+*.bbl
+*.blg
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+pdelab-howto-article.dvi
+pdelab-howto-article.pdf
+pdelab-howto-beamer.dvi
+pdelab-howto-beamer.pdf
+Makefile.dist
+Makefile.dist.in
