@@ -1,9 +1,12 @@
-PDELab Howto
-============
+PDELab Howto 1.0.1
+==================
 
 This is the first public release of PDELab, a PDE discretization toolkit built
 on top of the DUNE framework [0]. License information can be found in the file
 COPYING.
+
+Version 1.0.1 is a small hotfix release to make sure the generated release tarballs
+contain all of the example code.
 
 If you need help, please ask on our mailinglist [1]. Bugs can also be submitted
 to the PDELab bugtracker at [2] instead.
@@ -17,6 +20,9 @@ actual library package dune-pdelab.
 
 Changes
 =======
+
+1.0.1
+-----
 
 - Fix broken distribution tarballs - they were missing a lot of files.
 
