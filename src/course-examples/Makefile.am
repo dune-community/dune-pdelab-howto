@@ -8,18 +8,45 @@ dist_noinst_DATA =
 GRIDDIM=2
 
 
-noinst_PROGRAMS = \
-	example01 \
-	example02 \
-	example03 \
-	example04 \
-	example05 \
-	example06 \
+noinst_PROGRAMS =				\
+	example01				\
+	example02				\
+	example03				\
+	example04				\
+	example05				\
+	example06				\
 	example07
 
 #	novlp_test	
 
 #	dnaplfvamg 
+noinst_HEADERS =				\
+	example01_main.hh			\
+	example01a_Q1.hh			\
+	example01a_Q2.hh			\
+	example01a_RT.hh			\
+	example01a_operator.hh			\
+	example01b_Q2.hh			\
+	example01b_operator.hh			\
+	example02_Q1.hh				\
+	example02_bcextension.hh		\
+	example02_bctype.hh			\
+	example02_operator.hh			\
+	example03_Q2.hh				\
+	example03_bcextension.hh		\
+	example03_bctype.hh			\
+	example03_operator.hh			\
+	example03_toperator.hh			\
+	example04.hh				\
+	example04_operator.hh			\
+	example05_Q1Q1.hh			\
+	example05_Q2Q2.hh			\
+	example05_initial.hh			\
+	example05_operator.hh			\
+	example05_toperator.hh			\
+	example06_Q1Q1.hh			\
+	example06_bctype.hh			\
+	example07_adaptivity.hh
 
 # novlp_test_SOURCES = novlp_test.cc
 # novlp_test_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) \

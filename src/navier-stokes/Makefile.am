@@ -3,7 +3,13 @@
 # possible options
 #LDADD = $(UG_LDFLAGS) $(AMIRAMESH_LDFLAGS) $(UG_LIBS) $(AMIRAMESH_LIBS)
 #AM_CPPFLAGS = $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS)
-dist_noinst_DATA = 
+dist_noinst_DATA =				\
+	cgstokes.ini				\
+	cgstokes_instat.ini			\
+	grids/lshape.msh			\
+	grids/pipe.msh				\
+	grids/turbtube.msh			\
+	grids/turbtube2d.msh
 
 GRIDDIM=2
 
@@ -15,9 +21,13 @@ endif
 
 noinst_PROGRAMS = $(SUPERLUPROGRAMS) 
 
-#	novlp_test	
+noinst_HEADERS =				\
+	cgstokes_initial.hh			\
+	sproblemA.hh
 
-#	dnaplfvamg 
+#	novlp_test
+
+#	dnaplfvamg
 
 # novlp_test_SOURCES = novlp_test.cc
 # novlp_test_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) \
