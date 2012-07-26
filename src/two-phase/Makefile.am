@@ -3,7 +3,7 @@
 # possible options
 #LDADD = $(UG_LDFLAGS) $(AMIRAMESH_LDFLAGS) $(UG_LIBS) $(AMIRAMESH_LIBS)
 #AM_CPPFLAGS = $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS)
-dist_noinst_DATA = 
+dist_noinst_DATA =
 
 GRIDDIM=2
 
@@ -14,19 +14,20 @@ endif
 noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
 	dnaplfv
 
-#	novlp_test	
 noinst_HEADERS = twophasemfd.hh
 
-#	dnaplfvamg 
+#	novlp_test
+
+#	dnaplfvamg
 
 # novlp_test_SOURCES = novlp_test.cc
 # novlp_test_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) \
 # $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) \
-# $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS) $(PARMETIS_CPPFLAGS) 
+# $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS) $(PARMETIS_CPPFLAGS)
 # novlp_test_LDADD = $(PARMETIS_LIBS) $(DUNEMPILDFLAGS) $(DUNEMPILIBS) \
 # $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) \
 # $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) \
-# $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS) 
+# $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 # novlp_test_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS) $(PARMETIS_LDFLAGS)
 # novlp_test_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
@@ -45,7 +46,7 @@ dnaplmfd_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 endif
 
 
-CLEANFILES = dgfparser.log q1*.vtu *.pvtu *.vtu *.png 
+CLEANFILES = dgfparser.log q1*.vtu *.pvtu *.vtu *.png
 
 #============================================================
 # pass most important options when "make distcheck" is used
