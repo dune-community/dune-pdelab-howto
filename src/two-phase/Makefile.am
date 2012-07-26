@@ -15,6 +15,7 @@ noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
 	dnaplfv
 
 #	novlp_test	
+noinst_HEADERS = twophasemfd.hh
 
 #	dnaplfvamg 
 

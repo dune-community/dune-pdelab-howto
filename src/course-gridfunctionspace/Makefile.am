@@ -16,6 +16,24 @@ noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
 	q1constrainedinterpolatemain \
 	thinterpolatemain
 
+noinst_HEADERS =				\
+	analyticfunction.hh			\
+	l2interpolationerror.hh			\
+	q1constrainedinterpolate.hh		\
+	q1constraints.hh			\
+	q1constraintsparameters.hh		\
+	q1gridfunctionspace.hh			\
+	q1interpolate.hh			\
+	q1interpolationerror.hh			\
+	q1localbasis.hh				\
+	q1localcoefficients.hh			\
+	q1localfiniteelement.hh			\
+	q1localfiniteelementmap.hh		\
+	q1localinterpolation.hh			\
+	q2interpolationerror.hh			\
+	thinterpolate.hh			\
+	thvelocity.hh
+
 # novlp_test_SOURCES = novlp_test.cc
 # novlp_test_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) \
 # $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) \

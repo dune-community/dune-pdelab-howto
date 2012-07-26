@@ -8,29 +8,78 @@ EIGENPROGRAMS =	\
 endif
 
 if SUPERLU
-SUPERLUPROGRAMS = \
-    dgdiffusion \
-	dgdiffusion-hp \
-	dgoverlapping \
+SUPERLUPROGRAMS =				\
+    dgdiffusion					\
+	dgdiffusion-hp				\
+	dgoverlapping				\
 	rt0main
 endif
 
-noinst_PROGRAMS = \
-    $(EIGENPROGRAMS) \
-    $(SUPERLUPROGRAMS) \
-	overlappingsinglephaseflowccfv \
-	overlappingsinglephaseflow \
-	nonoverlappingsinglephaseflow \
-	nonlineardiffusion \
-	transporttest \
-	instationarytest \
-	poisson \
-	mimetic \
-	laplacedirichletccfv \
-	reentrantcorner \
-	diffusion \
-	scalabilitytest \
+noinst_PROGRAMS =				\
+    $(EIGENPROGRAMS)				\
+    $(SUPERLUPROGRAMS)				\
+	overlappingsinglephaseflowccfv		\
+	overlappingsinglephaseflow		\
+	nonoverlappingsinglephaseflow		\
+	nonlineardiffusion			\
+	transporttest				\
+	instationarytest			\
+	poisson					\
+	mimetic					\
+	laplacedirichletccfv			\
+	reentrantcorner				\
+	diffusion				\
+	scalabilitytest				\
 	ldomain
+
+
+noinst_HEADERS =				\
+	l2interpolationerror.hh			\
+	parameterA.hh				\
+	parameterB.hh				\
+	parameterC.hh				\
+	parameterD.hh				\
+	parameterE.hh				\
+	parameterF.hh				\
+	problemA.hh				\
+	problemB.hh				\
+	problemC.hh				\
+	problemD.hh				\
+	problemE.hh				\
+	problemF.hh
+
+dist_noinst_DATA =				\
+	grids/2dgrid.al				\
+	grids/2dreentrantcorner.dgf		\
+	grids/2dsimplex.alu			\
+	grids/3dgrid.al				\
+	grids/3drefinedcube.alu			\
+	grids/CuKav.geo				\
+	grids/CuKav.msh				\
+	grids/circle.geo			\
+	grids/circle1storder.msh		\
+	grids/circle2ndorder.msh		\
+	grids/cube.geo				\
+	grids/cube.hexa				\
+	grids/cube.tetra			\
+	grids/cube1045.msh			\
+	grids/cube3205.msh			\
+	grids/cube99.msh			\
+	grids/curved2d.geo			\
+	grids/curved2d.msh			\
+	grids/ldomain.al			\
+	grids/ldomain.geo			\
+	grids/ldomain.msh			\
+	grids/ldomain2.msh			\
+	grids/pyramid.geo			\
+	grids/pyramid.msh			\
+	grids/pyramid1storder.msh		\
+	grids/pyramid2ndorder.msh		\
+	grids/pyramid4.msh			\
+	grids/telescope.geo			\
+	grids/telescope.msh			\
+	grids/telescope1storder.msh		\
+	grids/telescope2ndorder.msh
 
 if SUPERLU
 dgdiffusion_SOURCES = dgdiffusion.cc
