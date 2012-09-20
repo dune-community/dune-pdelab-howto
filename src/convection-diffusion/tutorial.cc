@@ -104,18 +104,18 @@ int main(int argc, char **argv)
   int cells=10; if (argc>=2) sscanf(argv[1],"%d",&cells);
 
   // define parameters
-  const unsigned int dim = 3;
-  const unsigned int degree = 2;
-  const Dune::GeometryType::BasicType elemtype = Dune::GeometryType::simplex;
+  const unsigned int dim = 2;
+  const unsigned int degree = 3;
+  const Dune::GeometryType::BasicType elemtype = Dune::GeometryType::cube;
   const Dune::PDELab::MeshType meshtype = Dune::PDELab::MeshType::conforming;
-  const Dune::SolverCategory::Category solvertype = Dune::SolverCategory::nonoverlapping;
+  const Dune::SolverCategory::Category solvertype = Dune::SolverCategory::overlapping;
   typedef double NumberType;
 
   // make grid
-  typedef Dune::ALUSimplexGrid<dim,dim> GM;
-  //typedef Dune::YaspGrid<dim> GM;
+  //typedef Dune::ALUSimplexGrid<dim,dim> GM;
+  typedef Dune::YaspGrid<dim> GM;
   typedef Dune::PDELab::StructuredGrid<GM> Grid;
-  Grid grid(elemtype,cells);
+  Grid grid(elemtype,cells,5);
   grid->loadBalance();
 
   // make problem parameters
@@ -125,10 +125,10 @@ int main(int argc, char **argv)
   BCType bctype(grid->leafView(),problem);
 
   // make a finite element space
-  typedef Dune::PDELab::CGSpace<GM,NumberType,degree,BCType,elemtype,meshtype,solvertype> FS; 
-  FS fs(*grid,bctype);
-  //typedef Dune::PDELab::DGPkSpace<GM,NumberType,degree,elemtype,solvertype> FS;
-  //FS fs(grid->leafView());
+  //typedef Dune::PDELab::CGSpace<GM,NumberType,degree,BCType,elemtype,meshtype,solvertype> FS; 
+  //FS fs(*grid,bctype);
+  typedef Dune::PDELab::DGPkSpace<GM,NumberType,degree,elemtype,solvertype> FS;
+  FS fs(grid->leafView());
 
   // make a degree of freedom vector and initialize it with a function
   typedef typename FS::DOF X;
@@ -142,18 +142,19 @@ int main(int argc, char **argv)
   fs.setNonConstrainedDOFS(x,0.0);
 
   // assembler for finite elemenent problem
-  typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,typename FS::FEM> LOP;
-  LOP lop(problem);
-  //typedef Dune::PDELab::ConvectionDiffusionDG<Problem,typename FS::FEM> LOP;
-  //LOP lop(problem,Dune::PDELab::ConvectionDiffusionDGMethod::SIPG,Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn,2.0);
+  //typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,typename FS::FEM> LOP;
+  //LOP lop(problem);
+  typedef Dune::PDELab::ConvectionDiffusionDG<Problem,typename FS::FEM> LOP;
+  LOP lop(problem,Dune::PDELab::ConvectionDiffusionDGMethod::SIPG,Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn,2.0);
   typedef Dune::PDELab::GlobalAssembler<FS,LOP,solvertype> ASS;
   ASS ass(fs,lop);
   
   // make linear solver and solve problem
   typedef Dune::PDELab::ISTLSolverBackend_IterativeDefault<FS,ASS,solvertype> SBE;
+  //typedef Dune::PDELab::ISTLSolverBackend_CG_AMG_SSOR<FS,ASS,solvertype> SBE;
   SBE sbe(fs,ass,5000,1);
   typedef Dune::PDELab::StationaryLinearProblemSolver<typename ASS::GO,typename SBE::LS,X> SLP;
-  SLP slp(*ass,x,*sbe,1e-8);
+  SLP slp(*ass,x,*sbe,1e-6);
   slp.apply();
 
   // output grid to VTK file

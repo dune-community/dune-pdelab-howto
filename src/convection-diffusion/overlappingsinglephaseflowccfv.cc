@@ -99,13 +99,13 @@ void test (const GV& gv)
   x = 0.0;
   Dune::PDELab::interpolate(g,gfs,x);
 
-  typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GO> LS;
-  LS ls(gfs,5000,3);
+  // typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GO> LS;
+  // LS ls(gfs,5000,3);
   
-  //typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,CC> LS;
-  //LS ls(gfs,cc,100,5,1);
+  typedef Dune::PDELab::ISTLBackend_OVLP_CG_SSORk<GFS,CC> LS;
+  LS ls(gfs,cc,100,5,2);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
-  SLP slp(go,x,ls,1e-6);
+  SLP slp(go,x,ls,1e-10);
   slp.apply();
 
   // make discrete function object
@@ -141,22 +141,23 @@ int main(int argc, char** argv)
     int nz; sscanf(argv[3],"%d",&nz);
 
     // 2D
-    // if (false)
-    // {
-    //   // make grid
-    //   Dune::FieldVector<double,2> L(1.0);
-    //   Dune::FieldVector<int,2> N(128);
-    //   Dune::FieldVector<bool,2> B(false);
-    //   int overlap=4;
-    //   Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
-    //   //      grid.globalRefine(6);
+    if (true)
+    {
+      // make grid
+      Dune::FieldVector<double,2> L(1.0);
+      Dune::FieldVector<int,2> N(128);
+      N[0] = nx; N[1] = ny;
+      Dune::FieldVector<bool,2> B(false);
+      int overlap=3;
+      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
+      //      grid.globalRefine(6);
       
-    //   // solve problem :)
-    //   test(grid.leafView());
-    // }
+      // solve problem :)
+      test(grid.leafView());
+    }
 
     // Q1, 3d
-    if (true)
+    if (false)
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
