@@ -422,8 +422,8 @@ int main(int argc, char **argv)
   // start try/catch block to get error messages from dune
   try {
 
-    // Alberta/Pk2d version
-#if HAVE_ALBERTA
+    // UG version
+#if HAVE_UG
     if (true)
     {
       // read command line arguments
