@@ -20,11 +20,24 @@ if CONVERT
 endif
 endif
 
-TEX_FILES = functionspaces.tex istl-backend.tex pdelab-howto-beamer.tex \
-	summary.tex instationaryproblems.tex  operators.tex \
-	pdelab-howto-main.tex systems.tex introduction.tex \
-	pdelab-howto-article.tex  stationaryproblems.tex   weightedresidual.tex \
-        worklow.tex
+TEX_FILES = \
+  adaptivity.tex \
+  algebraicformulation.tex \
+  constrainedspaces.tex \
+  functionspaces.tex \
+  instationaryproblems.tex \
+  introduction.tex \
+  istl-backend.tex \
+  operators.tex \
+  parallel_computing.tex \
+  pdelab-howto-article.tex \
+  pdelab-howto-beamer.tex \
+  pdelab-howto-main.tex \
+  stationaryproblems.tex \
+  summary.tex \
+  systems.tex \
+  weightedresidual.tex \
+  workflow.tex
 
 pdelab-howto-article.dvi: pdelab-howto-main.tex lit.bib $(TEX_FILES)
 pdelab-howto-beamer.dvi: pdelab-howto-main.tex lit.bib $(TEX_FILES)
