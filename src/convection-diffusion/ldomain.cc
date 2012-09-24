@@ -451,7 +451,9 @@ int main(int argc, char **argv)
        GmshIndexMap boundary_index_map;
        GmshIndexMap element_index_map;
        Dune::GmshReader<GridType> gmsh_reader;
-       gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
+       Dune::GridFactory<GridType> factory(&grid);
+       Dune::GmshReader<GridType>::read(factory,grid_file,boundary_index_map,element_index_map,true,false);
+       factory.createGrid();
        grid.loadBalance();
 
       for (int i=0; i<start_level; i++) grid.globalRefine(1);
