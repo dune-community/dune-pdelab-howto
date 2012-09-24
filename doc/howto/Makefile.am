@@ -23,7 +23,8 @@ endif
 TEX_FILES = functionspaces.tex istl-backend.tex pdelab-howto-beamer.tex \
 	summary.tex instationaryproblems.tex  operators.tex \
 	pdelab-howto-main.tex systems.tex introduction.tex \
-	pdelab-howto-article.tex  stationaryproblems.tex   weightedresidual.tex
+	pdelab-howto-article.tex  stationaryproblems.tex   weightedresidual.tex \
+        worklow.tex
 
 pdelab-howto-article.dvi: pdelab-howto-main.tex lit.bib $(TEX_FILES)
 pdelab-howto-beamer.dvi: pdelab-howto-main.tex lit.bib $(TEX_FILES)
