@@ -156,7 +156,7 @@ void mimeticDirichletBoundaryConditions(const B& b, const G& g, const GFS& gfs, 
     static const unsigned int dimIntersection = G::Traits::dimDomain - 1;
     typedef typename G::Traits::DomainFieldType ctype;
 
-    const GV& gridview = gfs.gridview();
+    const GV& gridview = gfs.gridView();
 
     // make local function space
     typedef Dune::PDELab::GridFunctionSubSpace<GFS,1> FaceSpace;
