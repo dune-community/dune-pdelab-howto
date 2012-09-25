@@ -146,15 +146,15 @@ int main(int argc, char **argv)
   //LOP lop(problem);
   typedef Dune::PDELab::ConvectionDiffusionDG<Problem,typename FS::FEM> LOP;
   LOP lop(problem,Dune::PDELab::ConvectionDiffusionDGMethod::SIPG,Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn,2.0);
-  typedef Dune::PDELab::GlobalAssembler<FS,LOP,solvertype> ASS;
-  ASS ass(fs,lop);
+  typedef Dune::PDELab::GlobalAssembler<FS,LOP,solvertype> ASSEMBLER;
+  ASSEMBLER assembler(fs,lop);
   
   // make linear solver and solve problem
-  typedef Dune::PDELab::ISTLSolverBackend_IterativeDefault<FS,ASS,solvertype> SBE;
+  typedef Dune::PDELab::ISTLSolverBackend_IterativeDefault<FS,ASSEMBLER,solvertype> SBE;
   //typedef Dune::PDELab::ISTLSolverBackend_CG_AMG_SSOR<FS,ASS,solvertype> SBE;
-  SBE sbe(fs,ass,5000,1);
-  typedef Dune::PDELab::StationaryLinearProblemSolver<typename ASS::GO,typename SBE::LS,X> SLP;
-  SLP slp(*ass,x,*sbe,1e-6);
+  SBE sbe(fs,assembler,5000,1);
+  typedef Dune::PDELab::StationaryLinearProblemSolver<typename ASSEMBLER::GO,typename SBE::LS,X> SLP;
+  SLP slp(*assembler,x,*sbe,1e-6);
   slp.apply();
 
   // output grid to VTK file
