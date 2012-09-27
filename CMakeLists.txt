@@ -7,8 +7,10 @@ set(BUILD_DOCS 1)
 # general stuff
 cmake_minimum_required(VERSION 2.8.8)
 
-# make sure our own modules are found
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules")
+#find dune-common and set the module path
+find_package(dune-common)
+list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH}
+  "${CMAKE_SOURCE_DIR}/cmake/modules")
 
 #include the dune macros
 include(DuneMacros)
