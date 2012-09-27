@@ -15,6 +15,9 @@ set(SUPERLUPROGRAMS
         rt0main)
 endif(SUPERLU_FOUND )
 
+if(ALUGRID_FOUND)
+  set(ALUGRIDPROGRAMS tutorial)
+endif(ALUGRID_FOUND)
 set(noinst_PROGRAMS                                
     ${EIGENPROGRAMS}                            
     ${SUPERLUPROGRAMS}                          
@@ -30,7 +33,6 @@ set(noinst_PROGRAMS
         reentrantcorner                         
         diffusion                               
         scalabilitytest                         
-        tutorial                                
         ldomain)
 
 
@@ -366,15 +368,17 @@ add_dune_alugrid_flags(diffusion )
 target_link_libraries(diffusion ${DUNE_LIBS})
 add_dune_superlu_flags(diffusion )
 
-add_executable(tutorial tutorial.cc)
+if(ALUGRID_FOUND)
+  add_executable(tutorial tutorial.cc)
+  add_dune_alberta_flags(tutorial )
+  add_dune_amiramesh_flags(tutorial )
+  add_dune_ug_flags(tutorial )
+  add_dune_mpi_flags(tutorial )
+  target_link_libraries(tutorial ${DUNE_LIBS})
+  add_dune_superlu_flags(tutorial )
+  add_dune_alugrid_flags(tutorial )
+endif(ALUGRID_FOUND)
 
-add_dune_alberta_flags(tutorial )
-add_dune_amiramesh_flags(tutorial )
-add_dune_ug_flags(tutorial )
-add_dune_mpi_flags(tutorial )
-target_link_libraries(tutorial ${DUNE_LIBS})
-add_dune_superlu_flags(tutorial )
-add_dune_alugrid_flags(tutorial )
 # The following lines are comment out as the translation is not clear. TODO review
 #
 # set(tutorial_ LDADD ${DUNEMPILDFLAGS} ${DUNEMPILIBS} ${SUPERLU_LIBS} ${ALBERTA_LDFLAGS} ${ALBERTA_LIBS} ${AMIRAMESH_LDFLAGS} ${AMIRAMESH_LIBS} ${UG_LDFLAGS} ${UG_LIBS} ${ALUGRID_LDFLAGS} ${ALUGRID_LIBS} ${DUNE_LDFLAGS} ${DUNE_LIBS})
