@@ -7,4 +7,4 @@ set(utility_HEADERS
 # include not needed for CMake
 # include $(top_srcdir)/am/global-rules
 
-install(FILES "${utility_HEADERS}" DESTINATION ${utilitydir})
+install(FILES ${utility_HEADERS} DESTINATION ${utilitydir})
