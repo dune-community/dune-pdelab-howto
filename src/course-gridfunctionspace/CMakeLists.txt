@@ -71,6 +71,7 @@ add_dune_amiramesh_flags(q1gridfunctionspacemain )
 add_dune_ug_flags(q1gridfunctionspacemain )
 add_dune_mpi_flags(q1gridfunctionspacemain )
 add_dune_alugrid_flags(q1gridfunctionspacemain )
+target_link_libraries(q1gridfunctionspacemain ${DUNE_LIBS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
 # set(q1gridfunctionspacemain_ LDADD ${DUNEMPILDFLAGS} ${DUNEMPILIBS} ${ALBERTA_LDFLAGS} ${ALBERTA_LIBS} ${AMIRAMESH_LDFLAGS} ${AMIRAMESH_LIBS} ${UG_LDFLAGS} ${UG_LIBS} ${ALUGRID_LDFLAGS} ${ALUGRID_LIBS} ${DUNE_LDFLAGS} ${DUNE_LIBS})
