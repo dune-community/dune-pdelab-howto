@@ -377,7 +377,6 @@ if(ALUGRID_FOUND)
   target_link_libraries(tutorial ${DUNE_LIBS})
   add_dune_superlu_flags(tutorial )
   add_dune_alugrid_flags(tutorial )
-endif(ALUGRID_FOUND)
 
 # The following lines are comment out as the translation is not clear. TODO review
 #
@@ -388,6 +387,7 @@ endif(ALUGRID_FOUND)
 
 target_link_libraries(tutorial ${DUNE_LIBS})
 add_dune_superlu_flags(tutorial )
+endif(ALUGRID_FOUND)
 
 add_executable(scalabilitytest scalabilitytest.cc)
 
