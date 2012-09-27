@@ -190,5 +190,5 @@ set(SOURCES
 if(LATEX_USABLE)
   ADD_LATEX_DOCUMENT(pdelab-howto-article.tex FATHER_TARGET doc DEFAULT_PDF 
       INPUTS ${TEX_FILES} turing.avi turing_3D.avi ${SOURCES} IMAGES ${EPS_IMAGES} BIBFILES lit.bib)
- create_doc_install(${DOCFILES} ${docdir} pdelab-howto-arcticle_safepdf)
+ create_doc_install(${DOCFILES} ${docdir} pdelab-howto-article_safepdf)
 endif(LATEX_USABLE)
