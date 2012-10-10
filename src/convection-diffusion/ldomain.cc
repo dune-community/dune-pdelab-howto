@@ -245,7 +245,7 @@ void driverFEM (Grid& grid,
           error_fraction( eta, alpha, beta, refine_threshold, eta_beta, verbose );
         else
           element_fraction( eta, alpha, beta, refine_threshold, eta_beta, verbose );
-        mark_grid( grid, eta, refine_threshold );
+        mark_grid( grid, eta, refine_threshold, 0.0 );
         adapt_grid( grid, gfs, u );
         N.push_back( gfs.globalSize() );
       }
