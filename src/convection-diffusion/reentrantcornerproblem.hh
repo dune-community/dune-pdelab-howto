@@ -57,13 +57,14 @@ public:
   {
     typename Traits::DomainType x = e.geometry().global(xlocal);
 
-    typename Traits::DomainFieldType theta = std::atan2(x[1], x[0]);
-
-    //if(theta < 0.0) theta += 2*M_PI;
-    if(theta < -1e-12) theta += 2*M_PI;
-    typename Traits::DomainFieldType r = x.two_norm();
-
-    return pow(r,2.0/3.0)*std::sin(theta*2.0/3.0);
+    if( x[0]>-1e-12 && x[1]<1e-12 )
+        return 0;
+    else{
+      typename Traits::DomainFieldType theta = std::atan2(x[1], x[0]);
+      if(theta < 0.0) theta += 2*M_PI;
+      typename Traits::DomainFieldType r = x.two_norm();
+      return pow(r,2.0/3.0)*std::sin(theta*2.0/3.0);
+    }
   }
 
   //! Neumann boundary condition
