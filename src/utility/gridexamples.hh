@@ -283,6 +283,44 @@ public:
   }
 };
 
+
+class UGLDomainCubes : UGSetHeapSize, public Dune::UGGrid<2>
+{
+public:
+  UGLDomainCubes (unsigned int heapSize=100) : UGSetHeapSize(heapSize), Dune::UGGrid<2>()
+  {
+    Dune::GridFactory<Dune::UGGrid<2> > factory(this);
+    Dune::FieldVector<double,2> pos;
+    pos[0] =-1.0;  pos[1] =-1.0; factory.insertVertex(pos);
+    pos[0] = 0.0;  pos[1] =-1.0; factory.insertVertex(pos);
+    pos[0] =-1.0;  pos[1] = 0.0; factory.insertVertex(pos);
+    pos[0] = 0.0;  pos[1] = 0.0; factory.insertVertex(pos);
+    pos[0] = 1.0;  pos[1] = 0.0; factory.insertVertex(pos);
+    pos[0] =-1.0;  pos[1] = 1.0; factory.insertVertex(pos);
+    pos[0] = 0.0;  pos[1] = 1.0; factory.insertVertex(pos);
+    pos[0] = 1.0;  pos[1] = 1.0; factory.insertVertex(pos);
+    std::vector<unsigned int> cornerIDs(4);
+
+    cornerIDs[0] = 0; cornerIDs[1] = 1; cornerIDs[2] = 2; cornerIDs[3] = 3;
+    factory.insertElement(Dune::GeometryType(Dune::GeometryType::cube,2), cornerIDs);
+    cornerIDs[0] = 2; cornerIDs[1] = 3; cornerIDs[2] = 5; cornerIDs[3] = 6;
+    factory.insertElement(Dune::GeometryType(Dune::GeometryType::cube,2), cornerIDs);
+    cornerIDs[0] = 3; cornerIDs[1] = 4; cornerIDs[2] = 6; cornerIDs[3] = 7;
+    factory.insertElement(Dune::GeometryType(Dune::GeometryType::cube,2), cornerIDs);
+
+    factory.createGrid();
+
+    /* 5 - 6 - 7
+       |   |   |
+       2 - 3 - 4
+       |   |
+       0 - 1
+    */
+  }
+};
+
+
+
 template< int dim, int variant >
 class UGUnitCube : public BasicUnitCube< dim >
 {
