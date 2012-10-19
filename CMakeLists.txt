@@ -5,7 +5,7 @@ project("dune-pdelab-howto" C CXX)
 set(BUILD_DOCS 1)
 
 # general stuff
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 2.8.6)
 
 #find dune-common and set the module path
 find_package(dune-common)
