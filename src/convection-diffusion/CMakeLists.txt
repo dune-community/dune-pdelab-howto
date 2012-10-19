@@ -122,7 +122,6 @@ add_dune_alugrid_flags(dgdiffusion_hp )
 
 target_link_libraries(dgdiffusion_hp ${DUNE_LIBS})
 add_dune_superlu_flags(dgdiffusion_hp )
-endif(SUPERLU_FOUND )
 
 add_executable(dgoverlapping dgoverlapping.cc)
 
@@ -139,9 +138,7 @@ add_dune_alugrid_flags(dgoverlapping )
 # The following lines are comment out as the translation is not clear. TODO review
 #
 # set(dgoverlapping_ LDFLAGS ${AM_LDFLAGS} ${SUPERLU_LDFLAGS})
-
-target_link_libraries(dgoverlapping ${DUNE_LIBS})
-add_dune_superlu_flags(dgoverlapping )
+endif(SUPERLU_FOUND )
 
 add_executable(overlappingsinglephaseflowccfv overlappingsinglephaseflowccfv.cc)
 
