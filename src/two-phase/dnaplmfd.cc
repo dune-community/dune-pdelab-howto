@@ -7,7 +7,7 @@
 #include<vector>
 #include<map>
 #include <fenv.h>
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>

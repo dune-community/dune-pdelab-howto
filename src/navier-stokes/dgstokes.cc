@@ -9,7 +9,7 @@
 #include <vector>
 #include <map>
 #include <string>
-#include <dune/common/mpihelper.hh>
+#include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/grid/yaspgrid.hh>
