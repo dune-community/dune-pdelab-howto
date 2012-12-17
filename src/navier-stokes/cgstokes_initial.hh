@@ -212,8 +212,10 @@ public:
   PressureDropFlux (const GV& gv, const RF p_, const RF l_, const RF o_, const int d_)
     : BaseT(gv), pressure(p_), length(l_), origin(o_), direction(d_)
   {
+#ifndef NDEBUG
     const int dim = GV::dimension;
     assert(direction >=0 && direction <dim);
+#endif
   }
 
   inline void evaluateGlobal (const typename Traits::DomainType& x,

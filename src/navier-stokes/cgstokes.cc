@@ -31,26 +31,26 @@
 #include<dune/istl/superlu.hh>
 #include<dune/istl/preconditioners.hh>
 #include<dune/istl/io.hh>
-#include<dune/pdelab/newton/newton.hh>
+
 #include<dune/pdelab/finiteelementmap/pk2dfem.hh>
 #include<dune/pdelab/finiteelementmap/pk3dfem.hh>
 #include<dune/pdelab/finiteelementmap/q12dfem.hh>
 #include<dune/pdelab/finiteelementmap/q22dfem.hh>
 #include<dune/pdelab/finiteelementmap/q1fem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
-#include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include<dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
+#include<dune/pdelab/gridfunctionspace/subspace.hh>
+#include<dune/pdelab/gridfunctionspace/vtk.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-//#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
-//#include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include<dune/pdelab/localoperator/cg_stokes.hh>
 #include <dune/common/parametertreeparser.hh>
 
@@ -61,18 +61,20 @@
 // The driver for all examples
 //===============================================================
 
-template<typename GV, typename V_FEM, typename P_FEM, typename PRM, int q> 
+template<typename GV, typename V_FEM, typename P_FEM, typename IF, typename PRM, int q>
 void navierstokes 
 (
  const GV& gv, 
  std::string filename, 
- PRM & parameters,
- V_FEM & vFem, P_FEM & pFem)
+ const PRM & parameters,
+ V_FEM & vFem, P_FEM & pFem,
+ IF & initial_solution )
 {
   typedef typename GV::Grid::ctype DF;
   static const unsigned int dim = GV::dimension;
 
   typedef double RF;
+  typedef IF InitializationFunction;
 
   Dune::Timer timer;
   std::cout << "=== Initialize:" << timer.elapsed() << std::endl;
@@ -80,22 +82,27 @@ void navierstokes
 
   ///////////////////////////////////////////////////////
   // Construct grid function spaces
-  typedef Dune::PDELab::ISTLVectorBackend<1> VectorBackend;
   typedef Dune::PDELab::ConformingDirichletConstraints ConstraintsAssembler;
-  typedef Dune::PDELab::SimpleGridFunctionStaticSize GFSSize;
-  typedef Dune::PDELab::GridFunctionSpace
-    <GV, V_FEM, ConstraintsAssembler, VectorBackend, GFSSize> V_GFS;
-  V_GFS vGfs(gv,vFem);
+  // typedef Dune::PDELab::GridFunctionSpace
+  //   <GV, V_FEM, ConstraintsAssembler> V_GFS;
+  // V_GFS vGfs(gv,vFem);
 
-  typedef Dune::PDELab::GridFunctionSpaceLexicographicMapper GFMapper;
-  typedef Dune::PDELab::PowerGridFunctionSpace<V_GFS,dim,GFMapper> PGFS_V_GFS;
-  PGFS_V_GFS powerVGfs(vGfs);
+  // typedef Dune::PDELab::GridFunctionSpaceLexicographicMapper GFMapper;
+  //typedef Dune::PDELab::PowerGridFunctionSpace<V_GFS,dim,GFMapper> PGFS_V_GFS;
+  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking,1>
+    VectorBackend;
+  typedef Dune::PDELab::VectorGridFunctionSpace
+    <GV,V_FEM,dim,VectorBackend,VectorBackend,ConstraintsAssembler> PGFS_V_GFS;
+  PGFS_V_GFS powerVGfs(gv,vFem);
+  powerVGfs.name("velocity");
 
   typedef Dune::PDELab::GridFunctionSpace
-    <GV, P_FEM, ConstraintsAssembler, VectorBackend, GFSSize> P_GFS;
+    <GV, P_FEM, ConstraintsAssembler, VectorBackend> P_GFS;
   P_GFS pGfs(gv,pFem);
+  powerVGfs.name("pressure");
 
-  typedef Dune::PDELab::CompositeGridFunctionSpace<GFMapper,PGFS_V_GFS, P_GFS> GFS;
+  typedef Dune::PDELab::CompositeGridFunctionSpace
+    <VectorBackend,Dune::PDELab::LexicographicOrderingTag, PGFS_V_GFS, P_GFS> GFS;
   GFS gfs(powerVGfs, pGfs);
   ///////////////////////////////////////////////////////
 
@@ -122,21 +129,18 @@ void navierstokes
   Dune::PDELab::constraints(constraints,gfs,cg);
 
   // Make grid function operator
-  typedef Dune::PDELab::TaylorHoodNavierStokesJacobian<PRM,true,q> LOP; 
-  LOP lop(parameters);
+  typedef Dune::PDELab::TaylorHoodNavierStokes<PRM> LOP;
+  LOP lop(parameters,q);
 
   typedef Dune::PDELab::GridOperator
-    <GFS,GFS,LOP,VectorBackend::MatrixBackend,RF,RF,RF,C,C> GO;
+    <GFS,GFS,LOP,Dune::PDELab::ISTLMatrixBackend,RF,RF,RF,C,C> GO;
   GO go(gfs,cg,gfs,cg,lop);
 
   // Make coefficent vector and initialize it from a function
   typedef typename GO::Traits::Domain V;
   V x0(gfs);
   x0 = 0.0;
-
-  Dune::PDELab::NavierStokesDirichletFunctionAdapterFactory<PRM> 
-    dirichletFunctionFactory(parameters);
-  Dune::PDELab::interpolate(dirichletFunctionFactory.dirichletFunction(),gfs,x0);
+  Dune::PDELab::interpolate(initial_solution,gfs,x0);
   std::cout << "=== Finished interpolation:" << timer.elapsed() << std::endl;
   timer.reset();
 
@@ -166,19 +170,22 @@ void navierstokes
   std::cout << "Final Residual: " << r.two_norm() << std::endl;
 
   // Generate functions suitable for VTK output
-  typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,0> VelocitySubGFS;
-  VelocitySubGFS velocitySubGfs(gfs);
-  typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,1> PressureSubGFS;
-  PressureSubGFS pressureSubGfs(gfs);
-  typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
-  VDGF vdgf(velocitySubGfs,x0);
-  typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
-  PDGF pdgf(pressureSubGfs,x0);
+  // typedef typename Dune::PDELab::GridFunctionSubSpace
+  //   <GFS,Dune::PDELab::TypeTree::TreePath<0> > VelocitySubGFS;
+  // VelocitySubGFS velocitySubGfs(gfs);
+  // typedef typename Dune::PDELab::GridFunctionSubSpace
+  //   <GFS,Dune::PDELab::TypeTree::TreePath<1> > PressureSubGFS;
+  // PressureSubGFS pressureSubGfs(gfs);
+  // typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
+  // VDGF vdgf(velocitySubGfs,x0);
+  // typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
+  // PDGF pdgf(pressureSubGfs,x0);
 
   // Output grid function with SubsamplingVTKWriter
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x0);
+  // vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
+  // vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
   vtkwriter.write(filename,Dune::VTK::appendedraw);
 }
 
@@ -240,14 +247,15 @@ int main(int argc, char** argv)
     {
       typedef double RF;
       // make grid
-      Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
+      const int dim = 2;
+      Dune::FieldVector<double,dim> L(1.0);
+      Dune::FieldVector<int,dim> N(1);
+      Dune::FieldVector<bool,dim> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(configuration.get<int>("domain.level"));
 
       // get view
-      typedef Dune::YaspGrid<2>::LeafGridView GV;
+      typedef Dune::YaspGrid<dim>::LeafGridView GV;
       const GV& gv=grid.leafView(); 
 
       const int p=2;
@@ -268,19 +276,22 @@ int main(int argc, char** argv)
       InitialSolution initial_solution(init_velocity,init_pressure);
 
       typedef BCTypeParam_HagenPoiseuille BoundaryFunction;
-      typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
-
       BoundaryFunction boundary_function;
+      typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
       NeumannFlux neumann_flux(gv);
+      typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
+      SourceFunction source_function(gv);
 
-      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters
-        <GV,BoundaryFunction,NeumannFlux,InitialSolution,RF>
+      typedef Dune::PDELab::NavierStokesDefaultParameters
+        <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
-      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux,initial_solution);
+      LOPParameters parameters
+        (configuration.sub("physics"),source_function,boundary_function,
+         initial_solution,neumann_flux);
         
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,LOPParameters,q>
-        (gv,"hagenpoiseuille_yasp_Q2Q1_2d", parameters, vFem, pFem);
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+        (gv,"hagenpoiseuille_yasp_Q2Q1_2d", parameters, vFem, pFem, initial_solution);
     }
 
 #if HAVE_ALUGRID
@@ -288,7 +299,8 @@ int main(int argc, char** argv)
     if(example_switch.find("HA2") != std::string::npos)
     {
       // make grid
-      typedef ALUUnitCube<2> UnitCube;
+      const int dim = 2;
+      typedef ALUUnitCube<dim> UnitCube;
       UnitCube unitcube;
       unitcube.grid().globalRefine(configuration.get<int>("domain.level"));
 
@@ -318,19 +330,22 @@ int main(int argc, char** argv)
       InitialSolution initial_solution(init_velocity,init_pressure);
 
       typedef BCTypeParam_HagenPoiseuille BoundaryFunction;
-      typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
       BoundaryFunction boundary_function;
+      typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
       NeumannFlux neumann_flux(gv);
+      typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
+      SourceFunction source_function(gv);
 
-      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters
-        <GV,BoundaryFunction,NeumannFlux,InitialSolution,RF>
+      typedef Dune::PDELab::NavierStokesDefaultParameters
+        <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
       LOPParameters parameters
-        (configuration.sub("physics"),boundary_function,neumann_flux,initial_solution);
+        (configuration.sub("physics"),source_function,boundary_function,
+         initial_solution,neumann_flux);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,LOPParameters,q>
-        (gv,"hagenpoiseuille_alu_P2P1_2d", parameters, vFem, pFem);
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+        (gv,"hagenpoiseuille_alu_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
 #endif
 
@@ -338,7 +353,8 @@ int main(int argc, char** argv)
     // UG Grid turbulence tube test 2D
     if(example_switch.find("TU2") != std::string::npos)
     {
-      typedef Dune::UGGrid<2> GridType;
+      const int dim = 2;
+      typedef Dune::UGGrid<dim> GridType;
       GridType grid;
 
       typedef double RF;
@@ -388,14 +404,19 @@ int main(int argc, char** argv)
       BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
       NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
 
-      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters
-        <GV,BoundaryFunction,NeumannFlux,InitialSolution,RF>
+      typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
+      SourceFunction source_function(gv);
+
+      typedef Dune::PDELab::NavierStokesDefaultParameters
+        <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
-      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux,initial_solution);
+      LOPParameters parameters
+        (configuration.sub("physics"),source_function,boundary_function,
+         initial_solution,neumann_flux);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,LOPParameters,q>
-        (gv,"turbtube_ug_P2P1_2d", parameters, vFem, pFem);
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+        (gv,"turbtube_ug_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
 #endif
 
@@ -403,7 +424,8 @@ int main(int argc, char** argv)
     // UG Grid L-shape domain test 2D
     if(example_switch.find("LU2") != std::string::npos)
     {
-      typedef Dune::UGGrid<2> GridType;
+      const int dim = 2;
+      typedef Dune::UGGrid<dim> GridType;
       GridType grid;
 
       typedef double RF;
@@ -453,14 +475,19 @@ int main(int argc, char** argv)
       BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
       NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
 
-      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters
-        <GV,BoundaryFunction,NeumannFlux,InitialSolution,RF>
+      typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
+      SourceFunction source_function(gv);
+
+      typedef Dune::PDELab::NavierStokesDefaultParameters
+        <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
-      LOPParameters parameters(configuration.sub("physics"),boundary_function,neumann_flux,initial_solution);
+      LOPParameters parameters
+        (configuration.sub("physics"),source_function,boundary_function,
+         initial_solution,neumann_flux);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,LOPParameters,q>
-        (gv,"lshape_ug_P2P1_2d", parameters, vFem, pFem);
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+        (gv,"lshape_ug_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
 #endif
 
@@ -469,6 +496,7 @@ int main(int argc, char** argv)
     // UG Grid Hagen-Poiseuille test 3D
     if(example_switch.find("HU3") != std::string::npos)
     {
+      const int dim = 3;
       typedef Dune::UGGrid<3> GridType;
       GridType grid;
 
@@ -510,15 +538,19 @@ int main(int argc, char** argv)
       BoundaryFunction boundary_function;
       NeumannFlux neumann_flux(gv);
 
-      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters
-        <GV,BoundaryFunction,NeumannFlux,InitialSolution,RF>
+      typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
+      SourceFunction source_function(gv);
+
+      typedef Dune::PDELab::NavierStokesDefaultParameters
+        <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
       LOPParameters parameters
-        (configuration.sub("physics"),boundary_function,neumann_flux,initial_solution);
+        (configuration.sub("physics"),source_function,boundary_function,
+         initial_solution,neumann_flux);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,LOPParameters,q>
-        (gv,"hagenpoiseuille_ug_P2P1_3d", parameters, vFem, pFem);
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+        (gv,"hagenpoiseuille_ug_P2P1_3d", parameters, vFem, pFem, initial_solution);
     }
 #endif
 
@@ -526,7 +558,8 @@ int main(int argc, char** argv)
     // UG Grid turbulence tube test 3D
     if(example_switch.find("TU3") != std::string::npos)
     {
-      typedef Dune::UGGrid<3> GridType;
+      const int dim = 3;
+      typedef Dune::UGGrid<dim> GridType;
       GridType grid;
 
       std::string grid_file = "grids/turbtube.msh";
@@ -576,15 +609,19 @@ int main(int argc, char** argv)
       BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
       NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
 
-      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters
-        <GV,BoundaryFunction,NeumannFlux,InitialSolution,RF>
+      typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
+      SourceFunction source_function(gv);
+
+      typedef Dune::PDELab::NavierStokesDefaultParameters
+        <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
       LOPParameters parameters
-        (configuration.sub("physics"),boundary_function,neumann_flux,initial_solution);
+        (configuration.sub("physics"),source_function,boundary_function,
+         initial_solution,neumann_flux);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,LOPParameters,q>
-        (gv,"turbtube_ug_P2P1_3d", parameters, vFem, pFem);
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+        (gv,"turbtube_ug_P2P1_3d", parameters, vFem, pFem, initial_solution);
 
     }
 #endif
