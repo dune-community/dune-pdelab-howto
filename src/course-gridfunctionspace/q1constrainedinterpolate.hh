@@ -35,5 +35,5 @@ void q1interpolate (const GV& gv)
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,1); // plot result
   vtkwriter.addVertexData(new Dune::PDELab::
 						  VTKGridFunctionAdapter<DGF>(dgf,"q1"));
-  vtkwriter.write("q1constrainedinterpolate",Dune::VTKOptions::ascii); 
+  vtkwriter.write("q1constrainedinterpolate",Dune::VTK::ascii); 
 }

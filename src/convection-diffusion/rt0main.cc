@@ -7,7 +7,7 @@
 #endif
 #include<iostream>
 #include<vector>
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
@@ -153,11 +153,11 @@ void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   P0DGF p0dgf(psub,x);
 
   // output grid function with VTKWriter
-  //Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  //Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,1); // plot result
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<P0DGF>(p0dgf,"pressure"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<RT0DGF>(rt0dgf,"velocity"));
-  vtkwriter.write(filename,Dune::VTKOptions::ascii);
+  vtkwriter.write(filename,Dune::VTK::ascii);
 }
 
 template<typename GV, typename PFEM, typename VFEM> 

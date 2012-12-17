@@ -8,7 +8,7 @@
 #include<iostream>
 #include<vector>
 #include<map>
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
@@ -286,7 +286,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
   // output grid function with SubsamplingVTKWriter
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
-  vtkwriter.write(filename,Dune::VTKOptions::ascii);
+  vtkwriter.write(filename,Dune::VTK::ascii);
 #endif
 
 #ifdef ANALYTIC_SOLUTION_PROVIDED
@@ -376,7 +376,7 @@ int main(int argc, char** argv)
  
           // instantiate finite element maps
           typedef Dune::PDELab::MonomLocalFiniteElementMap<double,double,2,MONOM_BASIS_ORDER> FEM;
-          FEM fem(Dune::GeometryType::simplex); // works only for cubes
+          FEM fem(Dune::GeometryType(Dune::GeometryType::simplex,2)); // works only for cubes
 
           solve_dg(gv,fem,"DG_Alberta_2d",true);
          

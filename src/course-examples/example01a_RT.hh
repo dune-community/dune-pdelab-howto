@@ -37,5 +37,5 @@ void example01a_RT (const GV& gv)
   DGF udgf(gfs,u);
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"solution"));
-  vtkwriter.write("example01_RT",Dune::VTKOptions::binaryappended);
+  vtkwriter.write("example01_RT",Dune::VTK::appendedraw);
 }

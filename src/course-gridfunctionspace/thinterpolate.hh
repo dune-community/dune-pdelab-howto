@@ -67,12 +67,12 @@ void thinterpolate (const GV& gv)
   PDGF pdgf(psub,x);
 
   // output grid functions with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(
 	new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"velocity"));
   vtkwriter.addVertexData(
     new Dune::PDELab::VTKGridFunctionAdapter<V0DGF>(v0dgf,"velo 0"));
   vtkwriter.addVertexData(
     new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"pressure"));
-  vtkwriter.write("thinterpolate",Dune::VTKOptions::ascii);
+  vtkwriter.write("thinterpolate",Dune::VTK::ascii);
 }

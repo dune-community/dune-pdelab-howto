@@ -3,16 +3,18 @@
 # possible options
 #LDADD = $(UG_LDFLAGS) $(AMIRAMESH_LDFLAGS) $(UG_LIBS) $(AMIRAMESH_LIBS)
 #AM_CPPFLAGS = $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS)
-dist_noinst_DATA = 
+dist_noinst_DATA =				\
+	splitdomain.geo				\
+	splitdomain.msh
 
 GRIDDIM=2
 
 if SUPERLU
-SUPERLUPROGRAMS = 
+SUPERLUPROGRAMS =
 endif
 
 noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
-	heterogeneoussquare 
+	heterogeneoussquare
 
 if SUPERLU
 endif
@@ -23,7 +25,7 @@ heterogeneoussquare_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(A
 heterogeneoussquare_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 heterogeneoussquare_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
-CLEANFILES = dgfparser.log *.vtu *.png 
+CLEANFILES = dgfparser.log *.vtu *.png
 
 #============================================================
 # pass most important options when "make distcheck" is used

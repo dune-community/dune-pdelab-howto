@@ -51,7 +51,8 @@ public:
 
     // select quadrature rule
     Dune::GeometryType gt = eg.geometry().type();
-    const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
+    const Dune::QuadratureRule<DF,dim>& 
+      rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
 
     // loop over quadrature points
     for (typename Dune::QuadratureRule<DF,dim>::const_iterator 
@@ -83,9 +84,9 @@ public:
           gradu.axpy(x(lfsu,i),gradphi[i]);
 
         // evaluate parameters
-        Dune::FieldVector<RF,dim> 
+        Dune::FieldVector<DF,dim> 
           globalpos = eg.geometry().global(it->position());
-        Dune::FieldVector<RF,dim> midpoint(0.5);
+        Dune::FieldVector<DF,dim> midpoint(0.5);
         globalpos -= midpoint;
         RF f;
         if (globalpos.two_norm()<0.25) f = -10.0; else f = 10.0;

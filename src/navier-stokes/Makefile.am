@@ -3,7 +3,13 @@
 # possible options
 #LDADD = $(UG_LDFLAGS) $(AMIRAMESH_LDFLAGS) $(UG_LIBS) $(AMIRAMESH_LIBS)
 #AM_CPPFLAGS = $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS)
-dist_noinst_DATA = 
+dist_noinst_DATA =				\
+	cgstokes.ini				\
+	cgstokes_instat.ini			\
+	grids/lshape.msh			\
+	grids/pipe.msh				\
+	grids/turbtube.msh			\
+	grids/turbtube2d.msh
 
 GRIDDIM=2
 
@@ -13,26 +19,30 @@ SUPERLUPROGRAMS = dgstokes \
 	cgstokes_instat
 endif
 
-noinst_PROGRAMS = $(SUPERLUPROGRAMS) 
+noinst_PROGRAMS = $(SUPERLUPROGRAMS)
 
-#	novlp_test	
+noinst_HEADERS =				\
+	cgstokes_initial.hh			\
+	sproblemA.hh
 
-#	dnaplfvamg 
+#	novlp_test
+
+#	dnaplfvamg
 
 # novlp_test_SOURCES = novlp_test.cc
 # novlp_test_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) \
 # $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) \
-# $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS) $(PARMETIS_CPPFLAGS) 
+# $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS) $(PARMETIS_CPPFLAGS)
 # novlp_test_LDADD = $(PARMETIS_LIBS) $(DUNEMPILDFLAGS) $(DUNEMPILIBS) \
 # $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) \
 # $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) \
-# $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS) 
+# $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 # novlp_test_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS) $(PARMETIS_LDFLAGS)
 # novlp_test_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
 if SUPERLU
 cgstokes_SOURCES = cgstokes.cc
-cgstokes_CXXFLAGS = $(AM_CXXFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) -DDUNE_DEVEL_MODE $(ALUGRID_CPPFLAGS) 
+cgstokes_CXXFLAGS = $(AM_CXXFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) -DDUNE_DEVEL_MODE $(ALUGRID_CPPFLAGS)
 cgstokes_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(UG_LDFLAGS) $(UG_LIBS)
 cgstokes_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 cgstokes_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
@@ -55,7 +65,7 @@ dgstokes_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 endif
 
 
-CLEANFILES = dgfparser.log q1*.vtu *.vtu *.png 
+CLEANFILES = dgfparser.log q1*.vtu *.vtu *.png
 
 #============================================================
 # pass most important options when "make distcheck" is used

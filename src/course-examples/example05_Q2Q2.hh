@@ -84,7 +84,7 @@ void example05_Q2Q2 (const GV& gv, double dtstart, double dtmax, double tend)
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U0DGF>(u0dgf,"u0"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U1DGF>(u1dgf,"u1"));
-    vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+    vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
     fn.increment();
   }
 
@@ -105,7 +105,7 @@ void example05_Q2Q2 (const GV& gv, double dtstart, double dtmax, double tend)
       Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U0DGF>(u0dgf,"u0"));
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U1DGF>(u1dgf,"u1"));
-      vtkwriter.write(fn.getName(),Dune::VTKOptions::binaryappended);
+      vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
       fn.increment();
 
       uold = unew;

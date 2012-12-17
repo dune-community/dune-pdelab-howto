@@ -1,11 +1,18 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
+
 #include <iostream>
+#include <sstream>
 #include "config.h"           // file constructed by ./configure script
-#include <dune/common/mpihelper.hh> // include mpi helper class 
+#include <dune/common/parallel/mpihelper.hh> // include mpi helper class 
 #include <dune/grid/sgrid.hh> // load sgrid definition
 #include <dune/grid/onedgrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #if HAVE_UG 
 #include <dune/grid/uggrid.hh>
+#endif
+#if HAVE_ALBERTA  // Hint: For ALBERTA to be effective, the macro GRIDDIM must be set in Makefile.am
+#include <dune/grid/albertagrid.hh>
+#include <dune/grid/albertagrid/dgfparser.hh>
 #endif
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/istl/bvector.hh>
@@ -26,284 +33,126 @@
 #include <dune/pdelab/constraints/constraints.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/p1fem.hh>
+#include<dune/pdelab/finiteelementmap/pkfem.hh>
+#include<dune/pdelab/finiteelementmap/q1fem.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionfem.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
-#include<dune/pdelab/adaptivity/adapt.hh>
+
+//#include<dune/pdelab/adaptivity/adapt.hh>
+// Using new adaptivity implementation with grid marking based on error-fraction:
+#include<dune/pdelab/adaptivity/adaptivity.hh>
 
 #include"../utility/gridexamples.hh"
+#include "reentrantcornerproblem.hh"
 
-template<typename GV, typename RF>
-class ReentrantCornerProblem
-{
-  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
-
-public:
-  typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
-
-  //! tensor diffusion coefficient
-  typename Traits::PermTensorType
-  A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::PermTensorType I;
-    for (std::size_t i=0; i<Traits::dimDomain; i++)
-      for (std::size_t j=0; j<Traits::dimDomain; j++)
-        I[i][j] = (i==j) ? 1.0 : 0.0;
-    return I;
-  }
-
-  //! velocity field
-  typename Traits::RangeType
-  b (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::RangeType v(0.0);
-    return v;
-  }
-
-  //! sink term
-  typename Traits::RangeFieldType 
-  c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    return 0.0;
-  }
-
-  //! source term
-  typename Traits::RangeFieldType 
-  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    return 0.0;
-  }
-
-  //! boundary condition type function
-  BCType
-  bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    typename Traits::DomainType xglobal = is.geometry().global(x);
-    return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
-  }
-
-  //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType 
-  g (const typename Traits::ElementType& e, const typename Traits::DomainType& xlocal) const
-  {
-    typename Traits::DomainType x = e.geometry().global(xlocal);
-
-    typename Traits::DomainFieldType theta = std::atan2(x[1], x[0]);
-    if(theta < 0.0) theta += 2*M_PI;
-    typename Traits::DomainFieldType r = x.two_norm();
-
-    return pow(r,2.0/3.0)*std::sin(theta*2.0/3.0);
-  }
-
-  //! Neumann boundary condition
-  typename Traits::RangeFieldType 
-  j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return 0.0;
-  }
-
-  //! Neumann boundary condition
-  typename Traits::RangeFieldType 
-  o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return 0.0;
-  }
-};
-
-//! exact gradient of solution
-template<typename GV, typename RF>
-class ExactGradient
-  : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<GV,RF,
-      GV::dimension,Dune::FieldVector<RF,GV::dimension> >,
-      ExactGradient<GV,RF> >
-{
-  const GV& gv;
-
-public:
-  typedef Dune::PDELab::GridFunctionTraits<GV,RF,
-      GV::dimension,Dune::FieldVector<RF,GV::dimension> > Traits;
-  typedef Dune::PDELab::GridFunctionBase<Traits,ExactGradient<GV,RF> > BaseT;
-
-  ExactGradient (const GV& gv_) : gv(gv_) {}
-
-  inline void evaluate (const typename Traits::ElementType& e, 
-                        const typename Traits::DomainType& xlocal,
-                        typename Traits::RangeType& y) const
-  {  
-    typename Traits::DomainType x = e.geometry().global(xlocal);
-
-    typename Traits::DomainFieldType theta = std::atan2(x[1], x[0]);
-    if(theta < 0.0) theta += 2*M_PI;
-    typename Traits::DomainFieldType r = x.two_norm();
-
-    y[0] = (2.0/3.0)*pow(r,-1.0/3.0)*(cos(theta)*sin(2.0*theta/3.0) - sin(theta)*cos(2.0*theta/3.0));
-    y[1] = (2.0/3.0)*pow(r,-1.0/3.0)*(sin(theta)*sin(2.0*theta/3.0) + cos(theta)*cos(2.0*theta/3.0));
-  }
-  
-  inline const typename Traits::GridViewType& getGridView () const
-  {
-    return gv;
-  }
-};
-
-/*! \brief Adapter returning f1(x)-f2(x) for two given grid functions
-
-  \tparam T1  a grid function type
-  \tparam T2  a grid function type
-*/
-template<typename T1, typename T2>
-class DifferenceAdapter 
-  : public Dune::PDELab::GridFunctionBase<
-  Dune::PDELab::GridFunctionTraits<typename T1::Traits::GridViewType,
-				   typename T1::Traits::RangeFieldType,
-				   1,Dune::FieldVector<typename T1::Traits::RangeFieldType,1> >
-  ,DifferenceAdapter<T1,T2> >
-{
-public:
-  typedef Dune::PDELab::GridFunctionTraits<typename T1::Traits::GridViewType,
-                                           typename T1::Traits::RangeFieldType,
-                                           1,Dune::FieldVector<typename T1::Traits::RangeFieldType,1> > Traits;
-
-  //! constructor 
-  DifferenceAdapter (const T1& t1_, const T2& t2_) : t1(t1_), t2(t2_) {}
-
-  //! \copydoc GridFunctionBase::evaluate()
-  inline void evaluate (const typename Traits::ElementType& e, 
-                        const typename Traits::DomainType& x, 
-                        typename Traits::RangeType& y) const
-  {  
-    typename Traits::RangeType y1;
-    t1.evaluate(e,x,y1);
-    typename Traits::RangeType y2;
-    t2.evaluate(e,x,y2);
-    y1 -= y2;
-    y = y1;
-  }
-
-  inline const typename Traits::GridViewType& getGridView () const
-  {
-    return t1.getGridView();
-  }
-  
-private:
-  const T1& t1;
-  const T2& t2;
-};
-
-/*! \brief Adapter returning ||f1(x)-f2(x)||^2 for two given grid functions
-
-  \tparam T1  a grid function type
-  \tparam T2  a grid function type
-*/
-template<typename T1, typename T2>
-class DifferenceSquaredAdapter 
-  : public Dune::PDELab::GridFunctionBase<
-  Dune::PDELab::GridFunctionTraits<typename T1::Traits::GridViewType,
-				   typename T1::Traits::RangeFieldType,
-				   1,Dune::FieldVector<typename T1::Traits::RangeFieldType,1> >
-  ,DifferenceSquaredAdapter<T1,T2> >
-{
-public:
-  typedef Dune::PDELab::GridFunctionTraits<typename T1::Traits::GridViewType,
-                                           typename T1::Traits::RangeFieldType,
-                                           1,Dune::FieldVector<typename T1::Traits::RangeFieldType,1> > Traits;
-
-  //! constructor 
-  DifferenceSquaredAdapter (const T1& t1_, const T2& t2_) : t1(t1_), t2(t2_) {}
-
-  //! \copydoc GridFunctionBase::evaluate()
-  inline void evaluate (const typename Traits::ElementType& e, 
-                        const typename Traits::DomainType& x, 
-                        typename Traits::RangeType& y) const
-  {  
-    typename T1::Traits::RangeType y1;
-    t1.evaluate(e,x,y1);
-    typename T2::Traits::RangeType y2;
-    t2.evaluate(e,x,y2);
-    y1 -= y2;
-    y = y1.two_norm2();
-  }
-
-  inline const typename Traits::GridViewType& getGridView () const
-  {
-    return t1.getGridView();
-  }
-  
-private:
-  const T1& t1;
-  const T2& t2;
-};
+#include<dune/common/parametertree.hh>
+#include<dune/common/parametertreeparser.hh>
 
 //! Solve problem on leaf grid view and adapt grid
-template<class Grid>
-void driver (Grid& grid, std::string filename_base, double TOL, int maxsteps, double fraction)
+template<typename Grid,int degree>
+void driverFEM (Grid& grid,
+                const Dune::ParameterTree& configuration)
 {
+
+  int verbose = configuration.get<int>("general.verbose");
+  int strategy = configuration.get<int>("adaptivity.strategy");
+
+  std::stringstream vtu,cmd;
+  vtu << "ldomain_";
+  vtu << configuration.get<std::string>("grid.manager") << "_";
+  vtu << "s" << strategy;
+  std::string filename_base (vtu.str());
+  cmd << "rm " << vtu.str() << "*";
+  system( cmd.str().c_str() );
+
   // some types
   typedef typename Grid::LeafGridView GV;
   typedef typename Grid::ctype Coord;
   typedef double Real;
   const int dim = GV::dimension;
 
+  // make finite element map
+  // note: adaptivity currently relies on finite element map not depending on grid view
+  const GV& gv=grid.leafView();
+  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,typename Grid::ctype,Real,degree,dim> FEM;
+  FEM fem(gv);
+
+  // define problem
+  typedef ReentrantCornerProblem<GV,Real> Problem;
+  Problem problem;
+
   // some arrays to store results
   std::vector<double> l2;
   std::vector<double> h1s;
   std::vector<double> ee;
   std::vector<int> N;
-
-  // make finite element map
-  // note: adaptivity currently relies on finite element map not depending on grid view
-  typedef Dune::PDELab::P1LocalFiniteElementMap<Coord,Real,dim> FEM;
-  FEM fem;
+  std::vector<int> nIterations; // of the linear solver
 
   // make grid function space 
   // note: adaptivity relies on leaf grid view object being updated by the grid on adaptation 
-  typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
+  //typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
+  typedef Dune::PDELab::ConformingDirichletConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   CON con;
   GFS gfs(grid.leafView(),fem,con);
   N.push_back(gfs.globalSize());
 
+  // make a degree of freedom vector;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
+  U u(gfs,0.0);
+
+  typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
+  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
+
+  int maxsteps = configuration.get<int>("adaptivity.maxsteps");
+  bool bReplay = configuration.get<int>("adaptivity.replay");
+  double TOL = configuration.get<double>("adaptivity.TOL");
+  double refinementfraction = configuration.get<double>("adaptivity.refinementfraction");
+
   // refinement loop
   for (int step=0; step<maxsteps; step++)
     {
-      // make a degree of freedom vector;
-      typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
-      U u(gfs,0.0);
-      con.compute_ghosts(gfs);
-      
+
+      std::cout << "***************************************" << std::endl;
+      std::cout << "Refinement Step " << step << std::endl;
+      std::cout << "***************************************" << std::endl;
+
+      //con.compute_ghosts(gfs);
       // get current leaf view
       const GV& gv=grid.leafView();
-
-      // make problem
-      typedef ReentrantCornerProblem<GV,Real> Problem;
-      Problem problem;
 
       // make constraints container and initialize it
       typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
       CC cc;
       Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> bctype(gv,problem);
       Dune::PDELab::constraints(bctype,gfs,cc);
-      //Dune::PDELab::set_nonconstrained_dofs(cc,0.0,u);
       std::cout << "constrained dofs=" << cc.size() << " of " << gfs.globalSize() << std::endl;
 
-      // initialize DOFS from Dirichlet extension
-      // note: currently we start from scratch on every grid
-      typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
       G g(gv,problem);
-      Dune::PDELab::interpolate(g,gfs,u);
 
-
-      // write vtk file
-      //Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-      Dune::VTKWriter<GV> vtkwriter2(gv);
-      std::stringstream fullname2;
-      fullname2 << "test" << "_step" << step;
-      vtkwriter2.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<G>(g,"u"));
-      vtkwriter2.write(fullname2.str(),Dune::VTKOptions::binaryappended);
-
+      if( bReplay==false || step==0 ){
+        // reset degree of freedom vector;
+        std::cout << "Resetting solution on the refined grid." << std::endl;
+        u = U(gfs,0.0);
+        // initialize DOFS from Dirichlet extension
+        // note: currently we start from scratch on every grid
+        Dune::PDELab::interpolate(g,gfs,u);
+        Dune::PDELab::set_nonconstrained_dofs(cc,0.0,u);
+      }
+      else{
+        std::cout << "Solution from coarse grid transferred to refined grid." << std::endl;
+        // plot transferred solution 
+        DGF pre_udgf(gfs,u);
+        Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,0);
+        std::stringstream fullname;
+        fullname << filename_base << "_prestep_" << step;
+        // plot analytical solution on the refined gridview
+        vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(pre_udgf,"pre_u_h"));
+        vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
+      }
 
       // make local operator
       typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
@@ -315,11 +164,12 @@ void driver (Grid& grid, std::string filename_base, double TOL, int maxsteps, do
       // make linear solver and solve problem
       //typedef Dune::PDELab::ISTLBackend_NOVLP_CG_NOPREC<GFS> LS;
       //LS ls (gfs,50,2);
-       typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
-       LS ls(10000,1);
+      typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
+      LS ls(10000,verbose);
       typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
       SLP slp(go,u,ls,1e-10);
       slp.apply();
+      nIterations.push_back( slp.ls_result().iterations );
 
       // compute errors
       typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
@@ -361,56 +211,76 @@ void driver (Grid& grid, std::string filename_base, double TOL, int maxsteps, do
       DGF0 udgf0(p0gfs,eta);
       typedef DifferenceAdapter<G,DGF> Difference;
       Difference difference(g,udgf);
-      //Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-      Dune::VTKWriter<GV> vtkwriter(gv);
+      Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,degree-1);
       std::stringstream fullname;
       fullname << filename_base << "_step" << step;
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"u_h"));
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<G>(g,"u"));
       vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<Difference>(difference,"u-u_h"));
       vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(udgf0,"estimated error"));
-      vtkwriter.write(fullname.str(),Dune::VTKOptions::binaryappended);
+      vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
 
       // error control
       if (estimated_error <= TOL) break;
 
-      // create grid adaption classes
-      typedef Dune::PDELab::L2Projection<GFS,U> Proj;
-      Proj proj;
-      typedef Dune::PDELab::ResidualErrorEstimation<GFS,U,ESTLOP,true> REE;
-      REE ree(gfs,estlop);
-      typedef Dune::PDELab::EstimationAdaptation<Grid,GFS,U,REE> EA;
-      EA ea(grid,gfs,ree,fraction,0.0);
-      typedef Dune::PDELab::GridAdaptor<Grid,GFS,U,EA,Proj> GRA;
-      GRA gra(grid,gfs,ea,proj);
+      // create grid adaption classes of "adapt.hh":
+      //typedef Dune::PDELab::L2Projection<GFS,U> Proj;
+      //Proj proj;
+      //typedef Dune::PDELab::ResidualErrorEstimation<GFS,U,ESTLOP,true> REE;
+      //REE ree(gfs,estlop);
+      //typedef Dune::PDELab::EstimationAdaptation<Grid,GFS,U,REE> EA;
+      //EA ea(grid,gfs,ree,fraction,0.0);
+      //typedef Dune::PDELab::GridAdaptor<Grid,GFS,U,EA,Proj> GRA;
+      //GRA gra(grid,gfs,ea,proj);
+      //typedef Dune::PDELab::GridAdaptor<Grid,GFS,U,Proj> GRA;
+      //GRA gra;
       
       // adapt grid
-      if (step<maxsteps-1) 
-	{
-	  gra.adapt(u);
-	  N.push_back(gfs.globalSize());
-	}
+      if (step<maxsteps-1) {
+        double alpha(refinementfraction);      // refinement fraction
+        double refine_threshold(0);
+        double beta(0);              // no coarsening here
+        double eta_beta(0);          // dummy variable
+        if( strategy == 1)
+          error_fraction( eta, alpha, beta, refine_threshold, eta_beta, verbose );
+        else
+          element_fraction( eta, alpha, beta, refine_threshold, eta_beta, verbose );
+        mark_grid( grid, eta, refine_threshold, 0.0 );
+        adapt_grid( grid, gfs, u );
+        N.push_back( gfs.globalSize() );
+      }
     }
 
   // print results
-  std::cout << "Results on mesh=" << filename_base << std::endl; 
-  std::cout << "N l2 l2rate h1semi h1semirate estimator effectivity" << std::endl;
+  std::cout << "" << std::endl; 
+  std::cout << "#Results for polynomial degree " << degree << std::endl; 
+  std::cout << "#          N"
+            << "    IT" 
+            << "          l2" 
+            << "      l2rate" 
+            << "      h1semi" 
+            << "  h1semirate"
+            << "   estimator"
+            << " effectivity" << std::endl;
   for (std::size_t i=0; i<N.size(); i++) 
     {
       double rate1=0.0;
       if (i>0) rate1=log(l2[i]/l2[i-1])/log(0.5);
       double rate2=0.0;
       if (i>0) rate2=log(h1s[i]/h1s[i-1])/log(0.5); 
-      std::cout << std::setw(10) << i
-		<< std::setw(10) << N[i]
-		<< std::setw(12) << std::setprecision(4) << std::scientific << l2[i]
-		<< std::setw(12) << std::setprecision(4) << std::scientific << rate1
-		<< std::setw(12) << std::setprecision(4) << std::scientific << h1s[i]
-		<< std::setw(12) << std::setprecision(4) << std::scientific << rate2
-		<< std::setw(12) << std::setprecision(4) << std::scientific << ee[i]
-		<< std::setw(12) << std::setprecision(4) << std::scientific << ee[i]/(h1s[i])
-		<< std::endl;
+      std::cout << std::setw(3) << i
+                << std::setw(9) << N[i]
+                << std::setw(6) << nIterations[i]
+                << std::setw(12) << std::setprecision(4) << std::scientific << l2[i]
+                << std::setw(12) << std::setprecision(4) << std::scientific << rate1
+                << std::setw(12) << std::setprecision(4) << std::scientific << h1s[i]
+                << std::setw(12) << std::setprecision(4) << std::scientific << rate2
+                << std::setw(12) << std::setprecision(4) << std::scientific << ee[i]
+                << std::setw(12) << std::setprecision(4) << std::scientific << ee[i]/(h1s[i])
+                << std::endl;
     }
+  
+  std::cout << "View results using: \n paraview --data=" << vtu.str() << "_step..vtu" << std::endl;
 
 }
 
@@ -418,44 +288,60 @@ int main(int argc, char **argv)
 {
   // initialize MPI, finalize is done automatically on exit 
   Dune::MPIHelper::instance(argc,argv);
+  typedef double Real;
 
   // start try/catch block to get error messages from dune
   try {
+    
+    std::string config_file("ldomain.ini");
+    Dune::ParameterTree configuration;
+    Dune::ParameterTreeParser parser;
+    try{
+      parser.readINITree( config_file, configuration );
+    }
+    catch(...){
+      std::cerr << "Could not read config file \"" 
+                << config_file << "\"!" << std::endl;
+      exit(1);
+    }
 
-    // Alberta/Pk2d version
-#if HAVE_ALBERTA
-    if (true)
-    {
-      // read command line arguments
-      if (argc!=6)
-	{
-	  std::cout << "usage: " << argv[0] << " <mesh file> <start level> <TOL> <max steps> <fraction>" << std::endl;
-	  return 0;
-	}
-      std::string grid_file(argv[1]);
-      int start_level; sscanf(argv[2],"%d",&start_level);
-      double TOL; sscanf(argv[3],"%lg",&TOL);
-      int maxsteps; sscanf(argv[4],"%d",&maxsteps);
-      double fraction; sscanf(argv[5],"%lg",&fraction);
+    // Hint: Set the polynomial degree here:
+    const int degree=1;
 
-      // make Alberta grid
-     // typedef AlbertaLDomain::Grid GridType;
-     // AlbertaLDomain gridp;
-     // GridType &grid = gridp;
-
+    // UG version
+#if HAVE_UG
+    if( "ug"==configuration.get<std::string>("grid.manager") ) {
       // make UG grid
-       const int dim=2;
-       typedef Dune::UGGrid<dim> GridType;
-       GridType grid;
-       typedef std::vector<int> GmshIndexMap;
-       GmshIndexMap boundary_index_map;
-       GmshIndexMap element_index_map;
-       Dune::GmshReader<GridType> gmsh_reader;
-       gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
-       grid.loadBalance();
+      const int dim=2;
+      typedef Dune::UGGrid<dim> GridType;
+      GridType grid;
+      typedef std::vector<int> GmshIndexMap;
+      GmshIndexMap boundary_index_map;
+      GmshIndexMap element_index_map;
+      Dune::GridFactory<GridType> factory(&grid);
+      std::string grid_file="grids/ldomain.msh";
+      Dune::GmshReader<GridType>::read(factory,grid_file,boundary_index_map,element_index_map,true,false);
+      factory.createGrid();
 
-      for (int i=0; i<start_level; i++) grid.globalRefine(1);
-      driver(grid,"ldomain",TOL,maxsteps,fraction);
+      grid.globalRefine( configuration.get<int>("grid.baselevel") );
+      grid.loadBalance();
+
+      std::cout << "Conforming refinement on UG grid (simplices)" << std::endl;
+      driverFEM<GridType,degree>(grid,configuration);
+    }
+    
+#endif
+
+#if HAVE_ALBERTA
+    if( "alberta"==configuration.get<std::string>("grid.manager") ) {
+      // make Alberta grid
+      typedef AlbertaLDomain::Grid GridType;
+      AlbertaLDomain gridp;
+      GridType &grid = gridp;
+      grid.globalRefine( configuration.get<int>("grid.baselevel") );
+
+      std::cout << "Conforming Refinement on Alberta grid (simplices)" << std::endl;
+      driverFEM<GridType,degree>(grid,configuration);
     }
 #endif
   }

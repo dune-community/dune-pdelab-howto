@@ -13,7 +13,7 @@
 #include<string>
 #include<stdlib.h>
 
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
@@ -27,7 +27,7 @@
 #include<dune/istl/preconditioners.hh>
 #include<dune/istl/io.hh>
 #include<dune/istl/superlu.hh>
-
+#include<dune/pdelab/newton/newton.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/finiteelementmap/q1fem.hh>

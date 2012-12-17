@@ -11,7 +11,7 @@
 #include<map>
 #include<string>
 
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
@@ -208,9 +208,9 @@ void sequential (const GV& gv)
   {
     typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
     DGF xdgf(gfs,x);
-    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-    vtkwriter.write("nonlineardiffusion_initial_guess_Q2",Dune::VTKOptions::ascii);
+    vtkwriter.write("nonlineardiffusion_initial_guess_Q2",Dune::VTK::ascii);
   }
 
   // <<<6>>> Make a linear solver 
@@ -236,9 +236,9 @@ void sequential (const GV& gv)
   {
     typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
     DGF xdgf(gfs,x);
-    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-    vtkwriter.write("nonlineardiffusion_sequential_Q2",Dune::VTKOptions::ascii);
+    vtkwriter.write("nonlineardiffusion_sequential_Q2",Dune::VTK::ascii);
   }
 }
 
@@ -303,9 +303,9 @@ void parallel_nonoverlapping_Q1 (const GV& gv)
   // <<<8>>> graphical output
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   DGF xdgf(gfs,x);
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-  vtkwriter.write("nonlineardiffusion_nonoverlapping_Q1",Dune::VTKOptions::ascii);
+  vtkwriter.write("nonlineardiffusion_nonoverlapping_Q1",Dune::VTK::ascii);
 }
 
 // a parallel variant for overlapping grids
@@ -372,9 +372,9 @@ void parallel_overlapping_Q1 (const GV& gv)
   // <<<8>>> graphical output
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   DGF xdgf(gfs,x);
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-  vtkwriter.write("nonlineardiffusion_overlapping_Q1",Dune::VTKOptions::ascii);
+  vtkwriter.write("nonlineardiffusion_overlapping_Q1",Dune::VTK::ascii);
 }
 
 

@@ -8,7 +8,7 @@
 #include<iostream>
 #include<vector>
 #include<map>
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
@@ -214,7 +214,7 @@ void runDG(
       Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,degree-1);
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<UDGF>(udgf,"u_h"));
       //vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<G>(g,"u"));
-      vtkwriter.write(fullname.str(),Dune::VTKOptions::binaryappended);
+      vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
     }
 }
 

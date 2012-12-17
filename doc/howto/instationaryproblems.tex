@@ -226,7 +226,7 @@ and consists of the files
 \begin{frame}
 \frametitle{Driver for Solving Instationary Linear Problem}
 \framesubtitle{About \lstinline{example03_Q2.hh}}
-Major extensions from the stationary \lstinline{example03} are:
+Major extensions from the stationary \lstinline{example02} are:
 \begin{itemize}
 \item Boundary condition type and boundary condition extension depend on time.
 \begin{itemize}
@@ -238,9 +238,8 @@ Major extensions from the stationary \lstinline{example03} are:
 \item Another for $m(u,v;t)$.
 \item Same idea: keep interface, add \lstinline{setTime()} method.
 \end{itemize}
-\item Class \lstinline{InstationaryGridOperator} combines two grid
-  operators representing the spatial discretizations of the time
-  derivatives of order one and zero. This allows for very general
+\item Class \lstinline{OneStepGridOperator} combines two grid
+  operators representing the spatial and temporal residual forms. This allows for very general
   implementations of discretizations using the \textit{method of
     lines}.
 \item Class \lstinline{OneStepMethod} implements time-stepping scheme.

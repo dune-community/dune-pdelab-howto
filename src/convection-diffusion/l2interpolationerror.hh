@@ -25,8 +25,8 @@ double l2interpolationerror (const U& u, const GFS& gfs, X& x,
   
   // loop over grid view
   double sum = 0.0;
-  for (ElementIterator eit = gfs.gridview().template begin<0>();
-	   eit!=gfs.gridview().template end<0>(); ++eit)
+  for (ElementIterator eit = gfs.gridView().template begin<0>();
+       eit!=gfs.gridView().template end<0>(); ++eit)
 	{
 	  lfs.bind(*eit);      // bind local function space to element /*@\label{l2int:bind}@*/
 	  lfs.vread(x,xl);     // get local coefficients

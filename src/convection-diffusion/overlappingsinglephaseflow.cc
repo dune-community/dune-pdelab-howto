@@ -5,23 +5,15 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
-#include<math.h>
 #include<iostream>
 #include<vector>
-#include<map>
 #include<string>
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/yaspgrid.hh>
-#include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
-#include<dune/istl/bvector.hh>
-#include<dune/istl/operators.hh>
-#include<dune/istl/solvers.hh>
-#include<dune/istl/preconditioners.hh>
-#include<dune/istl/io.hh>
 
 #include<dune/pdelab/finiteelementmap/q1fem.hh>
 #include<dune/pdelab/finiteelementmap/q12dfem.hh>
@@ -107,13 +99,17 @@ void driver (PROBLEM& problem,
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
   G g(gv,problem);
   Dune::PDELab::interpolate(g,gfs,x);
-  Dune::PDELab::constraints(bctype,gfs,cc);
-  Dune::PDELab::set_nonconstrained_dofs(cc,0.0,x);
+  Dune::PDELab::constraints(bctype,gfs,cc,false);
 
-  typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GO> LS;
-  LS ls(gfs,5000,3);
+  // typedef Dune::PDELab::ISTLBackend_CG_AMG_SSOR<GO> LS;
+  // LS ls(gfs,5000,3);
+  typedef Dune::PDELab::ISTLBackend_OVLP_CG_SSORk<GFS,CC> LS;
+  LS ls(gfs,cc,100,5,2);
+  //typedef Dune::PDELab::ISTLBackend_OVLP_CG_SuperLU<GFS,CC> LS;
+  //LS ls(gfs,cc,500,2);
+
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
-  SLP slp(go,x,ls,1e-12);
+  SLP slp(go,x,ls,1e-10);
   slp.apply();
 
   // make discrete function object
@@ -121,9 +117,9 @@ void driver (PROBLEM& problem,
   DGF dgf(gfs,x);
   
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  vtkwriter.pwrite(filename.c_str(),"vtk","",Dune::VTKOptions::binaryappended);
+  // Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
+  // vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
+  // vtkwriter.pwrite(filename.c_str(),"vtk","",Dune::VTK::appendedraw);
 }
 
 //===============================================================
@@ -143,14 +139,22 @@ int main(int argc, char** argv)
           std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
       }
     
+    // read command line arguments
+    if (argc!=2)
+      {
+        std::cout << "usage: " << argv[0] << " <n>" << std::endl;
+        return 0;
+      }
+    int size; sscanf(argv[1],"%d",&size);
+
     // Q1, 2d
     if (true)
       {
         // make grid
         Dune::FieldVector<double,2> L(1.0);
-        Dune::FieldVector<int,2> N(3);
+        Dune::FieldVector<int,2> N(size);
         Dune::FieldVector<bool,2> B(false);
-        int overlap=1;
+        int overlap=3;
         Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
         //grid.globalRefine(4);
         typedef Dune::YaspGrid<2>::LeafGridView GV;

@@ -11,7 +11,7 @@
 #include<map>
 #include<string>
 
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
@@ -221,9 +221,9 @@ void stationary (const GV& gv)
   {
     typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
     DGF xdgf(gfs,x);
-    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-    vtkwriter.write("transporttest_stationary",Dune::VTKOptions::binaryappended);
+    vtkwriter.write("transporttest_stationary",Dune::VTK::appendedraw);
   }
 }
 
@@ -308,9 +308,9 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   {
     typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
     DGF xdgf(gfs,xold);
-    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
+    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
     fn.increment();
   }
 
@@ -326,9 +326,9 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
       // graphics
       typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
       DGF xdgf(gfs,x);
-      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
       vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-      vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
+      vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
       fn.increment();
 
       xold = x;
@@ -413,9 +413,9 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   {
     typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
     DGF xdgf(gfs,xold);
-    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
     vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
+    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
     fn.increment();
   }
 
@@ -431,9 +431,9 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
       // graphics
       typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
       DGF xdgf(gfs,x);
-      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
       vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
-      vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
+      vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
       fn.increment();
 
       xold = x;

@@ -33,10 +33,10 @@ We demonstrate these concepts in the following.
 \frametitle{Problem and Weak Formulation}
 Consider the following model problem:
 \begin{subequations} \label{Eq:Example01}
-\begin{align*}
+\begin{align}
 -\Delta u + a u &= f &&\text{in $\Omega\subset\mathbb{R}^d$ (open, connected)},\\
 \nabla u \cdot n &= 0 &&\text{on $\partial\Omega$}.
-\end{align*}
+\end{align}
 \end{subequations}
 \medskip
 Weak formulation. Set $U = H^1(\Omega)$.
@@ -130,23 +130,24 @@ For linear PDEs $\mathcal{R}$ is affine linear: $\mathcal{R}(\mathbf{u}) = \math
 
 \begin{frame}
 \frametitle{Residual Assembly}
+{\small
 \begin{equation*}
 \begin{split}
 &(\mathcal{R}(\mathbf{u}) )_i  = r\left(\text{FE}(\mathbf{u}),\phi_i\right)
 = \sum_{e\in E_h^0} \int_{\Omega_e} \nabla \text{FE}(\mathbf{u}) \cdot \nabla\phi_i 
 + a \, \text{FE}_{\Phi_{U_h^k}}(\mathbf{u}) \phi_i - f \phi_i \,dx\\
-&= \sum_{e\in E_h^0} \int_{\Omega_e} 
+&= \sum_{(e,m) : g(e,m)=i} \int_{\Omega_e} 
 \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \nabla_x \hat\phi_{e,l}(\mu_e^{-1}(x))\right]
-\cdot \nabla_x \underbrace{\hat\phi_{e,m}}_{g(e,m)=i}(\mu_e^{-1}(x))\\
-& + a \, \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \hat\phi_{e,l}(\mu_e^{-1}(x)) \right] \hat\phi_{e,m}(\mu_e^{-1}(x))
+\cdot \nabla_x \hat\phi_{e,m}(\mu_e^{-1}(x))\\
+& + a \, \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \hat\phi_{e,l}(\mu_e^{-1}(x))\right] \hat\phi_{e,m}(\mu_e^{-1}(x))
 - f \hat\phi_{e,m}(\mu_e^{-1}(x)) \, dx\\
-&= \sum_{e\in E_h^0} \int_{\hat\Omega_e} 
+&= \sum_{(e,m) : g(e,m)=i} \int_{\hat\Omega_e} 
 \Biggl\{\left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} (\nabla \mu_e(\hat{x}))^{-T}\nabla_{\hat{x}} \hat\phi_{e,l}(\hat{x})\right]
 \cdot (\nabla \mu_e(\hat{x}))^{-T} \nabla_{\hat{x}} \hat\phi_{e,m}(\hat{x})\\
 & + a \, \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \hat\phi_{e,l}(\hat{x}) \right] \hat\phi_{e,m}(\hat{x})
 - f \hat\phi_{e,m}(\hat{x}) \Biggr\} \text{det} \nabla\mu_e(\hat{x}) \, d\hat{x} .
 \end{split}
-\end{equation*}
+\end{equation*}}
 \end{frame}
 
 \begin{frame}
@@ -155,13 +156,12 @@ Define restriction to local degrees of freedom
 \begin{align*}
 \mathbf{U}_e &= \mathbb{R}^{n(e)}, &
 \mathbf{R}_e &: \mathbf{U} \to \mathbf{U}_e, &
-\left(\mathbf{U}_e(\mathbf{u})\right)_l &= (\mathbf{u})_{g(e,l)} \quad 0\leq l < n(e).
+\left(\mathbf{R}_e(\mathbf{u})\right)_l &= (\mathbf{u})_{g(e,l)} \quad 0\leq l < n(e).
 \end{align*}
 Define \textit{local operator} $\bm{\alpha}^{\text{vol}}_{h,e} : \mathbf{U}_e \to \mathbf{U}_e$ (user part):
-\begin{equation*}
+{\small\begin{equation*}
 \begin{split}
-&\bigl(\bm{\alpha}^{\text{vol}}_{h,e}({\color{cyan}\mathbf{u}})\bigr)_m  = \\
-&\int_{\hat\Omega_e} 
+&\bigl(\bm{\alpha}^{\text{vol}}_{h,e}({\color{cyan}\mathbf{u}})\bigr)_m  = \int_{\hat\Omega_e} 
 \Biggl\{\left[ \sum_{l=0}^{n(e)-1} ({\color{cyan}\mathbf{u}})_{l} {\color{purple}
 (\nabla \mu_e(\hat{x}))^{-T}} {\color{blue}\nabla_{\hat{x}} \hat\phi_{e,l}(\hat{x})} \right]
 \cdot {\color{purple}(\nabla \mu_e(\hat{x}))^{-T}} {\color{blue}\nabla_{\hat{x}} \hat\phi_{e,m}(\hat{x})}\\
@@ -169,11 +169,12 @@ Define \textit{local operator} $\bm{\alpha}^{\text{vol}}_{h,e} : \mathbf{U}_e \t
  {\color{blue}\hat\phi_{e,l}(\hat{x})} \right] {\color{blue}\hat\phi_{e,m}(\hat{x})}
 - {\color{olive} f} {\color{blue}\hat\phi_{e,m}(\hat{x})} \Biggr\} {\color{purple}\text{det} \nabla\mu_e(\hat{x})} \, d\hat{x} .
 \end{split}
-\end{equation*}
-Residual assembly is written generically:
+\end{equation*}}
+Residual assembly is written generically as:
 \begin{equation*}
 \mathcal{R}(\mathbf{u}) = \sum_{e\in E_h^0} \mathbf{R}_e^T \bm{\alpha}^{\text{vol}}_{h,e} (\mathbf{R}_e \mathbf{u})
 \end{equation*}
+$\bm{\alpha}^{\text{vol}}_{h,e}$: \textbf{compute all residual contributions of one element}.
 \end{frame}
 
 
@@ -187,7 +188,7 @@ Iterate until convergence:
 \begin{enumerate}
 \item Assemble Jacobian System $\mathbf{A}^k = \nabla\mathcal{R}(\mathbf{u}^k)$.
 \item Solve $\mathbf{A}^k \mathbf{z}^k = \mathbf{r}^k$ with some linear solver.
-\item Update $\mathbf{u}^{k+1} = \mathbf{u}^{k} - \sigma^k \mathbf{z}^{k+1}$. $\sigma\in(0,1]$.
+\item Update $\mathbf{u}^{k+1} = \mathbf{u}^{k} - \sigma^k \mathbf{z}^{k}$. $\sigma\in(0,1]$.
 \item Compute new residual $\mathbf{r}^{k+1} = \mathcal{R}(\mathbf{u}^{k+1})$.
 \item Set $k = k +1$.
 \end{enumerate}
@@ -199,15 +200,14 @@ We need methods to compute $\mathcal{R}(\mathbf{u})$ and $\nabla\mathcal{R}(\mat
 \frametitle{Jacobian}
 The Jacobian matrix is defined as
 \begin{equation*}
-(\mathbf{A}^k)_{i,j} = (\nabla\mathcal{R}(\mathbf{u}^k))_{i,j} 
-= \frac{\partial (\mathcal{R})_i}{\partial (\mathbf{u})_j}(\mathbf{u}^k)
-= \sum_{e\in E_h^0} \frac{\partial (\bm{\alpha}_{h,e}^{\text{vol}})_m }{\partial (\mathbf{u})_l } (\mathbf{R}_e \mathbf{u}),
+(\mathbf{A})_{i,j} = (\nabla\mathcal{R}(\mathbf{u}))_{i,j} 
+= \frac{\partial (\mathcal{R})_i}{\partial (\mathbf{u})_j}(\mathbf{u})
+= \sum_{(e,m,l) : g(e,m)=i \wedge g(e,l)=j} \frac{\partial (\bm{\alpha}_{h,e}^{\text{vol}})_m }{\partial (\mathbf{u})_l } (\mathbf{R}_e \mathbf{u}).
 \end{equation*}
-where $g(e,m)=l, g(e,l)=j$.
 
 Again, the Jacobian can be computed from local contributions:
 \begin{equation*}
-\mathbf{A}^k = \sum_{e\in E_h^0} \mathbf{R}_e^T \nabla\bm{\alpha}_{h,e}^{\text{vol}}(\mathbf{R}_e \mathbf{u}) \, \mathbf{R}_e.
+\mathbf{A} = \sum_{e\in E_h^0} \mathbf{R}_e^T \nabla\bm{\alpha}_{h,e}^{\text{vol}}(\mathbf{R}_e \mathbf{u}) \, \mathbf{R}_e.
 \end{equation*}
 
 The local Jacobians can be
@@ -497,11 +497,11 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01b_Q2.hh}
 \frametitle{Problem and Weak Formulation}
 Consider now the following model problem:
 \begin{subequations} \label{Eq:Example02}
-\begin{align*}
+\begin{align}
  -\Delta u + a u  &= f &&\text{in $\Omega\subset\mathbb{R}^d$},\\
                 u &= g &&\text{on $\Gamma_D\subseteq\partial\Omega$},\\
 -\nabla u \cdot n &= j &&\text{on $\Gamma_N=\partial\Omega\setminus\Gamma_D$},
-\end{align*}
+\end{align}
 \end{subequations}
 where $a>0$ when $\Gamma_D=\emptyset$.
 
@@ -550,7 +550,7 @@ where $w$ is an extension of $g$ to $\Omega$ and $u = w + \tilde{u}$.
 \begin{equation*}
 \tilde{U}_h^k = \left \{ u \in U_h^k \,:\, u|_{\Gamma_D} = 0 \right\} \subset U_h^k.
 \end{equation*}
-(Mesh resolves the Dirichlet bopundary $\Gamma_D$.
+(Mesh resolves the Dirichlet boundary $\Gamma_D$).
 \item Provide extension $w\in U_h^k$ with ``$w=g$'' on $\Gamma_D$ in an appropriate sense.
 \item Obviously, $\text{dim}\tilde{U}_h^k < \text{dim} U_h^k$.
 \item Note: Dirichlet boundary conditions could also be handled by penalty methods. 
@@ -619,7 +619,7 @@ and coefficients $\omega_{i,j}$.
 
 \begin{frame}
 \frametitle{Example 2 Overview}
-The first example implements model problem \eqref{Eq:Example01}.
+The first example implements model problem \eqref{Eq:Example02}.
 
 It consists of the following files:
 \begin{itemize}
@@ -770,8 +770,8 @@ finite-dimensional function space:
 \end{itemize}
 \item A \textit{grid operator} realizes computations with residual forms:
 \begin{itemize}
-\item \lstinline{gos.residual(u,r)} $\quad\leftrightarrow\quad$ $\mathbf{r} = \mathcal{R}(\mathbf{u})$.
-\item \lstinline{gos.jacobian(u,A)} $\quad\leftrightarrow\quad$ $\mathbf{A} = \nabla\mathcal{R}(\mathbf{u})$.
+\item \lstinline{go.residual(u,r)} $\quad\leftrightarrow\quad$ $\mathbf{r} = \mathcal{R}(\mathbf{u})$.
+\item \lstinline{go.jacobian(u,A)} $\quad\leftrightarrow\quad$ $\mathbf{A} = \nabla\mathcal{R}(\mathbf{u})$.
 \end{itemize}
 \item A \textit{matrix container} represents a linear map (not shown yet):
 \begin{itemize}
@@ -788,11 +788,11 @@ We wish to demonstrate that PDELab allows also the implementation of Finite Volu
 
 Consider again the elliptic model problem:
 \begin{subequations} \label{Eq:Example04}
-\begin{align*}
+\begin{align}
  -\Delta u + a u  &= q &&\text{in $\Omega\subset\mathbb{R}^d$},\\
                 u &= g &&\text{on $\Gamma_D\subseteq\partial\Omega$},\\
 -\nabla u \cdot n &= j &&\text{on $\Gamma_N=\partial\Omega\setminus\Gamma_D$},
-\end{align*}
+\end{align}
 \end{subequations}
 where $a>0$ when $\Gamma_D=\emptyset$.
 
@@ -803,13 +803,13 @@ We show how to formulate this method in the framework of residual forms.
 \frametitle{Discrete Weak Formulation I}
 For a grid $E_h^0$ define $W_h = \{ u \in L_2(\Omega) \,:\, 
 u|_{\Omega_e} = \text{const} \ \forall e\in E_h^0\}$. $v\in W_h$:
-\begin{equation*}
+{\small\begin{equation*}
 \begin{split}
 & \sum_{e\in E_h^0} \int_{\Omega_e} (-\Delta u + au - q) v \, dx = 
 \sum_{e\in E_h^0} \biggl\{ \int_{\Omega_e} (au - q) v \, dx - 
 \int_{\partial\Omega_e} (\nabla u\cdot n) v \, ds \biggr\}\\
 &\quad = \sum_{e\in E_h^0} \biggl\{ \int_{\Omega_e} (au - q) v \, dx
-- \int_{\partial\Omega_e\cap\Omega_e} (\nabla u\cdot n) v \, ds\\
+- \int_{\partial\Omega_e\cap\Omega} (\nabla u\cdot n) v \, ds\\
 &\hspace{30mm} - \int_{\partial\Omega_e\cap\Gamma_D} (\nabla u\cdot n) v \, ds
 + \int_{\partial\Omega_e\cap\Gamma_N} j v \, ds \biggr\}\\
 &\quad = \sum_{e\in E_h^0} \int_{\Omega_e} (au - q) v \, dx
@@ -817,7 +817,7 @@ u|_{\Omega_e} = \text{const} \ \forall e\in E_h^0\}$. $v\in W_h$:
 &\hspace{30mm} - \sum_{f\in B_h^1} \int_{\Omega_f\cap\Gamma_D} (\nabla u\cdot n) v \, ds
 + \sum_{f\in B_h^1} \int_{\Omega_f\cap\Gamma_N} j v \, ds .
 \end{split}
-\end{equation*}
+\end{equation*}}
 $E_h^1$: interior faces, $B_h^1$: boundary faces, $n_f$ pointing from $e^-_f$ to $e^+_f$,
 $x_f^-$ center of $e_f^-$, $x_f^+$ center of $e_f^+$, $[v]|_f = v(x_f^-) - v(x_f^+)$.
 \end{frame}
@@ -930,13 +930,9 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example04_operator.h
 This method uses a discontinuous test space that is constant on
 ``cells''. Let us introduce some notation to define this formally.
 
-\begin{frame}<article>
+\begin{onlyenv}<article>
 \frametitle<presentation>{Vertex-centered Finite Volumes}
 \begin{window}[0,r,{
-\psfrag{bi}{$c_i$}
-\psfrag{vi}{$z_i$}
-\psfrag{bj}{$c_j$}
-\psfrag{vj}{$z_j$}
 \includegraphics[width=0.4\textwidth]{./EPS/SecMesh2D}},{}]
 $E_h^d=\{z_0,\ldots,z_{N_h^d-1}\}$ are the vertices of the mesh
 (entities of codimension $d$). 
@@ -957,7 +953,7 @@ V_h^0 & = \{ v\in L_2(\Omega) \,|\, \forall c\in C_h : v|_{\Omega_c} =
 \tilde{V}_h^0 &= \{ v\in V_h \,|\, \forall z\in E_h^d, x_z\in\Gamma_D : v(x_z)=0\}.
 \end{align*}
 
-\end{frame}
+\end{onlyenv}
 
 \begin{frame}<article>
 \frametitle<presentation>{Vertex Centered Finite Volumes (Contd.)}

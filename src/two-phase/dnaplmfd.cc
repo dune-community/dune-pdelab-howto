@@ -7,7 +7,7 @@
 #include<vector>
 #include<map>
 #include <fenv.h>
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
@@ -639,14 +639,14 @@ void test (const GV& gv, int timesteps, double timestep)
       if (graphics)
         {
           if (rank==0) std::cout << "writing output file " << filecounter << std::endl;
-          Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+          Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_nDGF>(p_n_dgf,"p_n"));
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P_wDGF>(p_w_dgf,"p_w"));
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_nDGF>(s_n_dgf,"s_n"));
           vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<S_wDGF>(s_w_dgf,"s_w"));
           char fname[255];
           sprintf(fname,"%s-%05d",basename,filecounter);
-          vtkwriter.pwrite(fname,"vtk","",Dune::VTKOptions::binaryappended);
+          vtkwriter.pwrite(fname,"vtk","",Dune::VTK::appendedraw);
           filecounter++;
         }
 

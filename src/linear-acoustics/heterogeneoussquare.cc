@@ -15,7 +15,7 @@
 #include<map>
 #include<string>
 
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
@@ -288,7 +288,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
     if (degree>=2) refinement+=2;
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,refinement);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"u"));
-    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
+    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
     fn.increment();
   }
 
@@ -311,7 +311,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
           if (degree>=2) refinement+=2;
           Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,refinement);
           vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"u"));
-          vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTKOptions::binaryappended);
+          vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
           fn.increment();
         }
 
@@ -419,8 +419,9 @@ int main(int argc, char** argv)
         typedef std::vector<int> GmshIndexMap;
         GmshIndexMap boundary_index_map;
         GmshIndexMap element_index_map;
+        Dune::GridFactory<GridType> factory(&grid);
         Dune::GmshReader<GridType> gmsh_reader;
-        gmsh_reader.read(grid,grid_file,boundary_index_map,element_index_map,true,false);
+        gmsh_reader.read(factory,grid_file,boundary_index_map,element_index_map,true,false);
         for (int i=0; i<max_level; i++) grid.globalRefine(1);
         typedef GridType::LeafGridView GV;
         const GV& gv=grid.leafView();

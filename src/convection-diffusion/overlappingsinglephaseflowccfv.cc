@@ -7,19 +7,11 @@
 #endif
 #include<iostream>
 #include<vector>
-#include<map>
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/yaspgrid.hh>
-#include<dune/istl/bvector.hh>
-#include<dune/istl/operators.hh>
-#include<dune/istl/solvers.hh>
-#include<dune/istl/preconditioners.hh>
-#include<dune/istl/io.hh>
-#include<dune/istl/paamg/amg.hh>
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/p0constraints.hh>
@@ -71,19 +63,20 @@ void test (const GV& gv)
 
   // local operator
   watch.reset();
-  typedef k_D<GV,RF> KType;
-  Dune::FieldVector<double,dim> correlation_length;
-  correlation_length = 1.0/64.0;
-  KType k(gv,correlation_length,0.5,0.0,5000,-1083);
-  typedef A0_D<GV,RF> A0Type;
+  typedef k_A<GV,RF> KType;
+  KType k(gv);
+  // Dune::FieldVector<double,dim> correlation_length;
+  // correlation_length = 1.0/64.0;
+  // KType k(gv,correlation_length,0.5,0.0,5000,-1083);
+  typedef A0_A<GV,RF> A0Type;
   A0Type a0(gv);
-  typedef F_D<GV,RF> FType;
+  typedef F_A<GV,RF> FType;
   FType f(gv);
-  typedef B_D<GV> BType;
+  typedef B_A<GV> BType;
   BType b(gv);
-  typedef J_D<GV,RF> JType;
+  typedef J_A<GV,RF> JType;
   JType j(gv);
-  typedef G_D<GV,RF> GType;
+  typedef G_A<GV,RF> GType;
   GType g(gv);
   typedef Dune::PDELab::DiffusionCCFV<KType,A0Type,FType,BType,JType,GType> LOP;
   LOP lop(k,a0,f,b,j,g);
@@ -93,7 +86,7 @@ void test (const GV& gv)
   typedef typename GFS::template ConstraintsContainer<RF>::Type CC;
   CC cc;
   cc.clear();
-  Dune::PDELab::constraints(g,gfs,cc,false);
+  Dune::PDELab::constraints(gfs,cc,false);
 
   // grid operator
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,VBE::MatrixBackend,RF,RF,RF,
@@ -108,10 +101,11 @@ void test (const GV& gv)
 
   // typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GO> LS;
   // LS ls(gfs,5000,3);
-  typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,CC> LS;
-  LS ls(gfs,cc,5000,5,1);
+  
+  typedef Dune::PDELab::ISTLBackend_OVLP_CG_SSORk<GFS,CC> LS;
+  LS ls(gfs,cc,100,5,2);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
-  SLP slp(go,x,ls,1e-12);
+  SLP slp(go,x,ls,1e-10);
   slp.apply();
 
   // make discrete function object
@@ -119,9 +113,9 @@ void test (const GV& gv)
   DGF dgf(gfs,x);
 
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  vtkwriter.pwrite("single_phase_yasp2d_CCFV","vtk","",Dune::VTKOptions::binaryappended);
+  // Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
+  // vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
+  // vtkwriter.pwrite("single_phase_yasp2d_CCFV","vtk","",Dune::VTK::appendedraw);
 }
 
 int main(int argc, char** argv)
@@ -132,10 +126,19 @@ int main(int argc, char** argv)
     if(Dune::MPIHelper::isFake)
       std::cout<< "This is a sequential program." << std::endl;
     else
-	  {
-		if(helper.rank()==0)
-		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
-	  }
+      {
+        if(helper.rank()==0)
+          std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
+      }
+
+    if (argc!=4)
+      {
+        std::cout << "usage: " << argv[0] << " <nx> <ny> <nz>" << std::endl;
+        return 0;
+      }
+    int nx; sscanf(argv[1],"%d",&nx);
+    int ny; sscanf(argv[2],"%d",&ny);
+    int nz; sscanf(argv[3],"%d",&nz);
 
     // 2D
     if (true)
@@ -143,8 +146,9 @@ int main(int argc, char** argv)
       // make grid
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(128);
+      N[0] = nx; N[1] = ny;
       Dune::FieldVector<bool,2> B(false);
-      int overlap=4;
+      int overlap=3;
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
       //      grid.globalRefine(6);
       
@@ -157,9 +161,10 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(64);
+      Dune::FieldVector<int,3> N;
+      N[0] = nx; N[1] = ny; N[2] = nz;
       Dune::FieldVector<bool,3> B(false);
-      int overlap=4;
+      int overlap=1;
       Dune::YaspGrid<3> grid(helper.getCommunicator(),L,N,B,overlap);
 
       // solve problem :)
@@ -167,27 +172,27 @@ int main(int argc, char** argv)
     }
 
     // UG Q1 2D test
-#if HAVE_UG
-    if (false)
-    {
-      // make grid 
-      UGUnitSquareQ grid(1000);
-      grid.globalRefine(6);
+// #if HAVE_UG
+//     if (false)
+//     {
+//       // make grid 
+//       UGUnitSquareQ grid(1000);
+//       grid.globalRefine(6);
 
-      test(grid.leafView());
-    }
-#endif
+//       test(grid.leafView());
+//     }
+// #endif
 
-	// test passed
-	return 0;
+    // test passed
+    return 0;
 
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 } 

@@ -1,61 +1,110 @@
 # $Id: duneproject 5425 2009-02-10 09:31:08Z sander $
 
-# possible options
-#LDADD = $(UG_LDFLAGS) $(AMIRAMESH_LDFLAGS) $(UG_LIBS) $(AMIRAMESH_LIBS)
-#AM_CPPFLAGS = $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS)
-dist_noinst_DATA = poisson laplacedirichletccfv
-SUBDIRS = 
+SUBDIRS =
+
 GRIDDIM=2
 
+if EIGEN
+EIGENPROGRAMS =	\
+    laplacedirichletccfv-eigen
+endif
+
 if SUPERLU
-SUPERLUPROGRAMS = dgdiffusion \
-	dgdiffusion-hp \
+SUPERLUPROGRAMS =				\
+    dgdiffusion					\
+	dgdiffusion-hp				\
+	dgoverlapping				\
 	rt0main
 endif
 
-noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
-	overlappingsinglephaseflowccfv \
-	overlappingsinglephaseflow \
-	nonoverlappingsinglephaseflow \
-	dgoverlapping \
-	nonlineardiffusion \
-	transporttest \
-	instationarytest \
-	poisson \
-	mimetic \
-	laplacedirichletccfv \
-	reentrantcorner \
-	diffusion \
+if ALUGRID
+   ALUGRIDPROGRAMS = tutorial
+endif
+noinst_PROGRAMS =				\
+    $(EIGENPROGRAMS)				\
+    $(SUPERLUPROGRAMS)				\
+    $(ALUGRIDPROGRAMS)                          \
+	overlappingsinglephaseflowccfv		\
+	overlappingsinglephaseflow		\
+	nonoverlappingsinglephaseflow		\
+	nonlineardiffusion			\
+	transporttest				\
+	instationarytest			\
+	poisson					\
+	mimetic					\
+	laplacedirichletccfv			\
+	reentrantcorner				\
+	diffusion				\
+	scalabilitytest				\
+	dgldomain				\
 	ldomain
 
-# novlp_test_SOURCES = novlp_test.cc
-# novlp_test_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) \
-# $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) \
-# $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS) $(PARMETIS_CPPFLAGS) 
-# novlp_test_LDADD = $(PARMETIS_LIBS) $(DUNEMPILDFLAGS) $(DUNEMPILIBS) \
-# $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) \
-# $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) \
-# $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS) 
-# novlp_test_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS) $(PARMETIS_LDFLAGS)
-# novlp_test_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
+
+noinst_HEADERS =				\
+	l2interpolationerror.hh			\
+	parameterA.hh				\
+	parameterB.hh				\
+	parameterC.hh				\
+	parameterD.hh				\
+	parameterE.hh				\
+	parameterF.hh				\
+	problemA.hh				\
+	problemB.hh				\
+	problemC.hh				\
+	problemD.hh				\
+	problemE.hh				\
+	problemF.hh
+
+dist_noinst_DATA =				\
+	grids/2dgrid.al				\
+	grids/2dreentrantcorner.dgf		\
+	grids/2dsimplex.alu			\
+	grids/3dgrid.al				\
+	grids/3drefinedcube.alu			\
+	grids/CuKav.geo				\
+	grids/CuKav.msh				\
+	grids/circle.geo			\
+	grids/circle1storder.msh		\
+	grids/circle2ndorder.msh		\
+	grids/cube.geo				\
+	grids/cube.hexa				\
+	grids/cube.tetra			\
+	grids/cube1045.msh			\
+	grids/cube3205.msh			\
+	grids/cube99.msh			\
+	grids/curved2d.geo			\
+	grids/curved2d.msh			\
+	grids/ldomain.al			\
+	grids/ldomain.geo			\
+	grids/ldomain.msh			\
+	grids/ldomain2.msh			\
+	grids/pyramid.geo			\
+	grids/pyramid.msh			\
+	grids/pyramid1storder.msh		\
+	grids/pyramid2ndorder.msh		\
+	grids/pyramid4.msh			\
+	grids/telescope.geo			\
+	grids/telescope.msh			\
+	grids/telescope1storder.msh		\
+	grids/telescope2ndorder.msh
 
 if SUPERLU
 dgdiffusion_SOURCES = dgdiffusion.cc
 dgdiffusion_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
-dgdiffusion_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS) 
+dgdiffusion_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 dgdiffusion_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 dgdiffusion_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
 dgdiffusion_hp_SOURCES = dgdiffusion-hp.cc
 dgdiffusion_hp_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
-dgdiffusion_hp_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS) 
+dgdiffusion_hp_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 dgdiffusion_hp_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 dgdiffusion_hp_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 endif
 
 dgoverlapping_SOURCES = dgoverlapping.cc
 dgoverlapping_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
-dgoverlapping_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS) 
+dgoverlapping_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 dgoverlapping_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 dgoverlapping_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
@@ -108,10 +157,15 @@ mimetic_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 mimetic_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
 laplacedirichletccfv_SOURCES = laplacedirichletccfv.cc
-laplacedirichletccfv_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
-laplacedirichletccfv_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
-laplacedirichletccfv_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
-laplacedirichletccfv_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
+laplacedirichletccfv_CPPFLAGS = $(AM_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS)
+laplacedirichletccfv_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(UG_LDFLAGS) $(UG_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+
+if EIGEN
+laplacedirichletccfv_eigen_SOURCES = laplacedirichletccfv.cc
+laplacedirichletccfv_eigen_CPPFLAGS = $(laplacedirichletccfv_CPPFLAGS) -DUSE_EIGEN
+laplacedirichletccfv_eigen_CXXFLAGS = $(EIGEN_CXXFLAGS)
+laplacedirichletccfv_eigen_LDADD = $(laplacedirichletccfv_LDADD)
+endif
 
 reentrantcorner_SOURCES = reentrantcorner.cc
 reentrantcorner_CXXFLAGS = $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
@@ -132,13 +186,33 @@ diffusion_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDF
 diffusion_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 diffusion_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
+if ALUGRID
+    tutorial_SOURCES = tutorial.cc
+    tutorial_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
+    tutorial_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+    tutorial_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
+    tutorial_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
+endif
+
+scalabilitytest_SOURCES = scalabilitytest.cc
+scalabilitytest_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
+scalabilitytest_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+scalabilitytest_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
+scalabilitytest_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
+
 ldomain_SOURCES = ldomain.cc
 ldomain_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 ldomain_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 ldomain_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 ldomain_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
-CLEANFILES = poisson_*.vtu reentrant_*.vtu dgfparser.log q1*.vtu *.vtu *.png 
+dgldomain_SOURCES = dgldomain.cc
+dgldomain_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
+dgldomain_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+dgldomain_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
+dgldomain_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
+
+CLEANFILES = poisson_*.vtu reentrant_*.vtu dgfparser.log q1*.vtu *.vtu *.png
 
 #============================================================
 # pass most important options when "make distcheck" is used

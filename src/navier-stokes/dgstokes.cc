@@ -9,7 +9,7 @@
 #include <vector>
 #include <map>
 #include <string>
-#include <dune/common/mpihelper.hh>
+#include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/grid/yaspgrid.hh>
@@ -196,6 +196,22 @@ void stokes (const GV& gv, std::string filename, const std::string method)
     r *= -1.0; // need -residual
     x = r;
     solver.apply(x.base(),r.base(),stat);
+
+    // for (size_t i = 0; i < x.base().N(); i++)
+    //     for (size_t j = 0; j < x.base()[i].N(); j++)
+    //         std::cout << i << "," << j << "\t" << x.base()[i][j] << "\n";
+    
+    // make discrete function object
+    // Important! We have to get the subspaces via GridFunctionSubSpace
+    // the original (pre-composition) ones are not possible!
+    typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,0> velocitySubGFS;
+    velocitySubGFS velocitySubGfs(gfs);
+    typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,1> pSubGFS;
+    pSubGFS pSubGfs(gfs);
+    typedef Dune::PDELab::VectorDiscreteGridFunction<velocitySubGFS,V> VDGF;
+    VDGF vdgf(velocitySubGfs,x);
+    typedef Dune::PDELab::DiscreteGridFunction<pSubGFS,V> PDGF;
+    PDGF pdgf(pSubGfs,x);
 
     #ifdef MAKE_VTK_OUTPUT
     // output grid function with SubsamplingVTKWriter
