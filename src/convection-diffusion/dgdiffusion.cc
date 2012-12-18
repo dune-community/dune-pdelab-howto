@@ -44,6 +44,8 @@
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
+#include<dune/pdelab/gridfunctionspace/vtk.hh>
+
 #include"../utility/gridexamples.hh"
 
 #define PROBLEM_A

@@ -37,7 +37,6 @@
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
-
 #include<dune/pdelab/stationary/linearproblem.hh>
 
 #include"../utility/gridexamples.hh"
@@ -83,6 +82,7 @@ public:
   }
 };
 
+
 template<class GV> 
 void test (const GV& gv, std::string filename )
 {
@@ -99,11 +99,12 @@ void test (const GV& gv, std::string filename )
 #ifdef USE_EIGEN
   typedef Dune::PDELab::EigenVectorBackend VBE;
 #else
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
 #endif
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::NoConstraints,VBE,
-    Dune::PDELab::SimpleGridFunctionStaticSize> GFS; 
+                                          Dune::PDELab::NoConstraints,VBE
+                                          //, Dune::PDELab::SimpleGridFunctionStaticSize
+                                          > GFS;
   watch.reset();
   GFS gfs(gv,fem);
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
@@ -115,9 +116,9 @@ void test (const GV& gv, std::string filename )
   Dune::PDELab::LaplaceDirichletCCFV<GType> la(g);
   typedef Dune::PDELab::GridOperator<GFS,GFS,Dune::PDELab::LaplaceDirichletCCFV<GType>,
 #ifdef USE_EIGEN
-    Dune::PDELab::SparseEigenMatrixBackend,
+                                     Dune::PDELab::SparseEigenMatrixBackend,
 #else
-    VBE::MatrixBackend,
+                                     Dune::PDELab::ISTLMatrixBackend,
 #endif
     RF,RF,RF,Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation > GO;
   GO go(gfs,gfs,la);
