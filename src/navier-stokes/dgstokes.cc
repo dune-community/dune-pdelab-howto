@@ -21,10 +21,9 @@
 #include <dune/istl/io.hh>
 
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
+#include<dune/pdelab/gridfunctionspace/subspace.hh>
 #include <dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
-#include <dune/pdelab/gridfunctionspace/entityblockedlocalordering.hh>
-#include <dune/pdelab/gridfunctionspace/leaflocalordering.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/localoperator/stokesdg.hh>
@@ -197,29 +196,26 @@ void stokes (const GV& gv, std::string filename, const std::string method)
     x = r;
     solver.apply(x.base(),r.base(),stat);
 
-    // for (size_t i = 0; i < x.base().N(); i++)
-    //     for (size_t j = 0; j < x.base()[i].N(); j++)
-    //         std::cout << i << "," << j << "\t" << x.base()[i][j] << "\n";
-    
-    // make discrete function object
-    // Important! We have to get the subspaces via GridFunctionSubSpace
-    // the original (pre-composition) ones are not possible!
-    typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,0> velocitySubGFS;
-    velocitySubGFS velocitySubGfs(gfs);
-    typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,1> pSubGFS;
-    pSubGFS pSubGfs(gfs);
-    typedef Dune::PDELab::VectorDiscreteGridFunction<velocitySubGFS,V> VDGF;
-    VDGF vdgf(velocitySubGfs,x);
-    typedef Dune::PDELab::DiscreteGridFunction<pSubGFS,V> PDGF;
-    PDGF pdgf(pSubGfs,x);
+    // // Create VTK Output
+    // using namespace Dune::PDELab::TypeTree;
+    // typedef typename Dune::PDELab::GridFunctionSubSpace
+    //   <GFS,TypePath<0> > velocitySubGFS;
+    // velocitySubGFS velocitySubGfs(gfs);
+    // typedef typename Dune::PDELab::GridFunctionSubSpace
+    //   <GFS,TypePath<1> > pSubGFS;
+    // pSubGFS pSubGfs(gfs);
 
-    #ifdef MAKE_VTK_OUTPUT
+    // typedef Dune::PDELab::VectorDiscreteGridFunction<velocitySubGFS,V> VDGF;
+    // VDGF vdgf(velocitySubGfs,x);
+    // typedef Dune::PDELab::DiscreteGridFunction<pSubGFS,V> PDGF;
+    // PDGF pdgf(pSubGfs,x);
+
+    //    #ifdef MAKE_VTK_OUTPUT
     // output grid function with SubsamplingVTKWriter
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-    Dune::PDELab::add_solution_to_vtk_writer(
-        vtkwriter, gfs, x);
-    vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
-    #endif
+    Dune::PDELab::addSolutionToVTKWriter(vtkwriter, gfs, x);
+    vtkwriter.write(filename,Dune::VTK::appendedraw);
+    //    #endif
 }
 
 //===============================================================

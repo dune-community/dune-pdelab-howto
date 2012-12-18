@@ -83,12 +83,6 @@ void navierstokes
   ///////////////////////////////////////////////////////
   // Construct grid function spaces
   typedef Dune::PDELab::ConformingDirichletConstraints ConstraintsAssembler;
-  // typedef Dune::PDELab::GridFunctionSpace
-  //   <GV, V_FEM, ConstraintsAssembler> V_GFS;
-  // V_GFS vGfs(gv,vFem);
-
-  // typedef Dune::PDELab::GridFunctionSpaceLexicographicMapper GFMapper;
-  //typedef Dune::PDELab::PowerGridFunctionSpace<V_GFS,dim,GFMapper> PGFS_V_GFS;
   typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking,1>
     VectorBackend;
   typedef Dune::PDELab::VectorGridFunctionSpace
@@ -146,8 +140,6 @@ void navierstokes
 
   // Set non constrained dofs to zero
   Dune::PDELab::set_shifted_dofs(cg,0.0,x0);
-
-  //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // Linear solver
   typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LinearSolver;
