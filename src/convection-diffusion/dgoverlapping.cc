@@ -1,5 +1,5 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief test overlapping Schwarz solver for discontinuous Galerkin (solves Problem A-F)
 */
 #ifdef HAVE_CONFIG_H
@@ -36,7 +36,7 @@
 #include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+#include <dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
@@ -69,7 +69,7 @@ struct AllStrong
   : public Dune::Amg::Parameters
 {
   typedef M matrix_type;
-  
+
   template<class M1>
   void init(const M1* m)
   {}
@@ -79,7 +79,7 @@ struct AllStrong
   template<class M1>
   void examine(const M1& m)
   {}
-  
+
   template<class G, class E, class T>
   void examine(G& g, const E& e, const T& t)
   {
@@ -96,7 +96,7 @@ struct AllStrong
   AllStrong()
     : Dune::Amg::Parameters()
   {}
-  
+
 };
 
 template<class M>
@@ -121,7 +121,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
   Dune::Timer watch;
 
   // make function space
-  typedef Dune::PDELab::ISTLVectorBackend<BLOCK_SIZE> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking,BLOCK_SIZE> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
                                           Dune::PDELab::NoConstraints,VBE> GFS;
   watch.reset();
@@ -152,9 +152,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
   // make grid function operator
   typedef Dune::PDELab::DiffusionDG<KType,FType,BCType,GType,JType> LOP;
   LOP la(k,f,bctype,g,j,DG_METHOD);
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,
-    Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation,
-    typename VBE::MatrixBackend > GOS;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,typename Dune::PDELab::ISTLMatrixBackend,RF,RF,RF> GOS;
   GOS gos(gfs,gfs,la);
 
   // represent operator as a matrix
@@ -187,13 +185,14 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     }
 
   std::cout<<"Matrix size is "<<m.M()<<"x"<<m.N()<<" with block entries of size "<<BLOCK_SIZE<<"x"<<BLOCK_SIZE<<std::endl;
-    
+
 #ifdef USE_SUPER_LU // use lu decomposition as solver
 #if HAVE_SUPERLU
   // make ISTL solver
-  Dune::MatrixAdapter<M,V,V> opa(m);
+  typedef typename V::BaseT ISTLV;
   typedef typename M::BaseT ISTLM;
-  Dune::SuperLU<ISTLM> solver(m, verbose?1:0);
+  Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(Dune::PDELab::istl::raw(m));
+  Dune::SuperLU<ISTLM> solver(Dune::PDELab::istl::raw(m), verbose?1:0);
   Dune::InverseOperatorResult stat;
 #else
 #error No superLU support, please install and configure it.
@@ -201,7 +200,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
 #else // Use iterative solver
   // make ISTL solver
 
-    
+
   typedef typename M::BaseT ISTLM;
   typedef typename V::BaseT ISTLV;
   typedef  Dune::SeqOverlappingSchwarz<ISTLM,ISTLV,Dune::AdditiveSchwarzMode,
@@ -230,7 +229,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     Dune::Amg::SeqOverlappingSchwarzSmootherArgs<typename ISTLM::field_type>::none;
 
   if(dgSmootherArgs.overlap!=Dune::Amg::SeqOverlappingSchwarzSmootherArgs<typename ISTLM::field_type>::pairwise){
-    
+
     std::cout<<"Aggregating"<<std::endl;
     typedef typename Dune::Amg::MatrixGraph<ISTLM> MatrixGraph;
     typedef typename Dune::Amg::PropertiesGraph<MatrixGraph,Dune::Amg::VertexProperties,
@@ -244,8 +243,8 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     dgcriterion.setDefaultValuesIsotropic(2,5);
     std::cout<<" dg criterion "<<dgcriterion<<std::endl;
     int noAggregates, isoAggregates, oneAggregates, skippedAggregates;
-    
-    Dune::tie(noAggregates, isoAggregates, oneAggregates,skippedAggregates) = 
+
+    Dune::tie(noAggregates, isoAggregates, oneAggregates,skippedAggregates) =
       map.buildAggregates(m, pg, dgcriterion, false);
     std::cout<<"no aggregates="<<noAggregates<<" iso="<<isoAggregates<<" one="<<oneAggregates<<" skipped="<<skippedAggregates<<std::endl;
     // misuse coarsener to renumber aggregates
@@ -332,7 +331,7 @@ int main(int argc, char** argv)
       if(helper.rank()==0)
         std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
     }
-    
+
   std::string problem="C";
 
   try
@@ -369,17 +368,17 @@ int main(int argc, char** argv)
           typedef AlbertaUnitSquare GridType;
           GridType grid;
           grid.globalRefine(10);
-          
+
           // get view
           typedef GridType::LeafGridView GV;
-          const GV& gv=grid.leafView(); 
- 
+          const GV& gv=grid.leafView();
+
           // instantiate finite element maps
           typedef Dune::PDELab::MonomLocalFiniteElementMap<double,double,2,MONOM_BASIS_ORDER> FEM;
           FEM fem(Dune::GeometryType(Dune::GeometryType::simplex,2)); // works only for cubes
 
           solve_dg(gv,fem,"DG_Alberta_2d",true);
-         
+
         }
 #endif
 

@@ -1,5 +1,5 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief Discontinuous Galerkin with variable polynomial degree
 */
 #ifdef HAVE_CONFIG_H
@@ -107,9 +107,9 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     GType g(gv);
     JType j(gv);
 
-    // make grid function space 
+    // make grid function space
     typedef Dune::PDELab::NoConstraints CON;
-    typedef Dune::PDELab::ISTLVectorBackend<BLOCK_SIZE> VBE;
+    typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking,BLOCK_SIZE> VBE;
     typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
 
     watch.reset();
@@ -123,13 +123,13 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     typedef Dune::PDELab::DiffusionDG<KType,FType,BType,GType,JType> LOP;
     LOP lop(k,f,bctype,g,j,DG_METHOD);
 
-    typedef typename VBE::MatrixBackend MBE;
+    typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
     typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
     CC cc;
-    
+
     typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
     GO go(gfs,cc,gfs,cc,lop);
-    
+
     // make a vector of degree of freedom vectors
     typedef typename GO::Traits::Domain V;
     V solution(gfs,0.0);
@@ -166,7 +166,7 @@ int main(int argc, char** argv)
         std::cout<< "This is a sequential program." << std::endl;
     else
     {
-		if(helper.rank()==0)
+        if(helper.rank()==0)
             std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
     }
 
@@ -203,7 +203,7 @@ int main(int argc, char** argv)
             {
                 fem.setOrder(*it, 2 + cellmapper.map(*it) / range);
             }
-            
+
             // solve problem :)
             solve_dg(grid.leafView(),fem,"DG_Yasp_2d",true);
 #endif
