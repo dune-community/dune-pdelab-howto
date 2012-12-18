@@ -167,7 +167,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
     LocalBasisType::Traits::RangeFieldType R;
 
   // make function space
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
     VBE > GFS;
   GFS gfs(gv,fem);
@@ -186,8 +186,9 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   JType j(gv);
   typedef Dune::PDELab::Poisson<FType,BCTypeParam,JType,q> LOP;
   LOP lop(f,bctype,j);
+  typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,
-    LOP,VBE::MatrixBackend,R,R,R,C,C> GO;
+                                     LOP,MBE,R,R,R,C,C> GO;
   GO go(gfs,cg,gfs,cg,lop);
 
   // make coefficent Vector and initialize it from a function

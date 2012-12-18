@@ -44,6 +44,8 @@
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
+#include<dune/pdelab/gridfunctionspace/vtk.hh>
+
 #include"../utility/gridexamples.hh"
 
 #define PROBLEM_A
@@ -143,7 +145,9 @@ void runDG(
 
   // make grid function space 
   typedef Dune::PDELab::NoConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<blocksize> VBE;
+  const Dune::PDELab::ISTLParameters::Blocking blocking
+    = Dune::PDELab::ISTLParameters::static_blocking;
+  typedef Dune::PDELab::ISTLVectorBackend<blocking,blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
@@ -156,7 +160,7 @@ void runDG(
   if (weights=="OFF") w = Dune::PDELab::ConvectionDiffusionDGWeights::weightsOff;
   typedef Dune::PDELab::ConvectionDiffusionDG<PROBLEM,FEM> LOP;
   LOP lop(problem,m,w,alpha);
-  typedef typename VBE::MatrixBackend MBE;
+  typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
 
