@@ -689,9 +689,8 @@ const GV& gv=grid.leafView();
 typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
 FEM fem;
 typedef Dune::PDELab::OverlappingConformingDirichletConstraints CON;
-typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
 GFS gfs(gv,fem);
 
 //  define problem parameters
@@ -711,17 +710,18 @@ G g(gv,param);
 typedef typename GFS::template ConstraintsContainer<Real>::Type C;
 C cg;
 Dune::PDELab::constraints(b,gfs,cg);
+// Make grid operator space
+typedef Dune::PDELab::ConvectionDiffusion<Param> LOP;
+LOP lop(param,2);
+typedef Dune::PDELab::ISTLMatrixBackend MBE;
+typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,double,double,double,C,C> GO;
+GO go(gfs,cg,gfs,cg,lop);
+
 //  Compute affine shift
-typedef typename GFS::template VectorContainer<Real>::Type V;
+typedef typename GO::Traits::Domain V;
 V x(gfs,0.0);
 Dune::PDELab::interpolate(g,gfs,x);
 Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
-// Make grid operator space
-typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
-LOP lop(param,2);
-typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
-typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE> GOS;
-GOS gos(gfs,cg,gfs,cg,lop);
 
 // 3. Choose a linear solver 
 typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SuperLU<GFS,C> LS;
@@ -768,9 +768,8 @@ typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
 FEM fem;
 typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
 CON con;
-typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
 GFS gfs(gv,fem,con);
 con.compute_ghosts(gfs); // con stores indices of ghost dofs
 typedef ConvectionDiffusionProblem<GV,Real> Param;
@@ -789,18 +788,18 @@ typedef typename GFS::template ConstraintsContainer<Real>::Type C;
 C cg;
 Dune::PDELab::constraints(b,gfs,cg);
 
+// Make grid operator space
+typedef Dune::PDELab::ConvectionDiffusion<Param> LOP;
+LOP lop(param,2);
+typedef Dune::PDELab::ISTLMatrixBackend MBE;
+typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,double,double,double,C,C,true> GO;
+GO gos(gfs,cg,gfs,cg,lop);
+
 // Compute affine shift
-typedef typename GFS::template VectorContainer<Real>::Type V;
+typedef typename GO::Traits::Domain V;
 V x(gfs,0.0);
 Dune::PDELab::interpolate(g,gfs,x);
 Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
-
-// Make grid operator space
-typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
-LOP lop(param,2);
-typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
-typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE,true> GOS;
-GOS gos(gfs,cg,gfs,cg,lop);
 
 // 3. Choose a linear solver 
 typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GFS> LS;
