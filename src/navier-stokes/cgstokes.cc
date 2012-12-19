@@ -161,24 +161,33 @@ void navierstokes
   go.residual(x0,r);
   std::cout << "Final Residual: " << r.two_norm() << std::endl;
 
-  // Generate functions suitable for VTK output
-  // typedef typename Dune::PDELab::GridFunctionSubSpace
-  //   <GFS,Dune::PDELab::TypeTree::TreePath<0> > VelocitySubGFS;
-  // VelocitySubGFS velocitySubGfs(gfs);
-  // typedef typename Dune::PDELab::GridFunctionSubSpace
-  //   <GFS,Dune::PDELab::TypeTree::TreePath<1> > PressureSubGFS;
-  // PressureSubGFS pressureSubGfs(gfs);
-  // typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
-  // VDGF vdgf(velocitySubGfs,x0);
-  // typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
-  // PDGF pdgf(pressureSubGfs,x0);
 
-  // Output grid function with SubsamplingVTKWriter
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x0);
-  // vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
-  // vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
-  vtkwriter.write(filename,Dune::VTK::appendedraw);
+  { // Output grid function with SubsamplingVTKWriter (old school)
+
+    // Generate functions suitable for VTK output
+    typedef typename Dune::PDELab::GridFunctionSubSpace
+      <GFS,Dune::PDELab::TypeTree::TreePath<0> > VelocitySubGFS;
+    VelocitySubGFS velocitySubGfs(gfs);
+    typedef typename Dune::PDELab::GridFunctionSubSpace
+      <GFS,Dune::PDELab::TypeTree::TreePath<1> > PressureSubGFS;
+    PressureSubGFS pressureSubGfs(gfs);
+    typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
+    VDGF vdgf(velocitySubGfs,x0);
+    typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
+    PDGF pdgf(pressureSubGfs,x0);
+
+    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
+    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
+    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
+    vtkwriter.write(filename + std::string("_dgf"),Dune::VTK::appendedraw);
+  }
+
+  { // Output grid function with SubsamplingVTKWriter
+
+    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
+    Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x0);
+    vtkwriter.write(filename,Dune::VTK::appendedraw);
+  }
 }
 
 //===============================================================
