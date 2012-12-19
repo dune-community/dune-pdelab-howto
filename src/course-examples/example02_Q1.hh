@@ -9,10 +9,11 @@ void example02_Q1 (const GV& gv)
   // <<<2>>> Make grid function space
   typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem;
-  typedef Dune::PDELab::ConformingDirichletConstraints CONSTRAINTS; // constraints class
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CONSTRAINTS,VBE> GFS;
+  typedef Dune::PDELab::ConformingDirichletConstraints CON; // constraints class
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
+  gfs.name("solution");
   BCTypeParam bctype; // boundary condition type
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
@@ -23,7 +24,7 @@ void example02_Q1 (const GV& gv)
   // <<<3>>> Make grid operator
   typedef Example02LocalOperator<BCTypeParam> LOP;             // operator including boundary
   LOP lop( bctype );
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
 
   typedef Dune::PDELab::GridOperator<
     GFS,GFS,        /* ansatz and test space */
@@ -51,9 +52,7 @@ void example02_Q1 (const GV& gv)
   slp.apply();
 
   // <<<7>>> graphical output
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
-  DGF udgf(gfs,u);
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"solution"));
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,u);
   vtkwriter.write("example02_Q1",Dune::VTK::appendedraw);
 }

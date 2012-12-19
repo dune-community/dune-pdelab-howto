@@ -10,9 +10,10 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM;
   FEM fem;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
+  gfs.name("solution");
 
   BCTypeParam bctype;
   bctype.setTime(time);                                              // b.c. depends on time now
@@ -25,7 +26,7 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   LOP lop(bctype,4);                                           // local operator r
   typedef Example03TimeLocalOperator TLOP; 
   TLOP tlop(4);                                                 // local operator m
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO0;
   GO0 go0(gfs,cc,gfs,cc,lop);
   typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,CC,CC> GO1;
@@ -57,10 +58,8 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   // <<<8>>> graphics for initial guess
   Dune::PDELab::FilenameHelper fn("example03_Q2");              // append number to file name
   {
-    typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
-    DGF udgf(gfs,uold);
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"solution"));
+    Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,uold);
     vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
     fn.increment();                                             // increase file number
   }
@@ -75,10 +74,8 @@ void example03_Q2 (const GV& gv, double dt, double tend)
       osm.apply(time,dt,uold,g,unew);                           // do one time step
 
       // graphics
-      typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
-      DGF udgf(gfs,unew);
       Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"solution"));
+      Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,unew);
       vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
       fn.increment();
 

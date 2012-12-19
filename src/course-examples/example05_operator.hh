@@ -63,7 +63,6 @@ public:
         
     // dimensions
     const int dim = EG::Geometry::dimension;
-    const int dimw = EG::Geometry::dimensionworld;
 
     // select quadrature rule
     Dune::GeometryType gt = eg.geometry().type();
@@ -82,10 +81,10 @@ public:
         // compute u_0, u_1 at integration point
         RF u_0=0.0;
         for (size_type i=0; i<lfsu0.size(); i++) 
-	  u_0 += x(lfsu0,i)*phi0[i];                // localIndex() maps dof within
+          u_0 += x(lfsu0,i)*phi0[i];                // localIndex() maps dof within
         RF u_1=0.0;                                             // leaf space to all dofs
         for (size_type i=0; i<lfsu1.size(); i++)                // within given element
-	  u_1 += x(lfsu1,i)*phi1[i];
+          u_1 += x(lfsu1,i)*phi1[i];
 
         // evaluate gradient of basis functions on reference element
         std::vector<JacobianType> js0(lfsu0.size());
@@ -94,7 +93,7 @@ public:
         lfsu1.finiteElement().localBasis().evaluateJacobian(it->position(),js1);
 
         // transform gradients from reference element to real element
-        const Dune::FieldMatrix<DF,dimw,dim> 
+        const typename EG::Geometry::JacobianInverseTransposed
           jac = eg.geometry().jacobianInverseTransposed(it->position());
         std::vector<Dune::FieldVector<RF,dim> > gradphi0(lfsu0.size());
         for (size_type i=0; i<lfsu0.size(); i++)
@@ -116,12 +115,12 @@ public:
         // eq. 0: - d_0 \Delta u_0 - (\lambda*u_0 - u_0^3 - \sigma* u_1 + \kappa) = 0
         for (size_type i=0; i<lfsu0.size(); i++) 
           r.accumulate(lfsu0,i,(d_0*(gradu0*gradphi0[i])  
-				-(lambda*u_0-u_0*u_0*u_0-sigma*u_1+kappa)
-				*phi0[i])*factor);
+                                -(lambda*u_0-u_0*u_0*u_0-sigma*u_1+kappa)
+                                *phi0[i])*factor);
         // eq. 1: - d_1 \Delta u_1 - (u_0 - u_1) = 0
         for (size_type i=0; i<lfsu1.size(); i++) 
           r.accumulate(lfsu1,i,(d_1*(gradu1*gradphi1[i])
-				-(u_0-u_1)*phi1[i])*factor);
+                                -(u_0-u_1)*phi1[i])*factor);
       }
   }
 

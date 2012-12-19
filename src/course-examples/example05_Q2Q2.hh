@@ -4,25 +4,28 @@ void example05_Q2Q2 (const GV& gv, double dtstart, double dtmax, double tend)
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
-  const int dim = GV::dimension;
   Real time = 0.0;
 
   // <<<2>>> Make grid function space for the system
   typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM0;
   FEM0 fem0;
   typedef Dune::PDELab::NoConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<2> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM0,CON,VBE> GFS0;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE0;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM0,CON,VBE0> GFS0;
   GFS0 gfs0(gv,fem0);
 
-  typedef Dune::PDELab::PowerGridFunctionSpace<GFS0,2,
-    Dune::PDELab::GridFunctionSpaceBlockwiseMapper> GFS;
+  typedef Dune::PDELab::ISTLVectorBackend
+    <Dune::PDELab::ISTLParameters::static_blocking,2> VBE;               // block size 2
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS0,2,VBE,
+    Dune::PDELab::EntityBlockedOrderingTag> GFS;
   GFS gfs(gfs0);
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
 
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,0> U0SUB;
+  typedef Dune::PDELab::GridFunctionSubSpace
+    <GFS,Dune::PDELab::TypeTree::TreePath<0> > U0SUB;
   U0SUB u0sub(gfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,1> U1SUB;
+  typedef Dune::PDELab::GridFunctionSubSpace
+    <GFS,Dune::PDELab::TypeTree::TreePath<1> > U1SUB;
   U1SUB u1sub(gfs);
 
   // <<<3>>> Make instationary grid operator
@@ -36,7 +39,7 @@ void example05_Q2Q2 (const GV& gv, double dtstart, double dtmax, double tend)
   LOP lop(d_0,d_1,lambda,sigma,kappa,4);
   typedef Example05TimeLocalOperator TLOP; 
   TLOP tlop(tau,4);
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO0;
   GO0 go0(gfs,gfs,lop);
   typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,CC,CC> GO1;

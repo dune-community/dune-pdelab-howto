@@ -60,6 +60,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
+#include<dune/pdelab/gridfunctionspace/vtk.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 

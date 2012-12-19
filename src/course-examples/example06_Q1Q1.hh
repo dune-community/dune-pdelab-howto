@@ -12,18 +12,22 @@ void example06_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   FEM0 fem0;
   typedef Dune::PDELab::OverlappingConformingDirichletConstraints CON; // new constraints class
   CON con;
-  typedef Dune::PDELab::ISTLVectorBackend<2> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM0,CON,VBE> GFS0;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE0;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE1;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM0,CON,VBE0> GFS0;
   GFS0 gfs0(gv,fem0,con);
+  gfs0.name("u0");
 
   typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM1;
   FEM1 fem1;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM1,CON,VBE> GFS1;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM1,CON,VBE1> GFS1;
   GFS1 gfs1(gv,fem1,con);
+  gfs1.name("u1");
 
-  typedef Dune::PDELab::CompositeGridFunctionSpace<
-    Dune::PDELab::GridFunctionSpaceBlockwiseMapper,
-	  GFS0,GFS1> GFS;              
+  typedef Dune::PDELab::ISTLVectorBackend
+    <Dune::PDELab::ISTLParameters::static_blocking,2> VBE;
+  typedef Dune::PDELab::CompositeGridFunctionSpace
+    <VBE,Dune::PDELab::EntityBlockedOrderingTag,GFS0,GFS1> GFS;
   GFS gfs(gfs0,gfs1);
 
   typedef BCTypeParam<GV> U0_BCTypeParam;
@@ -34,11 +38,6 @@ void example06_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   CC cc;                                          // constraints needed due 
   Dune::PDELab::constraints( u_bctype, gfs, cc);  // to artificial boundaries
 
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,0> U0SUB;
-  U0SUB u0sub(gfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,1> U1SUB;
-  U1SUB u1sub(gfs);
-
   // <<<3>>> Make instationary grid operator
   Real d_0 = 0.00028, d_1 = 0.005;
   Real lambda = 1.0, sigma = 1.0, kappa = -0.05, tau = 0.1;
@@ -46,7 +45,7 @@ void example06_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   LOP lop(d_0,d_1,lambda,sigma,kappa,2);
   typedef Example05TimeLocalOperator TLOP; 
   TLOP tlop(tau,2);
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO0;
   GO0 go0(gfs,cc,gfs,cc,lop);
   typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,CC,CC> GO1;
@@ -87,13 +86,8 @@ void example06_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   // <<<8>>> graphics for initial guess
   Dune::PDELab::FilenameHelper fn("example06_Q1Q1");
   {
-    typedef Dune::PDELab::DiscreteGridFunction<U0SUB,U> U0DGF;
-    U0DGF u0dgf(u0sub,uold);
-    typedef Dune::PDELab::DiscreteGridFunction<U1SUB,U> U1DGF;
-    U1DGF u1dgf(u1sub,uold);
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U0DGF>(u0dgf,"u0"));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U1DGF>(u1dgf,"u1"));
+    Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,uold);
     vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
     fn.increment();
   }
@@ -108,13 +102,8 @@ void example06_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
       osm.apply(time,dt,uold,unew);
 
       // graphics
-      typedef Dune::PDELab::DiscreteGridFunction<U0SUB,U> U0DGF;
-      U0DGF u0dgf(u0sub,unew);
-      typedef Dune::PDELab::DiscreteGridFunction<U1SUB,U> U1DGF;
-      U1DGF u1dgf(u1sub,unew);
       Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U0DGF>(u0dgf,"u0"));
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U1DGF>(u1dgf,"u1"));
+      Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,unew);
       vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
       fn.increment();
 
