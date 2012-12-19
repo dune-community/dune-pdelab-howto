@@ -24,8 +24,10 @@ public:
     for (std::size_t i=0; i<Traits::dimDomain; i++)
       v[i] = 0.0;
     v[0] = 1.0;
-    v[1] = 1.0/3.0;
-    b0 = 0.25;
+    for (std::size_t i=1; i<Traits::dimDomain; i++)
+      v[i] = 1.0/3.0;
+    v /= v.two_norm(); // scale to length 1
+    std::cout << "v=" << v << std::endl;
   }
 
   //! tensor diffusion coefficient
@@ -76,10 +78,12 @@ public:
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& xlocal) const
   {
     typename Traits::DomainType x = e.geometry().global(xlocal);
-    if (x[1] < v[1]*x[0]+b0)
-      return 0.0;
-    else
+    typename Traits::DomainType y(0.4);
+    y -= x;
+    if (y.infinity_norm()<0.2)
       return 1.0;
+    else
+      return 0.0;
   }
 
   //! flux boundary condition
@@ -105,7 +109,6 @@ public:
 private:
   typename Traits::PermTensorType I;
   typename Traits::RangeType v;
-  typename Traits::RangeFieldType b0;
   RF time;
 };
 
@@ -152,6 +155,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
   G g(grid.leafView(),problem);
   problem.setTime(0.0);
+  Dune::PDELab::interpolate(g,fs.getGFS(),x);
 
   // linear solver backend
   typedef Dune::PDELab::ISTLSolverBackend_ExplicitDiagonal<FS,ASSEMBLER,solvertype> SBE;
@@ -168,13 +172,13 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   //OSM osm(method,*assembler,pdesolver);
 
   Dune::PDELab::ExplicitEulerParameter<NumberType> method1;
-  Dune::PDELab::HeunParameter<NumberType> method;
+  Dune::PDELab::HeunParameter<NumberType> method2;
   Dune::PDELab::Shu3Parameter<NumberType> method3;
   Dune::PDELab::RK4Parameter<NumberType> method4;
   typedef Dune::PDELab::SimpleTimeController<NumberType> TC;
   TC tc;
   typedef Dune::PDELab::ExplicitOneStepMethod<NumberType,typename ASSEMBLER::GO,typename SBE::LS,V,V,TC> OSM;
-  OSM osm(method,*assembler,*sbe,tc);
+  OSM osm(method2,*assembler,*sbe,tc);
   osm.setVerbosityLevel(2);
 
   // graphics for initial guess
