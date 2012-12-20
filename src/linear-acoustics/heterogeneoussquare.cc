@@ -50,8 +50,6 @@
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
-#include<dune/pdelab/gridoperatorspace/instationarygridoperatorspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
@@ -220,11 +218,12 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   // <<<2>>> Make grid function space
   const int blocksize = Dune::PB::PkSize<degree,dim>::value;
   typedef Dune::PDELab::NoConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<blocksize> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEMDG,CON,VBE,Dune::PDELab::SimpleGridFunctionStaticSize> GFSDG;
+  typedef Dune::PDELab::ISTLVectorBackend
+    <Dune::PDELab::ISTLParameters::static_blocking,blocksize> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEMDG,CON,VBE> GFSDG;
   GFSDG gfsdg(gv,femdg);
-  typedef Dune::PDELab::GridFunctionSpaceLexicographicMapper GFMapper;
-  typedef Dune::PDELab::PowerGridFunctionSpace<GFSDG,dim+1,GFMapper> GFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace
+    <GFSDG,dim+1,Dune::PDELab::ISTLVectorBackend<> > GFS;
   GFS gfs(gfsdg);
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
@@ -239,7 +238,6 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   LOP lop(param);
   typedef Dune::PDELab::DGLinearAcousticsTemporalOperator<Param,FEMDG> TLOP; 
   TLOP tlop(param);
-  typedef typename VBE::MatrixBackend MBE;
   Dune::PDELab::ExplicitEulerParameter<Real> method1;
   Dune::PDELab::HeunParameter<Real> method2;
   Dune::PDELab::Shu3Parameter<Real> method3;
@@ -250,10 +248,12 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   if (degree==2) {method=&method3; std::cout << "setting Shu 3" << std::endl;}
   if (degree==3) {method=&method4; std::cout << "setting RK4" << std::endl;}
 
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
+  typedef Dune::PDELab::GridOperator
+    <GFS,GFS,LOP,Dune::PDELab::ISTLMatrixBackend,Real,Real,Real,C,C> GO0;
   GO0 go0(gfs,cg,gfs,cg,lop);
 
-  typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,C,C> GO1;
+  typedef Dune::PDELab::GridOperator
+    <GFS,GFS,TLOP,Dune::PDELab::ISTLMatrixBackend,Real,Real,Real,C,C> GO1;
   GO1 go1(gfs,cg,gfs,cg,tlop);
 
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1,false> IGO;
