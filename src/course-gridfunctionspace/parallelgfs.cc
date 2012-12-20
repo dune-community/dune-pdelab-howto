@@ -30,6 +30,7 @@
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
+#include<dune/pdelab/gridfunctionspace/tags.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/localoperator/laplacedirichletccfv.hh>
@@ -89,10 +90,7 @@ void testp0 (const GV& gv)
   // make grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
     Dune::PDELab::P0ParallelConstraints,
-    Dune::PDELab::ISTLVectorBackend<1>,
-    // Dune::PDELab::SimpleGridFunctionStaticSize
-    Dune::PDELab::GridFunctionRestrictedMapper
-    // Dune::PDELab::GridFunctionGeneralMapper
+    Dune::PDELab::ISTLVectorBackend<>
     > GFS;
   watch.reset();
   Dune::PDELab::P0ParallelConstraints con;
@@ -106,8 +104,6 @@ void testp0 (const GV& gv)
   // test generic communication
   typename V::iterator vi = v.begin();
   for (size_t i=0; vi!=v.end(); i++, ++vi) *vi = 0.1*i;
-  Dune::PDELab::GenericDataHandle<GFS,V,TestGatherScatter> dh(gfs,v,TestGatherScatter());
-  //  gv.communicate(dh,Dune::All_All_Interface,Dune::ForwardCommunication);
     
   // test default data handles
   Dune::PDELab::AddDataHandle<GFS,V> adddh(gfs,v);
@@ -121,20 +117,19 @@ void testp0 (const GV& gv)
 
   // test power
   typedef Dune::PDELab::PowerGridFunctionSpace<GFS,3,
-    //Dune::PDELab::GridFunctionSpaceBlockwiseMapper
-    Dune::PDELab::GridFunctionSpaceLexicographicMapper
+    Dune::PDELab::ISTLVectorBackend<>,
+    Dune::PDELab::LexicographicOrderingTag
   > PGFS;
   PGFS pgfs(gfs);
   typedef typename Dune::PDELab::BackendVectorSelector<PGFS,RF>::Type PV;
   PV pv(pgfs);
   typename PV::iterator pvi = pv.begin();
   for (size_t i=0; pvi!=pv.end(); i++, ++pvi) *pvi = i;
-  Dune::PDELab::GenericDataHandle<PGFS,PV,TestGatherScatter> pdh(pgfs,pv,TestGatherScatter());
-  //  gv.communicate(pdh,Dune::All_All_Interface,Dune::ForwardCommunication);
 
   // test composite
   typedef Dune::PDELab::CompositeGridFunctionSpace<
-    Dune::PDELab::GridFunctionSpaceLexicographicMapper,
+    Dune::PDELab::ISTLVectorBackend<>,
+      Dune::PDELab::LexicographicOrderingTag,
 	  GFS,PGFS> CGFS;              
   CGFS cgfs(gfs,pgfs);
   
@@ -142,8 +137,8 @@ void testp0 (const GV& gv)
   CV cv(cgfs);
   typename PV::iterator cvi = cv.begin();
   for (size_t i=0; cvi!=cv.end(); i++, ++cvi) *cvi = 100*i;
-  Dune::PDELab::GenericDataHandle<CGFS,CV,TestGatherScatter> cdh(cgfs,cv,TestGatherScatter());
-  gv.communicate(cdh,Dune::All_All_Interface,Dune::ForwardCommunication);
+  Dune::PDELab::AddDataHandle<CGFS,CV> adddh2(cgfs,cv);
+  gv.communicate(adddh2,Dune::All_All_Interface,Dune::ForwardCommunication);
 }
 
 template<class GV> 
@@ -161,10 +156,7 @@ void testp1 (const GV& gv)
   
   // make grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::ConformingDirichletConstraints,Dune::PDELab::ISTLVectorBackend<1>,
-    // Dune::PDELab::SimpleGridFunctionStaticSize
-    Dune::PDELab::GridFunctionRestrictedMapper
-    // Dune::PDELab::GridFunctionGeneralMapper
+    Dune::PDELab::ConformingDirichletConstraints,Dune::PDELab::ISTLVectorBackend<>
     > GFS;
   watch.reset();
   Dune::PDELab::ConformingDirichletConstraints con;
@@ -178,8 +170,6 @@ void testp1 (const GV& gv)
   // test generic communication
   typename V::iterator vi = v.begin();
   for (size_t i=0; vi!=v.end(); i++, ++vi) *vi = 0.1*i;
-  Dune::PDELab::GenericDataHandle<GFS,V,TestGatherScatter> dh(gfs,v,TestGatherScatter());
-  //  gv.communicate(dh,Dune::All_All_Interface,Dune::ForwardCommunication);
 
   // test default data handles
   Dune::PDELab::AddDataHandle<GFS,V> adh(gfs,v);
@@ -192,17 +182,18 @@ void testp1 (const GV& gv)
   gv.communicate(maxdh,Dune::All_All_Interface,Dune::ForwardCommunication);
 
   // test power
-  typedef Dune::PDELab::PowerGridFunctionSpace<GFS,3,
-    Dune::PDELab::GridFunctionSpaceBlockwiseMapper
-    //Dune::PDELab::GridFunctionSpaceLexicographicMapper
-  > PGFS;
+  typedef Dune::PDELab::ISTLVectorBackend
+    <Dune::PDELab::ISTLParameters::static_blocking,3> VBE;
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS,3,VBE,
+    Dune::PDELab::EntityBlockedOrderingTag
+    > PGFS;
   PGFS pgfs(gfs);
   typedef typename Dune::PDELab::BackendVectorSelector<PGFS,RF>::Type PV;
   PV pv(pgfs);
   typename PV::iterator pvi = pv.begin();
   for (size_t i=0; pvi!=pv.end(); i++, ++pvi) *pvi = i;
-  Dune::PDELab::GenericDataHandle<PGFS,PV,TestGatherScatter> pdh(pgfs,pv,TestGatherScatter());
-  gv.communicate(pdh,Dune::All_All_Interface,Dune::ForwardCommunication);
+  Dune::PDELab::AddDataHandle<PGFS,PV> adh2(pgfs,pv);
+  gv.communicate(adh2,Dune::All_All_Interface,Dune::ForwardCommunication);
 }
 
 //==============================================================================
