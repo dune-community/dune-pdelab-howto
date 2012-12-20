@@ -3,6 +3,9 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
+#include<dune/pdelab/finiteelementmap/q1fem.hh>
+#include<dune/pdelab/backend/istlvectorbackend.hh>
+
 #include"l2interpolationerror.hh"
 
 template<typename GV>
@@ -10,11 +13,14 @@ void q1interpolationerror (const GV& gv)
 {
   typedef typename GV::Grid::ctype D; // domain type
   typedef double R;                   // range type
+  const int dim = GV::dimension;
 
-  Q1LocalFiniteElementMap<D,R> fem;   // maps entity to finite element
+  typedef Dune::PDELab::Q1LocalFiniteElementMap<D,R,dim> FEM;
+  FEM fem;                           // maps entity to finite element
 
-  typedef Dune::PDELab::GridFunctionSpace<GV,
-	Q1LocalFiniteElementMap<D,R> > GFS;    
+  typedef Dune::PDELab::NoConstraints CON;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);                    // make grid function space
 
   typedef typename Dune::PDELab::BackendVectorSelector<GFS,R>::Type X;

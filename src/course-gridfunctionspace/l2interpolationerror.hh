@@ -20,7 +20,11 @@ double l2interpolationerror (const U& u, const GFS& gfs, X& x,
   // make local function space
   typedef Dune::PDELab::LocalFunctionSpace<GFS> LFS;
   LFS lfs(gfs);                            /*@\label{l2int:lfs}@*/
-  std::vector<R> xl(lfs.maxSize());        // local coefficients
+  typedef Dune::PDELab::LFSIndexCache<LFS> IndexCache;
+  IndexCache ic(lfs);
+  typedef typename X::template ConstLocalView<IndexCache> XView;
+  XView xview(x);
+
   std::vector<RangeType> b(lfs.maxSize()); // shape function values
   
   // loop over grid view
@@ -29,7 +33,8 @@ double l2interpolationerror (const U& u, const GFS& gfs, X& x,
        eit!=gfs.gridView().template end<0>(); ++eit)
 	{
 	  lfs.bind(*eit);      // bind local function space to element /*@\label{l2int:bind}@*/
-	  lfs.vread(x,xl);     // get local coefficients
+      ic.update();
+      xview.bind(ic);
 	  Dune::GeometryType gt = eit->geometry().type();
 	  const Dune::QuadratureRule<D,dim>&  /*@\label{l2int:quad}@*/
 		rule = Dune::QuadratureRules<D,dim>::rule(gt,qorder);
@@ -43,7 +48,7 @@ double l2interpolationerror (const U& u, const GFS& gfs, X& x,
 		  lfs.finiteElement().localBasis().evaluateFunction(
             qit->position(),b);
 		  for (unsigned int i=0; i<lfs.size(); i++)
-			u_fe.axpy(xl[i],b[i]);
+            u_fe.axpy(xview[i],b[i]);
 
 		  // evaluate the given grid function at integration point
 		  RangeType u_given;
