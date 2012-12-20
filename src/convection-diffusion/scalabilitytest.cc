@@ -92,10 +92,8 @@ void test (const GV& gv)
   FEM fem(Dune::GeometryType(Dune::GeometryType::cube,dim)); // works only for cubes
   
   // make function space
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::P0ParallelConstraints,VBE,
-    Dune::PDELab::SimpleGridFunctionStaticSize> GFS; 
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,Dune::PDELab::P0ParallelConstraints,VBE> GFS;
   watch.reset();
   GFS gfs(gv,fem);
 
@@ -123,8 +121,8 @@ void test (const GV& gv)
   Dune::PDELab::constraints(g,gfs,cc,false);
 
   // grid operator
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,VBE::MatrixBackend,RF,RF,RF,
-    CC,CC> GO;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,RF,RF,RF,CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop);
 
   // make coefficent Vector and initialize it from a function
@@ -242,7 +240,9 @@ void runDG ( const GV& gv,
 
   // make grid function space 
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<blocksize> VBE;
+  const Dune::PDELab::ISTLParameters::Blocking blocking
+    = Dune::PDELab::ISTLParameters::static_blocking;
+  typedef Dune::PDELab::ISTLVectorBackend<blocking,blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
@@ -255,7 +255,7 @@ void runDG ( const GV& gv,
   if (weights=="OFF") w = Dune::PDELab::ConvectionDiffusionDGWeights::weightsOff;
   typedef Dune::PDELab::ConvectionDiffusionDG<PROBLEM,FEM> LOP;
   LOP lop(problem,m,w,alpha);
-  typedef typename VBE::MatrixBackend MBE;
+  typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
   G g(gv,problem);
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;

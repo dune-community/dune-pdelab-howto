@@ -101,10 +101,7 @@ void test (const GV& gv, std::string filename )
 #else
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
 #endif
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-                                          Dune::PDELab::NoConstraints,VBE
-                                          //, Dune::PDELab::SimpleGridFunctionStaticSize
-                                          > GFS;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,Dune::PDELab::NoConstraints,VBE> GFS;
   watch.reset();
   GFS gfs(gv,fem);
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;

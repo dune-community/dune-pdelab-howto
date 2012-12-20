@@ -213,9 +213,8 @@ void sequential (const GV& gv, int t_level)
   typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM;
   FEM fem;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-    Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
   // <<<2b>>> define problem parameters
@@ -237,7 +236,7 @@ void sequential (const GV& gv, int t_level)
   LOP lop(param,4);
   typedef Dune::PDELab::L2 MLOP; 
   MLOP mlop(4);
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   //Dune::PDELab::FractionalStepParameter<Real> method;
   Dune::PDELab::Alexander3Parameter<Real> method;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
