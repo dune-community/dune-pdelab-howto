@@ -93,7 +93,7 @@ void navierstokes
   typedef Dune::PDELab::GridFunctionSpace
     <GV, P_FEM, ConstraintsAssembler, VectorBackend> P_GFS;
   P_GFS pGfs(gv,pFem);
-  powerVGfs.name("pressure");
+  pGfs.name("pressure");
 
   typedef Dune::PDELab::CompositeGridFunctionSpace
     <VectorBackend,Dune::PDELab::LexicographicOrderingTag, PGFS_V_GFS, P_GFS> GFS;
