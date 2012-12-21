@@ -389,7 +389,7 @@ void driver (Dune::shared_ptr<GM> grid, int prerefine_level, double tol, int max
       Dune::VTKWriter<typename GM::LeafGridView> vtkwriter(grid->leafView());
       vtkwriter.addVertexData(new typename FS::VTKF(xdgf,"x_h"));
       Y ee(estfs.getGFS(),0.0);
-      for (unsigned int i=0; i<ee.N(); i++) ee[i] = sqrt(y[i]);
+      for (unsigned int i=0; i<ee.base().N(); i++) (ee.base())[i] = sqrt((y.base())[i]);
       typename ESTFS::DGF eedgf(estfs.getGFS(),ee);
       vtkwriter.addCellData(new typename ESTFS::VTKF(eedgf,"estimated error"));
       std::stringstream fullname;
