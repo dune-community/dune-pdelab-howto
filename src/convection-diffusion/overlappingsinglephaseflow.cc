@@ -75,9 +75,9 @@ void driver (PROBLEM& problem,
   Dune::Timer watch;
 
   // make function space
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
   typedef Dune::PDELab::OverlappingConformingDirichletConstraints CON;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS; 
+  typedef Dune::PDELab::GridFunctionSpace
+    <GV,FEM,CON,Dune::PDELab::ISTLVectorBackend<> > GFS;
   GFS gfs(gv,fem);
 
   // make constraints map and initialize it from a function
@@ -89,8 +89,8 @@ void driver (PROBLEM& problem,
   // make grid operator
   typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP; 
   LOP lop(problem);
-  typedef Dune::PDELab::GridOperator<GFS,GFS,
-    LOP,VBE::MatrixBackend,R,R,R,CC,CC> GO;           
+  typedef Dune::PDELab::GridOperator
+      <GFS,GFS,LOP,Dune::PDELab::ISTLMatrixBackend,R,R,R,CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop);                     
 
   // make coefficent Vector and initialize it from a function
@@ -115,11 +115,11 @@ void driver (PROBLEM& problem,
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   DGF dgf(gfs,x);
-  
+
   // output grid function with VTKWriter
-  // Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  // vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  // vtkwriter.pwrite(filename.c_str(),"vtk","",Dune::VTK::appendedraw);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
+  vtkwriter.write(filename,Dune::VTK::appendedraw);
 }
 
 //===============================================================
