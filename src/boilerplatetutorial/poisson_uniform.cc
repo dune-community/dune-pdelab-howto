@@ -103,11 +103,11 @@ int main(int argc, char **argv)
   int cells=10; if (argc>=2) sscanf(argv[1],"%d",&cells);
 
   // define parameters
-  const unsigned int dim = 3;
+  const unsigned int dim = 2;
   const unsigned int degree = 1;
   const Dune::GeometryType::BasicType elemtype = Dune::GeometryType::cube;
   const Dune::PDELab::MeshType meshtype = Dune::PDELab::MeshType::conforming;
-  const Dune::SolverCategory::Category solvertype = Dune::SolverCategory::overlapping;
+  const Dune::SolverCategory::Category solvertype = Dune::SolverCategory::nonoverlapping;
   typedef double NumberType;
 
   // make grid
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
   //typedef Dune::ALUSimplexGrid<dim,dim> GM;
   typedef Dune::YaspGrid<dim> GM;
   typedef Dune::PDELab::StructuredGrid<GM> Grid;
-  Grid grid(elemtype,cells);
+  Grid grid(elemtype,cells,0);
   grid->loadBalance();
 
   // make problem parameters
@@ -146,8 +146,8 @@ int main(int argc, char **argv)
   ASSEMBLER assembler(fs,lop);
 
   // make linear solver and solve problem
-  //typedef Dune::PDELab::ISTLSolverBackend_IterativeDefault<FS,ASSEMBLER,solvertype> SBE;
-  typedef Dune::PDELab::ISTLSolverBackend_CG_AMG_SSOR<FS,ASSEMBLER,solvertype> SBE;
+  typedef Dune::PDELab::ISTLSolverBackend_IterativeDefault<FS,ASSEMBLER,solvertype> SBE;
+  //typedef Dune::PDELab::ISTLSolverBackend_CG_AMG_SSOR<FS,ASSEMBLER,solvertype> SBE;
   SBE sbe(fs,assembler,5000,1);
   typedef Dune::PDELab::StationaryLinearProblemSolver<ASSEMBLER::GO,SBE::LS,V> SLP;
   SLP slp(*assembler,x,*sbe,1e-6);
