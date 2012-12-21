@@ -44,6 +44,8 @@
 #include<dune/pdelab/constraints/constraintsparameters.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
+#include<dune/pdelab/gridfunctionspace/vtk.hh>
+
 #include "../utility/gridexamples.hh"
 
 
@@ -185,9 +187,10 @@ void poisson( const GV& gv,
     LocalBasisType::Traits::RangeFieldType R;
 
   // make grid function space
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS; 
   GFS gfs(gv,fem,con);
+  gfs.name("poisson solution");
 
   // make constraints map and initialize it from a function
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
@@ -204,7 +207,9 @@ void poisson( const GV& gv,
   typedef Dune::PDELab::Poisson<FType,BCTypeParam,JType,q> LOP; 
   LOP lop(f,bctype,j);
 
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,VBE::MatrixBackend,R,R,R,C,C> GO;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
+                                     Dune::PDELab::ISTLMatrixBackend,
+                                     R,R,R,C,C> GO;
   GO go(gfs,cg,gfs,cg,lop);
 
   // make coefficent Vector and initialize it from a function
@@ -261,13 +266,9 @@ void poisson( const GV& gv,
   go.localAssembler().backtransform(x);
 
   // make discrete function object
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  DGF dgf(gfs,x);
-
-  // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  //Dune::SubsamplingVTKWriter<GV> vtkwriter( gv, 1 );
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
+  Dune::SubsamplingVTKWriter<GV> vtkwriter( gv, 1 );
+  //Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
   vtkwriter.write(filename,Dune::VTK::ascii);
 }
 
@@ -322,7 +323,7 @@ void doSomeRandomRefinement( Grid & grid ){
 //
 // Testcase 1.) ALUGrid 2D triangular cells (hanging nodes refinement) - Pk elements
 // Testcase 2.) ALUGrid 3D cubical cells (hanging nodes refinement) - Q1 elements
-// Testcase 3.) ALUGrid 3D tetrahedral cells (uniform refinement) - Pk elements
+// Testcase 3.) ALUGrid 3D tetrahedral cells (hanging nodes refinement) - P1 elements
 //
 // Testcase 4.) YaspGrid 2D rectangular cells (uniform refinement) - Q1 elements
 // Testcase 5.) YaspGrid 2D rectangular cells (uniform refinement) - Q2 elements
@@ -360,7 +361,7 @@ int main(int argc, char** argv)
       // make grid 
       typedef ALUUnitSquare Grid;
       Grid grid;
-      grid.globalRefine(2);
+      grid.globalRefine(4);
 
 #ifdef HANGING_NODES_REFINEMENT
       doSomeRandomRefinement<Grid>( grid );
@@ -427,7 +428,7 @@ int main(int argc, char** argv)
       // make grid 
       typedef ALUCubeUnitSquare Grid;
       Grid grid;
-      grid.globalRefine(1);
+      grid.globalRefine(2);
 
 #ifdef HANGING_NODES_REFINEMENT
       doSomeRandomRefinement<Grid>( grid );
@@ -531,7 +532,6 @@ int main(int argc, char** argv)
 
     //return 0;
 
-#if HAVE_YASP
     {
       std::cout 
         << std::endl << std::endl
@@ -551,7 +551,7 @@ int main(int argc, char** argv)
 
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double> FEM;
+      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double,2> FEM;
       FEM fem;
   
       BCTypeParam bctype;
@@ -616,7 +616,6 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
       poisson<GV,FEM,BCTypeParam,Constraints,2>(gv,fem,"poisson_yasp_Q1_3d",bctype);
     }
-#endif
 
 #if HAVE_UG
     {
