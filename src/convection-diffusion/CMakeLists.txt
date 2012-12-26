@@ -10,7 +10,8 @@ endif(EIGEN_FOUND )
 if(SUPERLU_FOUND)
 set(SUPERLUPROGRAMS                                
     dgdiffusion                                 
-        dgdiffusion-hp                          
+        dgdiffusion-hp
+        dgldomain
         dgoverlapping                           
         rt0main)
 endif(SUPERLU_FOUND )
@@ -122,6 +123,17 @@ add_dune_alugrid_flags(dgdiffusion_hp )
 
 target_link_libraries(dgdiffusion_hp ${DUNE_LIBS})
 add_dune_superlu_flags(dgdiffusion_hp )
+
+add_executable(dgldomain dgldomain.cc)
+add_dune_alberta_flags(dgldomain )
+add_dune_amiramesh_flags(dgldomain )
+add_dune_ug_flags(dgldomain )
+add_dune_mpi_flags(dgldomain )
+target_link_libraries(dgldomain ${DUNE_LIBS})
+add_dune_superlu_flags(dgldomain )
+add_dune_alugrid_flags(dgldomain )
+target_link_libraries(dgldomain ${DUNE_LIBS})
+add_dune_superlu_flags(dgldomain )
 
 add_executable(dgoverlapping dgoverlapping.cc)
 
