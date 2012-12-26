@@ -10,7 +10,7 @@
 #include<vector>
 #include<map>
 #include<string>
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/grid/common/gridfactory.hh>
 #include<dune/grid/io/file/dgfparser/dgfparser.hh>
