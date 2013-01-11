@@ -586,7 +586,7 @@ int main(int argc, char** argv)
 
       // solve problem
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson<GV,FEM,BCTypeParam,Constraints,2>(gv,fem,"poisson_yasp_Q2_2d",bctype);
+      poisson<GV,FEM,BCTypeParam,Constraints,4>(gv,fem,"poisson_yasp_Q2_2d",bctype);
     }
 
     {
