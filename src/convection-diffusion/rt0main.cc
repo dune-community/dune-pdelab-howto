@@ -163,7 +163,7 @@ void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   // output grid function with VTKWriter
   //Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,1); // plot result
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<P0DGF>(p0dgf,"pressure"));
+  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P0DGF>(p0dgf,"pressure"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<RT0DGF>(rt0dgf,"velocity"));
   vtkwriter.write(filename,Dune::VTK::ascii);
 }
