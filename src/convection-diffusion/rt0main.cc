@@ -1,9 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief Solve Problems A-F using lowest order Raviart-Thomas elements (sequential)
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -65,11 +65,11 @@ public:
 };
 
 //===============================================================
-// Problem setup and solution 
+// Problem setup and solution
 //===============================================================
 
-template<typename BCType, typename GType, typename KType, typename A0Type, typename FType, typename VType, 
-         typename GV, typename PFEM, typename VFEM> 
+template<typename BCType, typename GType, typename KType, typename A0Type, typename FType, typename VType,
+         typename GV, typename PFEM, typename VFEM>
 void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
              const GV& gv, const PFEM& pfem, const VFEM& vfem, std::string filename)
 {
@@ -115,7 +115,7 @@ void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   Dune::PDELab::set_nonconstrained_dofs(t,0.0,x);  // clear interior
 
   // make grid operator
-  typedef Dune::PDELab::DiffusionMixed<KType,A0Type,FType,BCType,GType> LOP; 
+  typedef Dune::PDELab::DiffusionMixed<KType,A0Type,FType,BCType,GType> LOP;
   LOP lop(k,a0,f,bctype,g,4,2);
 
   typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
@@ -168,7 +168,7 @@ void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   vtkwriter.write(filename,Dune::VTK::ascii);
 }
 
-template<typename GV, typename PFEM, typename VFEM> 
+template<typename GV, typename PFEM, typename VFEM>
 void dispatcher (std::string problem, const GV& gv, const PFEM& pfem, const VFEM& vfem, std::string gridname)
 {
   std::string A("A"), B("B"), C("C"), D("D"), E("E"), F("F");
@@ -177,7 +177,7 @@ void dispatcher (std::string problem, const GV& gv, const PFEM& pfem, const VFEM
 
   typedef double RF;
 
-  if (problem==A) 
+  if (problem==A)
     {
       BCTypeParam_A bctype;
       G_A<GV,RF> g(gv);
@@ -187,7 +187,7 @@ void dispatcher (std::string problem, const GV& gv, const PFEM& pfem, const VFEM
       V_A<GV,RF> v(gv);
       driver(bctype,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
-  if (problem==B) 
+  if (problem==B)
     {
       BCTypeParam_B bctype;
       G_B<GV,RF> g(gv);
@@ -197,7 +197,7 @@ void dispatcher (std::string problem, const GV& gv, const PFEM& pfem, const VFEM
       V_B<GV,RF> v(gv);
       driver(bctype,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
-  if (problem==C) 
+  if (problem==C)
     {
       BCTypeParam_C bctype;
       G_C<GV,RF> g(gv);
@@ -207,7 +207,7 @@ void dispatcher (std::string problem, const GV& gv, const PFEM& pfem, const VFEM
       V_C<GV,RF> v(gv);
       driver(bctype,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
-  if (problem==D) 
+  if (problem==D)
     {
       Dune::FieldVector<RF,GV::Grid::dimension> correlation_length;
       correlation_length = 1.0/64.0;
@@ -220,7 +220,7 @@ void dispatcher (std::string problem, const GV& gv, const PFEM& pfem, const VFEM
       V_D<GV,RF> v(gv);
       driver(bctype,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
-  if (problem==E) 
+  if (problem==E)
     {
       BCTypeParam_E bctype;
       G_E<GV,RF> g(gv);
@@ -230,7 +230,7 @@ void dispatcher (std::string problem, const GV& gv, const PFEM& pfem, const VFEM
       V_E<GV,RF> v(gv);
       driver(bctype,g,k,a0,f,v,gv,pfem,vfem,filename);
     }
-  if (problem==F) 
+  if (problem==F)
     {
       BCTypeParam_F bctype;
       G_F<GV,RF> g(gv);
@@ -252,7 +252,7 @@ int main(int argc, char** argv)
 
     // YaspGrid 2D test
     if (true)
-    {  
+    {
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(1);
       Dune::FieldVector<bool,2> B(false);
@@ -280,7 +280,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<bool,3> B(false);
       Dune::YaspGrid<3> grid(L,N,B,0);
       grid.globalRefine(4);
- 
+
       // instantiate finite element maps
       typedef Dune::YaspGrid<3>::ctype DF;
       typedef Dune::YaspGrid<3>::LeafGridView GV;
@@ -374,4 +374,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}
