@@ -113,6 +113,16 @@ public:
     else
       return true;  // Dirichlet b.c. on all other boundaries
   }
+
+  template<typename I>
+  bool isNeumann(
+                 const I & intersection,   /*@\label{bcp:name}@*/
+                 const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                 ) const
+  {
+    return !isDirichlet(intersection,coord);
+  }
+
 };
 
 // function for Dirichlet boundary conditions and initialization

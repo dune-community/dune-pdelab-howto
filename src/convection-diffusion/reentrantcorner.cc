@@ -88,25 +88,6 @@ public:
 };
 
 
-// selecting the boundary condition type
-class BCTypeParam
-  : public Dune::PDELab::DirichletConstraintsParameters /*@\label{bcp:base}@*/
-{
-public:
-
-  template<typename I>
-  bool isDirichlet(
-                   const I & intersection,   /*@\label{bcp:name}@*/
-                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-                   ) const
-  {
-
-    //Dune::FieldVector<typename I::ctype, I::dimension>
-    //  xg = intersection.geometry().global( coord );
-    return true;  // Dirichlet b.c. on all boundaries
-  }
-};
-
 // function for Dirichlet boundary conditions and initialization
 template<typename GV, typename RF>
 class G
@@ -176,6 +157,8 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
   C cg;
   cg.clear();
+
+  typedef Dune::PDELab::DirichletConstraintsParameters BCTypeParam;
   BCTypeParam bctype;
   Dune::PDELab::constraints(bctype,gfs,cg);
 
