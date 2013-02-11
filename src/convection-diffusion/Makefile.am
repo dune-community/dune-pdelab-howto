@@ -31,13 +31,14 @@ noinst_PROGRAMS =				\
 	transporttest				\
 	instationarytest			\
 	poisson					\
-	mimetic					\
 	laplacedirichletccfv			\
 	reentrantcorner				\
 	diffusion				\
 	scalabilitytest				\
 	dgldomain				\
 	ldomain
+
+# mimetic is broken (probably irreparably...)
 
 
 noinst_HEADERS =				\
