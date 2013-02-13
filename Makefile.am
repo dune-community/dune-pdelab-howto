@@ -1,13 +1,13 @@
 # $Id: duneproject 5425 2009-02-10 09:31:08Z sander $
 
 # we need the module file to be able to build via dunecontrol
-EXTRA_DIST =		\
+EXTRA_DIST = CMakeLists.txt		\
 	dune.module	\
 	BSD		\
 	CC-BY-SA	\
 	RELEASE_NOTES
 
-SUBDIRS = doc m4 src
+SUBDIRS = cmake doc m4 src
 
 # don't follow the full GNU-standard
 # we need automake 1.5

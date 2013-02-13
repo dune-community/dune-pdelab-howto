@@ -10,7 +10,7 @@ if BUILD_DOCS
   DOCFILES = pdelab-howto-article.dvi pdelab-howto-article.pdf \
 	pdelab-howto-article.ps pdelab-howto-beamer.dvi pdelab-howto-beamer.pdf \
 	pdelab-howto-beamer.ps
-  EXTRA_DIST = $(DOCFILES)
+  EXTRA_DIST = CMakeLists.txt $(DOCFILES)
   EXTRAINSTALL = $(DOCFILES)
 endif
 

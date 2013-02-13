@@ -19,8 +19,7 @@
 #include<dune/istl/io.hh>
 #include<dune/istl/superlu.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/rt02dfem.hh>
-#include<dune/pdelab/finiteelementmap/rt0qfem.hh>
+#include<dune/pdelab/finiteelementmap/raviartthomasfem.hh>
 #include<dune/pdelab/finiteelementmap/rt0constraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
@@ -258,7 +257,7 @@ int main(int argc, char** argv)
       typedef double R;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::cube,dim));
-      typedef Dune::PDELab::RT0QLocalFiniteElementMap<GV,DF,R,dim> RT0FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,R,dim> RT0FEM;
       RT0FEM rt0fem(grid.leafView());
 
       dispatcher(problem,grid.leafView(),p0fem,rt0fem,"Yasp2d_rt0q");
@@ -280,7 +279,7 @@ int main(int argc, char** argv)
       typedef double R;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::cube,dim));
-      typedef Dune::PDELab::RT0QLocalFiniteElementMap<GV,DF,R,dim> RT0FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,R,dim> RT0FEM;
       RT0FEM rt0fem(grid.leafView());
 
       dispatcher(problem,grid.leafView(),p0fem,rt0fem,"Yasp3d_rt0q");
@@ -299,7 +298,7 @@ int main(int argc, char** argv)
       typedef double R;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
-      typedef Dune::PDELab::RT02DLocalFiniteElementMap<GV,DF,R> RT0FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,R> RT0FEM;
       RT0FEM rt0fem(grid.leafView());
 
       dispatcher(problem,grid.leafView(),p0fem,rt0fem,"ALU2d_rt0");
@@ -319,7 +318,7 @@ int main(int argc, char** argv)
       typedef double R;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
-      typedef Dune::PDELab::RT02DLocalFiniteElementMap<GV,DF,R> RT0FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,R> RT0FEM;
       RT0FEM rt0fem(grid.leafView());
 
       dispatcher(problem,grid.leafView(),p0fem,rt0fem,"UG2d_rt0");
@@ -339,7 +338,7 @@ int main(int argc, char** argv)
       typedef double R;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
-      typedef Dune::PDELab::RT02DLocalFiniteElementMap<GV,DF,R> RT0FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,R> RT0FEM;
       RT0FEM rt0fem(grid.leafView());
 
       dispatcher(problem,grid.leafView(),p0fem,rt0fem,"Alberta2d_rt0");

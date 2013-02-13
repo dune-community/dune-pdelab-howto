@@ -53,3 +53,5 @@ CLEANFILES = dgfparser.log q1*.vtu *.pvtu *.vtu *.png
 DISTCHECK_CONFIGURE_FLAGS = --with-dune-common=$(DUNE_COMMON_ROOT) --with-dune-grid=$(DUNE_GRID_ROOT) --with-dune-istl=$(DUNE_ISTL_ROOT) --with-dune-localfunctions=$(DUNE_LOCALFUNCTIONS_ROOT) --with-dune-pdelab=$(DUNE_PDELAB_ROOT)  CXX="$(CXX)" CC="$(CC)"
 
 include $(top_srcdir)/am/global-rules
+
+EXTRA_DIST = CMakeLists.txt
