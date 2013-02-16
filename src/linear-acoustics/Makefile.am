@@ -10,11 +10,11 @@ dist_noinst_DATA =				\
 GRIDDIM=2
 
 if SUPERLU
-SUPERLUPROGRAMS = 
+SUPERLUPROGRAMS =
 endif
 
 noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
-	heterogeneoussquare 
+	heterogeneoussquare
 
 if SUPERLU
 endif
@@ -25,7 +25,7 @@ heterogeneoussquare_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(A
 heterogeneoussquare_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 heterogeneoussquare_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
-CLEANFILES = dgfparser.log *.vtu *.png 
+CLEANFILES = dgfparser.log *.vtu *.png
 
 #============================================================
 # pass most important options when "make distcheck" is used

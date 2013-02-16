@@ -9,7 +9,7 @@
 #include<vector>
 #include<map>
 #include<string>
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/float_cmp.hh>
@@ -156,7 +156,7 @@ void mimeticDirichletBoundaryConditions(const B& b, const G& g, const GFS& gfs, 
     static const unsigned int dimIntersection = G::Traits::dimDomain - 1;
     typedef typename G::Traits::DomainFieldType ctype;
 
-    const GV& gridview = gfs.gridview();
+    const GV& gridview = gfs.gridView();
 
     // make local function space
     typedef Dune::PDELab::GridFunctionSubSpace<GFS,1> FaceSpace;

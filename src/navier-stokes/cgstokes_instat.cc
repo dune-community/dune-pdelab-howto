@@ -17,7 +17,7 @@
 #include<vector>
 #include<map>
 #include<string>
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/float_cmp.hh>
@@ -69,7 +69,7 @@
 // The driver for all examples
 //===============================================================
 
-template<typename GV, typename V_FEM, typename P_FEM, typename IF, typename PRM, int q> 
+template<int q, typename GV, typename V_FEM, typename P_FEM, typename IF, typename PRM> 
 void navierstokes 
 (
  const GV& gv, 
@@ -357,12 +357,13 @@ int main(int argc, char** argv)
       const RF boundary_pressure = config_parser.get<double>("boundaries.pressure");
       NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
 
-      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
+      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<GV,BoundaryFunction,NeumannFlux,InitialSolution,RF>
         LOPParameters;
-      LOPParameters parameters(config_parser.sub("physics"),boundary_function,neumann_flux);
+      LOPParameters parameters(config_parser.sub("physics"),boundary_function,neumann_flux,
+                               initial_solution);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+      navierstokes<q>
         (gv,"turbtube_ug_P2P1_2d", parameters, config_parser, vFem, pFem, initial_solution);
     }
 #endif
@@ -423,12 +424,13 @@ int main(int argc, char** argv)
       const RF boundary_pressure = config_parser.get<double>("boundaries.pressure");
       NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
 
-      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<BoundaryFunction,NeumannFlux,RF>
+      typedef Dune::PDELab::TaylorHoodNavierStokesDefaultParameters<GV,BoundaryFunction,NeumannFlux,InitialSolution,RF>
         LOPParameters;
-      LOPParameters parameters(config_parser.sub("physics"),boundary_function,neumann_flux);
+      LOPParameters parameters(config_parser.sub("physics"),boundary_function,neumann_flux,
+                               initial_solution);
   
       // solve problem
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+      navierstokes<q>
         (gv,"lshape_ug_P2P1_2d", parameters, config_parser, vFem, pFem, initial_solution);
     }
 #endif

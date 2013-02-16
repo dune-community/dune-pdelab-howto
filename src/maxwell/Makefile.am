@@ -11,11 +11,11 @@ dist_noinst_DATA =				\
 GRIDDIM=2
 
 if SUPERLU
-SUPERLUPROGRAMS = 
+SUPERLUPROGRAMS =
 endif
 
 noinst_PROGRAMS = $(SUPERLUPROGRAMS) \
-	modelproblem 
+	modelproblem
 
 if SUPERLU
 endif
@@ -26,7 +26,7 @@ modelproblem_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_
 modelproblem_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 modelproblem_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
-CLEANFILES = dgfparser.log *.vtu *.png 
+CLEANFILES = dgfparser.log *.vtu *.png
 
 #============================================================
 # pass most important options when "make distcheck" is used
