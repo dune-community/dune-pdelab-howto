@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include "config.h"           // file constructed by ./configure script
-#include <dune/common/parallel/mpihelper.hh> // include mpi helper class 
+#include <dune/common/mpihelper.hh> // include mpi helper class 
 #include <dune/grid/sgrid.hh> // load sgrid definition
 #include <dune/grid/onedgrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>

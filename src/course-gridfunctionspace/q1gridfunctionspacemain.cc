@@ -2,7 +2,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
-#include<dune/common/parallel/mpihelper.hh>
+#include<dune/common/mpihelper.hh>
 #include<dune/grid/yaspgrid.hh>
 #include"q1gridfunctionspace.hh"
 int main(int argc, char** argv)

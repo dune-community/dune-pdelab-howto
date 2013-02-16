@@ -7,7 +7,7 @@
 #endif
 #include<iostream>
 #include<vector>
-#include<dune/common/parallel/mpihelper.hh>
+#include<dune/common/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/timer.hh>
