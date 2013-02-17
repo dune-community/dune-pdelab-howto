@@ -1,9 +1,12 @@
 PDELab Howto
 ============
 
-This is the first public release of PDELab, a PDE discretization toolkit built
+This is the 1.1 release of PDELab, a PDE discretization toolkit built
 on top of the DUNE framework [0]. License information can be found in the file
 COPYING.
+
+PDELab 1.1 is a minor feature release mostly focused on fixing bugs, but it also
+includes a number of new features. For details, see the changelog below.
 
 If you need help, please ask on our mailinglist [1]. Bugs can also be submitted
 to the PDELab bugtracker at [2] instead.
@@ -18,7 +21,26 @@ actual library package dune-pdelab.
 Changes
 =======
 
-- Fix broken distribution tarballs - they were missing a lot of files.
+PDELab 1.1
+----------
+
+This is the first release of PDELab after the move from Subversion to Git for
+version control. You CANNOT find this release on the Subversion server. If you prefer
+to directly check out the sources instead of using the provided tarballs, please see
+our website for information on how to access the Git repository.
+
+- The directory src/boilerplatetutorial contains a number of examples using the new
+  boilerplate infrastructure layer from PDELab that is designed to reduce the amount
+  of code required for writing standard PDELab programs.
+
+- New example convection-diffusion/tutorial that also showcases the boilerplate
+  infrastructure.
+
+- We fixed most of the deprecation warnings due to deprecated APIs in the core modules.
+
+- Fix for builds from repository with recent versions of autotools.
+
+- Several bug fixes.
 
 
 Caveats
