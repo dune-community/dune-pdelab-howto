@@ -1,0 +1,6 @@
+*.vtu
+advection_instationary
+advection_stationary
+heat_instationary
+poisson_adaptive
+poisson_uniform
