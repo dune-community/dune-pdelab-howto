@@ -3,7 +3,7 @@
 
 #Name of the module
 Module: dune-pdelab-howto
-Version: 1.1-dev
+Version: 1.1-rc1
 Maintainer: peter.bastian@iwr.uni-heidelberg.de
 #depending on
-Depends: dune-common (>= 2.2)  dune-grid (>= 2.2) dune-istl (>= 2.2) dune-localfunctions (>= 2.2) dune-pdelab (>= 1.0)
+Depends: dune-common (>= 2.2)  dune-grid (>= 2.2) dune-istl (>= 2.2) dune-localfunctions (>= 2.2) dune-pdelab (>= 1.1)
