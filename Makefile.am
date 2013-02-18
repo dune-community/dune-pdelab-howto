@@ -1,10 +1,12 @@
 # $Id: duneproject 5425 2009-02-10 09:31:08Z sander $
 
 # we need the module file to be able to build via dunecontrol
-EXTRA_DIST = CMakeLists.txt		\
-	dune.module	\
-	BSD		\
-	CC-BY-SA	\
+EXTRA_DIST = CMakeLists.txt		              \
+	dune.module                                   \
+	dune-pdelab-howto-config.cmake.in             \
+	dune-pdelab-howto-version.cmake.in 	      \
+	BSD		                              \
+	CC-BY-SA	                              \
 	RELEASE_NOTES
 
 SUBDIRS = cmake doc m4 src
