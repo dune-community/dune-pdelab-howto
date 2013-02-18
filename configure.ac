@@ -34,6 +34,7 @@ AC_CONFIG_FILES([
   src/navier-stokes/Makefile
   src/two-phase/Makefile
   src/convection-diffusion/Makefile
+  src/boilerplatetutorial/Makefile
   src/linear-acoustics/Makefile
   src/maxwell/Makefile
   src/benchmark/Makefile

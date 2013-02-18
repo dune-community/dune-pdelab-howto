@@ -13,5 +13,9 @@ nonlineardiffusion
 rt0main
 reentrantcorner
 poisson
+dgldomain
+dgoverlapping
+scalabilitytest
+tutorial
 *.vtu
 *.pvtu

@@ -53,7 +53,8 @@ noinst_HEADERS =				\
 	problemC.hh				\
 	problemD.hh				\
 	problemE.hh				\
-	problemF.hh
+	problemF.hh				\
+	reentrantcornerproblem.hh
 
 dist_noinst_DATA =				\
 	grids/2dgrid.al				\
