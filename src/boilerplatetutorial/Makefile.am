@@ -66,4 +66,6 @@ CLEANFILES = poisson_*.vtu reentrant_*.vtu dgfparser.log q1*.vtu *.vtu *.png
 # pass most important options when "make distcheck" is used
 DISTCHECK_CONFIGURE_FLAGS = --with-dune-common=$(DUNE_COMMON_ROOT) --with-dune-grid=$(DUNE_GRID_ROOT) --with-dune-istl=$(DUNE_ISTL_ROOT) --with-dune-localfunctions=$(DUNE_LOCALFUNCTIONS_ROOT) --with-dune-pdelab=$(DUNE_PDELAB_ROOT)  CXX="$(CXX)" CC="$(CC)"
 
+EXTRA_DIST = CMakeLists.txt
+
 include $(top_srcdir)/am/global-rules
