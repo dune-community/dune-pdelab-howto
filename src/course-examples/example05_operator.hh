@@ -94,7 +94,7 @@ public:
         lfsu1.finiteElement().localBasis().evaluateJacobian(it->position(),js1);
 
         // transform gradients from reference element to real element
-        const Dune::FieldMatrix<DF,dimw,dim> 
+        typename EG::Geometry::JacobianInverseTransposed
           jac = eg.geometry().jacobianInverseTransposed(it->position());
         std::vector<Dune::FieldVector<RF,dim> > gradphi0(lfsu0.size());
         for (size_type i=0; i<lfsu0.size(); i++)
