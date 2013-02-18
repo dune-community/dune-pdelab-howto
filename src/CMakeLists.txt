@@ -1,5 +1,6 @@
 set(SUBDIRS                                        
         benchmark                               
+	boilerplatetutorial
         convection-diffusion                    
         course-examples                         
         course-gridfunctionspace                
