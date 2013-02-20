@@ -137,7 +137,7 @@ int main(int argc, char **argv)
   grid->loadBalance();
 
   // make problem parameters
-  typedef GenericAdvectionProblem<typename GM::LeafGridView,NumberType> Problem;
+  typedef GenericAdvectionProblem<GM::LeafGridView,NumberType> Problem;
   Problem problem;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
   BCType bctype(grid->leafView(),problem);
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
   FS fs(grid->leafView());
 
   // make a degree of freedom vector and initialize it with a function
-  typedef typename FS::DOF X;
+  typedef FS::DOF X;
   X x(fs.getGFS(),0.0);
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
   G g(grid->leafView(),problem);
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
   // assembler for finite elemenent problem
   // typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,typename FS::FEM> LOP;
   // LOP lop(problem);
-  typedef Dune::PDELab::ConvectionDiffusionDG<Problem,typename FS::FEM> LOP;
+  typedef Dune::PDELab::ConvectionDiffusionDG<Problem,FS::FEM> LOP;
   LOP lop(problem,Dune::PDELab::ConvectionDiffusionDGMethod::SIPG,Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn,2.0);
   typedef Dune::PDELab::GalerkinGlobalAssembler<FS,LOP,solvertype> ASSEMBLER;
   ASSEMBLER assembler(fs,lop);
@@ -171,14 +171,14 @@ int main(int argc, char **argv)
   typedef Dune::PDELab::ISTLSolverBackend_IterativeDefault<FS,ASSEMBLER,solvertype> SBE;
   //typedef Dune::PDELab::ISTLSolverBackend_CG_AMG_SSOR<FS,ASSEMBLER,solvertype> SBE;
   SBE sbe(fs,assembler,5000,1);
-  typedef Dune::PDELab::StationaryLinearProblemSolver<typename ASSEMBLER::GO,typename SBE::LS,X> SLP;
+  typedef Dune::PDELab::StationaryLinearProblemSolver<ASSEMBLER::GO,SBE::LS,X> SLP;
   SLP slp(*assembler,x,*sbe,1e-6);
   slp.apply();
 
   // output grid to VTK file
-  Dune::SubsamplingVTKWriter<typename GM::LeafGridView> vtkwriter(grid->leafView(),degree-1);
-  typename FS::DGF xdgf(fs.getGFS(),x);
-  vtkwriter.addVertexData(new typename FS::VTKF(xdgf,"x_h"));
+  Dune::SubsamplingVTKWriter<GM::LeafGridView> vtkwriter(grid->leafView(),degree-1);
+  FS::DGF xdgf(fs.getGFS(),x);
+  vtkwriter.addVertexData(new FS::VTKF(xdgf,"x_h"));
   vtkwriter.write("advection_stationary",Dune::VTK::appendedraw);
 
   // done
