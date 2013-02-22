@@ -188,7 +188,7 @@ set(SOURCES
 # Install documentation
 # We assume that ${DOCFILES} and ${DOCFILES_EXTRA} are targets
 if(LATEX_USABLE)
-  ADD_LATEX_DOCUMENT(pdelab-howto-article.tex FATHER_TARGET doc DEFAULT_PDF 
+  dune_add_latex_document(pdelab-howto-article.tex FATHER_TARGET doc DEFAULT_PDF
       INPUTS ${TEX_FILES} turing.avi turing_3D.avi ${SOURCES} IMAGES ${EPS_IMAGES} BIBFILES lit.bib)
  create_doc_install(${DOCFILES} ${docdir} pdelab-howto-article_safepdf)
 endif(LATEX_USABLE)
