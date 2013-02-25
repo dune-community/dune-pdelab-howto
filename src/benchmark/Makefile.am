@@ -23,6 +23,7 @@ LDADD =						\
 # TRUNK TARGETS FOLLOW
 
 if SUPERLU
+if UG
 
 MOSTLYCLEANFILES += cgstokes_*.vtu cgstokes_*_timings.txt
 
@@ -43,6 +44,7 @@ cgstokes_old_LDADD =				\
 	$(ALUGRID_LIBS)				\
 	$(UG_LIBS)
 
+endif
 endif
 
 # THIS IS A SEPARATION MARKER TO MINIMIZE SVN MERGE CONFLICTS
