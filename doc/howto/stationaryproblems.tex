@@ -923,6 +923,32 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example04_operator.h
 \end{Lst}}
 
 
+\begin{frame}
+  \frametitle{Sequential Solver Backends}
+A wide range of iterative methods from \lstinline!dune-istl! have been packaged into
+solver backends. Here are the sequential variants.
+\begin{center}\small
+\begin{tabular}{|l|l|l|}\hline
+solver backend & preconditioner & solver\\\hline
+\lstinline!ISTLBackend_SEQ_LOOP_Jac! & Jacobi & Loop\\\hline
+\lstinline!ISTLBackend_SEQ_BCGS_Jac! & Jacobi & BiCGStab\\\hline
+\lstinline!ISTLBackend_SEQ_BCGS_SSOR! & SSOR & BiCGStab\\\hline
+\lstinline!ISTLBackend_SEQ_CG_SSOR! & SSOR & CG\\\hline
+\lstinline!ISTLBackend_SEQ_BCGS_ILU0! & ILU0 & BiCGStab\\\hline
+\lstinline!ISTLBackend_SEQ_CG_ILU0! & ILU0 & CG\\\hline
+\lstinline!ISTLBackend_SEQ_BCGS_ILUn! & ILU(n) & BiCGStab\\\hline
+\lstinline!ISTLBackend_SEQ_CG_ILUn! & ILU(n) & CG\\\hline
+\lstinline!ISTLBackend_SEQ_MINRES_SSOR! & SSOR & MinRes\\\hline
+\lstinline!ISTLBackend_SEQ_SuperLU! & - & SuperLU\\\hline
+\lstinline!ISTLBackend_SEQ_ExplicitDiagonal! & Jacobi & Loop\\\hline
+\lstinline!ISTLBackend_SEQ_CG_AMG_SSOR<GO>! & AMG & CG\\\hline
+\lstinline!ISTLBackend_SEQ_BCGS_AMG_SSOR<GO>! & AMG & BiCGStab\\\hline
+\end{tabular}
+\end{center}
+\lstinline!GO! is a grid operator.
+\end{frame}
+
+
 \subsection{Other Schemes to Solve the Model Problem}
 
 \paragraph{Vertex-centered Finite Volumes}
