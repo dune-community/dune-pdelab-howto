@@ -1,5 +1,4 @@
-template<class GV>
-void example02_Q1 (const GV& gv)
+template<class GV> void example02_Q1 (const GV& gv)
 {
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
@@ -17,8 +16,7 @@ void example02_Q1 (const GV& gv)
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
   Dune::PDELab::constraints( bctype, gfs, cc ); // assemble constraints
-  std::cout << "constrained dofs=" << cc.size()
-            << " of " << gfs.globalSize() << std::endl;
+  std::cout << "constrained dofs=" << cc.size() << " of " << gfs.globalSize() << std::endl;
 
   // <<<3>>> Make grid operator
   typedef Example02LocalOperator<BCTypeParam> LOP;             // operator including boundary
