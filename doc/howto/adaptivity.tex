@@ -493,165 +493,91 @@
   \end{block}
 \end{frame}
 
+
 \subsection{Adaptivity in PDELab}
 
-\subsubsection*{LocalOperators}
+\subsubsection*{Refinement loop}
 
-\begin{frame}
-  \frametitle<presentation>{LocalOperators}
-  The local \emph{indicators} of the \emph{error estimator} are implemented the same way as the differential equation itself, as \emph{LocalOperators}.
+The adaptive refinement loop in listing 20 starts at the line 53. For $i=0$, our
+PDE is solved (line 64) on the base grid level. The solution is stored in the
+vector of degrees of freedom $u$ (line 31). Afterwards, we will compute
+a local error indicator $\eta$ (line 78-79) for the solution $u$.
+Based on this information, we will be able to decide which grid elements
+should be marked for refinement (or coarsening) in the next step.
+For this decision, we offer two different strategies: element fraction or error fraction.
 
-  The indicators are highly dependent upon the actual differential equation and the choice of estimator and therefore have to be \emph{implemented by the user}.
+Example: If you choose a refinement fraction $\alpha=0.2$, this means in the
+case of element fraction that the top $20\%$ of all
+elements in terms of local error will be refined, or, in the case of error fraction,
+all elements whose local error exceeds $80\%$ of the total error will be refined.
 
-  The default LocalOperator uses large jumps in the normal component of the gradient across element boundaries as an indicator.
+After the grid function space and the solution are also adapted on the grid,
+you need to make sure that the Dirichlet boundary constraints need to be
+re-applied on the adapted solution vector $u$.
 
-\end{frame}
 
-\subsubsection*{ErrorEstimation}
+\subsubsection*{Error indicator $\eta$}
+$\eta$ is supposed to be cell-wise constant. Therefore, we setup a grid function space using the $P_0$
+finite element. Since we need to traverse the whole grid once, we can
+simply use the infra\/struture provided by Dune::PDELab::GridOperator.
+All you need to contribute yourself is a local operator (line 49) that
+implements the evaluation of the local error indicator.
+It is highly dependent upon the actual differential equation and on your
+choice. A simple example is given in \lstinline{example07_error_indicator.hh}.
+It uses large jumps in the normal component of the gradient across element
+boundaries as an indicator.
 
-\begin{frame}[fragile]
-  \frametitle<presentation>{ErrorEstimation}
-  The \emph{ErrorEstimation} object estimates the error elementwise by evaluating the specified \emph{LocalOperator}.
 
-  \pause
 
-  \begin{block}{Class}
-    \lstinline{ResidualErrorEstimation<GFS, U, LOP =}
-    \lstinline{Dune::PDELab::GradientSmoothnessOperator,}
-    \lstinline{bool nonoverlapping_mode = false>}
-  \end{block}
+\subsubsection*{Refinement/coarsening fraction and threshold}
+\begin{block}{Function call}
+  \lstinline{element_fraction( eta, alpha, beta, eta_alpha, eta_beta, verbose  );}\\
+  or: \lstinline{error_fraction( eta, alpha, beta, eta_alpha, eta_beta, verbose );}
+\end{block}
 
-  \pause
+\begin{tabular}{l|lll}
+  parameter   & meaning                                          & type    &  \\
+\hline
+  eta         & DOF vector containing the local error indicators & U0      & input \\
+  alpha       & refinement fraction                              & double  & input  \\
+  beta        & coarsening fraction                              & double  & input  \\
+  eta\_alpha  & refinement threshold                             & double  & output \\
+  beta\_alpha & coarsening threshold                             & double  & output \\
+  verbose     & verbosity flag                                   & int     & input  \\
+\end{tabular}
 
-  \begin{block}{Constructor}
-    \lstinline{ResidualErrorEstimation(const GFS& gfs,}
-    \lstinline{const LOP& lop = GradientSmoothnessOperator())}
-  \end{block}
-\end{frame}
 
-\subsubsection*{EstimationAdaptation}
 
-\begin{frame}[fragile]
-  \frametitle<presentation>{EstimationAdaptation}
-  The \emph{EstimationAdaptation} object decides which elements should be marked for refinement or coarsening, based on the pre-computed error estimate and user-supplied \emph{control parameters}, e.g.~the percentage of elements that should be refined.
+\subsubsection*{Marking the grid for local adaptation}
+\begin{block}{Function call}
+  \lstinline{mark_grid( grid, eta, eta_alpha, eta_beta );}
+\end{block}
 
-  \pause
+\begin{tabular}{l|lll}
+  parameter   & meaning                                          & type    &  \\
+  \hline
+  grid        & the grid object                                  & Grid    & input+output \\
+  eta         & DOF vector containing the local error indicators & U0      & input \\
+  eta\_alpha  & refinement threshold                             & double  & input \\
+  beta\_alpha & coarsening threshold                             & double  & input \\
+\end{tabular}
 
-  \begin{block}{Class}
-    \lstinline{EstimationAdaptation<Grid, GFS, U, Estimation>}
-  \end{block}
 
-  \pause
+\subsubsection*{Adapting the grid and adjusting the solution vector}
+\begin{block}{Function call}
+  \lstinline{adapt_grid( grid, gfs, u );}
+\end{block}
 
-  \begin{block}{Constructor}
-    \lstinline{EstimationAdaptation(Grid& grid, const GFS& gfs,}
-    \lstinline{Estimation& estimation, double refine, double coarsen = 0.,}
-    \lstinline{int min = 0, int max = std::numeric_limits<int>::max(),}
-    \lstinline{bool doCommunicate = true)}
-  \end{block}
-\end{frame}
+\begin{tabular}{l|lll}
+  parameter   & meaning                                          & type    &  \\
+  \hline
+  grid        & the grid object                                  & Grid    & input+output \\
+  gfs         & the grid function space                          & GFS     & input+output \\
+  u           & DOF vector containing the solution of the PDE    & U       & input+output \\
+\end{tabular}
 
-\paragraph{Other Adaptation Objects}
 
-\begin{frame}
-  \frametitle<presentation>{Other Adaptation Objects}
 
-  \begin{block}{GlobalRefine}
-    Why would I want to use that when grid.globalRefine() works just as well?
-
-    Because this way the solution is automatically transferred to the finer level and may serve as
-    \begin{itemize}
-      \item the start vector of an iterative solver
-      \item the previous timestep in a transient scheme
-    \end{itemize}
-  \end{block}
-
-  \begin{block}{FunctionAdaptation}
-    Takes an arbitrary function and interprets its value as the desired level of refinement
-
-    Useful if a priori knowledge about the solution is available
-  \end{block}
-
-  \begin{block}{RandomAdaptation}
-    Randomly refined grids can help test the robustness of your code
-  \end{block}
-\end{frame}
-
-\subsubsection*{GridAdaptor}
-
-\begin{frame}[fragile]
-  \frametitle<presentation>{GridAdaptor}
-  The \emph{GridAdaptor} object represents the actual algorithm.
-
-  It adapts the grid and transfers the solution, controlled by the arguments of the constructor and their parameters.
-
-  \pause
-
-  \begin{block}{Class}
-    \lstinline{Dune::PDELab::L2Projection<GFS,U>}
-    \lstinline{Dune::PDELab::GridAdaptor<Grid,GFS,U,Adaptation,Projection>}
-  \end{block}
-
-  \pause
-
-  \begin{block}{Constructor}
-    \lstinline{GridAdaptor(Grid& grid, GFS& gfs,}
-    \lstinline{Adaptation& adaptation, Projection& projection)}
-  \end{block}
-
-  \begin{block}{Algorithm}
-    \lstinline{void adapt(U& u)}
-  \end{block}
-
-\end{frame}
-
-\begin{frame}
-  \frametitle{Summary}
-  \begin{itemize}
-    \item The \lstinline{GridAdaptor} adapts the grid using a user-supplied \lstinline{Projection} and \lstinline{Adaptation}.
-
-      \pause
-
-    \item The \lstinline{EstimationAdaptation}, one of the \lstinline{Adaptation} objects, uses an \lstinline{ErrorEstimation} and user-supplied parameters to decide which elements to refine or coarsen.
-
-      \pause
-
-    \item The \lstinline{ResidualErrorEstimation}, one of the \lstinline{ErrorEstimation} objects, evaluates a \lstinline{LocalOperator} to estimate the error.
-
-      \pause
-
-    \item The \lstinline{LocalOperator} is the responsability of the user and depends on the problem at hand. A default \lstinline{GradientSmoothnessOperator} exists; it simply tries to ensure a smooth solution up to first order derivatives.
-  \end{itemize}
-\end{frame}
-
-\subsubsection*{Parallel local refinement}
-
-\begin{frame}
-  \frametitle<presentation>{Parallel local refinement}
-
-  There is nothing special about parallel adaptivity.
-
-  The EstimationAdaptation object calculates the residual per processor and negotiates the local number of cells marked for refinement via
-  \[
-  N_{\text{refine}}^{\text{local}} = \frac{r^{\text{local}}}{r^{\text{global}}} \cdot N_{\text{cells}}^{\text{global}} \cdot \text{refine}
-  \]
-
-  \pause
-
-  \[
-  \frac{N_{\text{refine}}^{\text{local}}}{N_{\text{cells}}^{\text{local}}} = \frac{r^{\text{local}}}{r^{\text{global}}} \cdot \frac{N_{\text{cells}}^{\text{global}}}{N_{\text{cells}}^{\text{local}}} \cdot \text{refine}
-  \]
-
-  \pause
-
-  \[
-  \sum_{p} N_{\text{refine}}^{p} = \sum_{p}\frac{r^{p}}{r^{\text{global}}} \cdot N_{\text{cells}}^{\text{global}} \cdot \text{refine} = \text{refine} \cdot N_{\text{cells}}^{\text{global}}
-  \]
-
-  \pause
-
-  The grid itself takes care of consistency issues at processor boundaries.
-\end{frame}
 
 \subsection{Example 7}
 
@@ -664,6 +590,7 @@
   \begin{itemize}
     \item \lstinline{example07.cc} -- main program.
     \item \lstinline{example07_adaptivity.hh} -- driver using adaptivity.
+    \item \lstinline{example07_error_indicator.hh} -- local indicators.
     \item \lstinline{example02_(...).hh} -- problem definition as before.
   \end{itemize}
 \end{frame}
@@ -674,6 +601,7 @@
   \lstinputlisting[basicstyle=\tiny,numbers=left, 
   numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example07_adaptivity.hh}
 \end{frame}
+
 \mode<article>{
 \begin{Lst}[File src/course-examples/example07\_adaptivity.hh] \mbox
   \nopagebreak
