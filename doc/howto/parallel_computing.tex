@@ -660,7 +660,7 @@ iterative solver like SSOR).
 coefficient is applied. 
 \item With an overlapping Schwarz method the convergence is better the larger the overlap.
 \end{itemize}
-\item For overlapping domain decomposition there exists also an algebraic multigrid preconditioner.
+\item There exists also an algebraic multigrid preconditioner for overlapping as well as non-overlapping domain decomposition.
 \end{itemize}
 \end{frame}
 
@@ -758,8 +758,10 @@ solver backend & smoother & linear solver\\\hline
 \lstinline!ISTLBackend_NOVLP_CG_NOPREC<GFS>! & -- & CG\\\hline
 \lstinline!ISTLBackend_NOVLP_CG_Jacobi<GFS>! & Jacobi & CG\\\hline
 \lstinline!ISTLBackend_NOVLP_CG_SSORk<GOS,Scalar>! & SSOR & CG\\\hline
+\lstinline!ISTLBackend_NOVLP_CG_AMG_SSOR<GFS>! & AMG & CG\\\hline
 \lstinline!ISTLBackend_NOVLP_BCGS_NOPREC<GFS>! & -- & BiCGStab\\\hline
 \lstinline!ISTLBackend_NOVLP_BCGS_SSORk<GOS,Scalar>! & SSOR & BiCGStab\\\hline
+\lstinline!ISTLBackend_NOVLP_BCGS_AMG_SSOR<GFS>! & AMG & BiCGStab\\\hline
 \end{tabular}
 \end{center}
 \lstinline!ISTLBackend_NOVLP_ExplicitDiagonal! is a solver for explicit 
