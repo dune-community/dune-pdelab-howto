@@ -46,10 +46,10 @@
 \item The speed of individual computer cores is not increasing 
 essentially since some years
 \item The number of cores is increasing. Dual-cores are the rule, 
-up to 12-core processors are available.
+up to 16-core processors are available.
 \item Several multi-core processors can be used on one mainboard (e.g. four 12-core processors)
-\item Computer cluster with several multi-core multi-processor servers are affordable even for small companies
-\item High-performance computer have up to 294912 cores (JUGENE).
+\item Computer cluster with several multi-core multi-processor servers are affordable even for small companies.
+\item High-performance computer have up to 1'572'864 cores (Sequoia - BlueGene/Q).
 \end{itemize}
 
 \end{frame}
@@ -133,7 +133,7 @@ between processors with messages send over a network (computer clusters, super c
 \item Developed 1993-94 by a international board
 \item Available on nearly all computer platforms
 \item Free Implementations also for LINUX Clusters: {\bf MPICH}\footnote{\href{http://www-unix.mcs.anl.gov/mpi/mpich}{{\tiny http://www-unix.mcs.anl.gov/mpi/mpich}}}
- and {\bf OpenMPI}\footnote{\href{http://www.open-mpi.org/}{{\tiny http://www.open-mpi.org/}}} (former {\bf LAM})
+ and {\bf OpenMPI}\footnote{\href{http://www.open-mpi.org/}{{\tiny http://www.open-mpi.org/}}}
 \item Properties of MPI:
 \begin{itemize}
 \item library with C-, C++ and Fortran bindings (no language extension)
@@ -203,7 +203,7 @@ Machine  & Cells & Time steps & Newton steps & $T_{total}$ \\
   \frametitle<presentation>{Domain Decomposition}
 
   \begin{itemize}
-  \item partition a problem by splitting the domain it into small subdomains
+  \item partition a problem by splitting the domain into smaller subdomains
   \item each part is solved by a different processor
   \item goes back to an idea of H.A. Schwarz who in 1890 presented a method to prove the existence of
         solutions of the Laplace equation on ``complicated'' domains.
@@ -397,9 +397,12 @@ by the method\\
   \frametitle<presentation>{Iterators in a parallel Grid}
   \small
   Dune offers Iterators which only iterate over elements with certain partition types:\\
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
 \begin{lstlisting}
-Grid::template Codim<c>::template Partition<ptype>::Iterator it = gridView.template begin<c,ptype>();
+Grid::template Codim<c>::template Partition<ptype>::Iterator it
+                             = gridView.template begin<c,ptype>();
 \end{lstlisting}
+\only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
 
 \lstinline!ptype! is one of:
   \begin{center}
@@ -454,10 +457,14 @@ neighbor available on the same process.
   \frametitle<presentation>{Communication API}
 
   \texttt{GridView} provides a method for the communication between processes
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
     \begin{lstlisting}
 template<class DHImp, class DataType>
-void communicate ( CommDataHandleIF<DHImp, DataType> &datahandle, InterfaceType interface, CommunicationDirection dir ) const;
+void communicate ( CommDataHandleIF<DHImp, DataType> &datahandle,
+                   InterfaceType interface,
+                   CommunicationDirection dir ) const;
     \end{lstlisting}
+\only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
 where
     \begin{itemize}
     \item \lstinline!CommDataHandleIF!\\
@@ -470,11 +477,14 @@ where
 \begin{frame}[fragile]
   \frametitle<presentation>{Communication API}
   \begin{onlyenv}<presentation>
-  \texttt{GridView} provides a method for the communication between processes
+\lstset{basicstyle=\scriptsize\ttfamily}
     \begin{lstlisting}
 template<class DHImp, class DataType>
-void communicate ( CommDataHandleIF<DHImp, DataType> &datahandle, InterfaceType interface, CommunicationDirection dir ) const;
+void communicate ( CommDataHandleIF<DHImp, DataType> &datahandle,
+                   InterfaceType interface,
+                   CommunicationDirection dir ) const;
     \end{lstlisting}
+\lstset{basicstyle=\normalsize\ttfamily}
 where
     \end{onlyenv}
     \begin{itemize}
@@ -500,11 +510,11 @@ data communicate and only the entities present on both processes are included in
   \begin{itemize}
   \item parallel computations require global communication (e.g. sum(defect) or $\min(\Delta t)$ 
         and synchronization (e.g. a barrier needed for a timing)
-  \item Dune grids provide a collective communicator method:
+  \item Dune grids provide a method which returns a collective communicator object:
     \lstinline!  const CollectiveCommunication & comm () const;!
   \end{itemize}
   
-  \lstinline[basicstyle=\normalfont\ttfamily]!Dune::Grid::CollectiveCommunication! provides:
+The class  \lstinline[basicstyle=\normalfont\ttfamily] !Dune::Grid::CollectiveCommunication! provides the methods:
  \begin{center}
     \scriptsize
     \begin{tabular}{l|l}
@@ -512,7 +522,7 @@ data communicate and only the entities present on both processes are included in
       Method name & Description\\\hline
       \lstinline!rank! & obtain number (rank) of this process\\
       \lstinline!size! & obtain number of processes \\
-      \lstinline!barrier! & wait till all process arrived\\
+      \lstinline!barrier! & wait until all process arrived at the barrier\\
       \lstinline!min! & global min of local values\\
       \lstinline!max! & global max of local values\\
       \lstinline!sum! & global sum of local values\\
@@ -533,10 +543,10 @@ data communicate and only the entities present on both processes are included in
     same work load\\
     $\Rightarrow$ well balanced grids
   \item adaptation leads to unbalanced work load
-  \item only 3D ALUGrid provides working load balance methods to re-balance the work load
+  \item only 3D ALUGrid provides a working load balance methods to re-balance the work load
   \begin{description}[123]
   \item[\tt loadBalance(DataHandle \&data)]:\\
-    re-balances a parallel grid, optionally send also user data
+    re-balances a parallel grid, optionally sends also user data
   \item[\tt DataHandle]:\\
     works like the data handle for the communicate methods
   \end{description}
@@ -551,6 +561,7 @@ With YaspGrid you can determine how the grid is partitioned (as it is a structur
 adaptive grid refinement and load-balancing are not possible) by writing a class derived from
 \lstinline!Dune::YLoadBalance<dim>!
 
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
 \begin{lstlisting}
 template<int dim>
 class YaspPartition : public Dune::YLoadBalance<dim>
@@ -569,19 +580,23 @@ class YaspPartition : public Dune::YLoadBalance<dim>
     }
 };
 \end{lstlisting}
+\only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
 \end{frame}
 
 \begin{frame}[fragile]
   \frametitle<presentation>{Grid-Distribution with YaspGrid}
 Now you can pass the object to the constructor during grid creation
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
 \begin{lstlisting}
 Dune::FieldVector<int,2> n(10), overlap(1);
 Dune::FieldVector<double,2> upper(1.0);
 Dune::FieldVector<bool,dim> periodic(false);
 YaspGrid<2> grid(upper, n, periodic, 0);
 YaspPartition<dim> yp(mpiHelper.size());
-GRID grid(mpiHelper.getCommunicator(), upper, n, periodic, overlap, &yp );
+GRID grid(mpiHelper.getCommunicator(), upper, n, periodic,
+          overlap, &yp );
 \end{lstlisting}
+\only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
 \end{frame}
 
 \subsection{Parallel PDELab}
@@ -608,13 +623,14 @@ Parallel computing in PDELab is very easy.
 \begin{itemize}
 \item ISTL solvers need to be provided a \lstinline!Preconditioner! (like Jacobi, SSOR or ILU), a 
 \lstinline!LinearOperator! (providing a matrix-vector product) and
-a \lstinline!ScalarProduct!. These versions of these components have to fit together.
+a \lstinline!ScalarProduct!. The versions of these components have to fit together.
 \item Parallel solver backends make sure that the correct implementations of 
 \lstinline!Preconditioner!, \lstinline!LinearOperator! and \lstinline!ScalarProduct!
 are choosen matching the type of domain decomposition.
 \item Different solver backends are provided for overlapping and nonoverlapping domain
 decomposition.
 \item The solver backends can be found in the headers \lstinline!dune/pdelab/backend/istlsolverbackend.hh!,
+
 \lstinline!dune/pdelab/backend/ovlpistlsolverbackend.hh! and
 \lstinline!dune/pdelab/backend/novlpistlsolverbackend.hh!.
 \end{itemize}
@@ -634,8 +650,6 @@ of domain decomposition!!!}}
 \begin{frame}
 \frametitle{Parallel Preconditioners}
 \begin{itemize}
-\item To run in parallel Conjugate Gradients (CG) and BiCGStab solvers have to be able to compute parallel matrix vector
-products and scalar products.
 \item As parallel preconditioners to the CG and BiCGStab solvers additive Schwarz methods can be used:
 \begin{itemize}
 \item In this schemes the local subproblem on each processor is solved
@@ -675,7 +689,8 @@ constraints container (usually \lstinline!OverlappingConformingDirichletConstrai
 
 \begin{frame}[fragile]
   \frametitle{Overlapping Example}
-  \begin{lstlisting}[basicstyle=\small]
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
+  \begin{lstlisting}
 // 1. Create an overlapping grid
 Dune::FieldVector<double,2> L(1.0);
 Dune::FieldVector<int,2> N(16);
@@ -699,13 +714,15 @@ typedef ConvectionDiffusionProblem<GV,Real> Param;
 Param param;
 typedef Dune::PDELab::BoundaryConditionType_CD<Param> B;
 B b(gv,param);
-typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
-G g(gv,param);
 \end{lstlisting}  
+\only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
 \end{frame}
 \begin{frame}[fragile]
 \frametitle<presentation>{Overlapping Example Continued}
-  \begin{lstlisting}[basicstyle=\small]
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
+  \begin{lstlisting}
+typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
+G g(gv,param);
 
 //  Compute constrained space
 typedef typename GFS::template ConstraintsContainer<Real>::Type C;
@@ -728,6 +745,7 @@ typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SuperLU<GFS,C> LS;
 LS ls(gfs,cg,5000,2);
 ...
 \end{lstlisting}
+\only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
 \end{frame}
 
 \begin{frame}
@@ -753,12 +771,13 @@ and \lstinline!Scalar! the type of a scalar value in the matrix.
 
 \begin{frame}[fragile]
   \frametitle{Nonoverlapping example}
-  \begin{lstlisting}[basicstyle=\small]
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
+  \begin{lstlisting}
 // 1. Create an non-overlapping grid
 Dune::FieldVector<double,2> L(1.0);
 Dune::FieldVector<int,2> N(16);
 Dune::FieldVector<bool,2> periodic(false);
-int overlap=0; // needs overlap 0 because overlap elements are not assembled
+int overlap=0; // overlap 0 as overlap elements are not assembled
 Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
 typedef Dune::YaspGrid<2>::LeafGridView GV;
 const GV& gv=grid.leafView();
@@ -766,24 +785,26 @@ const GV& gv=grid.leafView();
 // 2. Create correctly constrained grid function space
 typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
 FEM fem;
-typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
-CON con;
+typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CO;
+CO con;
 typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CO,VBE,
+          Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
 GFS gfs(gv,fem,con);
 con.compute_ghosts(gfs); // con stores indices of ghost dofs
 typedef ConvectionDiffusionProblem<GV,Real> Param;
 Param param;
+\end{lstlisting}
+\only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
+\end{frame}
+\begin{frame}[fragile]
+\frametitle<presentation>{Nonoverlapping Example Continued}
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
+  \begin{lstlisting}
 typedef Dune::PDELab::BoundaryConditionType_CD<Param> B;
 B b(gv,param);
 typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
 G g(gv,param);
-\end{lstlisting}
-\end{frame}
-\begin{frame}[fragile]
-\frametitle<presentation>{Nonoverlapping Example Continued}
-  \begin{lstlisting}[basicstyle=\small]
 // Compute constrained space
 typedef typename GFS::template ConstraintsContainer<Real>::Type C;
 C cg;
@@ -801,12 +822,21 @@ LOP lop(param,2);
 typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
 typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,LOP,C,C,MBE,true> GOS;
 GOS gos(gfs,cg,gfs,cg,lop);
+\end{lstlisting}
+\only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
 
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle<presentation>{Nonoverlapping Example Continued}
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
+  \begin{lstlisting}
 // 3. Choose a linear solver 
 typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GFS> LS;
 LS ls(gfs,5000,1);
 ...
 \end{lstlisting}
-  
+\only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
+
 \end{frame}
 
