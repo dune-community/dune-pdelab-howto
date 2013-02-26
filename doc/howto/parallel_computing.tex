@@ -710,6 +710,13 @@ typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
 Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
 GFS gfs(gv,fem);
 
+\end{lstlisting}
+\end{frame}
+\begin{frame}[fragile]
+\frametitle<presentation>{Overlapping Example Continued}
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
+  \begin{lstlisting}
+
 //  define problem parameters
 typedef ConvectionDiffusionProblem<GV,Real> Param;
 Param param;
@@ -717,11 +724,6 @@ typedef Dune::PDELab::BoundaryConditionType_CD<Param> B;
 B b(gv,param);
 typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
 G g(gv,param);
-\end{lstlisting}
-\end{frame}
-\begin{frame}[fragile]
-\frametitle<presentation>{Overlapping Example Continued}
-  \begin{lstlisting}[basicstyle=\small]
 
 //  Compute constrained space
 typedef typename GFS::template ConstraintsContainer<Real>::Type C;
@@ -733,6 +735,13 @@ LOP lop(param,2);
 typedef Dune::PDELab::ISTLMatrixBackend MBE;
 typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,double,double,double,C,C> GO;
 GO go(gfs,cg,gfs,cg,lop);
+
+\end{lstlisting}
+\end{frame}
+\begin{frame}[fragile]
+\frametitle<presentation>{Overlapping Example Continued}
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
+  \begin{lstlisting}
 
 //  Compute affine shift
 typedef typename GO::Traits::Domain V;
@@ -816,7 +825,15 @@ typedef Dune::PDELab::ConvectionDiffusion<Param> LOP;
 LOP lop(param,2);
 typedef Dune::PDELab::ISTLMatrixBackend MBE;
 typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,double,double,double,C,C,true> GO;
-GO gos(gfs,cg,gfs,cg,lop);
+GO go(gfs,cg,gfs,cg,lop);
+
+\end{lstlisting}
+\only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
+\end{frame}
+\begin{frame}[fragile]
+\frametitle<presentation>{Nonoverlapping Example Continued}
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
+  \begin{lstlisting}
 
 // Compute affine shift
 typedef typename GO::Traits::Domain V;
