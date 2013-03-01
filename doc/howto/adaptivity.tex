@@ -501,19 +501,19 @@
 The adaptive refinement loop in listing 20 starts at the line 53. For $i=0$, our
 PDE is solved (line 64) on the base grid level. The solution is stored in the
 vector of degrees of freedom $u$ (line 31). Afterwards, we will compute
-a local error indicator $\eta$ (line 78-79) for the solution $u$.
+a local error indicator $\eta$ (lines 78-79) for the solution $u$.
 Based on this information, we will be able to decide which grid elements
 should be marked for refinement (or coarsening) in the next step.
 For this decision, we offer two different strategies: element fraction or error fraction.
 
 Example: If you choose a refinement fraction $\alpha=0.2$, this means in the
 case of element fraction that the top $20\%$ of all
-elements in terms of local error will be refined, or, in the case of error fraction,
-all elements whose local error exceeds $80\%$ of the total error will be refined.
+elements in terms of local error will be refined, or, in the case of error
+fraction, the contribution of all refined cells to the total error is $20\%$.
 
 After the grid function space and the solution are also adapted on the grid,
-you need to make sure that the Dirichlet boundary constraints need to be
-re-applied on the adapted solution vector $u$.
+note that the Dirichlet boundary constraints need to be
+re-applied on the adapted solution vector $u$ (line 104).
 
 
 \subsubsection*{Error indicator $\eta$}
