@@ -46,7 +46,8 @@ noinst_HEADERS =				\
 	example05_toperator.hh			\
 	example06_Q1Q1.hh			\
 	example06_bctype.hh			\
-	example07_adaptivity.hh
+	example07_adaptivity.hh			\
+	example07_error_indicator.hh
 
 # novlp_test_SOURCES = novlp_test.cc
 # novlp_test_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) \
