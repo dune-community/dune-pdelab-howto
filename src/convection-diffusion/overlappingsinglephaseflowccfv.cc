@@ -53,10 +53,9 @@ void test (const GV& gv)
   FEM fem(Dune::GeometryType(Dune::GeometryType::cube,dim)); // works only for cubes
   
   // make function space
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::P0ParallelConstraints,VBE,
-    Dune::PDELab::SimpleGridFunctionStaticSize> GFS; 
+    Dune::PDELab::P0ParallelConstraints,VBE> GFS;
   watch.reset();
   GFS gfs(gv,fem);
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
@@ -89,7 +88,7 @@ void test (const GV& gv)
   Dune::PDELab::constraints(gfs,cc,false);
 
   // grid operator
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,VBE::MatrixBackend,RF,RF,RF,
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,Dune::PDELab::ISTLMatrixBackend,RF,RF,RF,
     CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop);
 
@@ -113,9 +112,9 @@ void test (const GV& gv)
   DGF dgf(gfs,x);
 
   // output grid function with VTKWriter
-  // Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
-  // vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  // vtkwriter.pwrite("single_phase_yasp2d_CCFV","vtk","",Dune::VTK::appendedraw);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
+  vtkwriter.pwrite("single_phase_yasp2d_CCFV","vtk","",Dune::VTK::appendedraw);
 }
 
 int main(int argc, char** argv)

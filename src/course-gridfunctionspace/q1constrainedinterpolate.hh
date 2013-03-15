@@ -4,17 +4,22 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/constraints/constraints.hh>
+#include<dune/pdelab/finiteelementmap/q1fem.hh>
+#include<dune/pdelab/backend/istlvectorbackend.hh>
 
 template<typename GV>
 void q1interpolate (const GV& gv)
 {
   typedef typename GV::Grid::ctype D;// domain type
   typedef double R;                  // range type
+  const int dim = GV::dimension;
 
-  Q1LocalFiniteElementMap<D,R> fem;  // map entity to finite element
+  typedef Dune::PDELab::Q1LocalFiniteElementMap<D,R,dim> FEM;
+  FEM fem;
 
-  typedef Dune::PDELab::GridFunctionSpace<GV,
-	Q1LocalFiniteElementMap<D,R>,Q1Constraints> GFS;                    /*@\label{cint:newparameter}@*/
+  typedef Dune::PDELab::NoConstraints CON;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;          /*@\label{cint:newparameter}@*/
   GFS gfs(gv,fem);                   // make grid function space
 
   typedef typename GFS::template ConstraintsContainer<R>::Type T;       /*@\label{cint:container}@*/ 

@@ -9,15 +9,16 @@ void example01a_RT (const GV& gv)
   typedef Dune::PDELab::RannacherTurek2DLocalFiniteElementMap<Coord,Real> FEM;
   FEM fem;
   typedef Dune::PDELab::NoConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
+  gfs.name("solution");
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
 
   // <<<3>>> Make grid operator
   typedef Example01aLocalOperator LOP; 
   LOP lop;
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
   GO go(gfs,gfs,lop);
 
@@ -33,9 +34,7 @@ void example01a_RT (const GV& gv)
   slp.apply();
 
   // <<<6>>> graphical output
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
-  DGF udgf(gfs,u);
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"solution"));
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,u);
   vtkwriter.write("example01_RT",Dune::VTK::appendedraw);
 }

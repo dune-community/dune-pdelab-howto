@@ -96,10 +96,10 @@ void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
   Dune::Timer watch;
 
   // make function space
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-  typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
-  CON con;
+  typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints<GV> CON;
+  typedef Dune::PDELab::GridFunctionSpace
+    <GV,FEM,CON,Dune::PDELab::ISTLVectorBackend<> > GFS;
+  CON con(gv);
   GFS gfs(gv,fem,con);
   con.compute_ghosts(gfs);
 
@@ -112,8 +112,8 @@ void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
   // make grid operator
   typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP; 
   LOP lop(problem);
-  typedef Dune::PDELab::GridOperator<GFS,GFS,
-    LOP,VBE::MatrixBackend,R,R,R,CC,CC,true> GO;
+  typedef Dune::PDELab::GridOperator
+      <GFS,GFS,LOP,Dune::PDELab::ISTLMatrixBackend,R,R,R,CC,CC,true> GO;
   GO go(gfs,cc,gfs,cc,lop);
 
   // make coefficent Vector and initialize it from a function
@@ -126,7 +126,7 @@ void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
   Dune::PDELab::set_nonconstrained_dofs(cc,0.0,x);
 
   typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_SSORk<GO> LS;
-  LS ls (gfs,5000,3,2);
+  LS ls (go,5000,3,2);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
   SLP slp(go,x,ls,1e-12);
   slp.apply();

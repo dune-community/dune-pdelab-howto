@@ -13,7 +13,7 @@ void cadsample_P1 (const GV& gv, const M& m, const B& b, const G& g,
   FEM fem;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
   CON con;
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
@@ -24,17 +24,17 @@ void cadsample_P1 (const GV& gv, const M& m, const B& b, const G& g,
   std::cout << "constrained dofs=" << cc.size()
             << " of " << gfs.globalSize() << std::endl;
 
-  // <<<3>>> Make FE function extending Dirichlet boundary conditions
-  typedef typename GFS::template VectorContainer<Real>::Type V;
-  V x(gfs,0.0);
-  Dune::PDELab::interpolate(g,gfs,x);
-
-  // <<<4>>> Make grid operator
+  // <<<3>>> Make grid operator
   typedef CADLocalOperator<M,B,J> LOP;                                  // NEW
   LOP lop(m, b, j);
-  typedef Dune::PDELab::ISTLBCRSMatrixBackend<1,1> MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
   GOS gos(gfs,cc,gfs,cc,lop);
+
+  // <<<4>>> Make FE function extending Dirichlet boundary conditions
+  typedef typename GO::Traits::Domain V;
+  V x(gfs,0.0);
+  Dune::PDELab::interpolate(g,gfs,x);
 
   // <<<5>>> Select a linear solver backend
 #if HAVE_SUPERLU

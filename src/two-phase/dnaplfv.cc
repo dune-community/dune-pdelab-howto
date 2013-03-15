@@ -26,6 +26,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
+#include<dune/pdelab/gridfunctionspace/subspace.hh>
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
@@ -449,11 +450,13 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
   FEM fem(Dune::GeometryType(Dune::GeometryType::cube,dim));
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<2> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-    Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
-  typedef Dune::PDELab::PowerGridFunctionSpace<GFS,2,
-    Dune::PDELab::GridFunctionSpaceBlockwiseMapper> TPGFS;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE0;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE0> GFS;
+
+  typedef Dune::PDELab::ISTLVectorBackend
+    <Dune::PDELab::ISTLParameters::static_blocking,2> VBE;
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS,2,VBE,
+    Dune::PDELab::EntityBlockedOrderingTag> TPGFS;
   watch.reset();
   CON con;
   GFS gfs(gv,fem,con);
@@ -461,9 +464,11 @@ void test (const GV& gv, int timesteps, double timestep)
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
   // <<<2b>>> make subspaces for visualization
-  typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,0> P_lSUB;
+  typedef Dune::PDELab::GridFunctionSubSpace
+    <TPGFS,Dune::PDELab::TypeTree::TreePath<0> > P_lSUB;
   P_lSUB p_lsub(tpgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<TPGFS,1> P_gSUB;
+  typedef Dune::PDELab::GridFunctionSubSpace
+    <TPGFS,Dune::PDELab::TypeTree::TreePath<1> > P_gSUB;
   P_gSUB p_gsub(tpgfs);
 
   // <<<3>>> make parameter object
@@ -480,7 +485,7 @@ void test (const GV& gv, int timesteps, double timestep)
   LOP lop(tp);
   typedef Dune::PDELab::TwoPhaseOnePointTemporalOperator<TP> MLOP;
   MLOP mlop(tp);
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   Dune::PDELab::Alexander2Parameter<RF> method;
   typedef Dune::PDELab::GridOperator<TPGFS,TPGFS,LOP,MBE,RF,RF,RF,C,C> GO0;
   GO0 go0(tpgfs,cg,tpgfs,cg,lop);

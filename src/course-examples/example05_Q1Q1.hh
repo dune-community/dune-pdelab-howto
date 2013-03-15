@@ -10,23 +10,28 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend) {
   typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM0;
   FEM0 fem0;
   typedef Dune::PDELab::NoConstraints CON;                      // pure Neumann: no constraints
-  typedef Dune::PDELab::ISTLVectorBackend<2> VBE;               // block size 2
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM0,CON,VBE> GFS0;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE0;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE1;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM0,CON,VBE0> GFS0;
   GFS0 gfs0(gv,fem0);
 
   typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM1;
   FEM1 fem1;                                                    // might use Q2 as well
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM1,CON,VBE> GFS1;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM1,CON,VBE1> GFS1;
   GFS1 gfs1(gv,fem1);
 
-  typedef Dune::PDELab::CompositeGridFunctionSpace<             // compose function space
-  Dune::PDELab::GridFunctionSpaceBlockwiseMapper,GFS0,GFS1> GFS;// point block ordering
+  typedef Dune::PDELab::ISTLVectorBackend
+    <Dune::PDELab::ISTLParameters::static_blocking,2> VBE;               // block size 2
+  typedef Dune::PDELab::CompositeGridFunctionSpace             // compose function space
+    <VBE,Dune::PDELab::EntityBlockedOrderingTag,GFS0,GFS1> GFS;// point block ordering
   GFS gfs(gfs0,gfs1);
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
 
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,0> U0SUB;      // subspaces for later use
+  typedef Dune::PDELab::GridFunctionSubSpace
+    <GFS,Dune::PDELab::TypeTree::TreePath<0> > U0SUB;      // subspaces for later use
   U0SUB u0sub(gfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,1> U1SUB;
+  typedef Dune::PDELab::GridFunctionSubSpace
+    <GFS,Dune::PDELab::TypeTree::TreePath<1> > U1SUB;
   U1SUB u1sub(gfs);
 
   // <<<3>>> Make instationary grid operator
@@ -35,7 +40,7 @@ void example05_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend) {
   LOP lop(d_0,d_1,lambda,sigma,kappa,2);                        // spatial part
   typedef Example05TimeLocalOperator TLOP; 
   TLOP tlop(tau,2);                                             // temporal part
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO0;
   GO0 go0(gfs,gfs,lop);
   typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,CC,CC> GO1;

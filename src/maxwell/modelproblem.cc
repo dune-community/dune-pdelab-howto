@@ -41,6 +41,7 @@
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/finiteelementmap/opbfem.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include<dune/pdelab/gridfunctionspace/subspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -167,11 +168,12 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   // <<<2>>> Make grid function space
   const int blocksize = Dune::PB::PkSize<degree,dim>::value;
   typedef Dune::PDELab::NoConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<blocksize> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEMDG,CON,VBE,Dune::PDELab::SimpleGridFunctionStaticSize> GFSDG;
+  typedef Dune::PDELab::ISTLVectorBackend
+    <Dune::PDELab::ISTLParameters::static_blocking,blocksize> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEMDG,CON,VBE> GFSDG;
   GFSDG gfsdg(gv,femdg);
-  typedef Dune::PDELab::GridFunctionSpaceLexicographicMapper GFMapper;
-  typedef Dune::PDELab::PowerGridFunctionSpace<GFSDG,dim*2,GFMapper> GFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace
+    <GFSDG,dim*2,Dune::PDELab::ISTLVectorBackend<> > GFS;
   GFS gfs(gfsdg);
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
@@ -186,7 +188,6 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   LOP lop(param);
   typedef Dune::PDELab::DGMaxwellTemporalOperator<Param,FEMDG> TLOP; 
   TLOP tlop(param);
-  typedef typename VBE::MatrixBackend MBE;
   Dune::PDELab::ExplicitEulerParameter<Real> method1;
   Dune::PDELab::HeunParameter<Real> method2;
   Dune::PDELab::Shu3Parameter<Real> method3;
@@ -197,10 +198,12 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   if (degree==2) {method=&method3; std::cout << "setting Shu 3" << std::endl;}
   if (degree==3) {method=&method4; std::cout << "setting RK4" << std::endl;}
 
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
+  typedef Dune::PDELab::GridOperator
+    <GFS,GFS,LOP,Dune::PDELab::ISTLMatrixBackend,Real,Real,Real,C,C> GO0;
   GO0 go0(gfs,cg,gfs,cg,lop);
  
-  typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,C,C> GO1;
+  typedef Dune::PDELab::GridOperator
+    <GFS,GFS,TLOP,Dune::PDELab::ISTLMatrixBackend,Real,Real,Real,C,C> GO1;
   GO1 go1(gfs,cg,gfs,cg,tlop);
 
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1,false> IGO;
@@ -227,19 +230,19 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
 
   // <<<7>>> graphics for initial guess
   Dune::PDELab::FilenameHelper fn(name);
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,0> U0SUB;
+  using namespace Dune::PDELab::TypeTree;
+  typedef Dune::PDELab::GridFunctionSubSpace<GFS,TreePath<0> > U0SUB;
   U0SUB u0sub(gfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,1> U1SUB;
+  typedef Dune::PDELab::GridFunctionSubSpace<GFS,TreePath<1> > U1SUB;
   U1SUB u1sub(gfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,2> U2SUB;
+  typedef Dune::PDELab::GridFunctionSubSpace<GFS,TreePath<2> > U2SUB;
   U2SUB u2sub(gfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,3> U3SUB;
+  typedef Dune::PDELab::GridFunctionSubSpace<GFS,TreePath<3> > U3SUB;
   U3SUB u3sub(gfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,4> U4SUB;
+  typedef Dune::PDELab::GridFunctionSubSpace<GFS,TreePath<4> > U4SUB;
   U4SUB u4sub(gfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,5> U5SUB;
+  typedef Dune::PDELab::GridFunctionSubSpace<GFS,TreePath<5> > U5SUB;
   U5SUB u5sub(gfs);
-  int counter=0;
   {
     typedef Dune::PDELab::DiscreteGridFunction<U0SUB,V> U0DGF;
     U0DGF u0dgf(u0sub,xold);
@@ -267,6 +270,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   }
 
   // <<<8>>> time loop
+  int counter=0;
   Real time = 0.0;
   Real dt = timestep;
   V x(gfs,0.0);

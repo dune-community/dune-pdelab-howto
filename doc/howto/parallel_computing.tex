@@ -705,9 +705,8 @@ const GV& gv=grid.leafView();
 typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
 FEM fem;
 typedef Dune::PDELab::OverlappingConformingDirichletConstraints CON;
-typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
 GFS gfs(gv,fem);
 
 \end{lstlisting}
@@ -797,9 +796,8 @@ typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
 FEM fem;
 typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
 CON con;
-typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
 GFS gfs(gv,fem,con);
 con.compute_ghosts(gfs); // con stores indices of ghost dofs
 typedef ConvectionDiffusionProblem<GV,Real> Param;
@@ -825,7 +823,7 @@ typedef Dune::PDELab::ConvectionDiffusion<Param> LOP;
 LOP lop(param,2);
 typedef Dune::PDELab::ISTLMatrixBackend MBE;
 typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,double,double,double,C,C,true> GO;
-GO go(gfs,cg,gfs,cg,lop);
+GO gos(gfs,cg,gfs,cg,lop);
 
 \end{lstlisting}
 \only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
@@ -834,6 +832,7 @@ GO go(gfs,cg,gfs,cg,lop);
 \frametitle<presentation>{Nonoverlapping Example Continued}
 \only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
   \begin{lstlisting}
+
 
 // Compute affine shift
 typedef typename GO::Traits::Domain V;

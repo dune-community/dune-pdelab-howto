@@ -43,7 +43,6 @@
 
 #include<dune/pdelab/stationary/linearproblem.hh>
 
-//#include<dune/pdelab/adaptivity/adapt.hh>
 #include<dune/pdelab/adaptivity/adaptivity.hh>
 
 #include<dune/common/parametertree.hh>
@@ -90,8 +89,8 @@ void driverDG ( Grid& grid,
   // make grid function space 
   // note: adaptivity relies on leaf grid view object being updated by the grid on adaptation
   typedef Dune::PDELab::NoConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE1;
-  typedef Dune::PDELab::ISTLVectorBackend<blocksize> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE1;
+  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking,blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEMDG,CON,VBE> GFS;
   GFS gfs(grid.leafView(),femdg);
 
@@ -151,9 +150,9 @@ void driverDG ( Grid& grid,
       // make local operator
       typedef Dune::PDELab::ConvectionDiffusionDG<Problem,FEMDG> LOP;
       LOP lop(problem,m,w,alpha);
-      typedef typename VBE::MatrixBackend MBE;
+      typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
 
-      typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC,true> GO;
+      typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
       GO go(gfs,cc,gfs,cc,lop);
 
       // make linear solver and solve problem
@@ -206,7 +205,11 @@ void driverDG ( Grid& grid,
       typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,Real>::Type U0;
       U0 eta(p0gfs,0.0);
       estgo.residual(u,eta);
-      for (unsigned int i=0; i<eta.N(); i++) eta[i] = sqrt(eta[i]); 
+
+      for( typename U0::iterator it = eta.begin(), end = eta.end();
+           it != end; ++it )
+        *it = sqrt(*it);
+
       Real estimated_error = eta.two_norm();
       ee.push_back(estimated_error);
 

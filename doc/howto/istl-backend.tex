@@ -466,7 +466,8 @@ apply(M& A, V& z, W& r, typename V::ElementType reduction);
   \begin{lstlisting}
   // make grid function space
   typedef Dune::PDELab::NoConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<blocksize> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend
+    <Dune::PDELab::ISTLParameters::static_blocking,blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
@@ -477,7 +478,7 @@ apply(M& A, V& z, W& r, typename V::ElementType reduction);
     = Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn;
   typedef Dune::PDELab::ConvectionDiffusionDG<PROBLEM,FEM> LOP;
   LOP lop(problem,m,w,alpha);
-  typedef typename VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;

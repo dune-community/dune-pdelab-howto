@@ -88,25 +88,6 @@ public:
 };
 
 
-// selecting the boundary condition type
-class BCTypeParam
-  : public Dune::PDELab::DirichletConstraintsParameters /*@\label{bcp:base}@*/
-{
-public:
-
-  template<typename I>
-  bool isDirichlet(
-                   const I & intersection,   /*@\label{bcp:name}@*/
-                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-                   ) const
-  {
-
-    //Dune::FieldVector<typename I::ctype, I::dimension>
-    //  xg = intersection.geometry().global( coord );
-    return true;  // Dirichlet b.c. on all boundaries
-  }
-};
-
 // function for Dirichlet boundary conditions and initialization
 template<typename GV, typename RF>
 class G
@@ -167,7 +148,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
     LocalBasisType::Traits::RangeFieldType R;
 
   // make function space
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
     VBE > GFS;
   GFS gfs(gv,fem);
@@ -176,6 +157,8 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
   C cg;
   cg.clear();
+
+  typedef Dune::PDELab::DirichletConstraintsParameters BCTypeParam;
   BCTypeParam bctype;
   Dune::PDELab::constraints(bctype,gfs,cg);
 
@@ -186,8 +169,9 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   JType j(gv);
   typedef Dune::PDELab::Poisson<FType,BCTypeParam,JType,q> LOP;
   LOP lop(f,bctype,j);
+  typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,
-    LOP,VBE::MatrixBackend,R,R,R,C,C> GO;
+                                     LOP,MBE,R,R,R,C,C> GO;
   GO go(gfs,cg,gfs,cg,lop);
 
   // make coefficent Vector and initialize it from a function

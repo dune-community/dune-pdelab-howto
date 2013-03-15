@@ -96,16 +96,20 @@ public:
 };
 
 #if HAVE_ALUGRID
-class ALUUnitSquare : public Dune::ALUSimplexGrid<2,2> 
+class ALUUnitSquare :
+  public Dune::ALUGrid<2,2,Dune::simplex,Dune::conforming>
 {
 public:
-  ALUUnitSquare () : Dune::ALUSimplexGrid<2,2>("grids/2dsimplex.alu") {}
+  ALUUnitSquare () :
+    Dune::ALUGrid<2,2,Dune::simplex,Dune::conforming>("grids/2dsimplex.alu") {}
 };
 
-class ALUCubeUnitSquare : public Dune::ALUCubeGrid<3,3> 
+class ALUCubeUnitSquare : public Dune::ALUGrid<3,3,Dune::cube,Dune::conforming>
 {
 public:
-  ALUCubeUnitSquare () : Dune::ALUCubeGrid<3,3>("grids/3drefinedcube.alu") {}
+  ALUCubeUnitSquare () :
+    Dune::ALUGrid<3,3,Dune::cube,Dune::conforming>
+    ("grids/3drefinedcube.alu") {}
 };
 
 // class ALUReentrantCorner : public Dune::GridPtr<Dune::ALUSimplexGrid<2,2> >

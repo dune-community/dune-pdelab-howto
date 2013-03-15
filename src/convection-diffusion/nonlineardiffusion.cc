@@ -174,9 +174,8 @@ void sequential (const GV& gv)
   typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM;
   FEM fem;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-    Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
   // <<<2b>>> define problem parameters
@@ -196,7 +195,7 @@ void sequential (const GV& gv)
   // <<<4>>> Make grid operator
   typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
   LOP lop(param,8);
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
   GO go(gfs,cg,gfs,cg,lop);
 
@@ -252,15 +251,15 @@ void parallel_nonoverlapping_Q1 (const GV& gv)
   const int dim = GV::dimension;
   int rank = gv.comm().rank();
 
+  typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints<GV> CON;
+  CON con(gv);
   // <<<2>>> Make grid function space
   typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem;
-  typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
-  CON con;
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-    Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem,con);
+
   con.compute_ghosts(gfs); // con stores indices of ghost dofs
 
   // <<<2b>>> define problem parameters
@@ -280,7 +279,7 @@ void parallel_nonoverlapping_Q1 (const GV& gv)
   // <<<4>>> Make grid operator
   typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
   LOP lop(param,2);
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C,true> GO;
   GO go(gfs,cg,gfs,cg,lop);
 
@@ -291,8 +290,10 @@ void parallel_nonoverlapping_Q1 (const GV& gv)
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
   // <<<6>>> Make a linear solver 
-  typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GFS> LS;
-  LS ls(gfs,5000,1);
+  typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_SSORk<GO> LS;
+  LS ls (go,5000,3,2);
+  //typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GFS> LS;
+  //LS ls(gfs,5000,1);
 
   // <<<7>>> solve nonlinear problem
   Dune::PDELab::Newton<GO,LS,V> newton(go,x,ls);
@@ -322,9 +323,8 @@ void parallel_overlapping_Q1 (const GV& gv)
   typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem;
   typedef Dune::PDELab::OverlappingConformingDirichletConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-    Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
   // <<<2b>>> define problem parameters
@@ -344,7 +344,7 @@ void parallel_overlapping_Q1 (const GV& gv)
   // <<<4>>> Make grid operator
   typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
   LOP lop(param,2);
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
   GO go(gfs,cg,gfs,cg,lop);
 
