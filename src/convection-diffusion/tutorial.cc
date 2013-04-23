@@ -3,7 +3,7 @@
 #include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
 
 /** Parameter class for the stationary convection-diffusion equation of the following form:
- *  
+ *
  * \f{align*}{
  *   \nabla\cdot(-A(x) \nabla u + b(x) u) + c(x)u &=& f \mbox{ in } \Omega,  \ \
  *                                              u &=& g \mbox{ on } \partial\Omega_D (Dirichlet)\ \
@@ -47,14 +47,14 @@ public:
   }
 
   //! sink term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 0.0;
   }
 
   //! source term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 0.0;
@@ -73,7 +73,7 @@ public:
   }
 
   //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& xlocal) const
   {
     typename Traits::DomainType x = e.geometry().global(xlocal);
@@ -81,14 +81,14 @@ public:
   }
 
   //! flux boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
   }
 
   //! outflow boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
@@ -97,7 +97,7 @@ public:
 
 int main(int argc, char **argv)
 {
-  // initialize MPI, finalize is done automatically on exit 
+  // initialize MPI, finalize is done automatically on exit
   Dune::MPIHelper::instance(argc,argv);
 
   // command line args
@@ -119,19 +119,19 @@ int main(int argc, char **argv)
   grid->loadBalance();
 
   // make problem parameters
-  typedef GenericEllipticProblem<typename GM::LeafGridView,NumberType> Problem;
+  typedef GenericEllipticProblem<GM::LeafGridView,NumberType> Problem;
   Problem problem;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
   BCType bctype(grid->leafView(),problem);
 
   // make a finite element space
-  //typedef Dune::PDELab::CGSpace<GM,NumberType,degree,BCType,elemtype,meshtype,solvertype> FS; 
+  //typedef Dune::PDELab::CGSpace<GM,NumberType,degree,BCType,elemtype,meshtype,solvertype> FS;
   //FS fs(*grid,bctype);
   typedef Dune::PDELab::DGPkSpace<GM,NumberType,degree,elemtype,solvertype> FS;
   FS fs(grid->leafView());
 
   // make a degree of freedom vector and initialize it with a function
-  typedef typename FS::DOF X;
+  typedef FS::DOF X;
   X x(fs.getGFS(),0.0);
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
   G g(grid->leafView(),problem);
@@ -144,23 +144,23 @@ int main(int argc, char **argv)
   // assembler for finite elemenent problem
   //typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,typename FS::FEM> LOP;
   //LOP lop(problem);
-  typedef Dune::PDELab::ConvectionDiffusionDG<Problem,typename FS::FEM> LOP;
+  typedef Dune::PDELab::ConvectionDiffusionDG<Problem,FS::FEM> LOP;
   LOP lop(problem,Dune::PDELab::ConvectionDiffusionDGMethod::SIPG,Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn,2.0);
   typedef Dune::PDELab::GalerkinGlobalAssembler<FS,LOP,solvertype> ASSEMBLER;
   ASSEMBLER assembler(fs,lop);
-  
+
   // make linear solver and solve problem
   typedef Dune::PDELab::ISTLSolverBackend_IterativeDefault<FS,ASSEMBLER,solvertype> SBE;
   //typedef Dune::PDELab::ISTLSolverBackend_CG_AMG_SSOR<FS,ASS,solvertype> SBE;
   SBE sbe(fs,assembler,5000,1);
-  typedef Dune::PDELab::StationaryLinearProblemSolver<typename ASSEMBLER::GO,typename SBE::LS,X> SLP;
+  typedef Dune::PDELab::StationaryLinearProblemSolver<ASSEMBLER::GO,SBE::LS,X> SLP;
   SLP slp(*assembler,x,*sbe,1e-6);
   slp.apply();
 
   // output grid to VTK file
-  Dune::SubsamplingVTKWriter<typename GM::LeafGridView> vtkwriter(grid->leafView(),degree-1);
-  typename FS::DGF xdgf(fs.getGFS(),x);
-  vtkwriter.addVertexData(new typename FS::VTKF(xdgf,"x_h"));
+  Dune::SubsamplingVTKWriter<GM::LeafGridView> vtkwriter(grid->leafView(),degree-1);
+  FS::DGF xdgf(fs.getGFS(),x);
+  vtkwriter.addVertexData(new FS::VTKF(xdgf,"x_h"));
   vtkwriter.write("test",Dune::VTK::appendedraw);
 
   // done

@@ -1,5 +1,5 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief High-level test with Poisson equation
 */
 #ifdef HAVE_CONFIG_H
@@ -44,6 +44,8 @@
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
+#include<dune/pdelab/gridfunctionspace/vtk.hh>
+
 #include"../utility/gridexamples.hh"
 
 #define PROBLEM_A
@@ -82,11 +84,11 @@ const bool graphics = true;
   \tparam T2  a grid function type
 */
 template<typename T1, typename T2>
-class DifferenceSquaredAdapter 
+class DifferenceSquaredAdapter
   : public Dune::PDELab::GridFunctionBase<
   Dune::PDELab::GridFunctionTraits<typename T1::Traits::GridViewType,
-				   typename T1::Traits::RangeFieldType,
-				   1,Dune::FieldVector<typename T1::Traits::RangeFieldType,1> >
+                   typename T1::Traits::RangeFieldType,
+                   1,Dune::FieldVector<typename T1::Traits::RangeFieldType,1> >
   ,DifferenceSquaredAdapter<T1,T2> >
 {
 public:
@@ -94,14 +96,14 @@ public:
                                            typename T1::Traits::RangeFieldType,
                                            1,Dune::FieldVector<typename T1::Traits::RangeFieldType,1> > Traits;
 
-  //! constructor 
+  //! constructor
   DifferenceSquaredAdapter (const T1& t1_, const T2& t2_) : t1(t1_), t2(t2_) {}
 
   //! \copydoc GridFunctionBase::evaluate()
-  inline void evaluate (const typename Traits::ElementType& e, 
-                        const typename Traits::DomainType& x, 
+  inline void evaluate (const typename Traits::ElementType& e,
+                        const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  {  
+  {
     typename T1::Traits::RangeType y1;
     t1.evaluate(e,x,y1);
     typename T2::Traits::RangeType y2;
@@ -114,7 +116,7 @@ public:
   {
     return t1.getGridView();
   }
-  
+
 private:
   const T1& t1;
   const T2& t2;
@@ -123,14 +125,14 @@ private:
 //! solve problem with DG method
 template<class GV, class FEM, class PROBLEM, int degree, int blocksize>
 void runDG(
-           const GV& gv, 
-           const FEM& fem, 
+           const GV& gv,
+           const FEM& fem,
            PROBLEM& problem,
-           std::string basename, 
-           int level, 
-           std::string method, 
+           std::string basename,
+           int level,
+           std::string method,
            std::string weights,
-           double alpha 
+           double alpha
            )
 {
   // coordinate and result type
@@ -141,9 +143,9 @@ void runDG(
   std::stringstream fullname;
   fullname << basename << "_" << method << "_w" << weights << "_k" << degree << "_dim" << dim << "_level" << level;
 
-  // make grid function space 
+  // make grid function space
   typedef Dune::PDELab::NoConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<blocksize> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking,blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
@@ -156,7 +158,7 @@ void runDG(
   if (weights=="OFF") w = Dune::PDELab::ConvectionDiffusionDGWeights::weightsOff;
   typedef Dune::PDELab::ConvectionDiffusionDG<PROBLEM,FEM> LOP;
   LOP lop(problem,m,w,alpha);
-  typedef typename VBE::MatrixBackend MBE;
+  typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
 
@@ -173,14 +175,9 @@ void runDG(
   int ls_verbosity = 2;
   if (method=="SIPG")
     {
-      // TODO: "parallelistlhelper.hh" needs to be extended: 
-      // AMGVectorTypeSelector unknown to BlockProcessor for this case 
-      // where blocksize > 1 for a single PDE
-      //typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<GFS> LS;
-      //LS ls(2,10000,ls_verbosity);
-
       typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
       LS ls(10000,ls_verbosity);
+
       typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
       SLP slp(go,u,ls,1e-12);
       slp.apply();
@@ -259,7 +256,7 @@ int main(int argc, char** argv)
           Dune::FieldVector<double,dim> L(1.0);
           Dune::FieldVector<int,dim> N(1);
           Dune::FieldVector<bool,dim> P(false);
-          typedef Dune::YaspGrid<dim> Grid; 
+          typedef Dune::YaspGrid<dim> Grid;
           Grid grid(L,N,P,0);
           typedef Grid::LeafGridView GV;
 
@@ -333,7 +330,7 @@ int main(int argc, char** argv)
           Dune::FieldVector<double,dim> L(1.0);
           Dune::FieldVector<int,dim> N(1);
           Dune::FieldVector<bool,dim> P(false);
-          typedef Dune::YaspGrid<dim> Grid; 
+          typedef Dune::YaspGrid<dim> Grid;
           Grid grid(L,N,P,0);
           typedef Grid::LeafGridView GV;
 
@@ -381,28 +378,29 @@ int main(int argc, char** argv)
                   const int degree=1;
                   typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::cube> FEMDG;
                   FEMDG femdg;
-                  const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
+                  const int blocksize = Dune::PB::PkSize<degree,dim>::value;
                   runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,problemlabel,level,"SIPG","ON",2.0);
+
                 }
                 if (degree_dyn==2) {
                   const int degree=2;
                   typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::cube> FEMDG;
                   FEMDG femdg;
-                  const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
+                  const int blocksize = Dune::PB::PkSize<degree,dim>::value;
                   runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,problemlabel,level,"SIPG","ON",2.0);
                 }
                 if (degree_dyn==3) {
                   const int degree=3;
                   typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::cube> FEMDG;
                   FEMDG femdg;
-                  const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
+                  const int blocksize = Dune::PB::PkSize<degree,dim>::value;
                   runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,problemlabel,level,"SIPG","ON",2.0);
                 }
                 if (degree_dyn==4) {
                   const int degree=4;
                   typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::cube> FEMDG;
                   FEMDG femdg;
-                  const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
+                  const int blocksize = Dune::PB::PkSize<degree,dim>::value;
                   runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,problemlabel,level,"SIPG","ON",2.0);
                 }
               }
@@ -416,12 +414,12 @@ int main(int argc, char** argv)
 
           // make grid
           ALUUnitCube<dim> unitcube;
-          typedef ALUUnitCube<dim>::GridType Grid; 
+          typedef ALUUnitCube<dim>::GridType Grid;
           typedef Grid::LeafGridView GV;
 
           unitcube.grid().globalRefine( level );
             {
-              const GV& gv=unitcube.grid().leafView(); 
+              const GV& gv=unitcube.grid().leafView();
 
 #ifdef PROBLEM_A
               typedef ParameterA<GV,double> PROBLEM;
@@ -455,7 +453,7 @@ int main(int argc, char** argv)
               PROBLEM problem;
               std::string problemlabel("F");
 #endif
-               
+
               problemlabel.append("_SIMPLEX");
 
               if (method=="SIPG") {
@@ -489,13 +487,13 @@ int main(int argc, char** argv)
 
           // make grid
           ALUUnitCube<dim> unitcube;
-          typedef ALUUnitCube<dim>::GridType Grid; 
+          typedef ALUUnitCube<dim>::GridType Grid;
           typedef Grid::LeafGridView GV;
 
 
           unitcube.grid().globalRefine( level );
             {
-              const GV& gv=unitcube.grid().leafView(); 
+              const GV& gv=unitcube.grid().leafView();
 
 #ifdef PROBLEM_A
               typedef ParameterA<GV,double> PROBLEM;

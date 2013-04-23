@@ -56,6 +56,8 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
+#include<dune/pdelab/gridfunctionspace/vtk.hh>
+#include<dune/pdelab/gridfunctionspace/subspace.hh>
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/gridoperator/onestep.hh>
@@ -119,7 +121,7 @@ int main(int argc, char** argv)
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafView();
       example05_Q1Q1(gv,dtstart,dtmax,tend);
-      //example05_Q2Q2(gv,dtstart,dtmax,tend);
+      example05_Q2Q2(gv,dtstart,dtmax,tend);
     }
   }
   catch (Dune::Exception &e){

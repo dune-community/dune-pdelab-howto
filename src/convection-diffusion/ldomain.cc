@@ -94,7 +94,7 @@ void driverFEM (Grid& grid,
   // note: adaptivity relies on leaf grid view object being updated by the grid on adaptation 
   //typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   CON con;
   GFS gfs(grid.leafView(),fem,con);
@@ -157,7 +157,7 @@ void driverFEM (Grid& grid,
       // make local operator
       typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
       LOP lop(problem);
-      typedef VBE::MatrixBackend MBE;
+      typedef Dune::PDELab::ISTLMatrixBackend MBE;
       typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC,true> GO;
       GO go(gfs,cc,gfs,cc,lop);
 
@@ -202,7 +202,7 @@ void driverFEM (Grid& grid,
       typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,Real>::Type U0;
       U0 eta(p0gfs,0.0);
       estgo.residual(u,eta);
-      for (unsigned int i=0; i<eta.N(); i++) eta[i] = sqrt(eta[i]); 
+      for (unsigned int i=0; i<eta.flatsize(); i++) eta.base()[i] = sqrt(eta.base()[i]);
       Real estimated_error = eta.two_norm();
       ee.push_back(estimated_error);
 

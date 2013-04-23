@@ -165,9 +165,8 @@ void stationary (const GV& gv)
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem(gt); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-    Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
   // <<<2b>>> define problem parameters
@@ -188,7 +187,7 @@ void stationary (const GV& gv)
   // <<<4>>> Make grid operator
   typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP;
   LOP lop(param);
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
   GO go(gfs,cg,gfs,cg,lop);
 
@@ -243,9 +242,8 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem(gt); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-    Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
   // <<<2b>>> define problem parameters
@@ -268,7 +266,7 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   LOP lop(param);
   typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP;
   SLOP slop(param);
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   Dune::PDELab::FractionalStepParameter<Real> method;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
   GO0 go0(gfs,cg,gfs,cg,lop);
@@ -352,9 +350,8 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem(gt); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE,
-    Dune::PDELab::SimpleGridFunctionStaticSize> GFS;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
   // <<<2b>>> define problem parameters
@@ -378,7 +375,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   LOP lop(param);
   typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP;
   SLOP slop(param);
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
   GO0 go0(gfs,cg,gfs,cg,lop);
   Dune::PDELab::ExplicitEulerParameter<Real> method;

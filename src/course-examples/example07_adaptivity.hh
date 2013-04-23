@@ -10,9 +10,10 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   typedef Dune::PDELab::P1LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;     // constraints class
-  typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
+  gfs.name("solution");
 
   BCTypeParam bctype; // boundary condition type
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
@@ -22,7 +23,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   // <<<3>>> Make grid operator
   typedef Example02LocalOperator<BCTypeParam> LOP;       // operator including boundary
   LOP lop(bctype);
-  typedef VBE::MatrixBackend MBE;
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop);
 
@@ -36,20 +37,19 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   // <<<5>>> Select a linear solver backend
   typedef Dune::PDELab::ISTLBackend_SEQ_CG_SSOR LS;
   LS ls(5000,true);
-  
-  // <<<6>>> assemble linear problem
+
+  // <<<6>>> Assemble linear problem.
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
   SLP slp(go,u,ls,1e-10);
 
-  // <<<7>>> create GridAdaptor
-  typedef Dune::PDELab::L2Projection<GFS,U> Proj;
-  Proj proj;
-  typedef Dune::PDELab::ResidualErrorEstimation<GFS,U> REE;
-  REE ree(gfs);
-  typedef Dune::PDELab::EstimationAdaptation<Grid,GFS,U,REE> EA;
-  EA ea(grid,gfs,ree,0.2,0.0,1,maxLevel);
-  typedef Dune::PDELab::GridAdaptor<Grid,GFS,U,EA,Proj> GRA;
-  GRA gra(grid,gfs,ea,proj);
+
+  // <<<7>>> Preparation: Define types for the computation of the error estimate eta.
+  typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> P0FEM;
+  P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
+  typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,Dune::PDELab::NoConstraints,VBE> P0GFS;
+  typedef Dune::PDELab::ExampleErrorEstimator ESTLOP;
+  typedef Dune::PDELab::EmptyTransformation NoTrafo;
+  typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,Real>::Type U0;
 
   for (int i = 0; i <= maxLevel - startLevel; i++)
   {
@@ -58,21 +58,47 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
     std::string iter;
     s >> iter;
     std::cout << "Iteration: " << iter << "\thighest level in grid: " << grid.maxLevel() << std::endl;
-    std::cout << "constrained dofs=" << cc.size() 
+    std::cout << "constrained dofs=" << cc.size()
             << " of " << gfs.globalSize() << std::endl;
-    
-    // <<<8>>> solve linear problem
+
+    // <<<8>>> Solve linear problem.
     slp.apply();
 
     // <<<9>>> graphical output
-    typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
-    DGF udgf(gfs,u);
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"solution"));
+    Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,u);
     vtkwriter.write("adaptivity_"+iter,Dune::VTK::appendedraw);
-    
-    // <<<10>>> adapt the grid
-    gra.adapt(u);
+
+    // <<<10>>> compute estimated error eta
+    P0GFS p0gfs(gv,p0fem);
+    ESTLOP estlop;
+    typedef Dune::PDELab::GridOperator<GFS,P0GFS,ESTLOP,MBE,Real,Real,Real,NoTrafo,NoTrafo> ESTGO;
+    ESTGO estgo(gfs,p0gfs,estlop);
+    U0 eta(p0gfs,0.0);
+    estgo.residual(u,eta);
+
+    for (unsigned int i=0; i<eta.flatsize(); i++)
+      eta.base()[i] = sqrt(eta.base()[i]);
+
+    // Use eta to refine the grid following two different strategies based
+    // (1) element fraction
+    // (2) error fraction
+
+    double alpha(0.4);       // refinement fraction
+    double eta_alpha(0);     // refinement threshold
+    double beta(0.0);        // coarsening fraction
+    double eta_beta(0);      // coarsening threshold
+    int verbose = 2;
+
+    // <<<10>>> Adapt the grid locally...
+    // with strategy 1:
+    element_fraction( eta, alpha, beta, eta_alpha, eta_beta, verbose );
+    // or, alternatively, with strategy 2:
+    //error_fraction( eta, alpha, beta, eta_alpha, eta_beta, verbose );
+
+    mark_grid( grid, eta, eta_alpha, 0.0 );
+    adapt_grid( grid, gfs, u );
+
     Dune::PDELab::constraints(bctype,gfs,cc);
     Dune::PDELab::interpolate(g,gfs,u);
   }

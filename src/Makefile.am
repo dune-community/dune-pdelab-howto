@@ -1,5 +1,4 @@
 SUBDIRS =					\
-	benchmark				\
 	boilerplatetutorial			\
 	convection-diffusion			\
 	course-examples				\

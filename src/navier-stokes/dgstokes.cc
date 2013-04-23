@@ -1,9 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
-    \brief Solve Stokes with DG method (stationary case). 
+/** \file
+    \brief Solve Stokes with DG method (stationary case).
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include <iostream>
 #include <vector>
@@ -21,7 +21,10 @@
 #include <dune/istl/io.hh>
 
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include<dune/pdelab/gridoperator/gridoperator.hh>
+#include<dune/pdelab/gridfunctionspace/subspace.hh>
+#include <dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/vtk.hh>
+#include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/localoperator/stokesdg.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
@@ -33,15 +36,15 @@
 
 #include "sproblemA.hh"
 
-// #define USE_SUPER_LU
+#define USE_SUPER_LU
 #define MAKE_VTK_OUTPUT
 
 //===============================================================
-// Problem setup and solution 
+// Problem setup and solution
 //===============================================================
 
 // generate a P1 function and output it
-template<typename GV, typename RF, int vOrder, int pOrder> 
+template<typename GV, typename RF, int vOrder, int pOrder>
 void stokes (const GV& gv, std::string filename, const std::string method)
 {
     // <<<1>>> constants and types
@@ -49,7 +52,7 @@ void stokes (const GV& gv, std::string filename, const std::string method)
     static const unsigned int dim = GV::dimension;
     Dune::Timer watch;
     std::cout << "=== Initialize" << std::endl;
-    
+
     // <<<2>>> Make grid function space
     watch.reset();
     typedef Dune::PDELab::MonomLocalFiniteElementMap<DF,RF,dim,vOrder> vFEM;
@@ -60,32 +63,58 @@ void stokes (const GV& gv, std::string filename, const std::string method)
     // DOFs per cell
     static const unsigned int vBlockSize = Dune::MonomImp::Size<dim,vOrder>::val;
     static const unsigned int pBlockSize = Dune::MonomImp::Size<dim,pOrder>::val;
-    static const unsigned int blockSize = dim * vBlockSize + pBlockSize;
-    typedef Dune::PDELab::ISTLVectorBackend<blockSize> VectorBackend;
-    // v
-    Dune::dinfo << "--- v" << std::endl;
-    typedef Dune::PDELab::GridFunctionSpace<GV,vFEM,
-        Dune::PDELab::NoConstraints, VectorBackend,
-        Dune::PDELab::SimpleGridFunctionStaticSize> vGFS;
-    vGFS vGfs(gv,vFem);
+
+    typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking,vBlockSize> VVectorBackend;
+    typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking,pBlockSize> PVectorBackend;
+    typedef Dune::PDELab::ISTLVectorBackend<> VelocityVectorBackend;
+
+#if 0
+    // this creates a flat backend (i.e. blocksize == 1)
+    typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking> VectorBackend;
+#else
+    // this creates a backend with static blocks matching the size of the LFS
+    typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking> VectorBackend;
+#endif
     // velocity
     Dune::dinfo << "--- v^dim" << std::endl;
-    typedef Dune::PDELab::PowerGridFunctionSpace<vGFS,dim,
-        Dune::PDELab::ComponentBlockwiseOrderingTag<vBlockSize> > velocityGFS;
-    velocityGFS velocityGfs(vGfs);
+    typedef Dune::PDELab::EntityBlockedOrderingTag VelocityOrderingTag;
+    typedef Dune::PDELab::VectorGridFunctionSpace<
+        GV,vFEM,dim,
+        VelocityVectorBackend,
+        VVectorBackend,
+        Dune::PDELab::NoConstraints,
+        VelocityOrderingTag
+      > velocityGFS;
+    velocityGFS velocityGfs(gv,vFem);
+    velocityGfs.name("v");
     // p
     Dune::dinfo << "--- p" << std::endl;
     typedef Dune::PDELab::GridFunctionSpace<GV,pFEM,
-        Dune::PDELab::NoConstraints, VectorBackend,
-        Dune::PDELab::SimpleGridFunctionStaticSize> pGFS;
+        Dune::PDELab::NoConstraints, PVectorBackend> pGFS;
     pGFS pGfs(gv,pFem);
+    pGfs.name("p");
     // GFS
     Dune::dinfo << "--- v^dim,p" << std::endl;
+    typedef Dune::PDELab::EntityBlockedOrderingTag StokesOrderingTag;
     typedef Dune::PDELab::CompositeGridFunctionSpace<
-    Dune::PDELab::ComponentBlockwiseOrderingTag<dim * vBlockSize, pBlockSize>,
+        VectorBackend, StokesOrderingTag,
         velocityGFS, pGFS> GFS;
     GFS gfs(velocityGfs, pGfs);
     std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
+
+#if 0
+    // enable for output of DOFIndices and mapped container indices
+    {
+      Dune::PDELab::LocalFunctionSpace<GFS> lfs(gfs);
+      for (auto it = gv.template begin<0>(); it != gv.template end<0>(); ++it)
+        {compile
+          lfs.bind(*it);
+          for (int i = 0; i < lfs.size(); ++i)
+            std::cout << lfs.dofIndex(i) << "  " << gfs.ordering().map_index(lfs.dofIndex(i)) << std::endl;
+          std::cout << std::endl;
+        }
+    }
+#endif
 
     // <<<3>>> Make coefficient Vector and initialize it from a function
     typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
@@ -106,7 +135,7 @@ void stokes (const GV& gv, std::string filename, const std::string method)
     typedef typename Dune::PDELab::DefaultInteriorPenalty<RF> PenaltyTerm;
     PenaltyTerm ip_term(method,mu);
 
-    typedef Dune::PDELab::StokesDGParameters<GV,FType,BType,VType,PType,PenaltyTerm>
+    typedef Dune::PDELab::StokesDGParameters<GV,RF,FType,BType,VType,PType,PenaltyTerm>
       LocalDGOperatorParameters;
     LocalDGOperatorParameters lop_params(method, mu, f,b,v,p, ip_term);
     typedef Dune::PDELab::StokesDG<LocalDGOperatorParameters> LocalDGOperator;
@@ -115,7 +144,7 @@ void stokes (const GV& gv, std::string filename, const std::string method)
 
     typedef Dune::PDELab::EmptyTransformation C;
     typedef Dune::PDELab::GridOperator
-      <GFS,GFS,LocalDGOperator,typename VectorBackend::MatrixBackend,RF,RF,RF,C,C> GOS;
+        <GFS,GFS,LocalDGOperator, Dune::PDELab::ISTLMatrixBackend,RF,RF,RF,C,C> GOS;
     GOS gos(gfs,gfs,lop);
 
     std::cout << "=== grid operator space setup " <<  watch.elapsed() << " s" << std::endl;
@@ -129,9 +158,9 @@ void stokes (const GV& gv, std::string filename, const std::string method)
     gos.jacobian(x,m);
     std::cout << "=== jacobian assembly " <<  watch.elapsed() << " s" << std::endl;
 
-    // std::ofstream matrix("Matrix");
-    // Dune::printmatrix(matrix, m.base(), "M", "r", 6, 3);
-    
+    std::ofstream matrix("Matrix");
+    Dune::printmatrix(matrix, m.base(), "M", "r", 6, 3);
+
     // evaluate residual w.r.t initial guess
     V r(gfs);
     r = 0.0;
@@ -140,60 +169,53 @@ void stokes (const GV& gv, std::string filename, const std::string method)
     gos.residual(x,r);
     std::cout << "=== residual evaluation " <<  watch.elapsed() << " s" << std::endl;
 
-    // for (size_t i = 0; i < r.base().N(); i++)
-    //     for (size_t j = 0; j < r.base()[i].N(); j++)
-    //         std::cout << i << "," << j << "\t" << r.base()[i][j] << "\n";
     bool verbose = true;
-    
+
+    typedef typename M::BaseT ISTLM;
+    typedef typename V::BaseT ISTLV;
     #ifdef USE_SUPER_LU // use lu decomposition as solver
     #if HAVE_SUPERLU
     // make ISTL solver
-    Dune::MatrixAdapter<M,V,V> opa(m);
-    typedef typename M::BaseT ISTLM;
-    Dune::SuperLU<ISTLM> solver(m, verbose?1:0);
+    Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
+    Dune::SuperLU<ISTLM> solver(m.base(), verbose?1:0);
     Dune::InverseOperatorResult stat;
     #else
     #error No superLU support, please install and configure it.
     #endif
     #else // Use iterative solver
     // make ISTL solver
-    Dune::MatrixAdapter<M,V,V> opa(m);
-    Dune::SeqILU0<M,V,V> ilu0(m,1.0);
+    Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
+    Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(m.base(),1.0);
     typedef typename M::BaseT ISTLM;
-    Dune::BiCGSTABSolver<V> solver(opa,ilu0,1E-10,20000, verbose?2:1);
+    Dune::BiCGSTABSolver<ISTLV> solver(opa,ilu0,1E-10,20000, verbose?2:1);
     Dune::InverseOperatorResult stat;
     #endif
 
     // solve the jacobian system
     r *= -1.0; // need -residual
-    x = 0;
-    solver.apply(x,r,stat);
-    //std::cout << x << std::endl;
+    x = r;
+    solver.apply(x.base(),r.base(),stat);
 
-    // for (size_t i = 0; i < x.base().N(); i++)
-    //     for (size_t j = 0; j < x.base()[i].N(); j++)
-    //         std::cout << i << "," << j << "\t" << x.base()[i][j] << "\n";
-    
-    // make discrete function object
-    // Important! We have to get the subspaces via GridFunctionSubSpace
-    // the original (pre-composition) ones are not possible!
-    typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,0> velocitySubGFS;
-    velocitySubGFS velocitySubGfs(gfs);
-    typedef typename Dune::PDELab::GridFunctionSubSpace<GFS,1> pSubGFS;
-    pSubGFS pSubGfs(gfs);
-    typedef Dune::PDELab::VectorDiscreteGridFunction<velocitySubGFS,V> VDGF;
-    VDGF vdgf(velocitySubGfs,x);
-    typedef Dune::PDELab::DiscreteGridFunction<pSubGFS,V> PDGF;
-    PDGF pdgf(pSubGfs,x);
+    // // Create VTK Output
+    // using namespace Dune::PDELab::TypeTree;
+    // typedef typename Dune::PDELab::GridFunctionSubSpace
+    //   <GFS,TypePath<0> > velocitySubGFS;
+    // velocitySubGFS velocitySubGfs(gfs);
+    // typedef typename Dune::PDELab::GridFunctionSubSpace
+    //   <GFS,TypePath<1> > pSubGFS;
+    // pSubGFS pSubGfs(gfs);
 
-    #ifdef MAKE_VTK_OUTPUT
+    // typedef Dune::PDELab::VectorDiscreteGridFunction<velocitySubGFS,V> VDGF;
+    // VDGF vdgf(velocitySubGfs,x);
+    // typedef Dune::PDELab::DiscreteGridFunction<pSubGFS,V> PDGF;
+    // PDGF pdgf(pSubGfs,x);
+
+    //    #ifdef MAKE_VTK_OUTPUT
     // output grid function with SubsamplingVTKWriter
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VType>(v,"v0"));
+    Dune::PDELab::addSolutionToVTKWriter(vtkwriter, gfs, x);
     vtkwriter.write(filename,Dune::VTK::appendedraw);
-    #endif
+    //    #endif
 }
 
 //===============================================================
@@ -226,11 +248,10 @@ int main(int argc, char** argv)
             Dune::FieldVector<int,2> N(x); N[1] = y;
             Dune::FieldVector<bool,2> B(false);
             Dune::YaspGrid<2> grid(L,N,B,0);
-//            grid.globalRefine(4);
 
             // get view
             typedef Dune::YaspGrid<2>::LeafGridView GV;
-            const GV& gv=grid.leafView(); 
+            const GV& gv=grid.leafView();
 
             // make finite element map
             typedef GV::Grid::ctype DF;
@@ -239,7 +260,7 @@ int main(int argc, char** argv)
             stokes<GV,double,2,1>(gv,"dgstokes-2D-2-1", method);
         }
 
-    
+
         // YaspGrid P2/P3 2D test
 #if 0
         {
@@ -248,11 +269,10 @@ int main(int argc, char** argv)
             Dune::FieldVector<int,3> N(x); N[1] = y; N[2] = z;
             Dune::FieldVector<bool,3> B(false);
             Dune::YaspGrid<3> grid(L,N,B,0);
-            grid.globalRefine(0);
 
             // get view
             typedef Dune::YaspGrid<3>::LeafGridView GV;
-            const GV& gv=grid.leafView(); 
+            const GV& gv=grid.leafView();
 
             // make finite element map
             typedef GV::Grid::ctype DF;

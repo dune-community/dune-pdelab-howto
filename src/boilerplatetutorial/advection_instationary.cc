@@ -168,13 +168,13 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   //OSM osm(method,*assembler,pdesolver);
 
   Dune::PDELab::ExplicitEulerParameter<NumberType> method1;
-  Dune::PDELab::HeunParameter<NumberType> method;
+  Dune::PDELab::HeunParameter<NumberType> method2;
   Dune::PDELab::Shu3Parameter<NumberType> method3;
   Dune::PDELab::RK4Parameter<NumberType> method4;
   typedef Dune::PDELab::SimpleTimeController<NumberType> TC;
   TC tc;
   typedef Dune::PDELab::ExplicitOneStepMethod<NumberType,typename ASSEMBLER::GO,typename SBE::LS,V,V,TC> OSM;
-  OSM osm(method,*assembler,*sbe,tc);
+  OSM osm(method2,*assembler,*sbe,tc);
   osm.setVerbosityLevel(2);
 
   // graphics for initial guess

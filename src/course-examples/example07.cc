@@ -1,10 +1,10 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 /** \file
-    
+
     \brief Solve elliptic problem with adaptive conforming finite element method
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<math.h>
 #include<iostream>
@@ -24,7 +24,7 @@
 #include<dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
 #endif
-#if HAVE_UG 
+#if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
 #if HAVE_ALUGRID
@@ -55,19 +55,22 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
+#include<dune/pdelab/gridfunctionspace/vtk.hh>
 #include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
-#include<dune/pdelab/adaptivity/adapt.hh>
+
+#include<dune/pdelab/adaptivity/adaptivity.hh>
 
 #include"../utility/gridexamples.hh"
 
 #include"example02_bctype.hh"
 #include"example02_bcextension.hh"
 #include"example02_operator.hh"
+#include"example07_error_indicator.hh"
 #include"example07_adaptivity.hh"
 
 //===============================================================
@@ -100,12 +103,19 @@ int main(int argc, char** argv)
     int maxLevel;
     sscanf(argv[2],"%d",&maxLevel);
 
+    if( maxLevel < startLevel ){
+      std::cout << "maxLevel >= startLevel not fulfilled." << std::endl;
+    }
+
+    // If the starting grid is too coarse, the solution on the base level is useless.
+    startLevel += 3;
+    maxLevel   += 3;
+
     // sequential version
     if (1 && helper.size()==1)
     {
-#if HAVE_UG 
+#if HAVE_UG
       UGUnitSquare grid;
-      grid.loadBalance();
       grid.globalRefine(startLevel);
       typedef UGUnitSquare::LeafGridView GV;
       const GV& gv=grid.leafView();

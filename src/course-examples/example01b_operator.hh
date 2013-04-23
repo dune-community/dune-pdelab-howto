@@ -47,7 +47,6 @@ public:
         
     // dimensions
     const int dim = EG::Geometry::dimension;
-    const int dimw = EG::Geometry::dimensionworld;
 
     // select quadrature rule
     Dune::GeometryType gt = eg.geometry().type();
@@ -71,7 +70,7 @@ public:
         lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
         // transform gradients from reference element to real element
-        typename EG::Geometry::JacobianInverseTransposed
+        const typename EG::Geometry::JacobianInverseTransposed
           jac = eg.geometry().jacobianInverseTransposed(it->position());
         std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
         for (size_type i=0; i<lfsu.size(); i++)

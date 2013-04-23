@@ -3,6 +3,8 @@
 
 #include<dune/geometry/type.hh>
 #include<dune/geometry/quadraturerules.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
+
 template<class U, class GFS, class X> 
 double l2interpolationerror (const U& u, const GFS& gfs, X& x, 
 							 int qorder=1) {
@@ -19,7 +21,13 @@ double l2interpolationerror (const U& u, const GFS& gfs, X& x,
   
   // make local function space
   typedef Dune::PDELab::LocalFunctionSpace<GFS> LFS;
+  typedef Dune::PDELab::LFSIndexCache<LFS> LFSCache;
+  typedef typename X::template ConstLocalView<LFSCache> XView;
+
+
   LFS lfs(gfs);                            /*@\label{l2int:lfs}@*/
+  LFSCache lfs_cache(lfs);
+  XView x_view(x);
   std::vector<R> xl(lfs.maxSize());        // local coefficients
   std::vector<RangeType> b(lfs.maxSize()); // shape function values
   
@@ -29,7 +37,10 @@ double l2interpolationerror (const U& u, const GFS& gfs, X& x,
        eit!=gfs.gridView().template end<0>(); ++eit)
 	{
 	  lfs.bind(*eit);      // bind local function space to element /*@\label{l2int:bind}@*/
-	  lfs.vread(x,xl);     // get local coefficients
+      lfs_cache.update();
+      x_view.bind(lfs_cache);
+      x_view.read(xl);
+      x_view.unbind();
 	  Dune::GeometryType gt = eit->geometry().type();
 	  const Dune::QuadratureRule<D,dim>&  /*@\label{l2int:quad}@*/
 		rule = Dune::QuadratureRules<D,dim>::rule(gt,qorder);

@@ -9,7 +9,6 @@
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/grid/yaspgrid.hh>
 
-#include"q1localfiniteelementmap.hh"
 #include"analyticfunction.hh"
 #include"q1constraints.hh"
 #include"q1constraintsparameters.hh"

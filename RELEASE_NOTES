@@ -1,5 +1,5 @@
-PDELab Howto
-============
+PDELab Howto 1.0
+================
 
 This is the 1.1 release of PDELab, a PDE discretization toolkit built
 on top of the DUNE framework [0]. License information can be found in the file
@@ -42,6 +42,17 @@ our website for information on how to access the Git repository.
 
 - Several bug fixes.
 
+  - PDELab 1.1.0
+    - Fix for cgstokes benchmark breaking the build if UG is not installed
+    - Adaptivity example ported to new adaptivity infrastructure
+    - Several updates to Howto text
+
+  - PDELab 1.1-rc2
+    - fix for compilation problem with boilerplate examples
+    - build tarballs using GNU tar and make sure they work without automake installed
+
+  - PDELab 1.1-rc1
+    - initial release candidate
 
 Caveats
 =======

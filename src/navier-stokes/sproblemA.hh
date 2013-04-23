@@ -19,7 +19,7 @@ public:
     B_A (const GV& ) {}
     
     template<typename I>
-    inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
+    inline void evaluate (const I& ig, 
         const typename Traits::DomainType& x,
         typename Traits::RangeType& y) const
     {  
