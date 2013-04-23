@@ -27,26 +27,41 @@ if(SUPERLU_FOUND)
 list(APPEND MOSTLYCLEANFILES cgstokes_*.vtu cgstokes_*_timings.txt)
 
 list(APPEND SUPERLUPROGRAMS cgstokes-old)
-add_executable(cgstokes_old cgstokes-old.cc)
+add_executable(cgstokes_old EXCLUDE_FROM_ALL cgstokes-old.cc)
 
 add_dune_ug_flags(cgstokes_old )
 target_link_libraries(cgstokes_old ${DUNE_LIBS})
 add_dune_superlu_flags(cgstokes_old )
 add_dune_alugrid_flags(cgstokes_old )
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(cgstokes_old_ LDFLAGS                          
-#        ${AM_LDFLAGS}                           
-#        ${SUPERLU_LDFLAGS}                      
-#        ${UG_LDFLAGS}                           
-#        ${ALUGRID_LDFLAGS})
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(cgstokes_old_ LDADD                            
-#        ${SUPERLU_LIBS}                         
-#        ${ALUGRID_LIBS}                         
-#        ${UG_LIBS})
 
+list(APPEND SUPERLUPROGRAMS cgstokes-benchmark)
+add_executable(cgstokes-benchmark EXCLUDE_FROM_ALL cgstokes.cc)
+list(APPEND SUPERLUPROGRAMS cgstokes-benchmark)
+add_dune_ug_flags(cgstokes-benchmark)
+target_link_libraries(cgstokes-benchmark ${DUNE_LIBS})
+add_dune_superlu_flags(cgstokes-benchmark)
+add_dune_alugrid_flags(cgstokes-benchmark)
+
+
+# Generate list of macors for each executable
+set(velocityblocked_macros CGSTOKES_BLOCK_LEVEL=1)
+set(allblocked_macros CGSTOKES_BLOCK_LEVEL=2)
+set(macroblocks_macros DCGSTOKES_MACROBLOCKS)
+set(velocityblocked-macroblocks_macros
+  CGSTOKES_BLOCK_LEVEL=1
+  CGSTOKES_MACROBLOCKS)
+set(suffixes velocityblocked allblocked macroblocks velocityblocked-macroblocks)
+
+foreach(suffix ${suffixes})
+  list(APPEND SUPERLUPROGRAMS cgstokes-${suffix})
+  add_executable(cgstokes-${suffix} EXCLUDE_FROM_ALL cgstokes.cc)
+  set_property(TARGET cgstokes-${suffix} APPEND
+    PROPERTY COMPILE_DEFINITIONS ${${suffix}_macros})
+  add_dune_ug_flags(cgstokes-${suffix})
+  target_link_libraries(cgstokes-${suffix} ${DUNE_LIBS})
+  add_dune_superlu_flags(cgstokes-${suffix})
+  add_dune_alugrid_flags(cgstokes-${suffix})
+endforeach(suffix ${suffixes})
 endif(SUPERLU_FOUND )
 
 # THIS IS A SEPARATION MARKER TO MINIMIZE SVN MERGE CONFLICTS
