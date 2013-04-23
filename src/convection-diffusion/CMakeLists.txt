@@ -29,7 +29,6 @@ set(noinst_PROGRAMS
         transporttest                           
         instationarytest                        
         poisson                                 
-        mimetic                                 
         laplacedirichletccfv                    
         reentrantcorner                         
         diffusion                               
@@ -286,24 +285,7 @@ add_dune_alugrid_flags(instationarytest )
 target_link_libraries(instationarytest ${DUNE_LIBS})
 add_dune_superlu_flags(instationarytest )
 
-add_executable(mimetic mimetic.cc)
-
-add_dune_alberta_flags(mimetic )
-add_dune_amiramesh_flags(mimetic )
-add_dune_ug_flags(mimetic )
-add_dune_mpi_flags(mimetic )
-target_link_libraries(mimetic ${DUNE_LIBS})
-add_dune_superlu_flags(mimetic )
-add_dune_alugrid_flags(mimetic )
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(mimetic_ LDADD ${DUNEMPILDFLAGS} ${DUNEMPILIBS} ${SUPERLU_LIBS} ${ALBERTA_LDFLAGS} ${ALBERTA_LIBS} ${AMIRAMESH_LDFLAGS} ${AMIRAMESH_LIBS} ${UG_LDFLAGS} ${UG_LIBS} ${ALUGRID_LDFLAGS} ${ALUGRID_LIBS} ${DUNE_LDFLAGS} ${DUNE_LIBS})
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(mimetic_ LDFLAGS ${AM_LDFLAGS} ${SUPERLU_LDFLAGS})
-
-target_link_libraries(mimetic ${DUNE_LIBS})
-add_dune_superlu_flags(mimetic )
+# mimetic is broken (probably irreparably...)
 
 add_executable(laplacedirichletccfv laplacedirichletccfv.cc)
 
