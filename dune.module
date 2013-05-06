@@ -7,3 +7,4 @@ Version: 2.0-dev
 Maintainer: peter.bastian@iwr.uni-heidelberg.de
 #depending on
 Depends: dune-common (>= 2.3)  dune-grid (>= 2.3) dune-istl (>= 2.3) dune-localfunctions (>= 2.3) dune-pdelab (>= 2.0)
+Whitespace-Hook: Yes
