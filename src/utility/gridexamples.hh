@@ -71,7 +71,7 @@ void insertElements(int n, Dune::GridFactory<GridType> &factory, unsigned coordI
             }
         }
     }
-};
+}
 
 template <class GridType>
 void createGrid(GridType &grid, int n)
