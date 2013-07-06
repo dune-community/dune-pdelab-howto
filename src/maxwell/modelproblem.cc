@@ -38,14 +38,13 @@
 #include<dune/istl/io.hh>
 #include<dune/istl/superlu.hh>
 
-#include<dune/pdelab/constraints/constraints.hh>
+#include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/finiteelementmap/opbfem.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/subspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>

@@ -28,12 +28,12 @@
 #include<dune/pdelab/finiteelementmap/qkdg.hh>
 #include<dune/pdelab/finiteelementmap/pkfem.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
-#include<dune/pdelab/finiteelementmap/p0constraints.hh>
+#include<dune/pdelab/constraints/common/constraints.hh>
+#include<dune/pdelab/constraints/conforming.hh>
+#include<dune/pdelab/constraints/p0.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/common/vtkexport.hh>

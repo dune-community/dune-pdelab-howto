@@ -20,13 +20,13 @@
 #include<dune/istl/superlu.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/raviartthomasfem.hh>
-#include<dune/pdelab/finiteelementmap/rt0constraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/subspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/constraints/constraints.hh>
-#include<dune/pdelab/constraints/constraintsparameters.hh>
+#include<dune/pdelab/constraints/common/constraints.hh>
+#include<dune/pdelab/constraints/common/constraintsparameters.hh>
+#include<dune/pdelab/constraints/raviartthomas0.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>

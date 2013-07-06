@@ -48,13 +48,13 @@
 #include<dune/pdelab/finiteelementmap/q1fem.hh>
 #include<dune/pdelab/finiteelementmap/p1fem.hh>
 #include<dune/pdelab/finiteelementmap/rannacher_turek2dfem.hh>
-#include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
+#include<dune/pdelab/constraints/common/constraints.hh>
+#include<dune/pdelab/constraints/conforming.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/gridfunctionspace/vtk.hh>
-#include<dune/pdelab/constraints/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>

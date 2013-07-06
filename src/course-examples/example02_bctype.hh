@@ -1,7 +1,7 @@
 #include<dune/common/fvector.hh>
 
 #include<dune/pdelab/common/function.hh>
-#include<dune/pdelab/constraints/constraintsparameters.hh>
+#include<dune/pdelab/constraints/common/constraintsparameters.hh>
 
 //! \brief Parameter class selecting boundary conditions
 class BCTypeParam
