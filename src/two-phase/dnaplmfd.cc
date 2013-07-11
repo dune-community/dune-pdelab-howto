@@ -21,7 +21,7 @@
 #include<dune/istl/io.hh>
 #include<dune/istl/paamg/amg.hh>
 
-#include<dune/pdelab/constraints/constraints.hh>
+#include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/finiteelementmap/mimeticfem.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>

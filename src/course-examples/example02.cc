@@ -45,8 +45,8 @@
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/constraints/constraints.hh>
-#include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
+#include<dune/pdelab/constraints/common/constraints.hh>
+#include<dune/pdelab/constraints/conforming.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/p12dfem.hh>
 #include<dune/pdelab/finiteelementmap/p1fem.hh>

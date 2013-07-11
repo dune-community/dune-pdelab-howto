@@ -24,12 +24,12 @@
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/mimeticfem.hh>
-#include<dune/pdelab/finiteelementmap/mfdconstraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/constraints/constraints.hh>
-#include<dune/pdelab/constraints/constraintsparameters.hh>
+#include<dune/pdelab/constraints/common/constraints.hh>
+#include<dune/pdelab/constraints/common/constraintsparameters.hh>
+#include<dune/pdelab/constraints/mfd.hh>
 #include<dune/pdelab/gridfunctionspace/intersectionindexset.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
