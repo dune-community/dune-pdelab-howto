@@ -22,10 +22,10 @@ void example05_Q2Q2 (const GV& gv, double dtstart, double dtmax, double tend)
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
 
   typedef Dune::PDELab::GridFunctionSubSpace
-    <GFS,Dune::PDELab::TypeTree::TreePath<0> > U0SUB;
+    <GFS,Dune::TypeTree::TreePath<0> > U0SUB;
   U0SUB u0sub(gfs);
   typedef Dune::PDELab::GridFunctionSubSpace
-    <GFS,Dune::PDELab::TypeTree::TreePath<1> > U1SUB;
+    <GFS,Dune::TypeTree::TreePath<1> > U1SUB;
   U1SUB u1sub(gfs);
 
   // <<<3>>> Make instationary grid operator

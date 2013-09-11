@@ -197,7 +197,7 @@ void stokes (const GV& gv, std::string filename, const std::string method)
     solver.apply(x.base(),r.base(),stat);
 
     // // Create VTK Output
-    // using namespace Dune::PDELab::TypeTree;
+    // using namespace Dune::TypeTree;
     // typedef typename Dune::PDELab::GridFunctionSubSpace
     //   <GFS,TypePath<0> > velocitySubGFS;
     // velocitySubGFS velocitySubGfs(gfs);

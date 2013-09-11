@@ -145,12 +145,12 @@ void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
 
   // select subspaces
   typedef Dune::PDELab::GridFunctionSubSpace
-    <MGFS,Dune::PDELab::TypeTree::TreePath<0>> VSUB;
+    <MGFS,Dune::TypeTree::TreePath<0> > VSUB;
 
   VSUB vsub(mgfs);                   // velocity subspace
 
   typedef Dune::PDELab::GridFunctionSubSpace
-      <MGFS,Dune::PDELab::TypeTree::TreePath<1>> PSUB;
+      <MGFS,Dune::TypeTree::TreePath<1> > PSUB;
   PSUB psub(mgfs);                   // pressure subspace
 
   // make discrete function object

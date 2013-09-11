@@ -465,10 +465,10 @@ void test (const GV& gv, int timesteps, double timestep)
 
   // <<<2b>>> make subspaces for visualization
   typedef Dune::PDELab::GridFunctionSubSpace
-    <TPGFS,Dune::PDELab::TypeTree::TreePath<0> > P_lSUB;
+    <TPGFS,Dune::TypeTree::TreePath<0> > P_lSUB;
   P_lSUB p_lsub(tpgfs);
   typedef Dune::PDELab::GridFunctionSubSpace
-    <TPGFS,Dune::PDELab::TypeTree::TreePath<1> > P_gSUB;
+    <TPGFS,Dune::TypeTree::TreePath<1> > P_gSUB;
   P_gSUB p_gsub(tpgfs);
 
   // <<<3>>> make parameter object

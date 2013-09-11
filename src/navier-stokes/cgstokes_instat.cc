@@ -182,10 +182,10 @@ void navierstokes
   {
     // Generate functions suitable for VTK output
     typedef typename Dune::PDELab::GridFunctionSubSpace
-      <GFS,Dune::PDELab::TypeTree::TreePath<0> > VelocitySubGFS;
+      <GFS,Dune::TypeTree::TreePath<0> > VelocitySubGFS;
     VelocitySubGFS velocitySubGfs(gfs);
     typedef typename Dune::PDELab::GridFunctionSubSpace
-      <GFS,Dune::PDELab::TypeTree::TreePath<1> > PressureSubGFS;
+      <GFS,Dune::TypeTree::TreePath<1> > PressureSubGFS;
     PressureSubGFS pressureSubGfs(gfs);
     typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
     VDGF vdgf(velocitySubGfs,xold);
@@ -217,10 +217,10 @@ void navierstokes
       {
         // Generate functions suitable for VTK output
         typedef typename Dune::PDELab::GridFunctionSubSpace
-          <GFS,Dune::PDELab::TypeTree::TreePath<0> > VelocitySubGFS;
+          <GFS,Dune::TypeTree::TreePath<0> > VelocitySubGFS;
         VelocitySubGFS velocitySubGfs(gfs);
         typedef typename Dune::PDELab::GridFunctionSubSpace
-          <GFS,Dune::PDELab::TypeTree::TreePath<1> > PressureSubGFS;
+          <GFS,Dune::TypeTree::TreePath<1> > PressureSubGFS;
         PressureSubGFS pressureSubGfs(gfs);
         typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
         VDGF vdgf(velocitySubGfs,x);
@@ -243,10 +243,10 @@ void navierstokes
 
   // Compute norm of final solution
   typedef typename Dune::PDELab::GridFunctionSubSpace
-    <GFS,Dune::PDELab::TypeTree::TreePath<0> > VelocitySubGFS;
+    <GFS,Dune::TypeTree::TreePath<0> > VelocitySubGFS;
   VelocitySubGFS velocitySubGfs(gfs);
   typedef typename Dune::PDELab::GridFunctionSubSpace
-    <GFS,Dune::PDELab::TypeTree::TreePath<1> > PressureSubGFS;
+    <GFS,Dune::TypeTree::TreePath<1> > PressureSubGFS;
   PressureSubGFS pressureSubGfs(gfs);
   typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
   VDGF vdgf(velocitySubGfs,x);

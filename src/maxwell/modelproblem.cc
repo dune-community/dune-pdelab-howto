@@ -229,7 +229,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
 
   // <<<7>>> graphics for initial guess
   Dune::PDELab::FilenameHelper fn(name);
-  using namespace Dune::PDELab::TypeTree;
+  using namespace Dune::TypeTree;
   typedef Dune::PDELab::GridFunctionSubSpace<GFS,TreePath<0> > U0SUB;
   U0SUB u0sub(gfs);
   typedef Dune::PDELab::GridFunctionSubSpace<GFS,TreePath<1> > U1SUB;
