@@ -37,6 +37,7 @@
 #include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
@@ -158,12 +159,13 @@ void runDG(
   if (weights=="OFF") w = Dune::PDELab::ConvectionDiffusionDGWeights::weightsOff;
   typedef Dune::PDELab::ConvectionDiffusionDG<PROBLEM,FEM> LOP;
   LOP lop(problem,m,w,alpha);
-  typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
 
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
-  GO go(gfs,cc,gfs,cc,lop);
+  GO go(gfs,cc,gfs,cc,lop,mbe);
 
   // make a vector of degree of freedom vectors and initialize it with Dirichlet extension
   typedef typename GO::Traits::Domain U;
@@ -254,8 +256,9 @@ int main(int argc, char** argv)
         {
           const int dim = 2;
           Dune::FieldVector<double,dim> L(1.0);
-          Dune::FieldVector<int,dim> N(1);
-          Dune::FieldVector<bool,dim> P(false);
+          Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
+          std::fill(N.begin(),N.end(),1);
+          std::bitset<dim> P(false);
           typedef Dune::YaspGrid<dim> Grid;
           Grid grid(L,N,P,0);
           typedef Grid::LeafGridView GV;
@@ -263,7 +266,7 @@ int main(int argc, char** argv)
           // refine grid
           grid.globalRefine( level );
             {
-              const GV& gv=grid.leafView();
+              const GV& gv=grid.leafGridView();
 
 #ifdef PROBLEM_A
               typedef ParameterA<GV,double> PROBLEM;
@@ -328,8 +331,8 @@ int main(int argc, char** argv)
         {
           const int dim = 3;
           Dune::FieldVector<double,dim> L(1.0);
-          Dune::FieldVector<int,dim> N(1);
-          Dune::FieldVector<bool,dim> P(false);
+          Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
+          std::bitset<dim> P(false);
           typedef Dune::YaspGrid<dim> Grid;
           Grid grid(L,N,P,0);
           typedef Grid::LeafGridView GV;
@@ -337,7 +340,7 @@ int main(int argc, char** argv)
           // refine grid
           grid.globalRefine( level );
             {
-              const GV& gv=grid.leafView();
+              const GV& gv=grid.leafGridView();
 
 #ifdef PROBLEM_A
               typedef ParameterA<GV,double> PROBLEM;
