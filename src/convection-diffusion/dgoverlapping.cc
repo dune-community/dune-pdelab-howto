@@ -38,6 +38,7 @@
 #include<dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/diffusiondg.hh>
@@ -152,8 +153,10 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
   // make grid function operator
   typedef Dune::PDELab::DiffusionDG<KType,FType,BCType,GType,JType> LOP;
   LOP la(k,f,bctype,g,j,DG_METHOD);
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,typename Dune::PDELab::ISTLMatrixBackend,RF,RF,RF> GOS;
-  GOS gos(gfs,gfs,la);
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,RF,RF,RF> GOS;
+  GOS gos(gfs,gfs,la,mbe);
 
   // represent operator as a matrix
   typedef typename GOS::template MatrixContainer<RF>::Type M;
@@ -340,14 +343,15 @@ int main(int argc, char** argv)
       if (true)
         {
           // make grid
-          Dune::FieldVector<double,2> L(1.0);  // L[0]=2.0; L[1]=1.0;
-          Dune::FieldVector<int,2> N(64);       // N[0]=2; N[1]=2;
-          Dune::FieldVector<bool,2> B(false);
-          Dune::YaspGrid<2> grid(L,N,B,0);
+          const int dim = 2;
+          Dune::FieldVector<double,dim> L(1.0);  // L[0]=2.0; L[1]=1.0;
+          Dune::array<int,dim> N(Dune::fill_array<int,dim>(64));
+          std::bitset<dim> B(false);
+          Dune::YaspGrid<dim> grid(L,N,B,0);
 #ifdef REFINE_STEPWISE
           for (int i = 0; i <= GRID_REFINE; ++i)
             {
-              solve_dg(grid.leafView(), false);
+              solve_dg(grid.leafGridView(), false);
               grid.globalRefine(1);
             }
 #else
@@ -358,7 +362,7 @@ int main(int argc, char** argv)
           FEM fem(Dune::GeometryType(Dune::GeometryType::cube,2)); // works only for cubes
 
           // solve problem :)
-          solve_dg(grid.leafView(),fem,"DG_Yasp_2d",true);
+          solve_dg(grid.leafGridView(),fem,"DG_Yasp_2d",true);
 #endif
         }
 
@@ -371,7 +375,7 @@ int main(int argc, char** argv)
 
           // get view
           typedef GridType::LeafGridView GV;
-          const GV& gv=grid.leafView();
+          const GV& gv=grid.leafGridView();
 
           // instantiate finite element maps
           typedef Dune::PDELab::MonomLocalFiniteElementMap<double,double,2,MONOM_BASIS_ORDER> FEM;

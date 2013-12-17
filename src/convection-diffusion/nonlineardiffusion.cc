@@ -39,6 +39,7 @@
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/gridoperator/onestep.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
@@ -195,9 +196,10 @@ void sequential (const GV& gv)
   // <<<4>>> Make grid operator
   typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
   LOP lop(param,8);
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(27); // Number of diagonals is depending on dim, order and geometry.
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
-  GO go(gfs,cg,gfs,cg,lop);
+  GO go(gfs,cg,gfs,cg,lop,mbe);
 
   // <<<5>>> Compute affine shift
   typedef typename GO::Traits::Domain V;
@@ -409,13 +411,13 @@ int main(int argc, char** argv)
     if (helper.size()==1)
     {
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(16);
-      Dune::FieldVector<bool,2> periodic(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(16));
+      std::bitset<2> periodic(false);
       int overlap=0;
       Dune::YaspGrid<2> grid(L,N,periodic,overlap);
       grid.globalRefine(level);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
       sequential(gv);
     }
 
@@ -423,13 +425,13 @@ int main(int argc, char** argv)
     if (helper.size()>1)
     {
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(16);
-      Dune::FieldVector<bool,2> periodic(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(16));
+      std::bitset<2> periodic(false);
       int overlap=0; // needs overlap 0 because overlap elements are not assembled anyway
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
       grid.globalRefine(level);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
       parallel_nonoverlapping_Q1(gv);
     }
 
@@ -437,13 +439,13 @@ int main(int argc, char** argv)
     if (helper.size()>1)
     {
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(16);
-      Dune::FieldVector<bool,2> periodic(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(16));
+      std::bitset<2> periodic(false);
       int overlap=2;
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
       grid.globalRefine(level);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
       parallel_overlapping_Q1(gv);
     }
 

@@ -26,8 +26,7 @@
 #include<dune/pdelab/finiteelementmap/p1fem.hh>
 #include<dune/pdelab/finiteelementmap/pk2dfem.hh>
 #include<dune/pdelab/finiteelementmap/pk3dfem.hh>
-#include<dune/pdelab/finiteelementmap/q22dfem.hh>
-#include<dune/pdelab/finiteelementmap/q1fem.hh>
+#include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -38,6 +37,7 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
@@ -217,10 +217,13 @@ void poisson( const GV& gv,
   typedef Dune::PDELab::Poisson<FType,BCTypeParam,JType,q> LOP;
   LOP lop(f,bctype,j);
 
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
+
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
-                                     Dune::PDELab::ISTLMatrixBackend,
+                                     MBE,
                                      R,R,R,C,C> GO;
-  GO go(gfs,cg,gfs,cg,lop);
+  GO go(gfs,cg,gfs,cg,lop,mbe);
 
   // make coefficent Vector and initialize it from a function
   typedef typename GO::Traits::Domain V;
@@ -378,7 +381,7 @@ int main(int argc, char** argv)
 #endif
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -445,13 +448,14 @@ int main(int argc, char** argv)
 #endif
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
       const int q=2;
-      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,R,3> FEM;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,R,1> FEM;
+
       FEM fem;
 
       BCTypeParam bctype;
@@ -504,7 +508,7 @@ int main(int argc, char** argv)
 #endif
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
 
@@ -550,18 +554,18 @@ int main(int argc, char** argv)
 
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::bitset<2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(6);
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double,2> FEM;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
       FEM fem;
 
       BCTypeParam bctype;
@@ -579,18 +583,18 @@ int main(int argc, char** argv)
 
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::bitset<2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(3);
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::Q22DLocalFiniteElementMap<DF,double> FEM;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,2> FEM;
       FEM fem;
       BCTypeParam bctype;
 
@@ -607,18 +611,18 @@ int main(int argc, char** argv)
 
       // make grid
       Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(1);
-      Dune::FieldVector<bool,3> B(false);
+      Dune::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::bitset<3> B(false);
       Dune::YaspGrid<3> grid(L,N,B,0);
       grid.globalRefine(3);
 
       // get view
       typedef Dune::YaspGrid<3>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double,3> FEM;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
       FEM fem;
       BCTypeParam bctype;
 
@@ -653,7 +657,7 @@ int main(int argc, char** argv)
 #endif
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -717,12 +721,12 @@ int main(int argc, char** argv)
 #endif
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
-      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,R,2> FEM;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,R,1> FEM;
       FEM fem;
 
       BCTypeParam bctype;
@@ -776,13 +780,13 @@ int main(int argc, char** argv)
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
-      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,R,3> FEM;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,R,1> FEM;
       FEM fem;
 
       BCTypeParam bctype;
 
 #ifdef HANGING_NODES_REFINEMENT
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
       const int q=2;
       typedef Dune::PDELab::HangingNodesConstraintsAssemblers::CubeGridQ1Assembler ConstraintsAssembler;
 
@@ -833,7 +837,7 @@ int main(int argc, char** argv)
 #endif
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -883,7 +887,7 @@ int main(int argc, char** argv)
 
       // get view
       typedef AlbertaUnitSquare::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;

@@ -25,6 +25,7 @@
 #include <dune/pdelab/common/functionutilities.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
@@ -92,8 +93,8 @@ void driverDG ( Grid& grid,
   typedef Dune::PDELab::ISTLVectorBackend<> VBE1;
   typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking,blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEMDG,CON,VBE> GFS;
-  GFS gfs(grid.leafView(),femdg);
-
+  GFS gfs(grid.leafGridView(),femdg);
+  gfs.update();
   N.push_back(gfs.globalSize());
 
   // some local operator parameters
@@ -124,7 +125,7 @@ void driverDG ( Grid& grid,
       std::cout << "***************************************" << std::endl;
 
       // get current leaf view
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make constraints container and initialize it
       typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
@@ -150,10 +151,11 @@ void driverDG ( Grid& grid,
       // make local operator
       typedef Dune::PDELab::ConvectionDiffusionDG<Problem,FEMDG> LOP;
       LOP lop(problem,m,w,alpha);
-      typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
+      typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+      MBE mbe(27); // Number of diagonals is depending on dim, order and geometry.
 
       typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
-      GO go(gfs,cc,gfs,cc,lop);
+      GO go(gfs,cc,gfs,cc,lop,mbe);
 
       // make linear solver and solve problem
       //typedef Dune::PDELab::ISTLBackend_NOVLP_CG_NOPREC<GFS> LS;
@@ -201,7 +203,7 @@ void driverDG ( Grid& grid,
 
       typedef Dune::PDELab::EmptyTransformation NoTrafo;
       typedef Dune::PDELab::GridOperator<GFS,P0GFS,ESTLOP,MBE,Real,Real,Real,NoTrafo,NoTrafo> ESTGO;
-      ESTGO estgo(gfs,p0gfs,estlop);
+      ESTGO estgo(gfs,p0gfs,estlop,mbe);
       typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,Real>::Type U0;
       U0 eta(p0gfs,0.0);
       estgo.residual(u,eta);

@@ -33,6 +33,7 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/diffusiondg.hh>
@@ -123,12 +124,13 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     typedef Dune::PDELab::DiffusionDG<KType,FType,BType,GType,JType> LOP;
     LOP lop(k,f,bctype,g,j,DG_METHOD);
 
-    typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
+    typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+    MBE mbe(27); // Number of diagonals is depending on dim, order and geometry.
     typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
     CC cc;
 
     typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
-    GO go(gfs,cc,gfs,cc,lop);
+    GO go(gfs,cc,gfs,cc,lop,mbe);
 
     // make a vector of degree of freedom vectors
     typedef typename GO::Traits::Domain V;
@@ -175,11 +177,12 @@ int main(int argc, char** argv)
         // 2D
         {
             // make grid
-            Dune::FieldVector<double,2> L(1.0);  // L[0]=2.0; L[1]=1.0;
-            Dune::FieldVector<int,2> N(16);       // N[0]=2; N[1]=2;
-            Dune::FieldVector<bool,2> B(false);
-            typedef Dune::YaspGrid<2> Grid;
-            Grid grid(L,N,B,0);
+            const int dim=2;
+            Dune::FieldVector<double,dim> L(1.0);  // L[0]=2.0; L[1]=1.0;
+            Dune::array<int,dim> N(Dune::fill_array<int,dim>(16));
+            std::bitset<dim> P(false);
+            typedef Dune::YaspGrid<dim> Grid;
+            Grid grid(L,N,P,0);
 #ifdef REFINE_STEPWISE
             for (int i = 0; i <= GRID_REFINE; ++i)
             {
