@@ -3,10 +3,9 @@ template<class GV> void example02_Q1 (const GV& gv)
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
-  const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
-  typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,1> FEM;
   FEM fem;
   typedef Dune::PDELab::ConformingDirichletConstraints CON; // constraints class
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
@@ -22,7 +21,8 @@ template<class GV> void example02_Q1 (const GV& gv)
   // <<<3>>> Make grid operator
   typedef Example02LocalOperator<BCTypeParam> LOP;             // operator including boundary
   LOP lop( bctype );
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(9);
 
   typedef Dune::PDELab::GridOperator<
     GFS,GFS,        /* ansatz and test space */
@@ -31,7 +31,12 @@ template<class GV> void example02_Q1 (const GV& gv)
     Real,Real,Real, /* field types for domain, range and jacobian */
     CC,CC           /* constraints transformation  for ansatz and test space */
     > GO;
-  GO go(gfs,cc,gfs,cc,lop);
+  GO go(gfs,cc,gfs,cc,lop,mbe);
+
+  // How well did we estimate the number of entries per matrix row?
+  // => print Jacobian pattern statistics
+  typename GO::Traits::Jacobian jac(go);
+  std::cout << jac.patternStatistics() << std::endl;
 
   // <<<4>>> Make FE function extending Dirichlet boundary conditions
   typedef typename GO::Traits::Domain U;

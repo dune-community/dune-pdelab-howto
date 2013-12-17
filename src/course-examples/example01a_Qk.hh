@@ -1,13 +1,12 @@
-template<class GV>
-void example01a_Q1 (const GV& gv)
+template<int k, class GV>
+void example01a_Qk (const GV& gv)
 {
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
-  const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
-  typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,k> FEM;
   FEM fem;
   typedef Dune::PDELab::NoConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
@@ -17,11 +16,18 @@ void example01a_Q1 (const GV& gv)
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
 
   // <<<3>>> Make grid operator
-  typedef Example01aLocalOperator LOP; 
+  typedef Example01aLocalOperator LOP;
   LOP lop;
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  // Structured 2D grid, Q1 finite elements => 9-point stencil / Q2 => 25
+  MBE mbe(k == 1 ? 9 : 25);
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
-  GO go(gfs,gfs,lop);
+  GO go(gfs,gfs,lop,mbe);
+
+  // How well did we estimate the number of entries per matrix row?
+  // => print Jacobian pattern statistics
+  typename GO::Traits::Jacobian jac(go);
+  std::cout << jac.patternStatistics() << std::endl;
 
   // <<<4>>> Select a linear solver backend
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
