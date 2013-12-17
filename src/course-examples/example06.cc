@@ -96,6 +96,7 @@ int main(int argc, char** argv)
       std::bitset<2> periodic(false);
       int overlap=3;
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
+      grid.globalRefine(level);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafGridView();
       example06_Q1Q1(gv,dtstart,dtmax,tend);

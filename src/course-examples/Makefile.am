@@ -22,8 +22,7 @@ noinst_PROGRAMS =				\
 #	dnaplfvamg
 noinst_HEADERS =				\
 	example01_main.hh			\
-	example01a_Q1.hh			\
-	example01a_Q2.hh			\
+	example01a_Qk.hh			\
 	example01a_RT.hh			\
 	example01a_operator.hh			\
 	example01b_Q2.hh			\
@@ -39,8 +38,7 @@ noinst_HEADERS =				\
 	example03_toperator.hh			\
 	example04.hh				\
 	example04_operator.hh			\
-	example05_Q1Q1.hh			\
-	example05_Q2Q2.hh			\
+	example05_QkQk.hh			\
 	example05_initial.hh			\
 	example05_operator.hh			\
 	example05_toperator.hh			\

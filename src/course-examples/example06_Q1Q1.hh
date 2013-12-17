@@ -54,8 +54,8 @@ void example06_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   IGO igo(go0,go1);
 
   // How well did we estimate the number of entries per matrix row?
-  // => print Jacobian pattern statistics
-  typename IGO::Traits::Jacobian jac(igo);
+  // => print Jacobian pattern statistics (do not call this for IGO before osm.apply() was called!)
+  typename GO0::Traits::Jacobian jac(go0);
   std::cout << jac.patternStatistics() << std::endl;
 
   // <<<4>>> Make FE function with initial value

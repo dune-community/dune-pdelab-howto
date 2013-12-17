@@ -8,7 +8,7 @@ void example03_Q2 (const GV& gv, double dt, double tend)
 
   // <<<2>>> Make grid function space
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,2> FEM;
-  FEM fem;
+  FEM fem(gv);
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
@@ -36,8 +36,8 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   IGO igo(go0,go1);                                             // new grid operator
 
   // How well did we estimate the number of entries per matrix row?
-  // => print Jacobian pattern statistics
-  typename IGO::Traits::Jacobian jac(igo);
+  // => print Jacobian pattern statistics (do not call this for IGO before osm.apply() was called!)
+  typename GO0::Traits::Jacobian jac(go0);
   std::cout << jac.patternStatistics() << std::endl;
 
   // <<<3>>> Make FE function with initial value / Dirichlet b.c.

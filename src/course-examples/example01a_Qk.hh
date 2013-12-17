@@ -17,7 +17,7 @@ void example01a_Qk (const GV& gv)
 
   // <<<3>>> Make grid operator
   typedef Example01aLocalOperator LOP;
-  LOP lop;
+  LOP lop(2*k);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   // Structured 2D grid, Q1 finite elements => 9-point stencil / Q2 => 25
   MBE mbe(k == 1 ? 9 : 25);
@@ -41,7 +41,7 @@ void example01a_Qk (const GV& gv)
   slp.apply();
 
   // <<<6>>> graphical output
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,k == 1 ? 0 : 3);
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,u);
   std::stringstream basename;
   basename << "example01_Q" << k;

@@ -7,7 +7,7 @@ void example01b_Q2 (const GV& gv)
 
   // <<<2>>> Make grid function space
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,2> FEM;
-  FEM fem;
+  FEM fem(gv);
   typedef Dune::PDELab::NoConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
