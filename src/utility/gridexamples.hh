@@ -90,8 +90,9 @@ class YaspUnitSquare : public Dune::YaspGrid<2>
 {
 public:
   YaspUnitSquare () : Dune::YaspGrid<2>(Dune::FieldVector<double,2>(1.0),
-					  Dune::FieldVector<int,2>(1),
-					  Dune::FieldVector<bool,2>(false),0)
+            Dune::array<int,2>(Dune::fill_array<int,2>(1)),
+            std::bitset<2>(false),
+            0)
   {}
 };
 

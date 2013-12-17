@@ -92,12 +92,12 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(2.0);
-      Dune::FieldVector<int,2> N(1<<level);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::bitset<2> periodic(false);
       int overlap=3;
-      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
       example06_Q1Q1(gv,dtstart,dtmax,tend);
     }
   }

@@ -42,15 +42,11 @@ public:
   void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
 		     R& r) const
   {
-    // domain and range field type
-    typedef typename LFSU::Traits::FiniteElementType::
-      Traits::LocalBasisType::Traits::DomainFieldType DF;
+    // range field type
     typedef typename LFSU::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::RangeFieldType RF;
-    const int dim = EG::Geometry::dimension;
 
     // evaluate reaction term
-    Dune::FieldVector<DF,dim> center = eg.geometry().center();
     RF a = 0.0;
     RF f = 0.0;
 
