@@ -21,11 +21,11 @@ int main(int argc, char** argv)
 
     // make grid
     Dune::FieldVector<double,2> L(1.0);
-    Dune::FieldVector<int,2> N(1);
-    Dune::FieldVector<bool,2> B(false);
-    Dune::YaspGrid<2> grid(L,N,B,0);
+    Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+    std::bitset<2> periodic(false);
+    Dune::YaspGrid<2> grid(L,N,periodic,0);
     grid.globalRefine(5);
-    q1interpolate(grid.leafView());
+    q1interpolate(grid.leafGridView());
 	return 0;
   }
   catch (Dune::Exception &e){

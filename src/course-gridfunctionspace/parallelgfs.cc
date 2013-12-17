@@ -219,14 +219,15 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L; L[0] = 2.0; L[1] = 1.0;
-      Dune::FieldVector<int,2> N;    N[0] = 4;   N[1] = 2;
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N;
+      N[0] = 4;   N[1] = 2;
+      std::bitset<2> periodic(false);
       int overlap=1;
-      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
  
       // solve problem :
-      testp0(grid.leafView());
-      testp1(grid.leafView());
+      testp0(grid.leafGridView());
+      testp1(grid.leafGridView());
     }
 
     // 3D
@@ -234,14 +235,15 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,3> L; L[0] = 2; L[1] = 1; L[2] = 1;
-      Dune::FieldVector<int,3> N;    N[0] = 4;    N[1] = 2;    N[2] = 2;
-      Dune::FieldVector<bool,3> B(false);
+      Dune::array<int,3> N;
+      N[0] = 4;    N[1] = 2;    N[2] = 2;
+      std::bitset<3> periodic(false);
       int overlap=1;
-      Dune::YaspGrid<3> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<3> grid(helper.getCommunicator(),L,N,periodic,overlap);
       
       // solve problem :)
-      testp0(grid.leafView());
-      testp1(grid.leafView());
+      testp0(grid.leafGridView());
+      testp1(grid.leafGridView());
     }
 
 	// test passed

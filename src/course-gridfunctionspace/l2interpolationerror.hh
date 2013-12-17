@@ -14,7 +14,6 @@ double l2interpolationerror (const U& u, const GFS& gfs, X& x,
   typedef typename GFS::Traits::FiniteElementType::
 	Traits::LocalBasisType::Traits FTraits;
   typedef typename FTraits::DomainFieldType D;
-  typedef typename FTraits::RangeFieldType R;
   typedef typename FTraits::RangeType RangeType;
   
   // make local function space
