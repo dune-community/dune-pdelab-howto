@@ -22,7 +22,7 @@
 #include<dune/istl/paamg/amg.hh>
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/q1fem.hh>
+#include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -147,12 +147,11 @@ void testp1 (const GV& gv)
   // some types
   typedef typename GV::Grid::ctype DF;
   typedef double RF;
-  const int dim = GV::dimension;
   Dune::Timer watch;
 
   // instantiate finite element maps
-  typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,RF,dim> FEM;
-  FEM fem;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,RF,1> FEM;
+  FEM fem(gv);
   
   // make grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,

@@ -8,7 +8,7 @@
 
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/grid/yaspgrid.hh>
-#include<dune/pdelab/finiteelementmap/q1fem.hh>
+#include<dune/pdelab/finiteelementmap/qkfem.hh>
 
 #include"analyticfunction.hh"
 #include"q1interpolate.hh"
