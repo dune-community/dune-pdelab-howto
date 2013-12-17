@@ -7,7 +7,7 @@ void example01a_Qk (const GV& gv)
 
   // <<<2>>> Make grid function space
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,k> FEM;
-  FEM fem;
+  FEM fem(gv);
   typedef Dune::PDELab::NoConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
@@ -43,5 +43,7 @@ void example01a_Qk (const GV& gv)
   // <<<6>>> graphical output
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,u);
-  vtkwriter.write("example01_Q1",Dune::VTK::appendedraw);
+  std::stringstream basename;
+  basename << "example01_Q" << k;
+  vtkwriter.write(basename.str(),Dune::VTK::appendedraw);
 }

@@ -6,7 +6,7 @@ template<class GV> void example02_Q1 (const GV& gv)
 
   // <<<2>>> Make grid function space
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,1> FEM;
-  FEM fem;
+  FEM fem(gv);
   typedef Dune::PDELab::ConformingDirichletConstraints CON; // constraints class
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;

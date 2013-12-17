@@ -4,12 +4,11 @@ void example06_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
-  const int dim = GV::dimension;
   Real time = 0.0;
 
   // <<<2>>> Make grid function space for the system
-  typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM0;
-  FEM0 fem0;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,1> FEM0;
+  FEM0 fem0(gv);
   typedef Dune::PDELab::OverlappingConformingDirichletConstraints CON; // new constraints class
   CON con;
   typedef Dune::PDELab::ISTLVectorBackend<> VBE0;
@@ -18,8 +17,8 @@ void example06_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   GFS0 gfs0(gv,fem0,con);
   gfs0.name("u0");
 
-  typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM1;
-  FEM1 fem1;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,1> FEM1;
+  FEM1 fem1(gv);
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM1,CON,VBE1> GFS1;
   GFS1 gfs1(gv,fem1,con);
   gfs1.name("u1");
@@ -45,13 +44,19 @@ void example06_Q1Q1 (const GV& gv, double dtstart, double dtmax, double tend)
   LOP lop(d_0,d_1,lambda,sigma,kappa,2);
   typedef Example05TimeLocalOperator TLOP; 
   TLOP tlop(tau,2);
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(9);
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO0;
-  GO0 go0(gfs,cc,gfs,cc,lop);
+  GO0 go0(gfs,cc,gfs,cc,lop,mbe);
   typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,CC,CC> GO1;
-  GO1 go1(gfs,cc,gfs,cc,tlop);  
+  GO1 go1(gfs,cc,gfs,cc,tlop,mbe);
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
   IGO igo(go0,go1);
+
+  // How well did we estimate the number of entries per matrix row?
+  // => print Jacobian pattern statistics
+  typename IGO::Traits::Jacobian jac(igo);
+  std::cout << jac.patternStatistics() << std::endl;
 
   // <<<4>>> Make FE function with initial value
   typedef typename IGO::Traits::Domain U;
