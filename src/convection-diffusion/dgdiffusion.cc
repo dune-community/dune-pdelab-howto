@@ -257,7 +257,6 @@ int main(int argc, char** argv)
           const int dim = 2;
           Dune::FieldVector<double,dim> L(1.0);
           Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
-          std::fill(N.begin(),N.end(),1);
           std::bitset<dim> P(false);
           typedef Dune::YaspGrid<dim> Grid;
           Grid grid(L,N,P,0);
