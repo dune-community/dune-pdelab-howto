@@ -18,10 +18,16 @@ void example04 (const GV& gv)
   // <<<3>>> Make grid operator
   typedef Example04LocalOperator LOP;                           // our new operator
   LOP lop;
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(5);
   typedef Dune::PDELab::EmptyTransformation CC;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
-  GO go(gfs,gfs,lop);
+  GO go(gfs,gfs,lop,mbe);
+
+  // How well did we estimate the number of entries per matrix row?
+  // => print Jacobian pattern statistics
+  typename GO::Traits::Jacobian jac(go);
+  std::cout << jac.patternStatistics() << std::endl;
 
   // <<<4>>> Select a linear solver backend
   typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<GO> LS;

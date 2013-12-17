@@ -42,15 +42,7 @@
 #include<dune/pdelab/newton/newton.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/p12dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk2dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk3dfem.hh>
-#include<dune/pdelab/finiteelementmap/q12dfem.hh>
-#include<dune/pdelab/finiteelementmap/q22dfem.hh>
-#include<dune/pdelab/finiteelementmap/q1fem.hh>
-#include<dune/pdelab/finiteelementmap/p1fem.hh>
-#include<dune/pdelab/finiteelementmap/rannacher_turek2dfem.hh>
+#include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/constraints/conforming.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
@@ -62,7 +54,7 @@
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/gridoperator/onestep.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
-#include<dune/pdelab/backend/istlmatrixbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/instationary/onestep.hh>
@@ -70,8 +62,7 @@
 #include"example05_operator.hh"
 #include"example05_toperator.hh"
 #include"example05_initial.hh"
-#include"example05_Q1Q1.hh"
-#include"example05_Q2Q2.hh"
+#include"example05_QkQk.hh"
 
 //===============================================================
 // Main program with grid setup
@@ -113,15 +104,15 @@ int main(int argc, char** argv)
     if (1 && helper.size()==1)
     {
       Dune::FieldVector<double,2> L(2.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> periodic(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::bitset<2> periodic(false);
       int overlap=0;
       Dune::YaspGrid<2> grid(L,N,periodic,overlap);
       grid.globalRefine(level);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
-      example05_Q1Q1(gv,dtstart,dtmax,tend);
-      example05_Q2Q2(gv,dtstart,dtmax,tend);
+      const GV& gv=grid.leafGridView();
+      example05_QkQk<1>(gv,dtstart,dtmax,tend); // Q1Q1
+      example05_QkQk<2>(gv,dtstart,dtmax,tend); // Q2Q2
     }
   }
   catch (Dune::Exception &e){

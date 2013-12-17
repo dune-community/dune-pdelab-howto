@@ -203,8 +203,7 @@ Example 5 solves the diffusion reaction problem with conforming finite elements.
 It consists of the following files:
 \begin{itemize}
 \item \lstinline{example05.cc} -- the file to be compiled, main function. 
-\item \lstinline{example05_Q1Q1.hh} -- driver using $Q_1$ elements. 
-\item \lstinline{example05_Q2Q2.hh} -- driver using $Q_2$ elements.
+\item \lstinline{example05_QkQk.hh} -- driver using $Q_1$ or $Q_2$ elements. 
 \item \lstinline{example05_operator.hh} -- local operator for spatial part.
 \item \lstinline{example05_toperator.hh} -- local operator for temporal part.
 \item \lstinline{example05_initial.hh} -- set up initial conditions.
@@ -213,7 +212,7 @@ It consists of the following files:
 
 \begin{frame}
 \frametitle{Main Features of the Driver}
-\framesubtitle{About \lstinline{example05_Q1Q1.hh}}
+\framesubtitle{About \lstinline{example05_QkQk.hh}}
 \begin{itemize}
 \item Make a composit grid function space with two components.
 \item Use \lstinline{EntityBlockedOrderingTag} to order
@@ -226,15 +225,15 @@ both degrees of freedom of the system consecutively.
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Driver Using $Q_1$ Elements}
-\framesubtitle<presentation>{File \texttt{src/course-examples/example05\_Q1Q1.hh}}
+\framesubtitle<presentation>{File \texttt{src/course-examples/example05\_QkQk.hh}}
 \lstinputlisting[basicstyle=\tiny,numbers=left, 
-numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example05_Q1Q1.hh}
+numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example05_QkQk.hh}
 \end{frame}
 \mode<article>{
-\begin{Lst}[File src/course-examples/example05\_Q1Q1.hh] \mbox
+\begin{Lst}[File src/course-examples/example05\_QkQk.hh] \mbox
 \nopagebreak
 \lstinputlisting[basicstyle=\scriptsize,numbers=left, 
-numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example05_Q1Q1.hh}
+numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example05_QkQk.hh}
 \end{Lst}}
 
 \begin{frame}

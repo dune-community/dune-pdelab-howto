@@ -40,13 +40,8 @@
 #include<dune/istl/superlu.hh>
 #include<dune/pdelab/newton/newton.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/p12dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk2dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk3dfem.hh>
-#include<dune/pdelab/finiteelementmap/q12dfem.hh>
-#include<dune/pdelab/finiteelementmap/q22dfem.hh>
-#include<dune/pdelab/finiteelementmap/q1fem.hh>
-#include<dune/pdelab/finiteelementmap/p1fem.hh>
+#include<dune/pdelab/finiteelementmap/pkfem.hh>
+#include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/finiteelementmap/rannacher_turek2dfem.hh>
 #include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/constraints/conforming.hh>
@@ -58,15 +53,14 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
-#include<dune/pdelab/backend/istlmatrixbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
 #include"example01a_operator.hh"
 #include"example01b_operator.hh"
-#include"example01a_Q1.hh"
-#include"example01a_Q2.hh"
+#include"example01a_Qk.hh"
 #include"example01a_RT.hh"
 #include"example01b_Q2.hh"
 

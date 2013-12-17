@@ -1,5 +1,5 @@
-template<class GV>
-void example05_Q2Q2 (const GV& gv, double dtstart, double dtmax, double tend)
+template<int k, class GV>
+void example05_QkQk (const GV& gv, double dtstart, double dtmax, double tend)
 {
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
@@ -7,8 +7,8 @@ void example05_Q2Q2 (const GV& gv, double dtstart, double dtmax, double tend)
   Real time = 0.0;
 
   // <<<2>>> Make grid function space for the system
-  typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM0;
-  FEM0 fem0;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,k> FEM0;
+  FEM0 fem0(gv);
   typedef Dune::PDELab::NoConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<> VBE0;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM0,CON,VBE0> GFS0;
@@ -35,17 +35,23 @@ void example05_Q2Q2 (const GV& gv, double dtstart, double dtmax, double tend)
   Real sigma = 1.0;
   Real kappa = -0.05;
   Real tau = 0.1;
-  typedef Example05LocalOperator LOP; 
-  LOP lop(d_0,d_1,lambda,sigma,kappa,4);
-  typedef Example05TimeLocalOperator TLOP; 
-  TLOP tlop(tau,4);
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Example05LocalOperator LOP;
+  LOP lop(d_0,d_1,lambda,sigma,kappa,2*k);
+  typedef Example05TimeLocalOperator TLOP;
+  TLOP tlop(tau,2*k);
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(k == 1 ? 9 : 25);
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO0;
-  GO0 go0(gfs,gfs,lop);
+  GO0 go0(gfs,gfs,lop,mbe);
   typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,CC,CC> GO1;
-  GO1 go1(gfs,gfs,tlop);  
+  GO1 go1(gfs,gfs,tlop,mbe);
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
   IGO igo(go0,go1);
+
+  // How well did we estimate the number of entries per matrix row?
+  // => print Jacobian pattern statistics (do not call this for IGO before osm.apply() was called!)
+  typename GO0::Traits::Jacobian jac(go0);
+  std::cout << jac.patternStatistics() << std::endl;
 
   // <<<4>>> Make FE function with initial value
   typedef typename IGO::Traits::Domain U;
@@ -78,7 +84,9 @@ void example05_Q2Q2 (const GV& gv, double dtstart, double dtmax, double tend)
   osm.setVerbosityLevel(2);
 
   // <<<8>>> graphics for initial guess
-  Dune::PDELab::FilenameHelper fn("example05_Q2Q2");
+  std::stringstream basename;
+  basename << "example05_Q" << k << "Q2" << k;
+  Dune::PDELab::FilenameHelper fn(basename.str());
   {
     typedef Dune::PDELab::DiscreteGridFunction<U0SUB,U> U0DGF;
     U0DGF u0dgf(u0sub,uold);

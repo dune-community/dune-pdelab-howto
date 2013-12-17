@@ -6,8 +6,8 @@ void example01b_Q2 (const GV& gv)
   typedef double Real;
 
   // <<<2>>> Make grid function space
-  typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM;
-  FEM fem;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,2> FEM;
+  FEM fem(gv);
   typedef Dune::PDELab::NoConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
@@ -18,9 +18,16 @@ void example01b_Q2 (const GV& gv)
   // <<<3>>> Make grid operator
   typedef Example01bLocalOperator LOP;                                     // <= NEW
   LOP lop(4);
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(25);
+
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
-  GO go(gfs,gfs,lop);
+  GO go(gfs,gfs,lop,mbe);
+
+  // How well did we estimate the number of entries per matrix row?
+  // => print Jacobian pattern statistics
+  typename GO::Traits::Jacobian jac(go);
+  std::cout << jac.patternStatistics() << std::endl;
 
   // <<<4>>> Select a linear solver backend
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;

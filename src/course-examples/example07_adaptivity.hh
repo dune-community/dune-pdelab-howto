@@ -7,8 +7,8 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
-  typedef Dune::PDELab::P1LocalFiniteElementMap<Coord,Real,dim> FEM;
-  FEM fem;
+  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Coord,Real,1> FEM;
+  FEM fem(gv);
   typedef Dune::PDELab::ConformingDirichletConstraints CON;     // constraints class
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
@@ -23,9 +23,15 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   // <<<3>>> Make grid operator
   typedef Example02LocalOperator<BCTypeParam> LOP;       // operator including boundary
   LOP lop(bctype);
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(7);
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
-  GO go(gfs,cc,gfs,cc,lop);
+  GO go(gfs,cc,gfs,cc,lop,mbe);
+
+  // How well did we estimate the number of entries per matrix row?
+  // => print Jacobian pattern statistics
+  typename GO::Traits::Jacobian jac(go);
+  std::cout << jac.patternStatistics() << std::endl;
 
   // <<<4>>> Make FE function extending Dirichlet boundary conditions
   typedef typename GO::Traits::Domain U;
@@ -73,7 +79,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
     P0GFS p0gfs(gv,p0fem);
     ESTLOP estlop;
     typedef Dune::PDELab::GridOperator<GFS,P0GFS,ESTLOP,MBE,Real,Real,Real,NoTrafo,NoTrafo> ESTGO;
-    ESTGO estgo(gfs,p0gfs,estlop);
+    ESTGO estgo(gfs,p0gfs,estlop,mbe);
     U0 eta(p0gfs,0.0);
     estgo.residual(u,eta);
 

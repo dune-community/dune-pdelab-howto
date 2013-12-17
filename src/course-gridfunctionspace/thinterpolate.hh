@@ -6,8 +6,7 @@
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/gridfunctionspace/vtk.hh>
 #include<dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
-#include<dune/pdelab/finiteelementmap/q1fem.hh>
-#include<dune/pdelab/finiteelementmap/q22dfem.hh>
+#include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 
 template<class GV> 
@@ -21,15 +20,15 @@ void thinterpolate (const GV& gv)
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
 
   //  make Q_1 grid function space
-  typedef Dune::PDELab::Q1LocalFiniteElementMap<D,R,dim> Q1FEM;
-  Q1FEM q1fem;                        // Q1 finite elements
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,D,R,1> Q1FEM;
+  Q1FEM q1fem(gv);                        // Q1 finite elements
   typedef Dune::PDELab::GridFunctionSpace<GV,Q1FEM,VBE> Q1GFS;
   Q1GFS q1gfs(gv,q1fem);              // Q1 space
   q1gfs.name("pressure");
   
   // make Q_2 finite element map
-  typedef Dune::PDELab::Q22DLocalFiniteElementMap<D,R> Q22DFEM;
-  Q22DFEM q22dfem;                    // Q2 finite elements, no 3D :-(
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,D,R,2> Q22DFEM;
+  Q22DFEM q22dfem(gv);                    // Q2 finite elements, no 3D :-(
 
   // make velocity grid function space
   typedef Dune::PDELab::VectorGridFunctionSpace

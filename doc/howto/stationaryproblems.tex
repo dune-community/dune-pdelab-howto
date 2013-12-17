@@ -241,8 +241,7 @@ It consists of the following files:
 \begin{itemize}
 \item \lstinline{example01.cc} -- the file to be compiled. 
 \item \lstinline{example01_main.hh} -- main function. Instantiates a grid and runs the variants.
-\item \lstinline{example01a_Q1.hh} -- solve model problem \eqref{Eq:Example01} with $Q_1$ elements.
-\item \lstinline{example01a_Q2.hh} -- same with $Q_2$ elements.
+\item \lstinline{example01a_Qk.hh} -- solve model problem \eqref{Eq:Example01} with $Q_1$ or $Q_2$ elements.
 \item \lstinline{example01a_RT.hh} -- same with nonconforming rotated bilinear (``Rannacher-Turek'' element).
 \item \lstinline{example01a_operator.hh} -- local operator implementing $\bm{\alpha}_{h,e}^{\text{vol}}$.
 \item \lstinline{example01b_Q2.hh} -- solve nonlinear variant of the model problem \eqref{Eq:Example01} with $Q_2$ elements.
@@ -271,7 +270,7 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01_main.hh}
 
 \begin{frame}
 \frametitle{Driver for Solving Stationary Linear Problems}
-\framesubtitle{About \lstinline{example01a_Q1.hh}}
+\framesubtitle{About \lstinline{example01a_Qk.hh}}
 \begin{enumerate}
 \item Define useful constants/types like dimension or basic numeric type.
 \item Make \textit{grid function space} which corresponds here to $U_h^k$. It requires
@@ -303,15 +302,15 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01_main.hh}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Unconstrained Elliptic Problem with $Q_1$}
-\framesubtitle<presentation>{File \texttt{src/course-examples/example01a\_Q1.hh}}
+\framesubtitle<presentation>{File \texttt{src/course-examples/example01a\_Qk.hh}}
 \lstinputlisting[basicstyle=\tiny,numbers=left, 
-numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01a_Q1.hh}
+numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01a_Qk.hh}
 \end{frame}
 \mode<article>{
-\begin{Lst}[File src/course-examples/example01a\_Q1.hh] \mbox
+\begin{Lst}[File src/course-examples/example01a\_Qk.hh] \mbox
 \nopagebreak
 \lstinputlisting[basicstyle=\scriptsize,numbers=left, 
-numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01a_Q1.hh}
+numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01a_Qk.hh}
 \end{Lst}}
 
 
@@ -439,30 +438,16 @@ element on an $8 \times 8$ grid.}
 
 \begin{frame}
 \frametitle{Using $Q_2$ Elements}
-\ldots is quite simple, see \lstinline{example01a_Q2.hh}. Just
+\ldots is quite simple, see \lstinline{example01a_Qk.hh}. Just
 \begin{itemize}
-\item Use another finite element map \lstinline{Q22DLocalFiniteElementMap}.
-\item Increase quadrature order on the local operator to 4.
-\item Use \lstinline{SubsamplingVTKWriter} to allow visualization of higher order polynomials.
+\item Use a different template parameter for the order $k$ in \lstinline{QkLocalFiniteElementMap}.
+\item Increase quadrature order on the local operator according to k (4 in this case).
+\item Use higher level in \lstinline{SubsamplingVTKWriter} to allow visualization of higher order polynomials.
 \item Use a new name for the output file.
 \end{itemize}
 
 Explore the Rannacher Turek element in \lstinline{example01a_RT.hh}
 \end{frame}
-
-
-\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
-\frametitle<presentation>{Unconstrained Elliptic Problem with $Q_2$}
-\framesubtitle<presentation>{File \texttt{src/course-examples/example01a\_Q2.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
-numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01a_Q2.hh}
-\end{frame}
-\mode<article>{
-\begin{Lst}[File src/course-examples/example01a\_Q2.hh] \mbox
-\nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
-numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01a_Q2.hh}
-\end{Lst}}
 
 
 \begin{frame}

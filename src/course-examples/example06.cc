@@ -30,7 +30,7 @@
 #include<dune/pdelab/newton/newton.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/finiteelementmap/q1fem.hh>
+#include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/constraints/conforming.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
@@ -41,7 +41,7 @@
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/gridoperator/onestep.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
-#include<dune/pdelab/backend/istlmatrixbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/instationary/onestep.hh>
@@ -92,12 +92,13 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(2.0);
-      Dune::FieldVector<int,2> N(1<<level);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::bitset<2> periodic(false);
       int overlap=3;
-      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
+      grid.globalRefine(level);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
       example06_Q1Q1(gv,dtstart,dtmax,tend);
     }
   }

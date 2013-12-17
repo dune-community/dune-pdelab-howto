@@ -7,8 +7,8 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   Real time = 0.0;                                              // make a time variable
 
   // <<<2>>> Make grid function space
-  typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM;
-  FEM fem;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,2> FEM;
+  FEM fem(gv);
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
@@ -26,13 +26,19 @@ void example03_Q2 (const GV& gv, double dt, double tend)
   LOP lop(bctype,4);                                           // local operator r
   typedef Example03TimeLocalOperator TLOP; 
   TLOP tlop(4);                                                 // local operator m
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(25);
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO0;
-  GO0 go0(gfs,cc,gfs,cc,lop);
+  GO0 go0(gfs,cc,gfs,cc,lop,mbe);
   typedef Dune::PDELab::GridOperator<GFS,GFS,TLOP,MBE,Real,Real,Real,CC,CC> GO1;
-  GO1 go1(gfs,cc,gfs,cc,tlop);  
+  GO1 go1(gfs,cc,gfs,cc,tlop,mbe);
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
   IGO igo(go0,go1);                                             // new grid operator
+
+  // How well did we estimate the number of entries per matrix row?
+  // => print Jacobian pattern statistics (do not call this for IGO before osm.apply() was called!)
+  typename GO0::Traits::Jacobian jac(go0);
+  std::cout << jac.patternStatistics() << std::endl;
 
   // <<<3>>> Make FE function with initial value / Dirichlet b.c.
   typedef typename IGO::Traits::Domain U;

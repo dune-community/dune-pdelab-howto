@@ -41,8 +41,6 @@ public:
     typedef typename LFSU0::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::RangeFieldType RF;
     typedef typename LFSU0::Traits::FiniteElementType::
-      Traits::LocalBasisType::Traits::JacobianType JacobianType;
-    typedef typename LFSU0::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::RangeType RangeType;
     typedef typename LFSU::Traits::SizeType size_type;
         
