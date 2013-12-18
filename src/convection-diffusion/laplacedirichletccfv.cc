@@ -35,6 +35,7 @@
 #endif
 // istl
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
@@ -109,16 +110,24 @@ void test (const GV& gv, std::string filename )
   typedef G<GV,RF> GType;
   GType g(gv);
 
-  // make grid function operator
-  Dune::PDELab::LaplaceDirichletCCFV<GType> la(g);
-  typedef Dune::PDELab::GridOperator<GFS,GFS,Dune::PDELab::LaplaceDirichletCCFV<GType>,
 #ifdef USE_EIGEN
-                                     Dune::PDELab::SparseEigenMatrixBackend,
+  typedef Dune::PDELab::SparseEigenMatrixBackend MBE;
 #else
-                                     Dune::PDELab::ISTLMatrixBackend,
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
 #endif
-    RF,RF,RF,Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation > GO;
+
+  // make grid function operator
+  typedef Dune::PDELab::LaplaceDirichletCCFV<GType> LOP;
+  LOP la(g);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
+                                     MBE,
+                                     RF,RF,RF,Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation > GO;
+#ifdef USE_EIGEN
   GO go(gfs,gfs,la);
+#else
+  GO go(gfs,gfs,la,mbe);
+#endif
 
   // make coefficent Vector and initialize it from a function
   typedef typename GO::Traits::Domain V;
@@ -164,14 +173,15 @@ int main(int argc, char** argv)
     // 2D
     if(helper.size()==1){
       // make grid
-      Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
+      const int dim = 2;
+      Dune::FieldVector<double,dim> L(1.0);
+      Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
+      std::bitset<dim> B(false);
+      Dune::YaspGrid<dim> grid(L,N,B,0);
       grid.globalRefine(6);
       
       // solve problem :)
-      test(grid.leafView(),basename+"_yasp2d");
+      test(grid.leafGridView(),basename+"_yasp2d");
     }
     else{
       if(helper.rank()==0)
@@ -185,7 +195,7 @@ int main(int argc, char** argv)
       UGUnitSquareQ grid(1000);
       grid.globalRefine(6);
 
-      test(grid.leafView(),basename+"_ug2d");
+      test(grid.leafGridView(),basename+"_ug2d");
     }
 #endif
 

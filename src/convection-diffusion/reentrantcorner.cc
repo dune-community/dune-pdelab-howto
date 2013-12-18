@@ -44,6 +44,7 @@
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/poisson.hh>
@@ -139,9 +140,11 @@ public:
 //===============================================================
 
 // generate a P1 function and output it
-template<typename GV, typename FEM, typename CON, int q>
-void poisson (const GV& gv, const FEM& fem, std::string filename)
+template<typename GV, typename FEM, typename CON, int k>
+void poisson_driver (const GV& gv, const FEM& fem, std::string filename)
 {
+  const int q=2*k; // integration order
+
   // constants and types
   typedef typename GV::Grid::ctype DF;
   typedef typename FEM::Traits::FiniteElementType::Traits::
@@ -169,10 +172,11 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   JType j(gv);
   typedef Dune::PDELab::Poisson<FType,BCTypeParam,JType,q> LOP;
   LOP lop(f,bctype,j);
-  typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
   typedef Dune::PDELab::GridOperator<GFS,GFS,
                                      LOP,MBE,R,R,R,C,C> GO;
-  GO go(gfs,cg,gfs,cg,lop);
+  GO go(gfs,cg,gfs,cg,lop,mbe);
 
   // make coefficent Vector and initialize it from a function
   typedef typename GO::Traits::Domain V;
@@ -239,7 +243,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 
   // output grid function with VTKWriter
   {
-    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
+    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,k-1);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
     vtkwriter.write(filename,Dune::VTK::ascii);
   }
@@ -269,18 +273,17 @@ int main(int argc, char** argv)
 
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
       const int k=3;
-      const int q=2*k;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
 
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"reentrantcorner_Alberta_Pk_2d");
+      poisson_driver<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,k>(gv,fem,"reentrantcorner_Alberta_Pk_2d");
     }
 #endif
 

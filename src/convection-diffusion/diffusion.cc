@@ -401,13 +401,13 @@ int main(int argc, char** argv)
                 if (degree_dyn==1) {
                   const int degree=1;
                   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
-                  FEMCG femcg;
+                  FEMCG femcg(gv);
                   runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"CUBE",i);
                 }
                 if (degree_dyn==2) {
                   const int degree=2;
                   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
-                  FEMCG femcg;
+                  FEMCG femcg(gv);
                   runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"CUBE",i);
                 }
               }
@@ -468,13 +468,13 @@ int main(int argc, char** argv)
                 if (degree_dyn==1) {
                   const int degree=1;
                   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
-                  FEMCG femcg;
+                  FEMCG femcg(gv);
                   runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"CUBE",i);
                 }
                 if (degree_dyn==2) {
                   const int degree=2;
                   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
-                  FEMCG femcg;
+                  FEMCG femcg(gv);
                   runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"CUBE",i);
                 }
               }

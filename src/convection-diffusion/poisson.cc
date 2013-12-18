@@ -386,8 +386,8 @@ int main(int argc, char** argv)
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
-      const int k=1;
-      const int q=2*k;
+      const int k=1; // polynomial order of the FEM
+      const int q=2*k; // integration order for the quadrature rule
       typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
       FEM fem(gv);
 
@@ -449,15 +449,13 @@ int main(int argc, char** argv)
       // get view
       typedef Grid::LeafGridView GV;
       const GV& gv=grid.leafGridView();
-
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
-      const int q=2;
-      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,R,1> FEM;
-
-      FEM fem;
-
+      const int k=1;
+      const int q=2*k;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,R,k> FEM;
+      FEM fem(gv);
       BCTypeParam bctype;
 
 #ifdef HANGING_NODES_REFINEMENT
@@ -563,15 +561,17 @@ int main(int argc, char** argv)
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafGridView();
 
+      const int k=1;
+      const int q=2*k;
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
-      FEM fem;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,k> FEM;
+      FEM fem(gv);
 
       BCTypeParam bctype;
       // solve problem
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson<GV,FEM,BCTypeParam,Constraints,2>(gv,fem,"poisson_yasp_Q1_2d",bctype);
+      poisson<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_yasp_Q1_2d",bctype);
     }
 
 
@@ -592,15 +592,17 @@ int main(int argc, char** argv)
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafGridView();
 
+      const int k=2;
+      const int q=2*k;
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,2> FEM;
-      FEM fem;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,k> FEM;
+      FEM fem(gv);
       BCTypeParam bctype;
 
       // solve problem
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson<GV,FEM,BCTypeParam,Constraints,4>(gv,fem,"poisson_yasp_Q2_2d",bctype);
+      poisson<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_yasp_Q2_2d",bctype);
     }
 
     {
@@ -620,15 +622,17 @@ int main(int argc, char** argv)
       typedef Dune::YaspGrid<3>::LeafGridView GV;
       const GV& gv=grid.leafGridView();
 
+      const int k=2;
+      const int q=2*k;
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
-      FEM fem;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,k> FEM;
+      FEM fem(gv);
       BCTypeParam bctype;
 
       // solve problem
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson<GV,FEM,BCTypeParam,Constraints,2>(gv,fem,"poisson_yasp_Q1_3d",bctype);
+      poisson<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_yasp_Q1_3d",bctype);
     }
 
 #if HAVE_UG
@@ -723,11 +727,13 @@ int main(int argc, char** argv)
       typedef Grid::LeafGridView GV;
       const GV& gv=grid.leafGridView();
 
+      const int k=1;
+      const int q=2*k;
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
-      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,R,1> FEM;
-      FEM fem;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,R,k> FEM;
+      FEM fem(gv);
 
       BCTypeParam bctype;
 
@@ -736,7 +742,7 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::HangingNodesDirichletConstraints
         <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
       Constraints constraints(grid,true,bctype);
-      poisson<GV,FEM,BCTypeParam,Constraints,2>( gv,
+      poisson<GV,FEM,BCTypeParam,Constraints,q>( gv,
                                                  fem,
                                                  "poisson_UG_Q1_2d_hangingNodes",
                                                  bctype,
@@ -780,14 +786,16 @@ int main(int argc, char** argv)
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
-      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,R,1> FEM;
-      FEM fem;
-
       BCTypeParam bctype;
 
 #ifdef HANGING_NODES_REFINEMENT
       const GV& gv=grid.leafGridView();
-      const int q=2;
+
+      const int k=1;
+      const int q=2*k;
+
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,R,k> FEM;
+      FEM fem(gv);
       typedef Dune::PDELab::HangingNodesConstraintsAssemblers::CubeGridQ1Assembler ConstraintsAssembler;
 
       typedef Dune::PDELab::HangingNodesDirichletConstraints

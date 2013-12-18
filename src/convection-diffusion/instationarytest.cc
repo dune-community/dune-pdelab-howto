@@ -39,15 +39,8 @@
 #include<dune/istl/io.hh>
 #include<dune/istl/superlu.hh>
 
-#include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/p12dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk2dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk3dfem.hh>
-#include<dune/pdelab/finiteelementmap/q12dfem.hh>
-#include<dune/pdelab/finiteelementmap/q22dfem.hh>
-#include<dune/pdelab/finiteelementmap/q1fem.hh>
+#include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/finiteelementmap/p1fem.hh>
-#include<dune/pdelab/finiteelementmap/rannacher_turek2dfem.hh>
 #include<dune/pdelab/constraints/conforming.hh>
 #include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
@@ -59,6 +52,7 @@
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/gridoperator/onestep.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
@@ -209,9 +203,9 @@ void sequential (const GV& gv, int t_level)
   typedef double Real;
 
   // <<<2>>> Make grid function space
-  //typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,GV::Grid::dimension> FEM;
-  typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM;
-  FEM fem;
+  const int degree=2;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,degree> FEM;
+  FEM fem(gv);
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
@@ -236,13 +230,14 @@ void sequential (const GV& gv, int t_level)
   LOP lop(param,4);
   typedef Dune::PDELab::L2 MLOP; 
   MLOP mlop(4);
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
   //Dune::PDELab::FractionalStepParameter<Real> method;
   Dune::PDELab::Alexander3Parameter<Real> method;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
-  GO0 go0(gfs,cg,gfs,cg,lop);   
+  GO0 go0(gfs,cg,gfs,cg,lop,mbe);
   typedef Dune::PDELab::GridOperator<GFS,GFS,MLOP,MBE,Real,Real,Real,C,C> GO1;
-  GO1 go1(gfs,cg,gfs,cg,mlop);
+  GO1 go1(gfs,cg,gfs,cg,mlop,mbe);
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
   IGO igo(go0,go1);
   typedef typename IGO::Traits::Domain V;
@@ -352,14 +347,15 @@ int main(int argc, char** argv)
 
     // sequential version
     {
-      Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(16);
-      Dune::FieldVector<bool,2> periodic(false);
+      const int dim = 2;
+      Dune::FieldVector<double,dim> L(1.0);
+      Dune::array<int,dim> N(Dune::fill_array<int,dim>(16));
+      std::bitset<dim> periodic(false);
       int overlap=0;
-      Dune::YaspGrid<2> grid(L,N,periodic,overlap);
+      Dune::YaspGrid<dim> grid(L,N,periodic,overlap);
       grid.globalRefine(x_level);
-      typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      typedef Dune::YaspGrid<dim>::LeafGridView GV;
+      const GV& gv=grid.leafGridView();
       sequential(gv,t_level);
     }
   }
