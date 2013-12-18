@@ -5,10 +5,10 @@ if(ALUGRID_FOUND)
     advection_stationary
     advection_instationary
     heat_instationary)
-  foreach(prog in ${ALUGRIDPROGRAMS})
+  foreach(prog ${ALUGRIDPROGRAMS})
     add_executable(${prog} ${prog}.cc)
     add_dune_superlu_flags(${prog})
     add_dune_alugrid_flags(${prog})
     target_link_libraries(${prog} ${DUNE_LIBS})
-  endforeach(prog in ${ALUGRIDPROGRAMS})
+  endforeach(prog ${ALUGRIDPROGRAMS})
 endif(ALUGRID_FOUND)
