@@ -1,3 +1,8 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <dune/pdelab/boilerplate/pdelab.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
 #include <dune/pdelab/localoperator/l2.hh>
@@ -57,7 +62,6 @@ public:
   BCType
   bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
-    typename Traits::DomainType xglobal = is.geometry().global(x);
     return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
   }
 
@@ -106,14 +110,13 @@ template<typename GM, unsigned int degree, Dune::GeometryType::BasicType elemtyp
 void do_simulation (double T, double dt, GM& grid, std::string basename)
 {
   // define parameters
-  const unsigned int dim = GM::dimension;
   typedef double NumberType;
 
   // make problem parameters
   typedef GenericProblem<typename GM::LeafGridView,NumberType> Problem;
   Problem problem;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
-  BCType bctype(grid.leafView(),problem);
+  BCType bctype(grid.leafGridView(),problem);
 
   // make a finite element space
   typedef Dune::PDELab::CGSpace<GM,NumberType,degree,BCType,elemtype,meshtype,solvertype> FS;
@@ -135,7 +138,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   typedef typename FS::DOF V;
   V x(fs.getGFS(),0.0);
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
-  G g(grid.leafView(),problem);
+  G g(grid.leafGridView(),problem);
   problem.setTime(0.0);
   Dune::PDELab::interpolate(g,fs.getGFS(),x);
 
@@ -156,7 +159,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   // graphics for initial guess
   Dune::PDELab::FilenameHelper fn(basename);
   { // start a new block to automatically delete the VTKWriter object
-    Dune::SubsamplingVTKWriter<typename GM::LeafGridView> vtkwriter(grid.leafView(),degree-1);
+    Dune::SubsamplingVTKWriter<typename GM::LeafGridView> vtkwriter(grid.leafGridView(),degree-1);
     typename FS::DGF xdgf(fs.getGFS(),x);
     vtkwriter.addVertexData(new typename FS::VTKF(xdgf,"x_h"));
     vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
@@ -177,7 +180,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
 
       // output to VTK file
       {
-        Dune::SubsamplingVTKWriter<typename GM::LeafGridView> vtkwriter(grid.leafView(),degree-1);
+        Dune::SubsamplingVTKWriter<typename GM::LeafGridView> vtkwriter(grid.leafGridView(),degree-1);
         typename FS::DGF xdgf(fs.getGFS(),xnew);
         vtkwriter.addVertexData(new typename FS::VTKF(xdgf,"x_h"));
         vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
@@ -220,10 +223,6 @@ int main(int argc, char **argv)
     const Dune::GeometryType::BasicType elemtype = Dune::GeometryType::cube;
     const Dune::PDELab::MeshType meshtype = Dune::PDELab::MeshType::conforming;
 
-#if HAVE_UG // do this only if UG grid is present
-    typedef Dune::UGGrid<dim> GMa;
-    Dune::UGGrid<dim>::setDefaultHeapSize(1500);
-#endif
     typedef Dune::YaspGrid<dim> GM;
     typedef Dune::PDELab::StructuredGrid<GM> Grid;
     Grid grid(elemtype,cells);

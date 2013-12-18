@@ -1,3 +1,8 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <dune/pdelab/boilerplate/pdelab.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
 
@@ -67,7 +72,6 @@ public:
   BCType
   bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
-    typename Traits::DomainType xglobal = is.geometry().global(x);
     return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
   }
 
@@ -126,7 +130,7 @@ int main(int argc, char **argv)
   typedef GenericEllipticProblem<GM::LeafGridView,NumberType> Problem;
   Problem problem;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
-  BCType bctype(grid->leafView(),problem);
+  BCType bctype(grid->leafGridView(),problem);
 
   // make a finite element space
   typedef Dune::PDELab::CGSpace<GM,NumberType,degree,BCType,elemtype,meshtype,solvertype> FS;
@@ -136,7 +140,7 @@ int main(int argc, char **argv)
   typedef FS::DOF V;
   V x(fs.getGFS(),0.0);
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
-  G g(grid->leafView(),problem);
+  G g(grid->leafGridView(),problem);
   Dune::PDELab::interpolate(g,fs.getGFS(),x);
 
   // assemble constraints
@@ -158,7 +162,7 @@ int main(int argc, char **argv)
   slp.apply();
 
   // output grid to VTK file
-  Dune::SubsamplingVTKWriter<GM::LeafGridView> vtkwriter(grid->leafView(),degree-1);
+  Dune::SubsamplingVTKWriter<GM::LeafGridView> vtkwriter(grid->leafGridView(),degree-1);
   FS::DGF xdgf(fs.getGFS(),x);
   vtkwriter.addVertexData(new FS::VTKF(xdgf,"x_h"));
   vtkwriter.write("poisson_uniform",Dune::VTK::appendedraw);

@@ -1,3 +1,8 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <dune/pdelab/boilerplate/pdelab.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
 #include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
@@ -75,7 +80,6 @@ public:
   BCType
   bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& xlocal) const
   {
-    typename Traits::DomainType x = is.geometry().global(xlocal);
     if (is.outerNormal(xlocal)*v<0)
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
     else
@@ -130,29 +134,29 @@ int main(int argc, char **argv)
   typedef double NumberType;
 
   // make grid
-  //typedef Dune::ALUSimplexGrid<dim,dim> GM;
+  // typedef Dune::ALUGrid<dim,dim,Dune::simplex,Dune::conforming> GM;
   typedef Dune::YaspGrid<dim> GM;
   typedef Dune::PDELab::StructuredGrid<GM> Grid;
-  Grid grid(elemtype,cells,1);
+  Grid grid(elemtype,cells);
   grid->loadBalance();
 
   // make problem parameters
   typedef GenericAdvectionProblem<GM::LeafGridView,NumberType> Problem;
   Problem problem;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
-  BCType bctype(grid->leafView(),problem);
+  BCType bctype(grid->leafGridView(),problem);
 
   // make a finite element space
   // typedef Dune::PDELab::CGSpace<GM,NumberType,degree,BCType,elemtype,meshtype,solvertype> FS;
   // FS fs(*grid,bctype);
   typedef Dune::PDELab::DGPkSpace<GM,NumberType,degree,elemtype,solvertype> FS;
-  FS fs(grid->leafView());
+  FS fs(grid->leafGridView());
 
   // make a degree of freedom vector and initialize it with a function
   typedef FS::DOF X;
   X x(fs.getGFS(),0.0);
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
-  G g(grid->leafView(),problem);
+  G g(grid->leafGridView(),problem);
   Dune::PDELab::interpolate(g,fs.getGFS(),x);
 
   // assemble constraints
@@ -176,7 +180,7 @@ int main(int argc, char **argv)
   slp.apply();
 
   // output grid to VTK file
-  Dune::SubsamplingVTKWriter<GM::LeafGridView> vtkwriter(grid->leafView(),degree-1);
+  Dune::SubsamplingVTKWriter<GM::LeafGridView> vtkwriter(grid->leafGridView(),degree-1);
   FS::DGF xdgf(fs.getGFS(),x);
   vtkwriter.addVertexData(new FS::VTKF(xdgf,"x_h"));
   vtkwriter.write("advection_stationary",Dune::VTK::appendedraw);

@@ -1,3 +1,8 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <dune/pdelab/boilerplate/pdelab.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
 
@@ -52,7 +57,6 @@ public:
   BCType
   bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
-    typename Traits::DomainType xglobal = is.geometry().global(x);
     return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
   }
 
@@ -298,7 +302,6 @@ void driver (Dune::shared_ptr<GM> grid, int prerefine_level, double tol, int max
              double fraction, std::string basename)
 {
   // define parameters
-  const unsigned int dim = GM::dimension;
   typedef double NumberType;
 
   // make grid
@@ -320,7 +323,7 @@ void driver (Dune::shared_ptr<GM> grid, int prerefine_level, double tol, int max
       typedef ReentrantCornerProblem<typename GM::LeafGridView,NumberType> Problem;
       Problem problem;
       typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
-      BCType bctype(grid->leafView(),problem);
+      BCType bctype(grid->leafGridView(),problem);
 
       // make a finite element space
       typedef Dune::PDELab::CGSpace<GM,NumberType,degree,BCType,elemtype,meshtype,solvertype> FS;
@@ -335,7 +338,7 @@ void driver (Dune::shared_ptr<GM> grid, int prerefine_level, double tol, int max
       // assemble constraints and Dirichlet BC
       fs.assembleConstraints(bctype);
       typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
-      G g(grid->leafView(),problem);
+      G g(grid->leafGridView(),problem);
       Dune::PDELab::interpolate(g,fs.getGFS(),x);
 
       // assembler for finite elemenent problem
@@ -345,7 +348,7 @@ void driver (Dune::shared_ptr<GM> grid, int prerefine_level, double tol, int max
       ASS ass(fs,lop);
 
       // make linear solver and solve problem
-      typedef Dune::PDELab::ISTLSolverBackend_CG_AMG_SSOR<FS,ASS,solvertype> SBEa;
+      // typedef Dune::PDELab::ISTLSolverBackend_CG_AMG_SSOR<FS,ASS,solvertype> SBEa;
       typedef Dune::PDELab::ISTLSolverBackend_IterativeDefault<FS,ASS,solvertype> SBE;
       SBE sbe(fs,ass,5000,1);
 
@@ -364,7 +367,7 @@ void driver (Dune::shared_ptr<GM> grid, int prerefine_level, double tol, int max
       typedef Dune::PDELab::DiscreteGridFunctionGradient<typename FS::GFS,X> DGFGrad;
       DGFGrad xdgfgrad(fs.getGFS(),x);
       typedef ExactGradient<typename GM::LeafGridView,NumberType> Grad;
-      Grad grad(grid->leafView());
+      Grad grad(grid->leafGridView());
       typedef DifferenceSquaredAdapter<Grad,DGFGrad> GradDifferenceSquared;
       GradDifferenceSquared graddifferencesquared(grad,xdgfgrad);
       typename GradDifferenceSquared::Traits::RangeType h1semierrorsquared(0.0);
@@ -373,7 +376,7 @@ void driver (Dune::shared_ptr<GM> grid, int prerefine_level, double tol, int max
 
       // a posteriori error estimate
       typedef Dune::PDELab::P0Space<GM,NumberType,elemtype,solvertype> ESTFS;
-      ESTFS estfs(grid->leafView());
+      ESTFS estfs(grid->leafGridView());
       typedef Dune::PDELab::ConvectionDiffusionFEMResidualEstimator<Problem> ESTLOP;
       ESTLOP estlop(problem);
       typedef Dune::PDELab::GlobalAssembler<FS,ESTFS,ESTLOP,solvertype> ESTASS;
@@ -386,7 +389,7 @@ void driver (Dune::shared_ptr<GM> grid, int prerefine_level, double tol, int max
       ee.push_back(estimated_error);
 
       // output grid to VTK file
-      Dune::VTKWriter<typename GM::LeafGridView> vtkwriter(grid->leafView());
+      Dune::VTKWriter<typename GM::LeafGridView> vtkwriter(grid->leafGridView());
       vtkwriter.addVertexData(new typename FS::VTKF(xdgf,"x_h"));
       Y ee(estfs.getGFS(),0.0);
       for (unsigned int i=0; i<ee.base().N(); i++) (ee.base())[i] = sqrt((y.base())[i]);
@@ -405,7 +408,7 @@ void driver (Dune::shared_ptr<GM> grid, int prerefine_level, double tol, int max
       Dune::PDELab::mark_grid(*grid,y,eta_refine,eta_coarsen);
 
       // do refinement
-      Dune::PDELab::adapt_grid(*grid,fs.getGFS(),x);
+      Dune::PDELab::adapt_grid(*grid,fs.getGFS(),x,2*degree);
     }
 
   // print results
@@ -526,7 +529,7 @@ int main(int argc, char **argv)
       {
         const Dune::GeometryType::BasicType elemtype = Dune::GeometryType::simplex;
         const Dune::PDELab::MeshType meshtype = Dune::PDELab::MeshType::nonconforming;
-        typedef Dune::ALUSimplexGrid<dim,dim> GM;
+        typedef Dune::ALUGrid<dim,dim,Dune::simplex,Dune::nonconforming> GM;
         Dune::GridFactory<GM> factory;
         ldomain_mesh(factory,elemtype);
         Dune::shared_ptr<GM> grid(factory.createGrid());
