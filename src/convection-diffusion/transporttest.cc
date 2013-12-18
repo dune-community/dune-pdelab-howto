@@ -51,6 +51,7 @@
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/gridoperator/onestep.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/transportccfv.hh>
@@ -187,9 +188,10 @@ void stationary (const GV& gv)
   // <<<4>>> Make grid operator
   typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP;
   LOP lop(param);
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(5); // Maximal number of nonzeros per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
-  GO go(gfs,cg,gfs,cg,lop);
+  GO go(gfs,cg,gfs,cg,lop,mbe);
 
   // <<<5>>> Compute affine shift
   typedef typename GO::Traits::Domain V;
@@ -266,12 +268,13 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   LOP lop(param);
   typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP;
   SLOP slop(param);
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(5); // number of nonzero entries per row can be cross-checked by patternStatistics().
   Dune::PDELab::FractionalStepParameter<Real> method;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
-  GO0 go0(gfs,cg,gfs,cg,lop);
+  GO0 go0(gfs,cg,gfs,cg,lop,mbe);
   typedef Dune::PDELab::GridOperator<GFS,GFS,SLOP,MBE,Real,Real,Real,C,C> GO1;
-  GO1 go1(gfs,cg,gfs,cg,slop);
+  GO1 go1(gfs,cg,gfs,cg,slop,mbe);
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
   IGO igo(go0,go1);
 
@@ -375,12 +378,13 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   LOP lop(param);
   typedef Dune::PDELab::CCFVTemporalOperator<Param> SLOP;
   SLOP slop(param);
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(5); // number of nonzero entries per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
-  GO0 go0(gfs,cg,gfs,cg,lop);
+  GO0 go0(gfs,cg,gfs,cg,lop,mbe);
   Dune::PDELab::ExplicitEulerParameter<Real> method;
   typedef Dune::PDELab::GridOperator<GFS,GFS,SLOP,MBE,Real,Real,Real,C,C> GO1;
-  GO1 go1(gfs,cg,gfs,cg,slop);
+  GO1 go1(gfs,cg,gfs,cg,slop,mbe);
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1,false> IGO;
   IGO igo(go0,go1);
   igo.setMethod(method);
@@ -477,15 +481,22 @@ int main(int argc, char** argv)
     // parallel overlapping version
     if (true)
       {
-        Dune::FieldVector<double,2> L(1.0);
-        Dune::FieldVector<int,2> N(n);
-        Dune::FieldVector<bool,2> periodic(false);
+        const int dim = 2;
+        Dune::FieldVector<double,dim> L(1.0);
+        Dune::array<int,dim> N(Dune::fill_array<int,dim>(n));
+        std::bitset<dim> periodic(false);
         int overlap=o;
-        Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
-        typedef Dune::YaspGrid<2>::LeafGridView GV;
-        const GV& gv=grid.leafView();
+        Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,periodic,overlap);
+        typedef Dune::YaspGrid<dim>::LeafGridView GV;
+        const GV& gv=grid.leafGridView();
+
+        std::cout << "\n stationary" << std::endl;
         stationary(gv);
+
+        std::cout << "\n implicit_scheme" << std::endl;
         implicit_scheme(gv,Tend,timestep);
+
+        std::cout << "\n explicit_scheme" << std::endl;
         explicit_scheme(gv,Tend,timestep);
       }
 

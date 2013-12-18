@@ -14,8 +14,6 @@
 #include<dune/grid/yaspgrid.hh>
 
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/p12dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk2dfem.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -28,6 +26,7 @@
 #include<dune/pdelab/localoperator/diffusionccfv.hh>
 #include<dune/pdelab/localoperator/laplacedirichletccfv.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
@@ -88,9 +87,11 @@ void test (const GV& gv)
   Dune::PDELab::constraints(gfs,cc,false);
 
   // grid operator
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,Dune::PDELab::ISTLMatrixBackend,RF,RF,RF,
-    CC,CC> GO;
-  GO go(gfs,cc,gfs,cc,lop);
+
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(5); // Maximal number of nonzeros per row can be cross-checked by patternStatistics().
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,RF,RF,RF,CC,CC> GO;
+  GO go(gfs,cc,gfs,cc,lop,mbe);
 
   // make coefficent Vector and initialize it from a function
   typedef typename GO::Traits::Domain V;
@@ -143,31 +144,33 @@ int main(int argc, char** argv)
     if (true)
     {
       // make grid
-      Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(128);
+      const int dim = 2;
+      Dune::FieldVector<double,dim> L(1.0);
+      Dune::array<int,dim> N(Dune::fill_array<int,dim>(128));
       N[0] = nx; N[1] = ny;
-      Dune::FieldVector<bool,2> B(false);
+      std::bitset<dim> B(false);
       int overlap=3;
-      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
       //      grid.globalRefine(6);
       
       // solve problem :)
-      test(grid.leafView());
+      test(grid.leafGridView());
     }
 
     // Q1, 3d
     if (false)
     {
       // make grid
-      Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N;
+      const int dim = 3;
+      Dune::FieldVector<double,dim> L(1.0);
+      Dune::array<int,dim> N;
       N[0] = nx; N[1] = ny; N[2] = nz;
-      Dune::FieldVector<bool,3> B(false);
+      std::bitset<dim> B(false);
       int overlap=1;
-      Dune::YaspGrid<3> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
 
       // solve problem :)
-      test(grid.leafView());
+      test(grid.leafGridView());
     }
 
     // UG Q1 2D test
@@ -178,7 +181,7 @@ int main(int argc, char** argv)
 //       UGUnitSquareQ grid(1000);
 //       grid.globalRefine(6);
 
-//       test(grid.leafView());
+//       test(grid.leafGridView());
 //     }
 // #endif
 

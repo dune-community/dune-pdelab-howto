@@ -29,6 +29,7 @@
 #include<dune/pdelab/constraints/raviartthomas0.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/common/function.hh>
@@ -117,13 +118,15 @@ void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   typedef Dune::PDELab::DiffusionMixed<KType,A0Type,FType,BCType,GType> LOP;
   LOP lop(k,a0,f,bctype,g,4,2);
 
-  typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(9); // Maximal number of nonzeros per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator<MGFS,MGFS,LOP,MBE,R,R,R,T,T> GO;
-  GO go(mgfs,t,mgfs,t,lop);
+  GO go(mgfs,t,mgfs,t,lop,mbe);
 
   // represent operator as a matrix
   typedef typename GO::Jacobian M;
   M m(go);
+  std::cout << m.patternStatistics() << std::endl;
   m = 0.0;
   go.jacobian(x,m);
   //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
@@ -252,47 +255,49 @@ int main(int argc, char** argv)
     // YaspGrid 2D test
     if (true)
     {
-      Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
+      const int dim = 2;
+      Dune::FieldVector<double,dim> L(1.0);
+      Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
+      std::bitset<dim> B(false);
+      Dune::YaspGrid<dim> grid(L,N,B,0);
       grid.globalRefine(7);
 
       // instantiate finite element maps
-      typedef Dune::YaspGrid<2>::ctype DF;
-      typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const int dim = 2;
+      typedef Dune::YaspGrid<dim>::ctype DF;
+      typedef Dune::YaspGrid<dim>::LeafGridView GV;
+
       typedef double R;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::cube,dim));
       typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,R,0,Dune::GeometryType::cube> RT0FEM;
-      RT0FEM rt0fem(grid.leafView());
+      RT0FEM rt0fem(grid.leafGridView());
 
-      dispatcher(problem,grid.leafView(),p0fem,rt0fem,"Yasp2d_rt0q");
+      dispatcher(problem,grid.leafGridView(),p0fem,rt0fem,"Yasp2d_rt0q");
     }
 
     // YaspGrid 3D test
     if (true)
     {
-      Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(1);
-      Dune::FieldVector<bool,3> B(false);
-      Dune::YaspGrid<3> grid(L,N,B,0);
+      const int dim = 3;
+      Dune::FieldVector<double,dim> L(1.0);
+      Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
+      std::bitset<dim> B(false);
+      Dune::YaspGrid<dim> grid(L,N,B,0);
       grid.globalRefine(4);
 
       // instantiate finite element maps
-      typedef Dune::YaspGrid<3>::ctype DF;
-      typedef Dune::YaspGrid<3>::LeafGridView GV;
-      const int dim = 3;
+      typedef Dune::YaspGrid<dim>::ctype DF;
+      typedef Dune::YaspGrid<dim>::LeafGridView GV;
+
       typedef double R;
       typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::cube,dim));
 
       typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,R,0,Dune::GeometryType::cube> RT0FEM;
 
-      RT0FEM rt0fem(grid.leafView());
+      RT0FEM rt0fem(grid.leafGridView());
 
-      dispatcher(problem,grid.leafView(),p0fem,rt0fem,"Yasp3d_rt0q");
+      dispatcher(problem,grid.leafGridView(),p0fem,rt0fem,"Yasp3d_rt0q");
     }
 
 #if HAVE_ALUGRID
@@ -311,9 +316,9 @@ int main(int argc, char** argv)
 
       typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,R,0,Dune::GeometryType::simplex> RT0FEM;
 
-      RT0FEM rt0fem(grid.leafView());
+      RT0FEM rt0fem(grid.leafGridView());
 
-      dispatcher(problem,grid.leafView(),p0fem,rt0fem,"ALU2d_rt0");
+      dispatcher(problem,grid.leafGridView(),p0fem,rt0fem,"ALU2d_rt0");
     }
 #endif
 
@@ -333,9 +338,9 @@ int main(int argc, char** argv)
 
       typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,R,0,Dune::GeometryType::simplex> RT0FEM;
 
-      RT0FEM rt0fem(grid.leafView());
+      RT0FEM rt0fem(grid.leafGridView());
 
-      dispatcher(problem,grid.leafView(),p0fem,rt0fem,"UG2d_rt0");
+      dispatcher(problem,grid.leafGridView(),p0fem,rt0fem,"UG2d_rt0");
     }
 #endif
 
@@ -355,9 +360,9 @@ int main(int argc, char** argv)
 
       typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,R,0,Dune::GeometryType::simplex> RT0FEM;
 
-      RT0FEM rt0fem(grid.leafView());
+      RT0FEM rt0fem(grid.leafGridView());
 
-      dispatcher(problem,grid.leafView(),p0fem,rt0fem,"Alberta2d_rt0");
+      dispatcher(problem,grid.leafGridView(),p0fem,rt0fem,"Alberta2d_rt0");
     }
 #endif
 

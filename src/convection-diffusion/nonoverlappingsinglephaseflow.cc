@@ -33,13 +33,8 @@
 #include<dune/pdelab/constraints/conforming.hh>
 #include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/constraints/common/constraintsparameters.hh>
-#include<dune/pdelab/finiteelementmap/p12dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk2dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk3dfem.hh>
-#include<dune/pdelab/finiteelementmap/q12dfem.hh>
-#include<dune/pdelab/finiteelementmap/q22dfem.hh>
-#include<dune/pdelab/finiteelementmap/q1fem.hh>
-#include<dune/pdelab/finiteelementmap/p1fem.hh>
+#include<dune/pdelab/finiteelementmap/qkfem.hh>
+#include<dune/pdelab/finiteelementmap/pkfem.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
@@ -48,6 +43,7 @@
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
@@ -112,9 +108,13 @@ void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
   // make grid operator
   typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP; 
   LOP lop(problem);
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
   typedef Dune::PDELab::GridOperator
-      <GFS,GFS,LOP,Dune::PDELab::ISTLMatrixBackend,R,R,R,CC,CC,true> GO;
-  GO go(gfs,cc,gfs,cc,lop);
+      <GFS,GFS,LOP,
+       MBE,
+       R,R,R,CC,CC,true> GO;
+  GO go(gfs,cc,gfs,cc,lop,mbe);
 
   // make coefficent Vector and initialize it from a function
   typedef typename GO::Traits::Domain V;
@@ -161,14 +161,15 @@ int main(int argc, char** argv)
     if (true)
     {
       // make grid
-      Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(32);
-      Dune::FieldVector<bool,2> B(false);
+      const int dim = 2;
+      Dune::FieldVector<double,dim> L(1.0);
+      Dune::array<int,dim> N(Dune::fill_array<int,dim>(32));
+      std::bitset<dim> B(false);
       int overlap=0;
-      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
       //grid.globalRefine(4);
-      typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      typedef Dune::YaspGrid<dim>::LeafGridView GV;
+      const GV& gv=grid.leafGridView();
 #ifdef PROBLEM_A
         typedef ParameterA<GV,double> PROBLEM;
         PROBLEM problem;
@@ -196,26 +197,28 @@ int main(int argc, char** argv)
         PROBLEM problem;
 #endif
 
-      typedef Dune::YaspGrid<2>::ctype DF;
-      typedef Dune::PDELab::Q12DLocalFiniteElementMap<DF,double> FEM;
-      FEM fem;
+        typedef Dune::YaspGrid<dim>::ctype DF;
+        const int degree = 1;
+        typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;
+        FEM fem(gv);
 
-      driver(problem,gv,fem,"yasp2d_Q1",2);
+        driver(problem,gv,fem,"yasp2d_Q1",2*degree);
     }
 
     // Q1, 3d
     if (false)
     {
       // make grid
-      Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(8);
-      Dune::FieldVector<bool,3> B(false);
+      const int dim = 3;
+      Dune::FieldVector<double,dim> L(1.0);
+      Dune::array<int,dim> N(Dune::fill_array<int,dim>(8));
+      std::bitset<dim> B(false);
       int overlap=0;
-      Dune::YaspGrid<3> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
       //grid.globalRefine(3);
  
-      typedef Dune::YaspGrid<3>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      typedef Dune::YaspGrid<dim>::LeafGridView GV;
+      const GV& gv=grid.leafGridView();
 #ifdef PROBLEM_A
         typedef ParameterA<GV,double> PROBLEM;
         PROBLEM problem;
@@ -243,11 +246,12 @@ int main(int argc, char** argv)
         PROBLEM problem;
 #endif
 
-      typedef Dune::YaspGrid<3>::ctype DF;
-      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double,3> FEM;
-      FEM fem;
+        typedef Dune::YaspGrid<dim>::ctype DF;
+        const int degree = 1;
+        typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;
+        FEM fem(gv);
 
-      driver(problem,gv,fem,"yasp3d_Q1",2);
+        driver(problem,gv,fem,"yasp3d_Q1",2*degree);
     }
  
 #if HAVE_UG
@@ -270,7 +274,7 @@ int main(int argc, char** argv)
  
       // get view
       typedef GridType::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 #ifdef PROBLEM_A
         typedef ParameterA<GV,double> PROBLEM;
         PROBLEM problem;
@@ -303,9 +307,8 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=1;
       const int q=2*k;
-      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
- 
       //driver(problem,gv,fem,"UG3d_P1",q);
     }
 #endif
@@ -332,7 +335,7 @@ int main(int argc, char** argv)
  
       // get view
       typedef GridType::LeafGridView GV;
-      const GV& gv=grid->leafView(); 
+      const GV& gv=grid->leafGridView();
 #ifdef PROBLEM_A
         typedef ParameterA<GV,double> PROBLEM;
         PROBLEM problem;
@@ -365,7 +368,8 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=1;
       const int q=2*k;
-      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> FEM;
+
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
  
       driver(problem,gv,fem,"ALU3d_P1_PlastkDoeddel",q);
@@ -402,11 +406,11 @@ int main(int argc, char** argv)
 	  grid->loadBalance();
 	  std::cout << " after load balance /" << helper.rank() << "/ " << grid->size(0) << std::endl;
  
-	  grid->globalRefine(4);
+      grid->globalRefine(4);
  
-	  // get view
-	  typedef GridType::LeafGridView GV;
-	  const GV& gv=grid->leafView(); 
+      // get view
+      typedef GridType::LeafGridView GV;
+      const GV& gv=grid->leafGridView();
 #ifdef PROBLEM_A
         typedef ParameterA<GV,double> PROBLEM;
         PROBLEM problem;
@@ -437,10 +441,11 @@ int main(int argc, char** argv)
 	  // make finite element map
 	  typedef GridType::ctype DF;
 	  typedef double R;
-	  typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,R,GridType::dimension> FEM;
-	  FEM fem;
+      const int degree = 1;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;
+      FEM fem(gv);
  
-	  driver(problem,gv,fem,"ALU3d_Q1",2);
+      driver(problem,gv,fem,"ALU3d_Q1",2*degree);
 	}
 #endif
 

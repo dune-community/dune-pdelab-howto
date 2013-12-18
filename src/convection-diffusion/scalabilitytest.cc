@@ -38,6 +38,7 @@
 #include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
@@ -121,9 +122,10 @@ void test (const GV& gv)
   Dune::PDELab::constraints(g,gfs,cc,false);
 
   // grid operator
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,RF,RF,RF,CC,CC> GO;
-  GO go(gfs,cc,gfs,cc,lop);
+  GO go(gfs,cc,gfs,cc,lop,mbe);
 
   // make coefficent Vector and initialize it from a function
   typedef typename GO::Traits::Domain V;
@@ -255,14 +257,15 @@ void runDG ( const GV& gv,
   if (weights=="OFF") w = Dune::PDELab::ConvectionDiffusionDGWeights::weightsOff;
   typedef Dune::PDELab::ConvectionDiffusionDG<PROBLEM,FEM> LOP;
   LOP lop(problem,m,w,alpha);
-  typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
   G g(gv,problem);
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
   Dune::PDELab::constraints(g,gfs,cc,false);
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
-  GO go(gfs,cc,gfs,cc,lop);
+  GO go(gfs,cc,gfs,cc,lop,mbe);
 
   // make a vector of degree of freedom vectors and initialize it with Dirichlet extension
   typedef typename GO::Traits::Domain U;
@@ -339,11 +342,10 @@ int main(int argc, char** argv)
     {
       const int dim = 3;
       Dune::FieldVector<double,dim> L(1.0);
-      Dune::FieldVector<int,dim> N;
+      Dune::array<int,dim> N;
       N[0] = nx; N[1] = ny; N[2] = nz;
-      Dune::FieldVector<bool,dim> B(false);
+      std::bitset<dim> B(false);
       int overlap=1;
-
 
       typedef YaspPartition<dim,Dune::FieldVector<int,dim>> YP;
       YP* yp = (YP*) Dune::YaspGrid<dim>::defaultLoadbalancer();
@@ -376,7 +378,7 @@ int main(int argc, char** argv)
       typedef Dune::YaspGrid<dim> Grid;
       typedef Grid::LeafGridView GV;
 
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
       typedef Parameter<GV,double> PROBLEM;
       PROBLEM problem;
 
