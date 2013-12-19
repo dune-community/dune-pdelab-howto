@@ -1,5 +1,5 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief Mimetic finite difference example (solves Problem A-F)
 */
 #ifdef HAVE_CONFIG_H
@@ -96,7 +96,7 @@ public:
     }
 
     template<class I>
-    BCType bcType( const I& is, 
+    BCType bcType( const I& is,
                    const Dune::FieldVector<typename I::ctype, I::dimension-1> & x
                    ) const
     {
@@ -137,11 +137,11 @@ public:
 
   template<typename I>
   bool isDirichlet(
-				   const I & intersection,   /*@\label{bcp:name}@*/
-				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-				   ) const
+                   const I & intersection,   /*@\label{bcp:name}@*/
+                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                   ) const
   {
-	return false;
+    return false;
   }
 };
 
@@ -378,7 +378,7 @@ int main(int argc, char** argv)
 #if HAVE_ALUGRID
         if (false)
         {
-            // make grid 
+            // make grid
 //       ALUUnitSquare grid;
 //       grid.globalRefine(0);
 
@@ -414,7 +414,7 @@ int main(int argc, char** argv)
 
         // unit cube with hanging node refinement
         {
-            // make grid 
+            // make grid
 //             ALUCubeUnitSquare grid;
 //             grid.globalRefine(1);
 
