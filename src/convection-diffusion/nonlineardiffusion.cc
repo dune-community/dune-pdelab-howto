@@ -26,8 +26,7 @@
 #include<dune/istl/io.hh>
 #include<dune/istl/superlu.hh>
 
-#include<dune/pdelab/finiteelementmap/q1fem.hh>
-#include<dune/pdelab/finiteelementmap/q22dfem.hh>
+#include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/constraints/conforming.hh>
 #include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
@@ -171,9 +170,9 @@ void sequential (const GV& gv)
   typedef double Real;
 
   // <<<2>>> Make grid function space
-  //typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
-  typedef Dune::PDELab::Q22DLocalFiniteElementMap<Coord,Real> FEM;
-  FEM fem;
+  const int degree=2;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,degree> FEM;
+  FEM fem(gv);
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
@@ -197,7 +196,7 @@ void sequential (const GV& gv)
   typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
   LOP lop(param,8);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  MBE mbe(27); // Number of diagonals is depending on dim, order and geometry.
+  MBE mbe(27); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
   GO go(gfs,cg,gfs,cg,lop,mbe);
 
@@ -256,8 +255,9 @@ void parallel_nonoverlapping_Q1 (const GV& gv)
   typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints<GV> CON;
   CON con(gv);
   // <<<2>>> Make grid function space
-  typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
-  FEM fem;
+  const int degree=1;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,degree> FEM;
+  FEM fem(gv);
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem,con);
@@ -322,8 +322,9 @@ void parallel_overlapping_Q1 (const GV& gv)
   int rank = gv.comm().rank();
 
   // <<<2>>> Make grid function space
-  typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
-  FEM fem;
+  const int degree=1;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,degree> FEM;
+  FEM fem(gv);
   typedef Dune::PDELab::OverlappingConformingDirichletConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;

@@ -231,7 +231,7 @@ void sequential (const GV& gv, int t_level)
   typedef Dune::PDELab::L2 MLOP; 
   MLOP mlop(4);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
+  MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   //Dune::PDELab::FractionalStepParameter<Real> method;
   Dune::PDELab::Alexander3Parameter<Real> method;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;

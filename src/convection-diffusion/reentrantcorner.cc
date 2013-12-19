@@ -173,7 +173,11 @@ void poisson_driver (const GV& gv, const FEM& fem, std::string filename)
   typedef Dune::PDELab::Poisson<FType,BCTypeParam,JType,q> LOP;
   LOP lop(f,bctype,j);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
+
+  // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
+  // Unstructured grid with triangular elements where one node can be part of up to 9 cells.
+  MBE mbe(60);
+
   typedef Dune::PDELab::GridOperator<GFS,GFS,
                                      LOP,MBE,R,R,R,C,C> GO;
   GO go(gfs,cg,gfs,cg,lop,mbe);

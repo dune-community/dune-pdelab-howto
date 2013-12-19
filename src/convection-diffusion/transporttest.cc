@@ -189,7 +189,7 @@ void stationary (const GV& gv)
   typedef Dune::PDELab::CCFVSpatialTransportOperator<Param> LOP;
   LOP lop(param);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  MBE mbe(5); // Maximal number of nonzeros per row can be cross-checked by patternStatistics().
+  MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
   GO go(gfs,cg,gfs,cg,lop,mbe);
 

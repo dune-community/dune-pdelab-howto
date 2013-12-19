@@ -123,7 +123,7 @@ void test (const GV& gv)
 
   // grid operator
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
+  MBE mbe(9); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,RF,RF,RF,CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop,mbe);
 
@@ -258,7 +258,7 @@ void runDG ( const GV& gv,
   typedef Dune::PDELab::ConvectionDiffusionDG<PROBLEM,FEM> LOP;
   LOP lop(problem,m,w,alpha);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
+  MBE mbe(9); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
   G g(gv,problem);
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;

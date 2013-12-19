@@ -114,7 +114,7 @@ void test (const GV& gv, std::string filename )
   typedef Dune::PDELab::SparseEigenMatrixBackend MBE;
 #else
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
+  MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
 #endif
 
   // make grid function operator

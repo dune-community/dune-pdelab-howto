@@ -152,7 +152,7 @@ void driverDG ( Grid& grid,
       typedef Dune::PDELab::ConvectionDiffusionDG<Problem,FEMDG> LOP;
       LOP lop(problem,m,w,alpha);
       typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-      MBE mbe(27); // Number of diagonals is depending on dim, order and geometry.
+      MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
 
       typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
       GO go(gfs,cc,gfs,cc,lop,mbe);

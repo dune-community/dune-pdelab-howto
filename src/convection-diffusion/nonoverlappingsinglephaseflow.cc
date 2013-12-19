@@ -109,7 +109,7 @@ void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
   typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP; 
   LOP lop(problem);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
+  MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator
       <GFS,GFS,LOP,
        MBE,
@@ -368,7 +368,6 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=1;
       const int q=2*k;
-
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
  
