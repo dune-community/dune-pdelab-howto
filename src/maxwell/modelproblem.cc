@@ -50,6 +50,7 @@
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/gridoperator/onestep.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/instationary/onestep.hh>
@@ -174,6 +175,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   typedef Dune::PDELab::PowerGridFunctionSpace
     <GFSDG,dim*2,Dune::PDELab::ISTLVectorBackend<> > GFS;
   GFS gfs(gfsdg);
+  gfs.update(); // required here for initialization of the gfs
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
   std::cout << "degrees of freedom: " << gfs.globalSize() << std::endl;
@@ -197,13 +199,16 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   if (degree==2) {method=&method3; std::cout << "setting Shu 3" << std::endl;}
   if (degree==3) {method=&method4; std::cout << "setting RK4" << std::endl;}
 
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
+
   typedef Dune::PDELab::GridOperator
-    <GFS,GFS,LOP,Dune::PDELab::ISTLMatrixBackend,Real,Real,Real,C,C> GO0;
-  GO0 go0(gfs,cg,gfs,cg,lop);
+    <GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
+  GO0 go0(gfs,cg,gfs,cg,lop,mbe);
  
   typedef Dune::PDELab::GridOperator
-    <GFS,GFS,TLOP,Dune::PDELab::ISTLMatrixBackend,Real,Real,Real,C,C> GO1;
-  GO1 go1(gfs,cg,gfs,cg,tlop);
+    <GFS,GFS,TLOP,MBE,Real,Real,Real,C,C> GO1;
+  GO1 go1(gfs,cg,gfs,cg,tlop,mbe);
 
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1,false> IGO;
   IGO igo(go0,go1);
@@ -353,14 +358,14 @@ int main(int argc, char** argv)
     // parallel overlapping yaspgrid version
     if (grid_file=="yaspgrid")
       {
-        const int dim=3;
+        const int dim = 3;
         Dune::FieldVector<double,dim> L(1.0);
-        Dune::FieldVector<int,dim> N(max_level);
-        Dune::FieldVector<bool,dim> periodic(false);
+        Dune::array<int,dim> N(Dune::fill_array<int,dim>(max_level));
+        std::bitset<dim> periodic(false);
         int overlap=1;
         Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,periodic,overlap);
         typedef Dune::YaspGrid<dim>::LeafGridView GV;
-        const GV& gv=grid.leafView();
+        const GV& gv=grid.leafGridView();
         if (p==0)
           {
             const int degree=0;
@@ -415,7 +420,7 @@ int main(int argc, char** argv)
                                  element_index_map,true,false));
         for (int i=0; i<max_level; i++) gridp->globalRefine(1);
         typedef GridType::LeafGridView GV;
-        const GV& gv=gridp->leafView();
+        const GV& gv=gridp->leafGridView();
         if (p==0)
           {
             const int degree=0;
