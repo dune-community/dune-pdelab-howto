@@ -526,19 +526,19 @@ int main(int argc, char** argv)
               if (method=="FEM") {
                 if (degree_dyn==1) {
                   const int degree=1;
-                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree,dim> FEMCG;
+                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
                   FEMCG femcg(gv);
                   runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"SIMPLEX",i);
                 }
                 if (degree_dyn==2) {
                   const int degree=2;
-                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree,dim> FEMCG;
+                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
                   FEMCG femcg(gv);
                   runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"SIMPLEX",i);
                 }
                 if (degree_dyn==3) {
                   const int degree=3;
-                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree,dim> FEMCG;
+                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
                   FEMCG femcg(gv);
                   runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"SIMPLEX",i);
                 }
@@ -590,25 +590,25 @@ int main(int argc, char** argv)
               if (method=="FEM") {
                 if (degree_dyn==1) {
                   const int degree=1;
-                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree,dim> FEMCG;
+                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
                   FEMCG femcg(gv);
                   runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"SIMPLEX",i);
                 }
                 if (degree_dyn==2) {
                   const int degree=2;
-                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree,dim> FEMCG;
+                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
                   FEMCG femcg(gv);
                   runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"SIMPLEX",i);
                 }
                 if (degree_dyn==3) {
                   const int degree=3;
-                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree,dim> FEMCG;
+                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
                   FEMCG femcg(gv);
                   runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"SIMPLEX",i);
                 }
                 if (degree_dyn==4) {
                   const int degree=4;
-                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree,dim> FEMCG;
+                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
                   FEMCG femcg(gv);
                   runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"SIMPLEX",i);
                 }
