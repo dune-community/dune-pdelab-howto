@@ -52,6 +52,7 @@
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/instationary/onestep.hh>
 #include<dune/pdelab/localoperator/linearacousticsdg.hh>
@@ -227,6 +228,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   GFS gfs(gfsdg);
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
+  gfs.update(); // initializing the gfs
   std::cout << "degrees of freedom: " << gfs.globalSize() << std::endl;
 
   // <<<2b>>> define problem parameters
@@ -248,13 +250,16 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   if (degree==2) {method=&method3; std::cout << "setting Shu 3" << std::endl;}
   if (degree==3) {method=&method4; std::cout << "setting RK4" << std::endl;}
 
-  typedef Dune::PDELab::GridOperator
-    <GFS,GFS,LOP,Dune::PDELab::ISTLMatrixBackend,Real,Real,Real,C,C> GO0;
-  GO0 go0(gfs,cg,gfs,cg,lop);
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
 
   typedef Dune::PDELab::GridOperator
-    <GFS,GFS,TLOP,Dune::PDELab::ISTLMatrixBackend,Real,Real,Real,C,C> GO1;
-  GO1 go1(gfs,cg,gfs,cg,tlop);
+    <GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
+  GO0 go0(gfs,cg,gfs,cg,lop,mbe);
+
+  typedef Dune::PDELab::GridOperator
+    <GFS,GFS,TLOP,MBE,Real,Real,Real,C,C> GO1;
+  GO1 go1(gfs,cg,gfs,cg,tlop,mbe);
 
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1,false> IGO;
   IGO igo(go0,go1);
@@ -345,6 +350,8 @@ int main(int argc, char** argv)
             std::cout << "         <grid file> = 'yaspgrid' || <a gmsh file>"  << std::endl;
             std::cout << "         <refinement> = nonnegative integer, initial mesh has h=1/20" << std::endl;
             std::cout << "         <modulo> = write vtk file every modulo'th time step" << std::endl;
+            std::cout << "coarse example:" << std::endl;
+            std::cout << "./heterogeneoussquare 0.1 0.001 'yaspgrid' 1 1 5" << std::endl;
           }
         return 1;
       }
@@ -362,14 +369,14 @@ int main(int argc, char** argv)
     if (grid_file=="yaspgrid")
       {
         const int dim=2;
-        Dune::FieldVector<double,2> L; L[0]=1.0; L[1]=1.0;
-        Dune::FieldVector<int,2> N; N[0]=20; N[1]=20;
-        Dune::FieldVector<bool,2> periodic(false);
+        Dune::FieldVector<double,dim> L(1.0);
+        Dune::array<int,dim> N(Dune::fill_array<int,dim>(20));
+        std::bitset<dim> periodic(false);
         int overlap=1;
         Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
         for (int i=0; i<max_level; i++) grid.globalRefine(1);
         typedef Dune::YaspGrid<2>::LeafGridView GV;
-        const GV& gv=grid.leafView();
+        const GV& gv=grid.leafGridView();
         if (p==0)
           {
             const int degree=0;
@@ -424,7 +431,7 @@ int main(int argc, char** argv)
         gmsh_reader.read(factory,grid_file,boundary_index_map,element_index_map,true,false);
         for (int i=0; i<max_level; i++) grid.globalRefine(1);
         typedef GridType::LeafGridView GV;
-        const GV& gv=grid.leafView();
+        const GV& gv=grid.leafGridView();
         if (p==0)
           {
             const int degree=0;
