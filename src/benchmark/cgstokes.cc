@@ -25,12 +25,10 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 
-#include<dune/pdelab/finiteelementmap/pk2dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk3dfem.hh>
-#include<dune/pdelab/finiteelementmap/q12dfem.hh>
-#include<dune/pdelab/finiteelementmap/q22dfem.hh>
-#include<dune/pdelab/finiteelementmap/q1fem.hh>
+#include<dune/pdelab/finiteelementmap/pkfem.hh>
+#include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/constraints/common/constraints.hh>
@@ -45,12 +43,13 @@
 #include <dune/common/parametertreeparser.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
 #include <dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/entityblockedlocalordering.hh>
-#include <dune/pdelab/gridfunctionspace/leaflocalordering.hh>
+//#include <dune/pdelab/gridfunctionspace/entityblockedlocalordering.hh>
+//#include <dune/pdelab/gridfunctionspace/leaflocalordering.hh>
+
+#include <dune/pdelab/newton/newton.hh>
 
 #include "../utility/gridexamples.hh"
 #include "../navier-stokes/cgstokes_initial.hh"
-
 #include <dune/pdelab/common/benchmarkhelper.hh>
 
 //===============================================================
@@ -180,9 +179,11 @@ void navierstokes(const GV& gv,
       bh.end("LOP construction",std::cout);
       bh.start("GOP construction",std::cout);
 
+      typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+      MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
       typedef Dune::PDELab::GridOperator
-        <GFS,GFS,LOP,Dune::PDELab::ISTLMatrixBackend,RF,RF,RF,C,C> GO;
-      GO go(gfs,cg,gfs,cg,lop);
+        <GFS,GFS,LOP,MBE,RF,RF,RF,C,C> GO;
+      GO go(gfs,cg,gfs,cg,lop,mbe);
 
       bh.end("GOP construction",std::cout);
       bh.start("vector creation",std::cout);
@@ -201,7 +202,7 @@ void navierstokes(const GV& gv,
       bh.start("set shifted DOFs",std::cout);
 
       // Set non constrained dofs to zero
-      Dune::PDELab::set_shifted_dofs(gfs,cg,0.0,x0);
+      Dune::PDELab::set_shifted_dofs(cg,0.0,x0);
 
       bh.end("set shifted DOFs",std::cout);
 
@@ -252,8 +253,8 @@ void navierstokes(const GV& gv,
         {
           // Output grid function with SubsamplingVTKWriter
           Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-          Dune::PDELab::add_solution_to_vtk_writer(vtkwriter,gfs,x0);
-          vtkwriter.write(filename,Dune::VTKOptions::binaryappended);
+          Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x0);
+          vtkwriter.write(filename,Dune::VTK::appendedraw);
         }
 
       bh.end("IO",std::cout);
@@ -370,23 +371,26 @@ int main(int argc, char** argv)
 
         typedef double RF;
         // make grid
-        Dune::FieldVector<double,2> L(1.0);
-        Dune::FieldVector<int,2> N(1);
-        Dune::FieldVector<bool,2> B(false);
-        Dune::YaspGrid<2> grid(L,N,B,0);
+        const int dim = 2;
+        Dune::FieldVector<double,dim> L(1.0);
+        Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
+        std::bitset<dim> B(false);
+        Dune::YaspGrid<dim> grid(L,N,B,0);
         grid.globalRefine(level);
 
         // get view
-        typedef Dune::YaspGrid<2>::LeafGridView GV;
-        const GV& gv=grid.leafView();
+        typedef Dune::YaspGrid<dim>::LeafGridView GV;
+        const GV& gv=grid.leafGridView();
+
+        typedef Dune::YaspGrid<dim>::ctype DF;
 
         const int p=2;
         const int q=2*p;
 
-        typedef Dune::PDELab::Q22DLocalFiniteElementMap<double,double> V_FEM;
-        typedef Dune::PDELab::Q1LocalFiniteElementMap<double,double,2> P_FEM;
-
-        V_FEM vFem; P_FEM pFem;
+        typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,p> V_FEM;
+        V_FEM vFem(gv);
+        typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,p-1> P_FEM;
+        P_FEM pFem(gv);
 
         typedef HagenPoiseuilleVelocity<GV,RF,2> InitialVelocity;
         typedef ZeroScalarFunction<GV,RF> InitialPressure;
@@ -444,16 +448,16 @@ int main(int argc, char** argv)
 
         // get view
         typedef UnitCube::GridType::LeafGridView GV;
-        const GV& gv=unitcube.grid().leafView();
+        const GV& gv=unitcube.grid().leafGridView();
 
         // make finite element map
         typedef UnitCube::GridType::ctype DF;
         typedef double R;
         const int k=2;
         const int q=2*k;
-        typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-        typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
 
+        typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
+        typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
         V_FEM vFem(gv); P_FEM pFem(gv);
 
         typedef double RF;
@@ -523,16 +527,16 @@ int main(int argc, char** argv)
 
         // get view
         typedef GridType::LeafGridView GV;
-        const GV& gv=grid.leafView();
+        const GV& gv=grid.leafGridView();
 
         // make finite element map
         typedef GridType::ctype DF;
         typedef double R;
         const int k=2;
         const int q=2*k;
-        typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-        typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
 
+        typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
+        typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
         V_FEM vFem(gv); P_FEM pFem(gv);
 
         typedef ZeroScalarFunction<GV,RF> ZeroFunction;
@@ -609,16 +613,16 @@ int main(int argc, char** argv)
 
         // get view
         typedef GridType::LeafGridView GV;
-        const GV& gv=grid.leafView();
+        const GV& gv=grid.leafGridView();
 
         // make finite element map
         typedef GridType::ctype DF;
         typedef double R;
         const int k=2;
         const int q=2*k;
-        typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-        typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
 
+        typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
+        typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
         V_FEM vFem(gv); P_FEM pFem(gv);
 
         typedef ZeroScalarFunction<GV,RF> ZeroFunction;
@@ -695,16 +699,16 @@ int main(int argc, char** argv)
 
         // get view
         typedef GridType::LeafGridView GV;
-        const GV& gv=grid.leafView();
+        const GV& gv=grid.leafGridView();
 
         // make finite element map
         typedef GridType::ctype DF;
         typedef double R;
         const int k=2;
         const int q=2*k;
-        typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-        typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
 
+        typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
+        typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
         V_FEM vFem(gv); P_FEM pFem(gv);
 
         typedef HagenPoiseuilleVelocity<GV,RF,3> InitialVelocity;
@@ -769,16 +773,16 @@ int main(int argc, char** argv)
 
         // get view
         typedef GridType::LeafGridView GV;
-        const GV& gv=grid.leafView();
+        const GV& gv=grid.leafGridView();
 
         // make finite element map
         typedef GridType::ctype DF;
         typedef double R;
         const int k=2;
         const int q=2*k;
-        typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-        typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
 
+        typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
+        typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
         V_FEM vFem(gv); P_FEM pFem(gv);
 
         typedef double RF;
