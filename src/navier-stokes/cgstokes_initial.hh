@@ -33,6 +33,71 @@ public:
   }
 };
 
+
+
+// constraints parameter class for selecting boundary condition type
+class BCTypeParam_TU
+{
+public:
+  typedef Dune::PDELab::StokesBoundaryCondition BC;
+
+  struct Traits
+  {
+    typedef BC::Type RangeType;
+  };
+
+  BCTypeParam_TU() {}
+
+  template<typename I>
+  inline void evaluate (
+    const I & intersection,   /*@\label{bcp:name}@*/
+    const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
+    BC::Type& y) const
+  {
+    Dune::FieldVector<typename I::ctype, I::dimension>
+        xg = intersection.geometry().global( coord );
+    if( xg[0] > 5.0-1e-6 )
+      y = BC::DoNothing;
+    else
+      y = BC::VelocityDirichlet;
+  }
+};
+
+
+
+
+// constraints parameter class for selecting boundary condition type
+class BCTypeParam_LU
+{
+public:
+  typedef Dune::PDELab::StokesBoundaryCondition BC;
+
+  struct Traits
+  {
+    typedef BC::Type RangeType;
+  };
+
+  BCTypeParam_LU() {}
+
+  template<typename I>
+  inline void evaluate (
+    const I & intersection,   /*@\label{bcp:name}@*/
+    const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
+    BC::Type& y) const
+  {
+    Dune::FieldVector<typename I::ctype, I::dimension>
+        xg = intersection.geometry().global( coord );
+    if( xg[0] > 5.0-1e-6 )
+      y = BC::DoNothing;
+    else
+      y = BC::VelocityDirichlet;
+  }
+};
+
+
+
+
+
 // constraints parameter class for selecting boundary condition type
 template<typename GV>
 class BCTypeParam_PressureDrop
@@ -102,6 +167,103 @@ public:
   }
 
 };
+
+
+template<typename GV, typename RF, int dim>
+class TU_Velocity :
+  public Dune::PDELab::AnalyticGridFunctionBase<
+  Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim>,
+  TU_Velocity<GV,RF,dim> >
+{
+  RF time;
+
+public:
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim> Traits;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,TU_Velocity<GV,RF,dim> > BaseT;
+
+  typedef typename Traits::DomainType DomainType;
+  typedef typename Traits::RangeType RangeType;
+
+  TU_Velocity(const GV & gv) : BaseT(gv) {
+    time = 0.0;
+  }
+
+  inline void evaluateGlobal(const DomainType & x, RangeType & y) const
+  {
+    RF r = 0;
+
+    // 2d:
+    //y[1] = 0;
+    //r -= (x[1]-0.5)*(x[1]+0.5);
+
+    for(int i=0;i<dim;i++){
+      y[i] = 0;
+      if(i>0){
+        r -= (x[i]-0.5)*(x[i]+0.5);
+      }
+    }
+
+    if(x[0] < 1e-6){
+      y[0] = r*(1.0 - std::cos(2.0*3.1415*time));
+    }
+    else{
+      y[0]=0;
+    }
+  }
+
+  template <typename T>
+  void setTime(T t){
+    time = t;
+  }
+
+};
+
+
+
+template<typename GV, typename RF, int dim>
+class LU_Velocity :
+  public Dune::PDELab::AnalyticGridFunctionBase<
+  Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim>,
+  LU_Velocity<GV,RF,dim> >
+{
+private:
+  RF time;
+
+public:
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim> Traits;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,LU_Velocity<GV,RF,dim> > BaseT;
+
+  typedef typename Traits::DomainType DomainType;
+  typedef typename Traits::RangeType RangeType;
+
+  LU_Velocity(const GV & gv) : BaseT(gv) {
+    time = 0.0;
+  }
+
+  inline void evaluateGlobal(const DomainType & x, RangeType & y) const
+  {
+    RF r = 0;
+
+    y[1] = 0;
+    r += x[1]*(1.0-x[1]);
+
+    if(x[0] < -1.0+1e-6){
+      y[0] = r*(1.0 - std::cos(2.0*3.1415*time));
+    }
+    else{
+      y[0]=0;
+    }
+  }
+
+  template <typename T>
+  void setTime(T t){
+    time = t;
+  }
+
+};
+
+
+
 
 template<typename GV, typename RF>
 class HagenPoiseuilleVelocity<GV,RF,3> :

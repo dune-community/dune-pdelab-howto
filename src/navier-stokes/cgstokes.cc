@@ -32,11 +32,8 @@
 #include<dune/istl/preconditioners.hh>
 #include<dune/istl/io.hh>
 
-#include<dune/pdelab/finiteelementmap/pk2dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk3dfem.hh>
-#include<dune/pdelab/finiteelementmap/q12dfem.hh>
-#include<dune/pdelab/finiteelementmap/q22dfem.hh>
-#include<dune/pdelab/finiteelementmap/q1fem.hh>
+#include<dune/pdelab/finiteelementmap/pkfem.hh>
+#include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/constraints/common/constraintsparameters.hh>
 #include<dune/pdelab/constraints/conforming.hh>
@@ -49,6 +46,7 @@
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/cg_stokes.hh>
@@ -126,9 +124,11 @@ void navierstokes
   typedef Dune::PDELab::TaylorHoodNavierStokes<PRM> LOP;
   LOP lop(parameters,q);
 
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator
-    <GFS,GFS,LOP,Dune::PDELab::ISTLMatrixBackend,RF,RF,RF,C,C> GO;
-  GO go(gfs,cg,gfs,cg,lop);
+    <GFS,GFS,LOP,MBE,RF,RF,RF,C,C> GO;
+  GO go(gfs,cg,gfs,cg,lop,mbe);
 
   // Make coefficent vector and initialize it from a function
   typedef typename GO::Traits::Domain V;
@@ -250,24 +250,25 @@ int main(int argc, char** argv)
       // make grid
       const int dim = 2;
       Dune::FieldVector<double,dim> L(1.0);
-      Dune::FieldVector<int,dim> N(1);
-      Dune::FieldVector<bool,dim> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
+      Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
+      std::bitset<dim> B(false);
+      Dune::YaspGrid<dim> grid(L,N,B,0);
       grid.globalRefine(configuration.get<int>("domain.level"));
 
       // get view
       typedef Dune::YaspGrid<dim>::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
+      const GV& gv=grid.leafGridView();
 
       const int p=2;
       const int q=2*p;
 
-      typedef Dune::PDELab::Q22DLocalFiniteElementMap<double,double> V_FEM;
-      typedef Dune::PDELab::Q1LocalFiniteElementMap<double,double,2> P_FEM;
+      typedef Dune::YaspGrid<dim>::ctype DF;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,p> V_FEM;
+      V_FEM vFem(gv);
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,p-1> P_FEM;
+      P_FEM pFem(gv);
 
-      V_FEM vFem; P_FEM pFem;
-
-      typedef HagenPoiseuilleVelocity<GV,RF,2> InitialVelocity;
+      typedef HagenPoiseuilleVelocity<GV,RF,dim> InitialVelocity;
       typedef ZeroScalarFunction<GV,RF> InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
         InitialSolution;
@@ -307,21 +308,21 @@ int main(int argc, char** argv)
 
       // get view
       typedef UnitCube::GridType::LeafGridView GV;
-      const GV& gv=unitcube.grid().leafView(); 
+      const GV& gv=unitcube.grid().leafGridView();
  
       // make finite element map
       typedef UnitCube::GridType::ctype DF;
       typedef double R;
       const int k=2;
       const int q=2*k;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
 
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
       V_FEM vFem(gv); P_FEM pFem(gv);
 
       typedef double RF;
 
-      typedef HagenPoiseuilleVelocity<GV,RF,2> InitialVelocity;
+      typedef HagenPoiseuilleVelocity<GV,RF,dim> InitialVelocity;
       typedef ZeroScalarFunction<GV,RF> InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
         InitialSolution;
@@ -369,31 +370,32 @@ int main(int argc, char** argv)
 
       // get view
       typedef GridType::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
+      const GV& gv=grid.leafGridView();
  
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
       const int k=2;
       const int q=2*k;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
 
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
       V_FEM vFem(gv); P_FEM pFem(gv);
 
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
-      typedef Dune::PDELab::PowerGridFunction<ZeroFunction,2> 
-        InitialVelocity;
+      typedef TU_Velocity<GV,RF,2> InitialVelocity;
+
       typedef ZeroFunction InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
         InitialSolution;
 
-      ZeroFunction zero_function(gv);
-      InitialVelocity init_velocity(zero_function);
+      InitialVelocity init_velocity(gv);
+      init_velocity.setTime(1.0); // Take v(t=1.0) as initial velocity!
+
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_PressureDrop<GV> BoundaryFunction;
+      typedef BCTypeParam_TU BoundaryFunction;
       typedef PressureDropFlux<GV,RF> NeumannFlux;
 
       // Domain parameters:
@@ -402,7 +404,7 @@ int main(int argc, char** argv)
       const RF tube_origin = 0.0;
 
       const RF boundary_pressure = configuration.get<double>("boundaries.pressure");
-      BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
+      BoundaryFunction boundary_function;
       NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
 
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
@@ -440,31 +442,32 @@ int main(int argc, char** argv)
 
       // get view
       typedef GridType::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
+      const GV& gv=grid.leafGridView();
  
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
       const int k=2;
       const int q=2*k;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
 
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
       V_FEM vFem(gv); P_FEM pFem(gv);
 
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
-      typedef Dune::PDELab::PowerGridFunction<ZeroFunction,2> 
-        InitialVelocity;
+      typedef LU_Velocity<GV,RF,2> InitialVelocity;
+
       typedef ZeroFunction InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
         InitialSolution;
 
-      ZeroFunction zero_function(gv);
-      InitialVelocity init_velocity(zero_function);
+      InitialVelocity init_velocity(gv);
+      init_velocity.setTime(1.0); // Take v(t=1.0) as initial velocity!
+
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_PressureDrop<GV> BoundaryFunction;
+      typedef BCTypeParam_LU BoundaryFunction;
       typedef PressureDropFlux<GV,RF> NeumannFlux;
 
       // Domain parameters:
@@ -473,7 +476,7 @@ int main(int argc, char** argv)
       const RF tube_origin = -1.0;
 
       const RF boundary_pressure = configuration.get<double>("boundaries.pressure");
-      BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
+      BoundaryFunction boundary_function;
       NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
 
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
@@ -512,16 +515,16 @@ int main(int argc, char** argv)
 
       // get view
       typedef GridType::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
+      const GV& gv=grid.leafGridView();
  
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
       const int k=2;
       const int q=2*k;
-      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
 
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
       V_FEM vFem(gv); P_FEM pFem(gv);
 
       typedef HagenPoiseuilleVelocity<GV,RF,3> InitialVelocity;
@@ -571,34 +574,33 @@ int main(int argc, char** argv)
 
       // get view
       typedef GridType::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
+      const GV& gv=grid.leafGridView();
  
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
       const int k=2;
       const int q=2*k;
-      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
 
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
       V_FEM vFem(gv); P_FEM pFem(gv);
   
       typedef double RF;
 
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
-      typedef Dune::PDELab::PowerGridFunction<ZeroFunction,3> 
-        InitialVelocity;
+      typedef TU_Velocity<GV,RF,3> InitialVelocity;
+
       typedef ZeroFunction InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
         InitialSolution;
 
       ZeroFunction zero_function(gv);
-      InitialVelocity init_velocity(zero_function);
+      InitialVelocity init_velocity(gv);
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-
-      typedef BCTypeParam_PressureDrop<GV> BoundaryFunction;
+      typedef BCTypeParam_TU BoundaryFunction;
       typedef PressureDropFlux<GV,RF> NeumannFlux;
 
       // Domain parameters:
@@ -607,7 +609,7 @@ int main(int argc, char** argv)
       const RF tube_origin = 0.0;
 
       const RF boundary_pressure = configuration.get<double>("boundaries.pressure");
-      BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
+      BoundaryFunction boundary_function;
       NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
 
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;

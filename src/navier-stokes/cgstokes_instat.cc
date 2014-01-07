@@ -48,6 +48,7 @@
 #include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
@@ -139,13 +140,14 @@ void navierstokes
   MLOP mlop(parameters,q);
 
   Dune::PDELab::FractionalStepParameter<RF> method;
-  typedef Dune::PDELab::ISTLMatrixBackend MatrixBackend;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(50); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
 
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MatrixBackend,Real,Real,Real,C,C> GO0;
-  GO0 go0(gfs,cg,gfs,cg,lop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
+  GO0 go0(gfs,cg,gfs,cg,lop,mbe);
 
-  typedef Dune::PDELab::GridOperator<GFS,GFS,MLOP,MatrixBackend,Real,Real,Real,C,C> GO1;
-  GO1 go1(gfs,cg,gfs,cg,mlop);
+  typedef Dune::PDELab::GridOperator<GFS,GFS,MLOP,MBE,Real,Real,Real,C,C> GO1;
+  GO1 go1(gfs,cg,gfs,cg,mlop,mbe);
 
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
   IGO igo(go0,go1);
@@ -328,31 +330,31 @@ int main(int argc, char** argv)
 
       // get view
       typedef GridType::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
+      const GV& gv=grid.leafGridView();
  
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
       const int k=2;
       const int q=2*k;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
-
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
       V_FEM vFem(gv); P_FEM pFem(gv);
 
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
-      typedef Dune::PDELab::PowerGridFunction<ZeroFunction,2> 
-        InitialVelocity;
+      typedef TU_Velocity<GV,RF,2> InitialVelocity;
+
       typedef ZeroFunction InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
         InitialSolution;
 
       ZeroFunction zero_function(gv);
-      InitialVelocity init_velocity(zero_function);
+      InitialVelocity init_velocity(gv);
+
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_PressureDrop<GV> BoundaryFunction;
+      typedef BCTypeParam_TU BoundaryFunction;
       typedef PressureDropFlux<GV,RF> NeumannFlux;
 
       // Domain parameters:
@@ -360,7 +362,7 @@ int main(int argc, char** argv)
       const RF tube_length = 5.0;
       const RF tube_origin = 0.0;
 
-      BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
+      BoundaryFunction boundary_function;
       const RF boundary_pressure = config_parser.get<double>("boundaries.pressure");
       NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
       typedef ZeroVectorFunction<GV,RF,2> SourceFunction;
@@ -399,31 +401,29 @@ int main(int argc, char** argv)
 
       // get view
       typedef GridType::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
+      const GV& gv=grid.leafGridView();
  
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
       const int k=2;
       const int q=2*k;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k> V_FEM;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
-
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
       V_FEM vFem(gv); P_FEM pFem(gv);
 
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
-      typedef Dune::PDELab::PowerGridFunction<ZeroFunction,2> 
-        InitialVelocity;
+      typedef LU_Velocity<GV,RF,2> InitialVelocity;
       typedef ZeroFunction InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
         InitialSolution;
 
       ZeroFunction zero_function(gv);
-      InitialVelocity init_velocity(zero_function);
+      InitialVelocity init_velocity(gv);
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_PressureDrop<GV> BoundaryFunction;
+      typedef BCTypeParam_TU BoundaryFunction;
       typedef PressureDropFlux<GV,RF> NeumannFlux;
 
       // Domain parameters:
@@ -431,7 +431,7 @@ int main(int argc, char** argv)
       const RF tube_length = 6.0;
       const RF tube_origin = -1.0;
 
-      BoundaryFunction boundary_function(tube_length, tube_origin, tube_direction);
+      BoundaryFunction boundary_function;
       const RF boundary_pressure = config_parser.get<double>("boundaries.pressure");
       NeumannFlux neumann_flux(gv, boundary_pressure, tube_length, tube_origin, tube_direction);
       typedef ZeroVectorFunction<GV,RF,2> SourceFunction;
