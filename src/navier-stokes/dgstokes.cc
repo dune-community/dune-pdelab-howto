@@ -28,6 +28,7 @@
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/localoperator/stokesdg.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/finiteelementmap/monomfem.hh>
@@ -68,7 +69,7 @@ void stokes (const GV& gv, std::string filename, const std::string method)
     typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking,pBlockSize> PVectorBackend;
     typedef Dune::PDELab::ISTLVectorBackend<> VelocityVectorBackend;
 
-#if 0
+#if 1
     // this creates a flat backend (i.e. blocksize == 1)
     typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking> VectorBackend;
 #else
@@ -143,15 +144,18 @@ void stokes (const GV& gv, std::string filename, const std::string method)
     LocalDGOperator lop(lop_params,superintegration_order);
 
     typedef Dune::PDELab::EmptyTransformation C;
+    typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+    MBE mbe(75); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
     typedef Dune::PDELab::GridOperator
-        <GFS,GFS,LocalDGOperator, Dune::PDELab::ISTLMatrixBackend,RF,RF,RF,C,C> GOS;
-    GOS gos(gfs,gfs,lop);
+        <GFS,GFS,LocalDGOperator,MBE,RF,RF,RF,C,C> GOS;
+    GOS gos(gfs,gfs,lop,mbe);
 
     std::cout << "=== grid operator space setup " <<  watch.elapsed() << " s" << std::endl;
 
     typedef typename GOS::Jacobian M;
     watch.reset();
     M m(gos);
+    std::cout << m.patternStatistics() << std::endl;
     std::cout << "=== matrix setup " <<  watch.elapsed() << " s" << std::endl;
     m = 0.0;
     watch.reset();
@@ -173,23 +177,23 @@ void stokes (const GV& gv, std::string filename, const std::string method)
 
     typedef typename M::BaseT ISTLM;
     typedef typename V::BaseT ISTLV;
-    #ifdef USE_SUPER_LU // use lu decomposition as solver
-    #if HAVE_SUPERLU
+#ifdef USE_SUPER_LU // use lu decomposition as solver
+#if HAVE_SUPERLU
     // make ISTL solver
     Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
     Dune::SuperLU<ISTLM> solver(m.base(), verbose?1:0);
     Dune::InverseOperatorResult stat;
-    #else
-    #error No superLU support, please install and configure it.
-    #endif
-    #else // Use iterative solver
+#else
+#error No superLU support, please install and configure it.
+#endif
+#else // Use iterative solver
     // make ISTL solver
     Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
     Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(m.base(),1.0);
     typedef typename M::BaseT ISTLM;
     Dune::BiCGSTABSolver<ISTLV> solver(opa,ilu0,1E-10,20000, verbose?2:1);
     Dune::InverseOperatorResult stat;
-    #endif
+#endif
 
     // solve the jacobian system
     r *= -1.0; // need -residual
@@ -243,15 +247,17 @@ int main(int argc, char** argv)
 
         // YaspGrid P1/P2 2D test
         if(1){
-            // make grid
-            Dune::FieldVector<double,2> L(1.0);
-            Dune::FieldVector<int,2> N(x); N[1] = y;
-            Dune::FieldVector<bool,2> B(false);
-            Dune::YaspGrid<2> grid(L,N,B,0);
+          // make grid
+          const int dim = 2;
+          Dune::FieldVector<double,dim> L(1.0);
+          Dune::array<int,dim> N;
+          N[0] = x; N[1] = y;
+          std::bitset<dim> B(false);
+          Dune::YaspGrid<dim> grid(L,N,B,0);
 
-            // get view
-            typedef Dune::YaspGrid<2>::LeafGridView GV;
-            const GV& gv=grid.leafView();
+          // get view
+            typedef Dune::YaspGrid<dim>::LeafGridView GV;
+            const GV& gv=grid.leafGridView();
 
             // make finite element map
             typedef GV::Grid::ctype DF;
@@ -262,17 +268,19 @@ int main(int argc, char** argv)
 
 
         // YaspGrid P2/P3 2D test
-#if 0
+#if 1
         {
-            // make grid
-            Dune::FieldVector<double,3> L(1.0);
-            Dune::FieldVector<int,3> N(x); N[1] = y; N[2] = z;
-            Dune::FieldVector<bool,3> B(false);
-            Dune::YaspGrid<3> grid(L,N,B,0);
+          // make grid
+          const int dim = 3;
+          Dune::FieldVector<double,dim> L(1.0);
+          Dune::array<int,dim> N;
+          N[0] = x; N[1] = y; N[2] = z;
+          std::bitset<dim> B(false);
+          Dune::YaspGrid<dim> grid(L,N,B,0);
 
-            // get view
-            typedef Dune::YaspGrid<3>::LeafGridView GV;
-            const GV& gv=grid.leafView();
+          // get view
+          typedef Dune::YaspGrid<dim>::LeafGridView GV;
+          const GV& gv=grid.leafGridView();
 
             // make finite element map
             typedef GV::Grid::ctype DF;
