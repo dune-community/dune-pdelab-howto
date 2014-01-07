@@ -33,6 +33,7 @@
 #include<dune/pdelab/localoperator/twophaseccfv.hh>
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
+#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/newton/newton.hh>
 #include<dune/pdelab/instationary/onestep.hh>
@@ -485,13 +486,14 @@ void test (const GV& gv, int timesteps, double timestep)
   LOP lop(tp);
   typedef Dune::PDELab::TwoPhaseOnePointTemporalOperator<TP> MLOP;
   MLOP mlop(tp);
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   Dune::PDELab::Alexander2Parameter<RF> method;
   typedef Dune::PDELab::GridOperator<TPGFS,TPGFS,LOP,MBE,RF,RF,RF,C,C> GO0;
-  GO0 go0(tpgfs,cg,tpgfs,cg,lop);
+  GO0 go0(tpgfs,cg,tpgfs,cg,lop,mbe);
    
   typedef Dune::PDELab::GridOperator<TPGFS,TPGFS,MLOP,MBE,RF,RF,RF,C,C> GO1;
-  GO1 go1(tpgfs,cg,tpgfs,cg,mlop);
+  GO1 go1(tpgfs,cg,tpgfs,cg,mlop,mbe);
    
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
   IGO igo(go0,go1);
@@ -604,8 +606,10 @@ int main(int argc, char** argv)
 
 	if (argc!=4 && argc!=5)
 	  {
-		if(helper.rank()==0)
-		  std::cout << "usage: ./dnapl <level> <timesteps> <timestep> [<dimension>]" << std::endl;
+        if(helper.rank()==0){
+          std::cout << "usage: ./dnapl <level> <timesteps> <timestep> [<dimension>]" << std::endl;
+          std::cout << "coarse example: ./dnapl 1 200 20" << std::endl;
+        }
 		return 1;
 	  }
 
@@ -618,38 +622,46 @@ int main(int argc, char** argv)
 	double timestep;
 	sscanf(argv[3],"%lg",&timestep);
 
-    int dim=2;
+    int dimension=2;
     if(argc>4)
-      sscanf(argv[4], "%d", &dim);
+      sscanf(argv[4], "%d", &dimension);
 
     // 2D
-    if (dim==2)
+    if (dimension==2)
     {
+      const int dim=2;
       // make grid
       int l=maxlevel;
-      Dune::FieldVector<double,2> L; L[0] = width; L[1] = height;
-      Dune::FieldVector<int,2> N;    N[0] = 10*(1<<l);   N[1] = 6*(1<<l);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::FieldVector<double,dim> L(1.0);
+      L[0] = width;
+      L[1] = height;
+      Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
+      N[0] = 10*(1<<l);
+      N[1] = 6*(1<<l);
+      std::bitset<dim> B(false);
       int overlap=3;
-      Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,overlap);
- 
+      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
+
       // solve problem :)
-      test(grid.leafView(),timesteps,timestep);
+      test(grid.leafGridView(),timesteps,timestep);
     }
 
     // 3D
-    if (dim==3)
+    if (dimension==3)
     {
+      const int dim=3;
       // make grid
       int l=maxlevel;
-      Dune::FieldVector<double,3> L; L[0] = width; L[1] = width; L[2] = height;
-      Dune::FieldVector<int,3> N;    N[0] = 10*(1<<l);    N[1] = 10*(1<<l);    N[2] = 6*(1<<l);
-      Dune::FieldVector<bool,3> B(false);
+      Dune::FieldVector<double,dim> L(1.0);
+      L[0] = width; L[1] = width; L[2] = height;
+      Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
+      N[0] = 10*(1<<l);    N[1] = 10*(1<<l);    N[2] = 6*(1<<l);
+      std::bitset<dim> B(false);
       int overlap=2;
-      Dune::YaspGrid<3> grid(helper.getCommunicator(),L,N,B,overlap);
-      
+      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
+
       // solve problem :)
-      test(grid.leafView(),timesteps,timestep);
+      test(grid.leafGridView(),timesteps,timestep);
     }
 
 	// test passed
