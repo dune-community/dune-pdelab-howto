@@ -126,17 +126,20 @@ set(EPS_IMAGES
   EPS/umalayout.eps)
 
 set(SOURCES
-  ../../src/course-examples/example01_main.hh
-  ../../src/course-examples/example01a_Q1.hh
   ../../src/course-examples/example01a_operator.hh
-  ../../src/course-examples/example01a_Q2.hh
+  ../../src/course-examples/example01a_Qk.hh
+  ../../src/course-examples/example01a_RT.hh
+  ../../src/course-examples/example01b_operator.hh
   ../../src/course-examples/example01b_Q2.hh
-  ../../src/course-examples/example02_Q1.hh
-  ../../src/course-examples/example02_bctype.hh
+  ../../src/course-examples/example01.cc
+  ../../src/course-examples/example01_main.hh
   ../../src/course-examples/example02_bcextension.hh
+  ../../src/course-examples/example02_bctype.hh
+  ../../src/course-examples/example02.cc
   ../../src/course-examples/example02_operator.hh
-  ../../src/course-examples/example03_bctype.hh
+  ../../src/course-examples/example02_Q1.hh
   ../../src/course-examples/example03_bcextension.hh
+  ../../src/course-examples/example03_bctype.hh
   ../../src/course-examples/example03.cc
   ../../src/course-examples/example03_operator.hh
   ../../src/course-examples/example03_Q2.hh
@@ -147,13 +150,14 @@ set(SOURCES
   ../../src/course-examples/example05.cc
   ../../src/course-examples/example05_initial.hh
   ../../src/course-examples/example05_operator.hh
-  ../../src/course-examples/example05_Q1Q1.hh
+  ../../src/course-examples/example05_QkQk.hh
   ../../src/course-examples/example05_toperator.hh
   ../../src/course-examples/example06_bctype.hh
   ../../src/course-examples/example06.cc
   ../../src/course-examples/example06_Q1Q1.hh
   ../../src/course-examples/example07_adaptivity.hh
   ../../src/course-examples/example07.cc
+  ../../src/course-examples/example07_error_indicator.hh
   ../../src/course-gridfunctionspace/analyticfunction.hh
   ../../src/course-gridfunctionspace/l2interpolationerror.hh
   ../../src/course-gridfunctionspace/parallelgfs.cc
