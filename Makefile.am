@@ -3,8 +3,6 @@
 # we need the module file to be able to build via dunecontrol
 EXTRA_DIST = CMakeLists.txt		              \
 	dune.module                                   \
-	dune-pdelab-howto-config.cmake.in             \
-	dune-pdelab-howto-version.cmake.in 	      \
 	BSD		                              \
 	CC-BY-SA	                              \
 	RELEASE_NOTES

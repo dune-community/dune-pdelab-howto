@@ -23,7 +23,6 @@ AC_CONFIG_FILES([
   Makefile
   cmake/Makefile
   cmake/modules/Makefile
-  cmake/pkg/Makefile
   m4/Makefile
   doc/Makefile
   doc/howto/Makefile
