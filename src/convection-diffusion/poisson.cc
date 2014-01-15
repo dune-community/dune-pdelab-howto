@@ -24,10 +24,7 @@
 #include<dune/istl/preconditioners.hh>
 #include<dune/istl/io.hh>
 
-#include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/p1fem.hh>
-#include<dune/pdelab/finiteelementmap/pk2dfem.hh>
-#include<dune/pdelab/finiteelementmap/pk3dfem.hh>
+#include<dune/pdelab/finiteelementmap/pkfem.hh>
 #include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
@@ -356,7 +353,7 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=1; // polynomial order of the FEM
       const int q=2*k; // integration order for the quadrature rule
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
 
       // We need the boundary function for the hanging nodes
@@ -484,7 +481,7 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=1;
       const int q=2*k;
-      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
 
       BCTypeParam bctype;
@@ -639,7 +636,7 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=1; //k=3;
       const int q=2*k;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
 
       // We need the boundary function for the hanging nodes
@@ -826,7 +823,7 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=1;     // polynomial degree
       const int q=2*k;
-      typedef Dune::PDELab::Pk3DLocalFiniteElementMap<GV,DF,R,k> FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
       BCTypeParam bctype;
 
@@ -877,7 +874,7 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=3;
       const int q=2*k;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,k> FEM;
       FEM fem(gv);
       BCTypeParam bctype;
 
