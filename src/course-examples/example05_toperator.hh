@@ -31,9 +31,9 @@ public:
   {
     // select the two components (assume Galerkin scheme U=V)
     typedef typename LFSU::template Child<0>::Type LFSU0;
-    const LFSU0& lfsu0 = lfsu.template getChild<0>();
+    const LFSU0& lfsu0 = lfsu.template child<0>();
     typedef typename LFSU::template Child<1>::Type LFSU1;
-    const LFSU1& lfsu1 = lfsu.template getChild<1>();
+    const LFSU1& lfsu1 = lfsu.template child<1>();
 
     // domain and range field type (assume both components have same RF)
     typedef typename LFSU0::Traits::FiniteElementType::
