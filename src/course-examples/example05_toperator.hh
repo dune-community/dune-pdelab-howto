@@ -7,7 +7,7 @@
 #include<dune/pdelab/localoperator/idefault.hh>
 
 /** \brief A local operator for the mass operator (L_2 integral) in the system */
-class Example05TimeLocalOperator 
+class Example05TimeLocalOperator
   : public Dune::PDELab::NumericalJacobianApplyVolume<Example05TimeLocalOperator>,
     public Dune::PDELab::NumericalJacobianVolume<Example05TimeLocalOperator>,
     public Dune::PDELab::FullVolumePattern,
@@ -43,7 +43,7 @@ public:
     typedef typename LFSU0::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::RangeType RangeType;
     typedef typename LFSU::Traits::SizeType size_type;
-        
+
     // dimensions
     const int dim = EG::Geometry::dimension;
 
@@ -70,9 +70,9 @@ public:
 
         // integration
         RF factor = it->weight() * eg.geometry().integrationElement(it->position());
-        for (size_type i=0; i<lfsu0.size(); i++) 
+        for (size_type i=0; i<lfsu0.size(); i++)
           r.accumulate(lfsu0,i,u_0*phi0[i]*factor);
-        for (size_type i=0; i<lfsu1.size(); i++) 
+        for (size_type i=0; i<lfsu1.size(); i++)
           r.accumulate(lfsu1,i,tau*u_1*phi1[i]*factor);
       }
   }

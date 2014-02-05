@@ -19,7 +19,7 @@
  *
  * with conforming finite elements on all types of grids in any dimension
  */
-class Example05LocalOperator : 
+class Example05LocalOperator :
   public Dune::PDELab::NumericalJacobianApplyVolume<Example05LocalOperator >,
   public Dune::PDELab::NumericalJacobianVolume<Example05LocalOperator >,
   public Dune::PDELab::FullVolumePattern,
@@ -34,7 +34,7 @@ public:
   enum { doAlphaVolume = true };
 
   // constructor stores parameters
-  Example05LocalOperator (double d_0_, double d_1_, double lambda_, double sigma_, 
+  Example05LocalOperator (double d_0_, double d_1_, double lambda_, double sigma_,
                           double kappa_, unsigned int intorder_=2)
     : intorder(intorder_), d_0(d_0_), d_1(d_1_), lambda(lambda_),
       sigma(sigma_), kappa(kappa_)
@@ -60,7 +60,7 @@ public:
     typedef typename LFSU0::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::RangeType RangeType;
     typedef typename LFSU::Traits::SizeType size_type;
-        
+
     // dimensions
     const int dim = EG::Geometry::dimension;
 
@@ -69,7 +69,7 @@ public:
     const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
 
     // loop over quadrature points
-    for (typename Dune::QuadratureRule<DF,dim>::const_iterator 
+    for (typename Dune::QuadratureRule<DF,dim>::const_iterator
            it=rule.begin(); it!=rule.end(); ++it)
       {
         // evaluate basis functions on reference element
@@ -80,7 +80,7 @@ public:
 
         // compute u_0, u_1 at integration point
         RF u_0=0.0;
-        for (size_type i=0; i<lfsu0.size(); i++) 
+        for (size_type i=0; i<lfsu0.size(); i++)
           u_0 += x(lfsu0,i)*phi0[i];                // localIndex() maps dof within
         RF u_1=0.0;                                             // leaf space to all dofs
         for (size_type i=0; i<lfsu1.size(); i++)                // within given element
@@ -101,7 +101,7 @@ public:
         std::vector<Dune::FieldVector<RF,dim> > gradphi1(lfsu1.size());
         for (size_type i=0; i<lfsu1.size(); i++)
           jac.mv(js1[i][0],gradphi1[i]);
-        
+
         // compute gradient of u_0, u_1
         Dune::FieldVector<RF,dim> gradu0(0.0);
         for (size_type i=0; i<lfsu0.size(); i++)
@@ -113,12 +113,12 @@ public:
         // integrate both components
         RF factor = it->weight()*eg.geometry().integrationElement(it->position());
         // eq. 0: - d_0 \Delta u_0 - (\lambda*u_0 - u_0^3 - \sigma* u_1 + \kappa) = 0
-        for (size_type i=0; i<lfsu0.size(); i++) 
-          r.accumulate(lfsu0,i,(d_0*(gradu0*gradphi0[i])  
+        for (size_type i=0; i<lfsu0.size(); i++)
+          r.accumulate(lfsu0,i,(d_0*(gradu0*gradphi0[i])
 				-(lambda*u_0-u_0*u_0*u_0-sigma*u_1+kappa)
 				*phi0[i])*factor);
         // eq. 1: - d_1 \Delta u_1 - (u_0 - u_1) = 0
-        for (size_type i=0; i<lfsu1.size(); i++) 
+        for (size_type i=0; i<lfsu1.size(); i++)
           r.accumulate(lfsu1,i,(d_1*(gradu1*gradphi1[i])
 				-(u_0-u_1)*phi1[i])*factor);
       }
