@@ -140,8 +140,8 @@ public:
 //===============================================================
 
 // generate a P1 function and output it
-template<typename GV, typename FEM, typename CON, int k>
-void poisson_driver (const GV& gv, const FEM& fem, std::string filename)
+template<typename GV, typename FEM, typename CON>
+void poisson_driver (const GV& gv, const FEM& fem, std::string filename, int k)
 {
   const int q=2*k; // integration order
 
@@ -170,8 +170,8 @@ void poisson_driver (const GV& gv, const FEM& fem, std::string filename)
   FType f(gv);
   typedef J<GV,R> JType;
   JType j(gv);
-  typedef Dune::PDELab::Poisson<FType,BCTypeParam,JType,q> LOP;
-  LOP lop(f,bctype,j);
+  typedef Dune::PDELab::Poisson<FType,BCTypeParam,JType> LOP;
+  LOP lop(f,bctype,j,q);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
 
   // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
@@ -287,7 +287,7 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      poisson_driver<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,k>(gv,fem,"reentrantcorner_Alberta_Pk_2d");
+      poisson_driver<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"reentrantcorner_Alberta_Pk_2d",k);
     }
 #endif
 

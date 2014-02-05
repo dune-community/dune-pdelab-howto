@@ -184,12 +184,13 @@ public:
 //===============================================================
 
 // generate a P1 function and output it
-template<typename GV, typename FEM, typename BCTYPE, typename CON, int q>
+template<typename GV, typename FEM, typename BCTYPE, typename CON>
 void poisson_driver(const GV& gv,
                     const FEM& fem,
                     std::string filename,
                     const BCTYPE& bctype,    // boundary condition type
                     bool hanging_nodes,
+                    int q,  // quadrature order
                     const CON& con = CON())
 {
   // constants and types
@@ -215,8 +216,8 @@ void poisson_driver(const GV& gv,
   FType f(gv);
   typedef J<GV,R> JType;
   JType j(gv);
-  typedef Dune::PDELab::Poisson<FType,BCTypeParam,JType,q> LOP;
-  LOP lop(f,bctype,j);
+  typedef Dune::PDELab::Poisson<FType,BCTypeParam,JType> LOP;
+  LOP lop(f,bctype,j,q);
 
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   MBE mbe(45); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
@@ -375,16 +376,17 @@ int main(int argc, char** argv)
       // there are less than two hanging nodes per edge.
       Constraints constraints(grid,true,bctype);
 
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,
                                                        fem,
                                                        "poisson_ALU_Pk_2d_randomly_refined",
                                                        bctype,
                                                        true,
+                                                       q,
                                                        constraints
                                                        );
 #else
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_ALU_Pk_2d",bctype,false);
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,fem,"poisson_ALU_Pk_2d",bctype,false,q);
 #endif
     }
 #endif
@@ -432,16 +434,17 @@ int main(int argc, char** argv)
       Constraints constraints(grid,true,bctype);
 
       // solve problem
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,
                                                        fem,
                                                        "poisson_ALU_Q1_3d_hangingNodes",
                                                        bctype,
                                                        true,
+                                                       q,
                                                        constraints
                                                        );
 #else
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_ALU_Q1_3d",bctype,false);
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,fem,"poisson_ALU_Q1_3d",bctype,false,q);
 #endif
 
     }
@@ -493,16 +496,17 @@ int main(int argc, char** argv)
         <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
       Constraints constraints(grid,true,bctype);
       // solve problem
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,
                                                        fem,
                                                        "poisson_ALU_Pk_3d_hangingNodes",
                                                        bctype,
                                                        true,
+                                                       q,
                                                        constraints
                                                        );
 #else
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>( gv,fem,"poisson_ALU_Pk_3d", bctype, false );
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>( gv,fem,"poisson_ALU_Pk_3d", bctype, false, q );
 #endif
 
 
@@ -539,7 +543,7 @@ int main(int argc, char** argv)
       BCTypeParam bctype;
       // solve problem
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_yasp_Q1_2d",bctype,false);
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,fem,"poisson_yasp_Q1_2d",bctype,false,q);
     }
 
 
@@ -570,7 +574,7 @@ int main(int argc, char** argv)
 
       // solve problem
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_yasp_Q2_2d",bctype,false);
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,fem,"poisson_yasp_Q2_2d",bctype,false,q);
     }
 
     {
@@ -600,7 +604,7 @@ int main(int argc, char** argv)
 
       // solve problem
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_yasp_Q1_3d",bctype,false);
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,fem,"poisson_yasp_Q1_3d",bctype,false,q);
     }
 
 #if HAVE_UG
@@ -649,16 +653,17 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::HangingNodesDirichletConstraints
         <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
       Constraints constraints(grid,true,bctype);
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,
                                                        fem,
                                                        "poisson_UG_Pk_2d_hangingNodes",
                                                        bctype,
                                                        true,
+                                                       q,
                                                        constraints
                                                        );
 #else
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_UG_Pk_2d",bctype,false);
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,fem,"poisson_UG_Pk_2d",bctype,false,q);
 #endif
 
     }
@@ -711,16 +716,17 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::HangingNodesDirichletConstraints
         <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
       Constraints constraints(grid,true,bctype);
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,
                                                        fem,
                                                        "poisson_UG_Q1_2d_hangingNodes",
                                                        bctype,
                                                        true,
+                                                       q,
                                                        constraints
                                                        );
 #else
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_UG_Q1_2d",bctype,false);
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,fem,"poisson_UG_Q1_2d",bctype,false,q);
 #endif
 
     }
@@ -772,11 +778,12 @@ int main(int argc, char** argv)
         <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
 
       Constraints constraints(grid,true,bctype);
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,
                                                        fem,
                                                        "poisson_UG_Q1_3d_hangingNodes",
                                                        bctype,
                                                        true,
+                                                       q,
                                                        constraints
                                                        );
 #endif
@@ -832,16 +839,17 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::HangingNodesDirichletConstraints
         <GV::Grid,ConstraintsAssembler,BCTypeParam> Constraints;
       Constraints constraints(grid,true,bctype);
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,
                                                        fem,
                                                        "poisson_UG_Pk_3d_hangingNodes",
                                                        bctype,
                                                        true,
+                                                       q,
                                                        constraints
                                                        );
 #else
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_UG_Pk_3d",bctype,false);
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,fem,"poisson_UG_Pk_3d",bctype,false,q);
 #endif
 
     }
@@ -880,7 +888,7 @@ int main(int argc, char** argv)
 
       // solve problem
       typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-      poisson_driver<GV,FEM,BCTypeParam,Constraints,q>(gv,fem,"poisson_Alberta_Pk_2d",bctype,false);
+      poisson_driver<GV,FEM,BCTypeParam,Constraints>(gv,fem,"poisson_Alberta_Pk_2d",bctype,false,q);
     }
 #endif
 
