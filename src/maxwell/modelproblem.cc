@@ -161,7 +161,6 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
 {
   std::cout << "using degree " << degree << std::endl;
   // <<<1>>> Choose domain and range field type
-  typedef typename GV::Grid::ctype Coord;
   typedef double Real;
   const int dim = GV::dimension;
 
