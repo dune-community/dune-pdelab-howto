@@ -3,85 +3,82 @@
 set(SUBDIRS )
 
 if(EIGEN_FOUND)
-set(EIGENPROGRAMS  
+set(EIGENPROGRAMS
     laplacedirichletccfv-eigen)
 endif(EIGEN_FOUND )
 
 if(SUPERLU_FOUND)
-set(SUPERLUPROGRAMS                                
-    dgdiffusion                                 
+set(SUPERLUPROGRAMS
+    dgdiffusion
         dgdiffusion-hp
         dgldomain
-        dgoverlapping                           
+        dgoverlapping
         rt0main)
 endif(SUPERLU_FOUND )
 
-if(ALUGRID_FOUND)
-  set(ALUGRIDPROGRAMS tutorial)
-endif(ALUGRID_FOUND)
-set(noinst_PROGRAMS                                
-    ${EIGENPROGRAMS}                            
-    ${SUPERLUPROGRAMS}                          
-        overlappingsinglephaseflowccfv          
-        overlappingsinglephaseflow              
-        nonoverlappingsinglephaseflow           
-        nonlineardiffusion                      
-        transporttest                           
-        instationarytest                        
-        poisson                                 
-        laplacedirichletccfv                    
-        reentrantcorner                         
-        diffusion                               
-        scalabilitytest                         
+set(noinst_PROGRAMS
+    ${EIGENPROGRAMS}
+    ${SUPERLUPROGRAMS}
+        overlappingsinglephaseflowccfv
+        overlappingsinglephaseflow
+        nonoverlappingsinglephaseflow
+        nonlineardiffusion
+        transporttest
+        instationarytest
+        poisson
+        laplacedirichletccfv
+        reentrantcorner
+        diffusion
+        scalabilitytest
         ldomain)
 
 
-set(noinst_HEADERS                                 
-        l2interpolationerror.hh                 
-        parameterA.hh                           
-        parameterB.hh                           
-        parameterC.hh                           
-        parameterD.hh                           
-        parameterE.hh                           
-        parameterF.hh                           
-        problemA.hh                             
-        problemB.hh                             
-        problemC.hh                             
-        problemD.hh                             
-        problemE.hh                             
+set(noinst_HEADERS
+        l2interpolationerror.hh
+        parameterA.hh
+        parameterB.hh
+        parameterC.hh
+        parameterD.hh
+        parameterE.hh
+        parameterF.hh
+        problemA.hh
+        problemB.hh
+        problemC.hh
+        problemD.hh
+        problemE.hh
         problemF.hh)
 
-set(dist_noinst_DATA                               
-        grids/2dgrid.al                         
-        grids/2dreentrantcorner.dgf             
-        grids/2dsimplex.alu                     
-        grids/3dgrid.al                         
-        grids/3drefinedcube.alu                 
-        grids/CuKav.geo                         
-        grids/CuKav.msh                         
-        grids/circle.geo                        
-        grids/circle1storder.msh                
-        grids/circle2ndorder.msh                
-        grids/cube.geo                          
-        grids/cube.hexa                         
-        grids/cube.tetra                        
-        grids/cube1045.msh                      
-        grids/cube3205.msh                      
-        grids/cube99.msh                        
-        grids/curved2d.geo                      
-        grids/curved2d.msh                      
-        grids/ldomain.al                        
-        grids/ldomain.geo                       
-        grids/ldomain.msh                       
-        grids/ldomain2.msh                      
-        grids/pyramid.geo                       
-        grids/pyramid.msh                       
-        grids/pyramid1storder.msh               
-        grids/pyramid2ndorder.msh               
-        grids/pyramid4.msh                      
-        grids/telescope.geo                     
-        grids/telescope.msh                     
-        grids/telescope1storder.msh             
+set(dist_noinst_DATA
+        grids/2dgrid.al
+        grids/2dreentrantcorner.dgf
+        grids/2dsimplex.alu
+        grids/3dgrid.al
+        grids/3drefinedcube.alu
+        grids/CuKav.geo
+        grids/CuKav.msh
+        grids/circle.geo
+        grids/circle1storder.msh
+        grids/circle2ndorder.msh
+        grids/cube.geo
+        grids/cube.hexa
+        grids/cube.tetra
+        grids/cube1045.msh
+        grids/cube3205.msh
+        grids/cube99.msh
+        grids/curved2d.geo
+        grids/curved2d.msh
+        grids/ldomain.al
+        grids/ldomain.geo
+        grids/ldomain.msh
+        grids/ldomain2.msh
+        grids/pyramid.geo
+        grids/pyramid.msh
+        grids/pyramid1storder.msh
+        grids/pyramid2ndorder.msh
+        grids/pyramid4.msh
+        grids/telescope.geo
+        grids/telescope.msh
+        grids/telescope1storder.msh
         grids/telescope2ndorder.msh)
 
 if(SUPERLU_FOUND)
@@ -358,27 +355,6 @@ add_dune_alugrid_flags(diffusion )
 
 target_link_libraries(diffusion ${DUNE_LIBS})
 add_dune_superlu_flags(diffusion )
-
-if(ALUGRID_FOUND)
-  add_executable(tutorial tutorial.cc)
-  add_dune_alberta_flags(tutorial )
-  add_dune_amiramesh_flags(tutorial )
-  add_dune_ug_flags(tutorial )
-  add_dune_mpi_flags(tutorial )
-  target_link_libraries(tutorial ${DUNE_LIBS})
-  add_dune_superlu_flags(tutorial )
-  add_dune_alugrid_flags(tutorial )
-
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(tutorial_ LDADD ${DUNEMPILDFLAGS} ${DUNEMPILIBS} ${SUPERLU_LIBS} ${ALBERTA_LDFLAGS} ${ALBERTA_LIBS} ${AMIRAMESH_LDFLAGS} ${AMIRAMESH_LIBS} ${UG_LDFLAGS} ${UG_LIBS} ${ALUGRID_LDFLAGS} ${ALUGRID_LIBS} ${DUNE_LDFLAGS} ${DUNE_LIBS})
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(tutorial_ LDFLAGS ${AM_LDFLAGS} ${SUPERLU_LDFLAGS})
-
-target_link_libraries(tutorial ${DUNE_LIBS})
-add_dune_superlu_flags(tutorial )
-endif(ALUGRID_FOUND)
 
 add_executable(scalabilitytest scalabilitytest.cc)
 
