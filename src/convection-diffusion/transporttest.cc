@@ -394,7 +394,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   V x(gfs,0.0);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
-  
+
   // <<<6>>> Make a linear solver backend
   typedef Dune::PDELab::ISTLBackend_OVLP_ExplicitDiagonal<GFS> LS;
   LS ls(gfs);
@@ -503,6 +503,10 @@ int main(int argc, char** argv)
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
+    return 1;
+  }
+  catch (std::exception &e){
+    std::cerr << "STL error: " << e.what() << std::endl;
     return 1;
   }
   catch (...){
