@@ -1,10 +1,10 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 /** \file
-    
+
     \brief Solve two-component diffusion-reaction system with conforming finite elements
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<math.h>
 #include<iostream>
@@ -21,18 +21,6 @@
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/grid/yaspgrid.hh>
-#if HAVE_ALBERTA
-#include<dune/grid/albertagrid.hh>
-#include <dune/grid/albertagrid/dgfparser.hh>
-#endif
-#if HAVE_UG 
-#include<dune/grid/uggrid.hh>
-#endif
-#if HAVE_ALUGRID
-#include<dune/grid/alugrid.hh>
-#include<dune/grid/io/file/dgfparser/dgfalu.hh>
-#include<dune/grid/io/file/dgfparser/dgfparser.hh>
-#endif
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
 #include<dune/istl/solvers.hh>
