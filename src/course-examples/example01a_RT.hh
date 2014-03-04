@@ -36,7 +36,7 @@ void example01a_RT (const GV& gv)
   typedef typename GO::Traits::Domain U;
   U u(gfs,0.0); // initial value
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
-  SLP slp(go,u,ls,1e-10);
+  SLP slp(go,ls,u,1e-10);
   slp.apply();
 
   // <<<6>>> graphical output

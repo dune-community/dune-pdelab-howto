@@ -36,7 +36,7 @@ void example04 (const GV& gv)
   // <<<5>>> assemble and solve linear problem
   typedef typename GO::Traits::Domain U;
   U u(gfs,0.0);
-  Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> slp(go,u,ls,1e-10);
+  Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> slp(go,ls,u,1e-10);
   slp.apply();
 
   // <<<6>>> graphical output

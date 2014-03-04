@@ -51,7 +51,7 @@ template<class GV> void example02_Q1 (const GV& gv)
 
   // <<<6>>> assemble and solve linear problem
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
-  SLP slp(go,u,ls,1e-10);
+  SLP slp(go,ls,u,1e-10);
   slp.apply();
 
   // <<<7>>> graphical output

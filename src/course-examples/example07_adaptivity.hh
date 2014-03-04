@@ -46,7 +46,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
 
   // <<<6>>> Assemble linear problem.
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
-  SLP slp(go,u,ls,1e-10);
+  SLP slp(go,ls,u,1e-10);
 
 
   // <<<7>>> Preparation: Define types for the computation of the error estimate eta.
@@ -103,7 +103,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
     //error_fraction( eta, alpha, beta, eta_alpha, eta_beta, verbose );
 
     mark_grid( grid, eta, eta_alpha, 0.0 );
-    adapt_grid( grid, gfs, u );
+    adapt_grid( grid, gfs, u, 2 );
 
     Dune::PDELab::constraints(bctype,gfs,cc);
     Dune::PDELab::interpolate(g,gfs,u);
