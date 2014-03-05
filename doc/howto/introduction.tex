@@ -1,34 +1,43 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Introduction}
+\section{Unconstrained Conforming Finite Elements}\label{Sec:EllipticProblems}
+\subsection{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{PDELab Aims and Features}
+%\subsection{PDELab Aims and Features}
 
 \begin{frame}
 \frametitle<presentation>{DUNE PDELab Features}
 \begin{itemize}
-\item Rapid prototyping: Substantially reduce time to implement
-discretizations and solvers for systems of PDEs based on DUNE.
-\item Simple things should be simple --- suitable for teaching.
-\item Discrete function spaces spaces:
+\item \textbf{Substantially reduce time to implement
+discretizations and solvers for systems of PDEs based on DUNE.}
+%\item Simple things should be simple --- but still be efficient!
+\item \textbf{Discrete function spaces}
 \begin{itemize}
-\item Conforming and non-conforming,
-\item hp-refinement,
-\item general approach to constraints,
-\item generic generation of product spaces for systems.
+\item Map element-wise to global degrees of freedom.
+\item Seperate DOF mapping and coefficient vectors.
+\item General approach to constraints.
+\item Nested product spaces for systems of PDEs.
+\item Handle communication on distributed grids.
 \end{itemize} 
-\item Operators based on weighted residual formulation:
+\item \textbf{Generic Finite Element Assembly}
 \begin{itemize}
-\item Linear and nonlinear,
-\item stationary and transient,
-\item FE and FV schemes requiring at most face-neighbors.
+\item Handle element and face integrals.
+\item Residual and matrix assembly.
+\item Linear and nonlinear, stationary and transient problems.
 \end{itemize} 
-\item Exchangeable linear algebra backend. 
-\item User only involved with ``local'' view on (reference) element.
+\item \textbf{Solvers}
+\begin{itemize}
+\item Exploitation of blocking and ordering in linear solvers.
+\item Nonlinear solver (Newton, Picard, \ldots).
+\item Single step time-stepping schemes (explicit, implicit).
+\end{itemize} 
+\item Exchangeable linear algebra backend
+\item Still have to write C++ code, full control on element level.
+%\item User only involved with ``local'' view on (reference) element.
 \end{itemize}
 \end{frame}
 
@@ -82,6 +91,7 @@ To work through the examples the following DUNE modules are required:
 \item \lstinline{dune-grid},
 \item \lstinline{dune-istl},
 \item \lstinline{dune-localfunctions},
+\item \lstinline{dune-typetree},
 \item \lstinline{dune-pdelab},
 \item \lstinline{dune-pdelab-howto},
 \end{itemize}
@@ -92,7 +102,7 @@ required to do the examples on simplex grids.
 
 
 
-\subsection{How to Read this Manual}
+\subsection<article>{How to Read this Manual}
 
 The main idea of this howto is to introduce the concepts by working
 through a set of increasingly complex examples. We will start by 

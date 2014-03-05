@@ -367,14 +367,15 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example06_Q1Q1.hh}
 \frametitle{Further Examples for Local Operators}
 in \lstinline{dune/pdelab/localoperator} you find
 \begin{itemize}
-\item \lstinline{diffusiondg.hh} -- Stationary diffusion equation with variable coefficients, discontinuous 
-Galerkin methods.
-\item \lstinline{diffusionmixed.hh} -- dito, $RT0$ mixed method.
-\item \lstinline{diffusionmfd.hh} -- dito, mimetic finite difference method.
+\item \lstinline{convectiondiffusionfem.hh} -- stationary convection-diffusion equation with variable full tensor using
+continuous Galerkin method.
+\item \lstinline{convectiondiffusiondg.hh} -- stationary convection-diffusion equation with variable full tensor using discontinuous
+Galerkin method.
+\item \lstinline{diffusionmixed.hh} -- variable coefficient diffusion problem using $RT0$ mixed method.
+\item \lstinline{linearacousticsdg.hh} -- equations of linear acoustics using discontinuous Galerkin.
+\item \lstinline{maxwelldg.hh} -- Maxwell's equations using discontinuous Galerkin.
 \item \lstinline{twophaseccfv.hh} -- water-gas flow in porous media using pressure-pressure formulation,
 cell-centered finite volumes.
-\item \lstinline{transportccfv.hh} -- Stationary and instationary convection-diffusion equation with cell-centered
-finite volumes.
 \end{itemize}
 \ldots and more.
 \end{frame}

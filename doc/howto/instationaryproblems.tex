@@ -8,7 +8,7 @@
 \item Method of lines approach:
 \begin{itemize}
 \item Semi-discretization in space.
-\item Solve large ODE problem.
+\item Solve large-scale ODE problem in time.
 \end{itemize}
 \item One step methods for ODEs
 \begin{itemize}
@@ -16,9 +16,9 @@
 \item Explicit Runge-Kutta methods.
 \item Includes Explicit/implicit Euler, Crank-Nicolson, fractional
 step $\theta$, Alexanders S-stable methods \cite{alexander:77}, 
-Shu's explicit TVD Runge-Kutta methods \cite{shu:88}\ldots
+Shu's explicit strong stability preserving Runge-Kutta methods \cite{shu:88}\ldots
 \end{itemize}
-\item Multistep methods (e.g. BDF) could be implemented easily in current approach.
+\item Multistep methods (e.g. BDF) could be (and have been) implemented in current approach.
 \item Space-time methods are not yet supported
 \begin{itemize}
 \item Require extension of grid function space.
@@ -195,6 +195,8 @@ assembling $\mathbf{s}$, $\mathbf{q}$.
 \item Vector update $\mathbf{b} = \mathbf{s} + k^n \mathbf{q}$.
 \item ``Solve'' diagonal System $\mathbf{D} \mathbf{u}^{(i)} = \mathbf{b}$.
 \end{enumerate}
+\item \textbf{Note}: Conforming FEM yields a non-diagonal mass matrix. ``Mass lumping'' or 
+``under-integration'' may be used to get a diagonal mass matrix.
 \end{itemize}
 \end{frame}
 
