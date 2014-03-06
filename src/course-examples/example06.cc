@@ -64,35 +64,38 @@ int main(int argc, char** argv)
     if(Dune::MPIHelper::isFake)
       std::cout<< "This is a sequential program." << std::endl;
     else
-	  {
-		if(helper.rank()==0)
-		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
-	  }
+      {
+        if(helper.rank()==0)
+          std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
+      }
 
-	if (argc!=5)
-	  {
-		if(helper.rank()==0)
-		  std::cout << "usage: ./example06 <level> <dtstart> <dtmax> <tend>" << std::endl;
-		return 1;
-	  }
+    if (argc!=6)
+      {
+        if(helper.rank()==0)
+          std::cout << "usage: ./example06 <coarse_size> <level> <dtstart> <dtmax> <tend>" << std::endl;
+        return 1;
+      }
 
-	int level;
-	sscanf(argv[1],"%d",&level);
+    int coarse_size;
+    sscanf(argv[1],"%d",&coarse_size);
 
-	double dtstart;
-	sscanf(argv[2],"%lg",&dtstart);
+    int level;
+    sscanf(argv[2],"%d",&level);
 
-	double dtmax;
-	sscanf(argv[3],"%lg",&dtmax);
+    double dtstart;
+    sscanf(argv[3],"%lg",&dtstart);
 
-	double tend;
-	sscanf(argv[4],"%lg",&tend);
+    double dtmax;
+    sscanf(argv[4],"%lg",&dtmax);
+
+    double tend;
+    sscanf(argv[5],"%lg",&tend);
 
     // 2D
     {
       // make grid
       Dune::FieldVector<double,2> L(2.0);
-      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      Dune::array<int,2> N(Dune::fill_array<int,2>(coarse_size));
       std::bitset<2> periodic(false);
       int overlap=3;
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
@@ -104,10 +107,10 @@ int main(int argc, char** argv)
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 }
