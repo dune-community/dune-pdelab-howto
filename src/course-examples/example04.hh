@@ -26,8 +26,8 @@ void example04 (const GV& gv)
 
   // How well did we estimate the number of entries per matrix row?
   // => print Jacobian pattern statistics
-  typename GO::Traits::Jacobian jac(go);
-  std::cout << jac.patternStatistics() << std::endl;
+  // typename GO::Traits::Jacobian jac(go);
+  // std::cout << jac.patternStatistics() << std::endl;
 
   // <<<4>>> Select a linear solver backend
   typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<GO> LS;
