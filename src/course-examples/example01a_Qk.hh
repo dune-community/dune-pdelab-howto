@@ -34,7 +34,7 @@ void example01a_Qk (const GV& gv)
   LS ls(5000,true);
 
   // <<<5>>> solve linear problem
-  typedef typename GO::Traits::Domain U;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
   U u(gfs,0.0); // initial value
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
   SLP slp(go,ls,u,1e-10);
