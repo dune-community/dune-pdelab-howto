@@ -65,7 +65,7 @@ Discrete problem in residual form reads
 r_h^\text{mixed}\left((\sigma_h,u_h),(v,q)\right) = 0 \quad \forall
 (v,q) \in \tilde{S}_h\times W_h .
 \end{equation*}
-\textbf{Systems of PDEs lead to tensor product function spaces !}
+\textbf{Systems of PDEs lead to cartesian products of function spaces !}
 \end{frame}
 
 \begin{frame}
@@ -107,18 +107,19 @@ Composite function spaces have tree structure:
 
 \begin{frame}
 \frametitle{Implementation of Function Space Composition}
-\begin{itemize}
-\item \lstinline{Dune::PDELab::PowerGridFunctionSpace<GFS,k,M>} builds a
-new grid function space that is \lstinline{k}-times the product of \lstinline{GFS}.
-\item \lstinline{D...::CompositeGridFunctionSpace<M,GFS0,...,GFS8>}
-builds a new grid function space out of up to 9 existing grid function
+\begin{itemize}    
+\item \lstinline{Dune::PDELab::PowerGridFunctionSpace<GFS,k,VBE,OT>} builds a
+new grid function space that is \lstinline{k}-times the product of \lstinline{GFS}.\\
+\lstinline{VBE} is a vector backend, \lstinline{OT} is an ordering tag.
+\item \lstinline{D...::CompositeGridFunctionSpace<VBE,OT,GFS0,...,GFSk>}
+builds a new grid function space out of the given grid function
 spaces. 
-\item \lstinline{M} controls construction of local to global map.
+\item \lstinline{OT} controls construction of local to global map, allowing e.g. block-wise or component-wise ordering.
 \item This can be applied recursively leading to a type tree.
 \item Leaves of the tree are scalar or vector-valued finite element spaces.
 \item The local function spaces given to local operators reflects this tree structure.
 \item \lstinline{Dune::PDELab::GridFunctionSubSpace} allows the selection of subspaces.
-\item Grid functions can be composed in a similar way.
+\item User functions (e.g. for initial conditions) can be composed in a similar way.
 \end{itemize}
 \end{frame}
 
@@ -214,12 +215,13 @@ It consists of the following files:
 \frametitle{Main Features of the Driver}
 \framesubtitle{About \lstinline{example05_QkQk.hh}}
 \begin{itemize}
-\item Make a composit grid function space with two components.
+\item Make a product grid function space with two components.
 \item Use \lstinline{EntityBlockedOrderingTag} to order
 both degrees of freedom of the system consecutively.
 \item Local operator of the system takes a number of parameters.
-\item Graphical output requires subspaces to extract the components.
-\item Start with small time steps that are increased later.
+\item Graphical output requires subspaces to extract the components (well, if
+you do not use \lstinline{addSolutionToVTKWriter}).
+\item Start with small time steps that are increased progressively.
 \end{itemize}
 \end{frame}
 
@@ -241,10 +243,11 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example05_QkQk.hh}
 \framesubtitle{About \lstinline{example05_operator.hh}, \lstinline{example05_toperator.hh}}
 \begin{itemize}
 \item Local function spaces (trial and test) are now composite as well.
-\item They reflect the structure of the grid function spaces.
-\item Components are extracted with template magic.
-\item \lstinline{localIndex()} method on local function space maps
-a degree of freedom from this space to all degrees of freedom of the element.
+\item They have the same structure as the global function spaces.
+\item Components are extracted with template magic according to the tree structure.
+%\item \lstinline{localIndex()} method on local function space maps
+%a degree of freedom from this space to all degrees of freedom of the element.
+\item The \lstinline{x} and \lstinline{r} arguments allow access to the individual components.
 \item This local operator would work also when $u_0$ and $u_1$ are discretized
 with different finite element spaces.
 \item Same features are used in the temporal part.
