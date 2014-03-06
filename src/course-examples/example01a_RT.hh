@@ -15,7 +15,11 @@ void example01a_RT (const GV& gv)
   gfs.name("solution");
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
 
-  // <<<3>>> Make grid operator
+  // <<<3>>> Make DOF vector
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
+  U u(gfs,0.0); // initial value
+
+  // <<<4>>> Make grid operator
   typedef Example01aLocalOperator LOP; 
   LOP lop;
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
@@ -28,18 +32,16 @@ void example01a_RT (const GV& gv)
   typename GO::Traits::Jacobian jac(go);
   std::cout << jac.patternStatistics() << std::endl;
 
-  // <<<4>>> Select a linear solver backend
+  // <<<5>>> Select a linear solver backend
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
   LS ls(5000,true);
 
-  // <<<5>>> solve linear problem
-  typedef typename GO::Traits::Domain U;
-  U u(gfs,0.0); // initial value
+  // <<<6>>> solve linear problem
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
   SLP slp(go,ls,u,1e-10);
   slp.apply();
 
-  // <<<6>>> graphical output
+  // <<<7>>> graphical output
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,u);
   vtkwriter.write("example01_RT",Dune::VTK::appendedraw);
