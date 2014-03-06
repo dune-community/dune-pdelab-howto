@@ -86,7 +86,7 @@ public:
 
         // transform gradients from reference element to real element
         const typename EG::Geometry::JacobianInverseTransposed
-          &jac = eg.geometry().jacobianInverseTransposed(it->position());
+          jac = eg.geometry().jacobianInverseTransposed(it->position());
         std::vector<Gradient> gradphi(lfsu.size());
         for (size_type i=0; i<lfsu.size(); i++)
           jac.mv(js[i][0],gradphi[i]);
