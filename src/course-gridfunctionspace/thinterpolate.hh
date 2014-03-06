@@ -21,19 +21,19 @@ void thinterpolate (const GV& gv)
 
   //  make Q_1 grid function space
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,D,R,1> Q1FEM;
-  Q1FEM q1fem(gv);                        // Q1 finite elements
+  Q1FEM q1fem(gv);                    // Q1 finite elements
   typedef Dune::PDELab::GridFunctionSpace<GV,Q1FEM,VBE> Q1GFS;
   Q1GFS q1gfs(gv,q1fem);              // Q1 space
   q1gfs.name("pressure");
   
   // make Q_2 finite element map
-  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,D,R,2> Q22DFEM;
-  Q22DFEM q22dfem(gv);                    // Q2 finite elements, no 3D :-(
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,D,R,2> Q2FEM;
+  Q2FEM q2fem(gv);                    // Q2 finite elements
 
   // make velocity grid function space
   typedef Dune::PDELab::VectorGridFunctionSpace
-    <GV,Q22DFEM,dim,VBE,VBE> VGFS;
-  VGFS vgfs(gv,q22dfem);                   // velocity space
+    <GV,Q2FEM,dim,VBE,VBE> VGFS;
+  VGFS vgfs(gv,q2fem);                // velocity space
   vgfs.name("velocity");
 
   // make Taylor-Hood grid function space
