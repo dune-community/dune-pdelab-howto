@@ -75,26 +75,28 @@ int main(int argc, char** argv)
     if(Dune::MPIHelper::isFake)
       std::cout<< "This is a sequential program." << std::endl;
     else
-	  {
-		if(helper.rank()==0)
-		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
-	  }
+      {
+        if(helper.rank()==0)
+          std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
+      }
 
-	if (argc!=4)
-	  {
-		if(helper.rank()==0)
-		  std::cout << "usage: ./example03 <level> <dt> <tend>" << std::endl;
-		return 1;
-	  }
+    if (argc!=4)
+      {
+        if(helper.rank()==0) {
+          std::cout << "usage:      ./example03 <level> <dt> <tend>" << std::endl;
+          std::cout << "suggestion: level=3 dt=0.02 tend=6.28" << std::endl;
+        }
+        return 1;
+      }
 
-	int level;
-	sscanf(argv[1],"%d",&level);
+    int level;
+    sscanf(argv[1],"%d",&level);
 
-	double dt;
-	sscanf(argv[2],"%lg",&dt);
+    double dt;
+    sscanf(argv[2],"%lg",&dt);
 
-	double tend;
-	sscanf(argv[3],"%lg",&tend);
+    double tend;
+    sscanf(argv[3],"%lg",&tend);
 
     // sequential version
     if (helper.size()==1)
@@ -112,10 +114,10 @@ int main(int argc, char** argv)
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 }
