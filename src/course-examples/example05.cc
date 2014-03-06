@@ -64,29 +64,33 @@ int main(int argc, char** argv)
     if(Dune::MPIHelper::isFake)
       std::cout<< "This is a sequential program." << std::endl;
     else
-	  {
-		if(helper.rank()==0)
-		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
-	  }
+      {
+        if(helper.rank()==0)
+          std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
+      }
 
-	if (argc!=5)
-	  {
-		if(helper.rank()==0)
-		  std::cout << "usage: ./example05 <level> <dtstart> <dtmax> <tend>" << std::endl;
-		return 1;
-	  }
+    if (argc!=6)
+      {
+        if(helper.rank()==0) {
+          std::cout << "usage: ./example05 <level> <dtstart> <dtmax> <tend> <k>" << std::endl;
+          std::cout << "suggestion: ./example05 5 1e-3 1.0 200.0 1" << std::endl;
+        return 1;
+      }
 
-	int level;
-	sscanf(argv[1],"%d",&level);
+    int level;
+    sscanf(argv[1],"%d",&level);
 
-	double dtstart;
-	sscanf(argv[2],"%lg",&dtstart);
+    double dtstart;
+    sscanf(argv[2],"%lg",&dtstart);
 
-	double dtmax;
-	sscanf(argv[3],"%lg",&dtmax);
+    double dtmax;
+    sscanf(argv[3],"%lg",&dtmax);
 
-	double tend;
-	sscanf(argv[4],"%lg",&tend);
+    double tend;
+    sscanf(argv[4],"%lg",&tend);
+
+    int degree;
+    sscanf(argv[5],"%d",&degree);
 
     // sequential version
     if (1 && helper.size()==1)
@@ -99,16 +103,16 @@ int main(int argc, char** argv)
       grid.globalRefine(level);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
       const GV& gv=grid.leafGridView();
-      example05_QkQk<1>(gv,dtstart,dtmax,tend); // Q1Q1
-      example05_QkQk<2>(gv,dtstart,dtmax,tend); // Q2Q2
+      if (degree==1) example05_QkQk<1>(gv,dtstart,dtmax,tend); // Q1Q1
+      if (degree==2) example05_QkQk<2>(gv,dtstart,dtmax,tend); // Q2Q2
     }
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 }
