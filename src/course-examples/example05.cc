@@ -74,6 +74,7 @@ int main(int argc, char** argv)
         if(helper.rank()==0) {
           std::cout << "usage: ./example05 <level> <dtstart> <dtmax> <tend> <k>" << std::endl;
           std::cout << "suggestion: ./example05 5 1e-3 1.0 200.0 1" << std::endl;
+        }
         return 1;
       }
 
