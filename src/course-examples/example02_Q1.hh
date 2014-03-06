@@ -39,7 +39,7 @@ template<class GV> void example02_Q1 (const GV& gv)
   std::cout << jac.patternStatistics() << std::endl;
 
   // <<<4>>> Make FE function extending Dirichlet boundary conditions
-  typedef typename GO::Traits::Domain U;
+  typedef typename GO::Traits::Domain U;              // alternative way to extract vector type
   U u(gfs,0.0);
   typedef BCExtension<GV,Real> G;                               // boundary value + extension
   G g(gv);
