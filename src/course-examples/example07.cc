@@ -78,20 +78,20 @@ int main(int argc, char** argv)
     if(Dune::MPIHelper::isFake)
       std::cout<< "This is a sequential program." << std::endl;
     else
-	  {
-		if(helper.rank()==0)
-		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
-	  }
+      {
+        if(helper.rank()==0)
+          std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
+      }
 
-	if (argc!=3)
-	  {
-		if(helper.rank()==0)
-		  std::cout << "usage: ./example07 <startLevel> <maxLevel>" << std::endl;
-		return 1;
-	  }
+    if (argc!=3)
+      {
+        if(helper.rank()==0)
+          std::cout << "usage: ./example07 <startLevel> <maxLevel>" << std::endl;
+        return 1;
+      }
 
-	int startLevel;
-	sscanf(argv[1],"%d",&startLevel);
+    int startLevel;
+    sscanf(argv[1],"%d",&startLevel);
 
     int maxLevel;
     sscanf(argv[2],"%d",&maxLevel);
@@ -99,10 +99,6 @@ int main(int argc, char** argv)
     if( maxLevel < startLevel ){
       std::cout << "maxLevel >= startLevel not fulfilled." << std::endl;
     }
-
-    // If the starting grid is too coarse, the solution on the base level is useless.
-    startLevel += 3;
-    maxLevel   += 3;
 
     // sequential version
     if (1 && helper.size()==1)
@@ -120,10 +116,10 @@ int main(int argc, char** argv)
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 }
