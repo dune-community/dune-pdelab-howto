@@ -85,14 +85,14 @@ void example05_QkQk (const GV& gv, double dtstart, double dtmax, double tend)
 
   // <<<8>>> graphics for initial guess
   std::stringstream basename;
-  basename << "example05_Q" << k << "Q2" << k;
+  basename << "example05_Q" << k << "Q" << k;
   Dune::PDELab::FilenameHelper fn(basename.str());
   {
     typedef Dune::PDELab::DiscreteGridFunction<U0SUB,U> U0DGF;
     U0DGF u0dgf(u0sub,uold);
     typedef Dune::PDELab::DiscreteGridFunction<U1SUB,U> U1DGF;
     U1DGF u1dgf(u1sub,uold);
-    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
+    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3*(k-1));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U0DGF>(u0dgf,"u0"));
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U1DGF>(u1dgf,"u1"));
     vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
@@ -113,7 +113,7 @@ void example05_QkQk (const GV& gv, double dtstart, double dtmax, double tend)
       U0DGF u0dgf(u0sub,unew);
       typedef Dune::PDELab::DiscreteGridFunction<U1SUB,U> U1DGF;
       U1DGF u1dgf(u1sub,unew);
-      Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
+      Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3*(k-1));
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U0DGF>(u0dgf,"u0"));
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U1DGF>(u1dgf,"u1"));
       vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
