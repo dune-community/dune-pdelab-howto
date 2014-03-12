@@ -79,7 +79,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
     estgo.residual(u,eta);
 
     for (unsigned int i=0; i<eta.flatsize(); i++)
-      eta.base()[i] = sqrt(eta.base()[i]); // ??? why that
+      eta.base()[i] = sqrt(eta.base()[i]); // eta contains squares
 
     // Use eta to refine the grid following two different strategies based
     // (1) element fraction
@@ -93,12 +93,12 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
 
     // <<<10>>> Adapt the grid locally...
     // with strategy 1:
-    element_fraction( eta, alpha, beta, eta_alpha, eta_beta, verbose );
+    Dune::PDELab::element_fraction( eta, alpha, beta, eta_alpha, eta_beta, verbose );
     // or, alternatively, with strategy 2:
-    //error_fraction( eta, alpha, beta, eta_alpha, eta_beta, verbose );
+    //Dune::PDELab::error_fraction( eta, alpha, beta, eta_alpha, eta_beta, verbose );
 
-    mark_grid( grid, eta, eta_alpha, 0.0 ,0 , 100, verbose);
-    adapt_grid( grid, gfs, u, 2 );
+    Dune::PDELab::mark_grid( grid, eta, eta_alpha, 0.0 ,0 , 100, verbose);
+    Dune::PDELab::adapt_grid( grid, gfs, u, 2 );
 
     Dune::PDELab::constraints(bctype,gfs,cc);
     Dune::PDELab::interpolate(g,gfs,u); // this will overwrite the solution !

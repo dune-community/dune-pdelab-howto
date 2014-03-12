@@ -498,10 +498,10 @@
 
 \subsubsection*{Refinement loop}
 
-The adaptive refinement loop in listing 20 starts at the line 53. For $i=0$, our
-PDE is solved (line 64) on the base grid level. The solution is stored in the
-vector of degrees of freedom $u$ (line 31). Afterwards, we will compute
-a local error indicator $\eta$ (lines 78-79) for the solution $u$.
+The adaptive refinement loop in listing \ref{lst:ex07_adaptivity} starts at the line 31. For $i=0$, our
+PDE is solved (line 66) on the base grid level. The solution is stored in the
+vector of degrees of freedom $u$ (line 26). Afterwards, we will compute
+a local error indicator $\eta$ (lines 78-82) for the solution $u$.
 Based on this information, we will be able to decide which grid elements
 should be marked for refinement (or coarsening) in the next step.
 For this decision, we offer two different strategies: element fraction or error fraction.
@@ -520,7 +520,7 @@ re-applied on the adapted solution vector $u$ (line 104).
 $\eta$ is supposed to be cell-wise constant. Therefore, we setup a grid function space using the $P_0$
 finite element. Since we need to traverse the whole grid once, we can
 simply use the infra\/struture provided by Dune::PDELab::GridOperator.
-All you need to contribute yourself is a local operator (line 49) that
+All you need to contribute yourself is a local operator (line 61) that
 implements the evaluation of the local error indicator.
 It is highly dependent upon the actual differential equation and on your
 choice. A simple example is given in \lstinline{example07_error_indicator.hh}.
@@ -565,7 +565,7 @@ boundaries as an indicator.
 
 \subsubsection*{Adapting the grid and adjusting the solution vector}
 \begin{block}{Function call}
-  \lstinline{adapt_grid( grid, gfs, u );}
+  \lstinline{adapt_grid( grid, gfs, u, p );}
 \end{block}
 
 \begin{tabular}{l|lll}
@@ -574,8 +574,8 @@ boundaries as an indicator.
   grid        & the grid object                                  & Grid    & input+output \\
   gfs         & the grid function space                          & GFS     & input+output \\
   u           & DOF vector containing the solution of the PDE    & U       & input+output \\
+  p           & integration order for solution transfer          & int     & input \\
 \end{tabular}
-
 
 
 
@@ -599,13 +599,15 @@ boundaries as an indicator.
   \frametitle<presentation>{Adaptive Driver}
   \framesubtitle<presentation>{File \texttt{src/course-examples/example07\_adaptivity.hh}}
   \lstinputlisting[basicstyle=\tiny,numbers=left, 
-  numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example07_adaptivity.hh}
+    numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example07_adaptivity.hh}
 \end{frame}
 
 \mode<article>{
+  \vspace{1cm}
 \begin{Lst}[File src/course-examples/example07\_adaptivity.hh] \mbox
   \nopagebreak
-  \lstinputlisting[basicstyle=\scriptsize,numbers=left, 
-  numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example07_adaptivity.hh}
+  \label{lst:ex07_adaptivity}
+  \lstinputlisting[basicstyle=\scriptsize,numbers=left,
+    numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example07_adaptivity.hh}
 \end{Lst}}
 
