@@ -719,7 +719,7 @@ GFS gfs(gv,fem);
 //  define problem parameters
 typedef ConvectionDiffusionProblem<GV,Real> Param;
 Param param;
-typedef Dune::PDELab::BoundaryConditionType_CD<Param> B;
+typedef Dune::PDELab::BCTypeParam_CD<Param> B;
 B b(gv,param);
 typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
 G g(gv,param);
@@ -764,10 +764,10 @@ using the respective smoother.
 solver backend & smoother & linear solver\\\hline
 \lstinline!ISTLBackend_NOVLP_CG_NOPREC<GFS>! & -- & CG\\\hline
 \lstinline!ISTLBackend_NOVLP_CG_Jacobi<GFS>! & Jacobi & CG\\\hline
-\lstinline!ISTLBackend_NOVLP_CG_SSORk<GO,Scalar>! & SSOR & CG\\\hline
+\lstinline!ISTLBackend_NOVLP_CG_SSORk<GO>! & SSOR & CG\\\hline
 \lstinline!ISTLBackend_NOVLP_CG_AMG_SSOR<GO>! & AMG & CG\\\hline
 \lstinline!ISTLBackend_NOVLP_BCGS_NOPREC<GFS>! & -- & BiCGStab\\\hline
-\lstinline!ISTLBackend_NOVLP_BCGS_SSORk<GO,Scalar>! & SSOR & BiCGStab\\\hline
+\lstinline!ISTLBackend_NOVLP_BCGS_SSORk<GO>! & SSOR & BiCGStab\\\hline
 \lstinline!ISTLBackend_NOVLP_BCGS_AMG_SSOR<GO>! & AMG & BiCGStab\\\hline
 \end{tabular}
 \end{center}
@@ -795,7 +795,7 @@ const GV& gv=grid.leafView();
 typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
 FEM fem;
 typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
-CON con;
+CON con(gv);
 typedef Dune::PDELab::ISTLVectorBackend<> VBE;
 typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
 GFS gfs(gv,fem,con);
@@ -809,7 +809,7 @@ Param param;
 \frametitle<presentation>{Nonoverlapping Example Continued}
 \only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
   \begin{lstlisting}
-typedef Dune::PDELab::BoundaryConditionType_CD<Param> B;
+typedef Dune::PDELab::BCTypeParam_CD<Param> B;
 B b(gv,param);
 typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
 G g(gv,param);
@@ -841,9 +841,10 @@ Dune::PDELab::interpolate(g,gfs,x);
 Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
 // 3. Choose a linear solver
-typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GFS> LS;
-LS ls(gfs,5000,1);
+typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_SSORk<GO> LS;
+LS ls(go,5000,3,2);
 ...
 \end{lstlisting}
 
 \end{frame}
+
