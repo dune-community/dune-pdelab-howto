@@ -76,7 +76,7 @@ void driverFEM (Grid& grid,
   // make finite element map
   // note: adaptivity currently relies on finite element map not depending on grid view
   const GV& gv=grid.leafGridView();
-  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,typename Grid::ctype,Real,degree,dim> FEM;
+  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,typename Grid::ctype,Real,degree> FEM;
   FEM fem(gv);
 
   // define problem
