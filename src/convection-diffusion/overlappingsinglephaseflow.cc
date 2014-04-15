@@ -69,7 +69,6 @@ void driver (PROBLEM& problem,
              const GV& gv, const FEM& fem, std::string filename)
 {
   // constants and types and global variables
-  typedef typename GV::Grid::ctype DF;
   typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
   Dune::Timer watch;

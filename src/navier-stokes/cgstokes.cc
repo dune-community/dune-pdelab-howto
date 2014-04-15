@@ -68,11 +68,9 @@ void navierstokes
  V_FEM & vFem, P_FEM & pFem,
  IF & initial_solution )
 {
-  typedef typename GV::Grid::ctype DF;
   static const unsigned int dim = GV::dimension;
 
   typedef double RF;
-  typedef IF InitializationFunction;
 
   Dune::Timer timer;
   std::cout << "=== Initialize:" << timer.elapsed() << std::endl;

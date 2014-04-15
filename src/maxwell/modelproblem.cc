@@ -98,7 +98,6 @@ public:
   typename Traits::StateType 
   g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, const typename Traits::StateType& s) const
   {
-    typename Traits::DomainType xglobal = is.geometry().global(x);
     typename Traits::StateType u(0.0);
     // u[0] = -s[0];
     // u[1] = -s[1];

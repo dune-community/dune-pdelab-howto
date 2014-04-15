@@ -146,7 +146,6 @@ void poisson_driver (const GV& gv, const FEM& fem, std::string filename, int k)
   const int q=2*k; // integration order
 
   // constants and types
-  typedef typename GV::Grid::ctype DF;
   typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
 

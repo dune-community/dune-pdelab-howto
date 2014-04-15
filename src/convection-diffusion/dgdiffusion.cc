@@ -137,7 +137,6 @@ void runDG(
            )
 {
   // coordinate and result type
-  typedef typename GV::Grid::ctype Coord;
   typedef double Real;
   const int dim = GV::Grid::dimension;
 

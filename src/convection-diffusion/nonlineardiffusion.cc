@@ -249,7 +249,6 @@ void parallel_nonoverlapping_Q1 (const GV& gv)
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
-  const int dim = GV::dimension;
   int rank = gv.comm().rank();
 
   typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints<GV> CON;
@@ -318,7 +317,6 @@ void parallel_overlapping_Q1 (const GV& gv)
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
-  const int dim = GV::dimension;
   int rank = gv.comm().rank();
 
   // <<<2>>> Make grid function space

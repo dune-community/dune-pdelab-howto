@@ -86,7 +86,6 @@ void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
             std::string filename, int intorder=1 )
 {
   // constants and types and global variables
-  typedef typename GV::Grid::ctype DF;
   typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
   Dune::Timer watch;
@@ -306,7 +305,6 @@ int main(int argc, char** argv)
       typedef GridType::ctype DF;
       typedef double R;
       const int k=1;
-      const int q=2*k;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
       //driver(problem,gv,fem,"UG3d_P1",q);
@@ -439,7 +437,6 @@ int main(int argc, char** argv)
  
 	  // make finite element map
 	  typedef GridType::ctype DF;
-	  typedef double R;
       const int degree = 1;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;
       FEM fem(gv);

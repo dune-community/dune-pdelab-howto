@@ -194,7 +194,6 @@ void poisson_driver(const GV& gv,
                     const CON& con = CON())
 {
   // constants and types
-  typedef typename GV::Grid::ctype DF;
   typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
 
@@ -756,12 +755,7 @@ int main(int argc, char** argv)
 #ifdef HANGING_NODES_REFINEMENT
       doSomeRandomRefinement<Grid>( grid );
 #endif
-      // get view
-      typedef Grid::LeafGridView GV;
-
       // make finite element map
-      typedef GV::Grid::ctype DF;
-      typedef double R;
       BCTypeParam bctype;
 
 #ifdef HANGING_NODES_REFINEMENT

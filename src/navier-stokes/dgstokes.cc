@@ -259,8 +259,6 @@ int main(int argc, char** argv)
             typedef Dune::YaspGrid<dim>::LeafGridView GV;
             const GV& gv=grid.leafGridView();
 
-            // make finite element map
-            typedef GV::Grid::ctype DF;
             // solve problem
             Dune::dinfo.push(false);
             stokes<GV,double,2,1>(gv,"dgstokes-2D-2-1", method);
@@ -282,8 +280,6 @@ int main(int argc, char** argv)
           typedef Dune::YaspGrid<dim>::LeafGridView GV;
           const GV& gv=grid.leafGridView();
 
-            // make finite element map
-            typedef GV::Grid::ctype DF;
             // solve problem
             stokes<GV,double,2,1>(gv,"dgstokes-2D-3-2", method);
         }

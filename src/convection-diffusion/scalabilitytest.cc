@@ -233,7 +233,6 @@ void runDG ( const GV& gv,
              double alpha )
 {
   // coordinate and result type
-  typedef typename GV::Grid::ctype Coord;
   typedef double Real;
   const int dim = GV::Grid::dimension;
 

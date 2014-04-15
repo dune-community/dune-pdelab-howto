@@ -73,7 +73,6 @@ void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
              const GV& gv, const PFEM& pfem, const VFEM& vfem, std::string filename)
 {
   // types and constants
-  typedef typename GV::Grid::ctype DF;
   typedef double R;
 
   // make a grid function space

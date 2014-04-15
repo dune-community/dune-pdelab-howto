@@ -117,7 +117,6 @@ public:
 template<class GV, class FEM>
 void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool verbose)
 {
-  typedef typename GV::Grid::ctype DF;
   typedef double RF;
   Dune::Timer watch;
 

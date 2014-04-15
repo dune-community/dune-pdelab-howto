@@ -291,7 +291,6 @@ int main(int argc, char **argv)
 {
   // initialize MPI, finalize is done automatically on exit 
   Dune::MPIHelper::instance(argc,argv);
-  typedef double Real;
 
   // start try/catch block to get error messages from dune
   try {

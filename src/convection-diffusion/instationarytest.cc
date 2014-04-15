@@ -40,7 +40,6 @@
 #include<dune/istl/superlu.hh>
 
 #include<dune/pdelab/finiteelementmap/qkfem.hh>
-#include<dune/pdelab/finiteelementmap/p1fem.hh>
 #include<dune/pdelab/constraints/conforming.hh>
 #include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>

@@ -182,7 +182,6 @@ void runDG ( const GV& gv,
              double alpha )
 {
   // coordinate and result type
-  typedef typename GV::Grid::ctype Coord;
   typedef double Real;
   const int dim = GV::Grid::dimension;
 
@@ -262,7 +261,6 @@ template<class GV, class FEM, class PROBLEM, int degree>
 void runFEM (const GV& gv, const FEM& fem, PROBLEM& problem, std::string basename, int level)
 {
   // coordinate and result type
-  typedef typename GV::Grid::ctype Coord;
   typedef double Real;
   const int dim = GV::Grid::dimension;
   std::stringstream fullname;

@@ -129,7 +129,6 @@ int main(int argc, char **argv)
   const unsigned int dim = 2;
   const unsigned int degree = 1;
   const Dune::GeometryType::BasicType elemtype = Dune::GeometryType::cube;
-  const Dune::PDELab::MeshType meshtype = Dune::PDELab::MeshType::conforming;
   const Dune::SolverCategory::Category solvertype = Dune::SolverCategory::overlapping;
   typedef double NumberType;
 
