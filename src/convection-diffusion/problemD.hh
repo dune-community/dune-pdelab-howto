@@ -35,7 +35,7 @@ public:
 		int id = is.index(*it);
         Dune::GeometryType gt = it->geometry().type();
         Dune::FieldVector<DF,dim> localcenter =
-          Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
+          Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
         Dune::FieldVector<DF,dim> globalcenter = it->geometry().global(localcenter);
 		perm[id]=field.eval(globalcenter);
 		mink = std::min(mink,log10(perm[id]));
@@ -99,7 +99,7 @@ public:
 		int id = is.index(*it);
         Dune::GeometryType gt = it->geometry().type();
         Dune::FieldVector<DF,dim> localcenter =
-          Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
+          Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
         Dune::FieldVector<DF,dim> globalcenter = it->geometry().global(localcenter);
 		perm[id]=field.eval(globalcenter);
 		perm[id]=1.0;
