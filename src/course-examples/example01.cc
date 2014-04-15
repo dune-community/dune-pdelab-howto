@@ -1,10 +1,10 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 /** \file
-    
+
     \brief Solve elliptic problem in unconstrained spaces with conforming finite elements
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<math.h>
 #include<iostream>
@@ -24,7 +24,7 @@
 #include<dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
 #endif
-#if HAVE_UG 
+#if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
 #if HAVE_ALUGRID

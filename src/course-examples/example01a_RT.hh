@@ -20,7 +20,7 @@ void example01a_RT (const GV& gv)
   U u(gfs,0.0); // initial value
 
   // <<<4>>> Make grid operator
-  typedef Example01aLocalOperator LOP; 
+  typedef Example01aLocalOperator LOP;
   LOP lop;
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   MBE mbe(7);
