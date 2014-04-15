@@ -184,7 +184,7 @@ int main(int argc, char** argv)
 #ifdef REFINE_STEPWISE
             for (int i = 0; i <= GRID_REFINE; ++i)
             {
-                solve_dg(grid.leafView(), false);
+                solve_dg(grid.leafGridView(), false);
                 grid.globalRefine(1);
             }
 #else
@@ -192,21 +192,21 @@ int main(int argc, char** argv)
 
             // instantiate finite element maps
             typedef Dune::SingleCodimSingleGeomTypeMapper<Grid::LeafGridView, 0> CellMapper;
-            CellMapper cellmapper(grid.leafView());
+            CellMapper cellmapper(grid.leafGridView());
             typedef Dune::PDELab::VariableMonomLocalFiniteElementMap<
                 CellMapper,double,double,2,monom_max_order> FEM;
             FEM fem(cellmapper, 2); // works only for cubes
 
             // set polynomial order per element
             unsigned int range = std::ceil( double(cellmapper.size()) / (monom_max_order-1) );
-            for (Grid::LeafGridView::Codim<0>::Iterator it = grid.leafView().begin<0>(), end = grid.leafView().end<0>();
+            for (Grid::LeafGridView::Codim<0>::Iterator it = grid.leafGridView().begin<0>(), end = grid.leafGridView().end<0>();
                  it != end; ++it)
             {
                 fem.setOrder(*it, 2 + cellmapper.map(*it) / range);
             }
 
             // solve problem :)
-            solve_dg(grid.leafView(),fem,"DG_Yasp_2d",true);
+            solve_dg(grid.leafGridView(),fem,"DG_Yasp_2d",true);
 #endif
         }
 
