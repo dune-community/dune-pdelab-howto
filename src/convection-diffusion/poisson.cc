@@ -767,6 +767,9 @@ int main(int argc, char** argv)
       const int k=1;
       const int q=2*k;
 
+      typedef GV::Grid::ctype DF;
+      typedef double R;
+
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
       typedef Dune::PDELab::HangingNodesConstraintsAssemblers::CubeGridQ1Assembler ConstraintsAssembler;
