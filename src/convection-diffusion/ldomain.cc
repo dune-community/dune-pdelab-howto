@@ -36,7 +36,6 @@
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/pkfem.hh>
-#include<dune/pdelab/finiteelementmap/q1fem.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionfem.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>

@@ -1,8 +1,6 @@
 #ifndef TWOPHASEMFD_HH
 #define TWOPHASEMFD_HH
 
-#include <dune/pdelab/gridoperatorspace/localmatrix.hh>
-#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include <dune/pdelab/localoperator/defaultimp.hh>
 #include <dune/pdelab/localoperator/pattern.hh>
 #include <dune/pdelab/localoperator/flags.hh>
