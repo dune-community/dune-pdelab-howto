@@ -1,9 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief Simple Maxwell problem in 3D
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<math.h>
 #include<iostream>
@@ -23,7 +23,7 @@
 #include<dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
 #endif
-#if HAVE_UG 
+#if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
 #if HAVE_ALUGRID
@@ -74,28 +74,28 @@ public:
   }
 
   //! permittivity
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   eps (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 1.0;
   }
 
   //! permeability
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   mu (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 1.0;
   }
 
   //! permeability
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   sigma (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 0.0;
   }
 
   //! boundary condition value
-  typename Traits::StateType 
+  typename Traits::StateType
   g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, const typename Traits::StateType& s) const
   {
     typename Traits::StateType u(0.0);
@@ -109,7 +109,7 @@ public:
   }
 
   //! right hand side
-  typename Traits::StateType 
+  typename Traits::StateType
   j (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::StateType rhs(0.0);
@@ -117,7 +117,7 @@ public:
   }
 
   //! initial value
-  typename Traits::StateType 
+  typename Traits::StateType
   u0 (const typename Traits::ElementType& e, const typename Traits::DomainType& xin) const
   {
     typedef typename Traits::DomainFieldType DF;
@@ -183,9 +183,9 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   Param param;
 
   // <<<3>>> Make grid operator space
-  typedef Dune::PDELab::DGMaxwellSpatialOperator<Param,FEMDG> LOP; 
+  typedef Dune::PDELab::DGMaxwellSpatialOperator<Param,FEMDG> LOP;
   LOP lop(param);
-  typedef Dune::PDELab::DGMaxwellTemporalOperator<Param,FEMDG> TLOP; 
+  typedef Dune::PDELab::DGMaxwellTemporalOperator<Param,FEMDG> TLOP;
   TLOP tlop(param);
   Dune::PDELab::ExplicitEulerParameter<Real> method1;
   Dune::PDELab::HeunParameter<Real> method2;
@@ -203,7 +203,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   typedef Dune::PDELab::GridOperator
     <GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO0;
   GO0 go0(gfs,cg,gfs,cg,lop,mbe);
- 
+
   typedef Dune::PDELab::GridOperator
     <GFS,GFS,TLOP,MBE,Real,Real,Real,C,C> GO1;
   GO1 go1(gfs,cg,gfs,cg,tlop,mbe);
@@ -343,11 +343,11 @@ int main(int argc, char** argv)
           }
         return 1;
       }
-    
+
     double Tend;
     sscanf(argv[1],"%lg",&Tend);
     double timestep;
-    sscanf(argv[2],"%lg",&timestep); 
+    sscanf(argv[2],"%lg",&timestep);
     std::string grid_file(argv[3]);
     int max_level; sscanf(argv[4],"%d",&max_level);
     int p; sscanf(argv[5],"%d",&p);

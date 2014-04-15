@@ -755,6 +755,9 @@ int main(int argc, char** argv)
 #ifdef HANGING_NODES_REFINEMENT
       doSomeRandomRefinement<Grid>( grid );
 #endif
+      // get view
+      typedef Grid::LeafGridView GV;
+
       // make finite element map
       BCTypeParam bctype;
 

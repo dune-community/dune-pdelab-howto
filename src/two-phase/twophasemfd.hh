@@ -77,7 +77,7 @@ namespace Dune
 
             // define sparsity pattern connecting self and neighbor dofs
             // template<typename LFSU, typename LFSV>
-            // void pattern_skeleton (const LFSU& lfsu_s, const LFSV& lfsv_s, const LFSU& lfsu_n, const LFSV& lfsv_n, 
+            // void pattern_skeleton (const LFSU& lfsu_s, const LFSV& lfsv_s, const LFSU& lfsu_n, const LFSV& lfsv_n,
             //                        LocalSparsityPattern& pattern_sn, LocalSparsityPattern& pattern_ns) const
             // {
             //     // extract subspaces
@@ -452,7 +452,7 @@ namespace Dune
 		  r.accumulate(n_face_space,e,cell.face_areas[e] * data.j_g(ig.intersection(), center, time));
                 else // Dirichlet boundary
 		  r.accumulate(n_face_space,e,-1e-10*data.g_g(ig.intersection(), center, time));
- 
+
                 if (data.bc_l(ig.intersection(), center, time) == 0) // Neumann boundary
 		  r.accumulate(w_face_space,e,cell.face_areas[e] * data.j_l(ig.intersection(), center, time));
                 else // Dirichlet boundary

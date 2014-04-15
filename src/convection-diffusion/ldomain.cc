@@ -3,11 +3,11 @@
 #include <iostream>
 #include <sstream>
 #include "config.h"           // file constructed by ./configure script
-#include <dune/common/parallel/mpihelper.hh> // include mpi helper class 
+#include <dune/common/parallel/mpihelper.hh> // include mpi helper class
 #include <dune/grid/sgrid.hh> // load sgrid definition
 #include <dune/grid/onedgrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
-#if HAVE_UG 
+#if HAVE_UG
 #include <dune/grid/uggrid.hh>
 #endif
 #if HAVE_ALBERTA  // Hint: For ALBERTA to be effective, the macro GRIDDIM must be set in Makefile.am
@@ -90,8 +90,8 @@ void driverFEM (Grid& grid,
   std::vector<int> N;
   std::vector<int> nIterations; // of the linear solver
 
-  // make grid function space 
-  // note: adaptivity relies on leaf grid view object being updated by the grid on adaptation 
+  // make grid function space
+  // note: adaptivity relies on leaf grid view object being updated by the grid on adaptation
   //typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
@@ -145,7 +145,7 @@ void driverFEM (Grid& grid,
       }
       else{
         std::cout << "Solution from coarse grid transferred to refined grid." << std::endl;
-        // plot transferred solution 
+        // plot transferred solution
         DGF pre_udgf(gfs,u);
         Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,0);
         std::stringstream fullname;
@@ -190,11 +190,11 @@ void driverFEM (Grid& grid,
       typename GradDifferenceSquared::Traits::RangeType h1semierrorsquared(0.0);
       Dune::PDELab::integrateGridFunction(graddifferencesquared,h1semierrorsquared,10);
       h1s.push_back(sqrt(h1semierrorsquared));
-      
+
       // compute estimated error
       typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> P0FEM;
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
-      typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,Dune::PDELab::NoConstraints,VBE> P0GFS; 
+      typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,Dune::PDELab::NoConstraints,VBE> P0GFS;
       P0GFS p0gfs(gv,p0fem);
       typedef Dune::PDELab::ConvectionDiffusionFEMResidualEstimator<Problem> ESTLOP;
       ESTLOP estlop(problem);
@@ -236,7 +236,7 @@ void driverFEM (Grid& grid,
       //GRA gra(grid,gfs,ea,proj);
       //typedef Dune::PDELab::GridAdaptor<Grid,GFS,U,Proj> GRA;
       //GRA gra;
-      
+
       // adapt grid
       if (step<maxsteps-1) {
         double alpha(refinementfraction);      // refinement fraction
@@ -254,22 +254,22 @@ void driverFEM (Grid& grid,
     }
 
   // print results
-  std::cout << "" << std::endl; 
-  std::cout << "#Results for polynomial degree " << degree << std::endl; 
+  std::cout << "" << std::endl;
+  std::cout << "#Results for polynomial degree " << degree << std::endl;
   std::cout << "#          N"
-            << "    IT" 
-            << "          l2" 
-            << "      l2rate" 
-            << "      h1semi" 
+            << "    IT"
+            << "          l2"
+            << "      l2rate"
+            << "      h1semi"
             << "  h1semirate"
             << "   estimator"
             << " effectivity" << std::endl;
-  for (std::size_t i=0; i<N.size(); i++) 
+  for (std::size_t i=0; i<N.size(); i++)
     {
       double rate1=0.0;
       if (i>0) rate1=log(l2[i]/l2[i-1])/log(0.5);
       double rate2=0.0;
-      if (i>0) rate2=log(h1s[i]/h1s[i-1])/log(0.5); 
+      if (i>0) rate2=log(h1s[i]/h1s[i-1])/log(0.5);
       std::cout << std::setw(3) << i
                 << std::setw(9) << N[i]
                 << std::setw(6) << nIterations[i]
@@ -281,19 +281,19 @@ void driverFEM (Grid& grid,
                 << std::setw(12) << std::setprecision(4) << std::scientific << ee[i]/(h1s[i])
                 << std::endl;
     }
-  
+
   std::cout << "View results using: \n paraview --data=" << vtu.str() << "_step..vtu" << std::endl;
 
 }
 
 int main(int argc, char **argv)
 {
-  // initialize MPI, finalize is done automatically on exit 
+  // initialize MPI, finalize is done automatically on exit
   Dune::MPIHelper::instance(argc,argv);
 
   // start try/catch block to get error messages from dune
   try {
-    
+
     std::string config_file("ldomain.ini");
     Dune::ParameterTree configuration;
     Dune::ParameterTreeParser parser;
@@ -301,7 +301,7 @@ int main(int argc, char **argv)
       parser.readINITree( config_file, configuration );
     }
     catch(...){
-      std::cerr << "Could not read config file \"" 
+      std::cerr << "Could not read config file \""
                 << config_file << "\"!" << std::endl;
       exit(1);
     }
@@ -330,7 +330,7 @@ int main(int argc, char **argv)
       std::cout << "Conforming refinement on UG grid (simplices)" << std::endl;
       driverFEM<GridType,degree>(grid,configuration);
     }
-    
+
 #endif
 
 #if HAVE_ALBERTA

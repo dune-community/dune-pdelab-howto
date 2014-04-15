@@ -1,9 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief Solve Problems A-F in parallel on overlapping grids using conforming linear finite elements
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -64,7 +64,7 @@
 // set up diffusion problem and solve it
 //===============================================================
 
-template<typename PROBLEM, typename GV, typename FEM> 
+template<typename PROBLEM, typename GV, typename FEM>
 void driver (PROBLEM& problem,
              const GV& gv, const FEM& fem, std::string filename)
 {
@@ -86,7 +86,7 @@ void driver (PROBLEM& problem,
   Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<PROBLEM> bctype(gv,problem);
 
   // make grid operator
-  typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP; 
+  typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP;
   LOP lop(problem);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
@@ -139,7 +139,7 @@ int main(int argc, char** argv)
         if(helper.rank()==0)
           std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
       }
-    
+
     // read command line arguments
     if (argc!=2)
       {
@@ -187,7 +187,7 @@ int main(int argc, char** argv)
         typedef ParameterF<GV,double> PROBLEM;
         PROBLEM problem;
 #endif
-      
+
         typedef Dune::YaspGrid<dim>::ctype DF;
         const int degree = 1;
         typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;

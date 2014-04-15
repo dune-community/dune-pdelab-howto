@@ -1,5 +1,5 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief High-level test with Poisson equation
 */
 #ifdef HAVE_CONFIG_H
@@ -55,7 +55,7 @@ const bool graphics = true;
 
 /*
   With this class you can specify how to distribute the total number of
-  processes to the YASP grid by passing a vector of type 
+  processes to the YASP grid by passing a vector of type
   Dune::FieldVector<int,dim> to the constructor.
 */
 template<int dim, class iTupel>
@@ -80,7 +80,7 @@ public:
 
 
 
-template<class GV> 
+template<class GV>
 void test (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
@@ -91,7 +91,7 @@ void test (const GV& gv)
   // instantiate finite element maps
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
   FEM fem(Dune::GeometryType(Dune::GeometryType::cube,dim)); // works only for cubes
-  
+
   // make function space
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,Dune::PDELab::P0ParallelConstraints,VBE> GFS;
@@ -174,19 +174,19 @@ public:
   }
 
   //! sink term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 0.0;
   }
 
   //! source term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
     typename Traits::RangeFieldType norm = xglobal.two_norm2();
-    return (2.0*GV::dimension-4.0*norm)*exp(-norm); 
+    return (2.0*GV::dimension-4.0*norm)*exp(-norm);
   }
 
   //! boundary condition type function
@@ -197,7 +197,7 @@ public:
   }
 
   //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
@@ -206,14 +206,14 @@ public:
   }
 
   //! Neumann boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
   }
 
   //! outflow boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
@@ -223,13 +223,13 @@ public:
 
 //! solve problem with DG method
 template<class GV, class FEM, class PROBLEM, int degree, int blocksize>
-void runDG ( const GV& gv, 
-             const FEM& fem, 
+void runDG ( const GV& gv,
+             const FEM& fem,
              PROBLEM& problem,
-             std::string basename, 
-             int level, 
-             std::string method, 
-             std::string weights, 
+             std::string basename,
+             int level,
+             std::string method,
+             std::string weights,
              double alpha )
 {
   // coordinate and result type
@@ -239,7 +239,7 @@ void runDG ( const GV& gv,
   std::stringstream fullname;
   fullname << basename << "_" << method << "_w" << weights << "_k" << degree << "_dim" << dim << "_level" << level;
 
-  // make grid function space 
+  // make grid function space
   typedef Dune::PDELab::P0ParallelConstraints CON;
   const Dune::PDELab::ISTLParameters::Blocking blocking
     = Dune::PDELab::ISTLParameters::static_blocking;
@@ -349,11 +349,11 @@ int main(int argc, char** argv)
       typedef YaspPartition<dim,Dune::FieldVector<int,dim>> YP;
       YP* yp = (YP*) Dune::YaspGrid<dim>::defaultLoadbalancer();
       if( px*py*pz==0 ){
-        // If px,py,pz were not specified choose the default load balancer        
+        // If px,py,pz were not specified choose the default load balancer
         if( helper.rank() == 0 )
           std::cout << "Using default partitioning of YASP." << std::endl;
       }
-      
+
       else if( px*py*pz != helper.size() ){
         // If px*py*pz is not equal to the available number of processors
         // wrong input, stop and output warning!
@@ -364,8 +364,8 @@ int main(int argc, char** argv)
 
       else {
         Dune::FieldVector<int,dim> yasppartitions;
-        yasppartitions[0] = px; 
-        yasppartitions[1] = py; 
+        yasppartitions[0] = px;
+        yasppartitions[1] = py;
         yasppartitions[2] = pz;
         yp = new YP(yasppartitions);
         if( helper.rank() == 0 )

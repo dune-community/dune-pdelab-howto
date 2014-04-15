@@ -1,9 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief Solve Laplace equation with cell-centered finite volume method
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -53,7 +53,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G<GV,RF> > BaseT;
 
   G (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     typename Traits::DomainType center;
@@ -75,7 +75,7 @@ public:
 				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
 				   ) const
   {
-	
+
     //Dune::FieldVector<typename I::ctype, I::dimension>
     //  xg = intersection.geometry().global( coord );
     return true;  // Dirichlet b.c. on all boundaries
@@ -83,7 +83,7 @@ public:
 };
 
 
-template<class GV> 
+template<class GV>
 void test (const GV& gv, std::string filename )
 {
   typedef typename GV::Grid::ctype DF;
@@ -94,7 +94,7 @@ void test (const GV& gv, std::string filename )
   // instantiate finite element maps
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
   FEM fem(Dune::GeometryType(Dune::GeometryType::cube,dim)); // works only for cubes
-  
+
   // make function space
 #ifdef USE_EIGEN
   typedef Dune::PDELab::EigenVectorBackend VBE;
@@ -146,11 +146,11 @@ void test (const GV& gv, std::string filename )
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
   SLP slp(go,ls,x,1e-12);
   slp.apply();
-  
+
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   DGF dgf(gfs,x);
-  
+
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
@@ -167,8 +167,8 @@ int main(int argc, char** argv)
 #ifdef USE_EIGEN
     basename += "_eigen";
 #endif
-    
-    
+
+
     // 2D
     if(helper.size()==1){
       // make grid
@@ -178,7 +178,7 @@ int main(int argc, char** argv)
       std::bitset<dim> B(false);
       Dune::YaspGrid<dim> grid(L,N,B,0);
       grid.globalRefine(6);
-      
+
       // solve problem :)
       test(grid.leafGridView(),basename+"_yasp2d");
     }
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
     // UG Q1 2D test
 #if HAVE_UG
     if(helper.size()==1){
-      // make grid 
+      // make grid
       UGUnitSquareQ grid(1000);
       grid.globalRefine(6);
 
@@ -210,4 +210,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}

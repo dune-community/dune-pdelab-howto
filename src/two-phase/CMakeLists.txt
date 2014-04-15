@@ -11,7 +11,7 @@ if(SUPERLU_FOUND)
 set(SUPERLUPROGRAMS  dnaplmfd)
 endif(SUPERLU_FOUND )
 
-set(noinst_PROGRAMS  ${SUPERLUPROGRAMS} 
+set(noinst_PROGRAMS  ${SUPERLUPROGRAMS}
         dnaplfv)
 
 set(noinst_HEADERS  twophasemfd.hh)

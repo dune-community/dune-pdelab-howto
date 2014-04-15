@@ -1,9 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief Nonlinear diffusion equation solved in sequential and parallel (overlapping and nonoverlapping) using linear elements
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<math.h>
 #include<iostream>
@@ -56,32 +56,32 @@
 
 //! base class for parameter class
 template<typename GV, typename RF>
-class ConvectionDiffusionProblem : 
-  public Dune::PDELab::ConvectionDiffusionParameterInterface<Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF>, 
+class ConvectionDiffusionProblem :
+  public Dune::PDELab::ConvectionDiffusionParameterInterface<Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF>,
                                                              ConvectionDiffusionProblem<GV,RF> >
 {
 public:
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
   //! source/reaction term
-  typename Traits::RangeFieldType 
-  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
      typename Traits::RangeFieldType u) const
   {
     return -1.0;
   }
 
   //! nonlinearity under gradient
-  typename Traits::RangeFieldType 
-  w (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  w (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
      typename Traits::RangeFieldType u) const
   {
     return u;
   }
 
   //! nonlinear scaling of diffusion tensor
-  typename Traits::RangeFieldType 
-  v (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  v (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
      typename Traits::RangeFieldType u) const
   {
     return 1.0;
@@ -100,7 +100,7 @@ public:
 
   //! nonlinear flux vector
   typename Traits::RangeType
-  q (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  q (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
      typename Traits::RangeFieldType u) const
   {
     typename Traits::RangeType flux;
@@ -129,7 +129,7 @@ public:
   }
 
   //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::RangeType global = e.geometry().global(x);
@@ -144,7 +144,7 @@ public:
   //! Neumann boundary condition
   // Good: The dependence on u allows us to implement Robin type boundary conditions.
   // Bad: This interface cannot be used for mixed finite elements where the flux is the essential b.c.
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   j (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
      typename Traits::RangeFieldType u) const
   {
@@ -189,11 +189,11 @@ void sequential (const GV& gv)
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
   Dune::PDELab::constraints( bctype, gfs, cg );
-  std::cout << "constrained dofs=" << cg.size() 
+  std::cout << "constrained dofs=" << cg.size()
             << " of " << gfs.globalSize() << std::endl;
 
   // <<<4>>> Make grid operator
-  typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
+  typedef Dune::PDELab::ConvectionDiffusion<Param> LOP;
   LOP lop(param,8);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   MBE mbe(27); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
@@ -213,7 +213,7 @@ void sequential (const GV& gv)
     vtkwriter.write("nonlineardiffusion_initial_guess_Q2",Dune::VTK::ascii);
   }
 
-  // <<<6>>> Make a linear solver 
+  // <<<6>>> Make a linear solver
 #if HAVE_SUPERLU
   typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
   LS ls(false);
@@ -274,11 +274,11 @@ void parallel_nonoverlapping_Q1 (const GV& gv)
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
   Dune::PDELab::constraints( bctype, gfs, cg );
-  if (rank==0) std::cout << "/" << gv.comm().rank() << "/ " << "constrained dofs=" << cg.size() 
+  if (rank==0) std::cout << "/" << gv.comm().rank() << "/ " << "constrained dofs=" << cg.size()
                          << " of " << gfs.globalSize() << std::endl;
 
   // <<<4>>> Make grid operator
-  typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
+  typedef Dune::PDELab::ConvectionDiffusion<Param> LOP;
   LOP lop(param,2);
   typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C,true> GO;
@@ -290,7 +290,7 @@ void parallel_nonoverlapping_Q1 (const GV& gv)
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
-  // <<<6>>> Make a linear solver 
+  // <<<6>>> Make a linear solver
   typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_SSORk<GO> LS;
   LS ls (go,5000,3,2);
   //typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GFS> LS;
@@ -334,16 +334,16 @@ void parallel_overlapping_Q1 (const GV& gv)
   Dune::PDELab::BCTypeParam_CD<Param> bctype(gv,param);
   typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
   G g(gv,param);
-  
+
   // <<<3>>> Compute constrained space
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
   Dune::PDELab::constraints( bctype, gfs, cg );
-  if (rank==0) std::cout << "/" << gv.comm().rank() << "/ " << "constrained dofs=" << cg.size() 
+  if (rank==0) std::cout << "/" << gv.comm().rank() << "/ " << "constrained dofs=" << cg.size()
                          << " of " << gfs.globalSize() << std::endl;
 
   // <<<4>>> Make grid operator
-  typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
+  typedef Dune::PDELab::ConvectionDiffusion<Param> LOP;
   LOP lop(param,2);
   typedef Dune::PDELab::ISTLMatrixBackend MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,C,C> GO;
@@ -355,7 +355,7 @@ void parallel_overlapping_Q1 (const GV& gv)
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
 
-  // <<<6>>> Make a linear solver 
+  // <<<6>>> Make a linear solver
 #if HAVE_SUPERLU
   typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SuperLU<GFS,C> LS;
   LS ls(gfs,cg,5000,1);

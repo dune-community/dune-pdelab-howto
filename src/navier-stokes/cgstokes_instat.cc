@@ -1,8 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 
-/** \file 
+/** \file
 
-    \brief Example applications of the local operator TaylorHoodNavierStokesJacobian (instationary case). 
+    \brief Example applications of the local operator TaylorHoodNavierStokesJacobian (instationary case).
 
     This file provides examples applications of Navier-Stokes flow in
     2- and 3-dimensional tubes with and without obstacles. An L-shape
@@ -11,7 +11,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -67,14 +67,14 @@
 // The driver for all examples
 //===============================================================
 
-template<int q, typename GV, typename V_FEM, typename P_FEM, typename IF, typename PRM> 
-void navierstokes 
+template<int q, typename GV, typename V_FEM, typename P_FEM, typename IF, typename PRM>
+void navierstokes
 (
- const GV& gv, 
- std::string filename, 
+ const GV& gv,
+ std::string filename,
  const PRM & parameters,
  const Dune::ParameterTree parser,
- V_FEM & vFem, P_FEM & pFem, 
+ V_FEM & vFem, P_FEM & pFem,
  IF & initial_solution)
 {
   static const unsigned int dim = GV::dimension;
@@ -131,7 +131,7 @@ void navierstokes
   // Make grid function operator
   typedef Dune::PDELab::TaylorHoodNavierStokes<PRM> LOP;
   LOP lop(parameters);
-  typedef Dune::PDELab::NavierStokesMass<PRM> MLOP; 
+  typedef Dune::PDELab::NavierStokesMass<PRM> MLOP;
   MLOP mlop(parameters,q);
 
   Dune::PDELab::FractionalStepParameter<RF> method;
@@ -251,7 +251,7 @@ void navierstokes
   PDGF pdgf(pressureSubGfs,x);
   typename PDGF::Traits::RangeType l1norm(0);
   Dune::PDELab::integrateGridFunction(pdgf,l1norm,q);
-  std::cout << std::setw(12) << std::setprecision(7) << std::scientific 
+  std::cout << std::setw(12) << std::setprecision(7) << std::scientific
             << "L1 norm: " <<  l1norm << std::endl;
 
 
@@ -275,14 +275,14 @@ int main(int argc, char** argv)
     std::string example_switch;
     if(argc != 2){
       std::cout << std::endl << "PDELab Stokes Examples" << std::endl
-                << "----------------------" << std::endl << std::endl 
+                << "----------------------" << std::endl << std::endl
                 << "Call with command line parameter to execute examples:" << std::endl << std::endl
                 << "              Setup                      | Parameter" << std::endl
-                << "-----------------------------------------------------" << std::endl 
+                << "-----------------------------------------------------" << std::endl
                 << "Turbulence Tube  2D - UG - P2/P1         :   TU2" << std::endl
                 << "L-Shape Domain   2D - UG - P2/P1         :   LU2" << std::endl
-                << std::endl << std::endl 
-                << "You might also want to take a look at the configuration file \"cgstokes_instat.ini\"." 
+                << std::endl << std::endl
+                << "You might also want to take a look at the configuration file \"cgstokes_instat.ini\"."
                 << std::endl << std::endl;
       exit(1);
     }
@@ -292,7 +292,7 @@ int main(int argc, char** argv)
     // Initialize Navier Stokes parameter class from file
     Dune::ParameterTree config_parser;
     const std::string config_filename("cgstokes_instat.ini");
-    std::cout << "Reading configuration file \""<< config_filename 
+    std::cout << "Reading configuration file \""<< config_filename
               << "\"" << std::endl;
     try{
       Dune::ParameterTreeParser::readINITree(config_filename,config_parser);
@@ -326,7 +326,7 @@ int main(int argc, char** argv)
       // get view
       typedef GridType::LeafGridView GV;
       const GV& gv=grid.leafGridView();
- 
+
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
@@ -340,7 +340,7 @@ int main(int argc, char** argv)
       typedef TU_Velocity<GV,RF,2> InitialVelocity;
 
       typedef ZeroFunction InitialPressure;
-      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
+      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
 
       ZeroFunction zero_function(gv);
@@ -369,7 +369,7 @@ int main(int argc, char** argv)
       LOPParameters parameters
         (config_parser.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
-  
+
       // solve problem
       navierstokes<q>
         (gv,"turbtube_ug_P2P1_2d", parameters, config_parser, vFem, pFem, initial_solution);
@@ -397,7 +397,7 @@ int main(int argc, char** argv)
       // get view
       typedef GridType::LeafGridView GV;
       const GV& gv=grid.leafGridView();
- 
+
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
@@ -410,7 +410,7 @@ int main(int argc, char** argv)
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
       typedef LU_Velocity<GV,RF,2> InitialVelocity;
       typedef ZeroFunction InitialPressure;
-      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
+      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
 
       ZeroFunction zero_function(gv);
@@ -438,7 +438,7 @@ int main(int argc, char** argv)
       LOPParameters parameters
         (config_parser.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
-  
+
       // solve problem
       navierstokes<q>
         (gv,"lshape_ug_P2P1_2d", parameters, config_parser, vFem, pFem, initial_solution);

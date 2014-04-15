@@ -1,5 +1,5 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief Acoustic wave propagation in a simple 2D cavity
 
     Example 4 from "L. Krivodonova, J. Xin, J.-F. Remacle, N. Chevaugeon, J.E. Flaherty:
@@ -7,7 +7,7 @@
     conservation laws. Applied Numerical Mathematics, 48, 323-338, 2004.
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<math.h>
 #include<iostream>
@@ -27,7 +27,7 @@
 #include<dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
 #endif
-#if HAVE_UG 
+#if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
 #if HAVE_ALUGRID
@@ -79,24 +79,24 @@ public:
   }
 
   //! speed of sound
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 340.0;
   }
 
   //! Dirichlet boundary condition value
-  typename Traits::StateType 
+  typename Traits::StateType
   g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, const typename Traits::StateType& s) const
   {
     typename Traits::DomainType xglobal = is.geometry().global(x);
-    if (xglobal[0]<1e-6) 
+    if (xglobal[0]<1e-6)
       {
         typename Traits::StateType u(0.0);
         u[1] = 1.224*(1+0.5*sin(2*pi*1500.0*time));
         return u;
       }
-    if (xglobal[0]>1.0-1e-6) 
+    if (xglobal[0]>1.0-1e-6)
       {
         typename Traits::StateType u(0.0);
         return u;
@@ -107,7 +107,7 @@ public:
   }
 
   //! right hand side
-  typename Traits::StateType 
+  typename Traits::StateType
   q (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::StateType rhs(0.0);
@@ -115,7 +115,7 @@ public:
   }
 
   //! initial value
-  typename Traits::StateType 
+  typename Traits::StateType
   u0 (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::StateType u(0.0);
@@ -146,7 +146,7 @@ public:
   }
 
   //! speed of sound
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
@@ -156,7 +156,7 @@ public:
   }
 
   //! Dirichlet boundary condition value
-  typename Traits::StateType 
+  typename Traits::StateType
   g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, const typename Traits::StateType& s) const
   {
     typename Traits::StateType u(0.0);
@@ -167,7 +167,7 @@ public:
   }
 
   //! right hand side
-  typename Traits::StateType 
+  typename Traits::StateType
   q (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::StateType rhs(0.0);
@@ -175,7 +175,7 @@ public:
   }
 
   //! initial value
-  typename Traits::StateType 
+  typename Traits::StateType
   u0 (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
@@ -235,9 +235,9 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   Param param;
 
   // <<<4>>> Make grid operator
-  typedef Dune::PDELab::DGLinearAcousticsSpatialOperator<Param,FEMDG> LOP; 
+  typedef Dune::PDELab::DGLinearAcousticsSpatialOperator<Param,FEMDG> LOP;
   LOP lop(param);
-  typedef Dune::PDELab::DGLinearAcousticsTemporalOperator<Param,FEMDG> TLOP; 
+  typedef Dune::PDELab::DGLinearAcousticsTemporalOperator<Param,FEMDG> TLOP;
   TLOP tlop(param);
   Dune::PDELab::ExplicitEulerParameter<Real> method1;
   Dune::PDELab::HeunParameter<Real> method2;
@@ -354,11 +354,11 @@ int main(int argc, char** argv)
           }
         return 1;
       }
-    
+
     double Tend;
     sscanf(argv[1],"%lg",&Tend);
     double timestep;
-    sscanf(argv[2],"%lg",&timestep); 
+    sscanf(argv[2],"%lg",&timestep);
     std::string grid_file(argv[3]);
     int max_level; sscanf(argv[4],"%d",&max_level);
     int p; sscanf(argv[5],"%d",&p);

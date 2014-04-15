@@ -8,7 +8,7 @@
 template<typename GV, typename RF>
 class k_D
   : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<GV,RF,
-      1,Dune::FieldVector<RF,1> >,
+                                                                           1,Dune::FieldVector<RF,1> >,
       k_D<GV,RF> >
 {
 public:
@@ -18,48 +18,48 @@ public:
   typedef Dune::PDELab::GridFunctionBase<Traits,k_D<GV,RF> > BaseT;
 
   k_D (const GV& gv_, Dune::FieldVector<double,GV::dimension> correlation_length,
-	   double variance = 1.0, double mean = 0.0, long modes = 1000, long seed = -1083) 
-	: gv(gv_), is(gv.indexSet()), perm(is.size(0))
+     double variance = 1.0, double mean = 0.0, long modes = 1000, long seed = -1083)
+  : gv(gv_), is(gv.indexSet()), perm(is.size(0))
   {
-	typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-	typedef typename Traits::DomainFieldType DF;
-	const int dim = GV::dimension;
-	double mink=1E100;
-	double maxk=-1E100;
+  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
+  typedef typename Traits::DomainFieldType DF;
+  const int dim = GV::dimension;
+  double mink=1E100;
+  double maxk=-1E100;
 
-	
-	EberhardPermeabilityGenerator<GV::dimension> field(correlation_length,variance,mean,modes,seed);
 
-	for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
-	  {
-		int id = is.index(*it);
+  EberhardPermeabilityGenerator<GV::dimension> field(correlation_length,variance,mean,modes,seed);
+
+  for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
+    {
+    int id = is.index(*it);
         Dune::GeometryType gt = it->geometry().type();
         Dune::FieldVector<DF,dim> localcenter =
           Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
         Dune::FieldVector<DF,dim> globalcenter = it->geometry().global(localcenter);
-		perm[id]=field.eval(globalcenter);
-		mink = std::min(mink,log10(perm[id]));
-		maxk = std::max(maxk,log10(perm[id]));
-	  }
-	std::cout << "log10(mink)=" << mink << " log10(maxk)=" << maxk << std::endl;
+    perm[id]=field.eval(globalcenter);
+    mink = std::min(mink,log10(perm[id]));
+    maxk = std::max(maxk,log10(perm[id]));
+    }
+  std::cout << "log10(mink)=" << mink << " log10(maxk)=" << maxk << std::endl;
   }
 
   k_D ( const GV& gv_, const std::vector<RF>& perm_)
     : gv(gv_), is(gv.indexSet()), perm(perm_)
   {}
-    
-  inline void evaluate (const typename Traits::ElementType& e, 
+
+  inline void evaluate (const typename Traits::ElementType& e,
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  { 
-	y = perm[is.index(e)];
+  {
+  y = perm[is.index(e)];
   }
-  
+
   inline const typename Traits::GridViewType& getGridView () const
   {
     return gv;
   }
-  
+
 private:
   const GV& gv;
   const typename GV::IndexSet& is;
@@ -82,49 +82,49 @@ public:
       K_D<GV,RF> > BaseT;
 
   K_D (const GV& gv_, Dune::FieldVector<double,GV::dimension> correlation_length,
-	   double variance = 1.0, double mean = 0.0, long modes = 1000, long seed = -1083) 
-	: gv(gv_), is(gv.indexSet()), perm(is.size(0))
+     double variance = 1.0, double mean = 0.0, long modes = 1000, long seed = -1083)
+  : gv(gv_), is(gv.indexSet()), perm(is.size(0))
   {
-	typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-	typedef typename Traits::DomainFieldType DF;
-	const int dim = GV::dimension;
-	double mink=1E100;
-	double maxk=-1E100;
+  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
+  typedef typename Traits::DomainFieldType DF;
+  const int dim = GV::dimension;
+  double mink=1E100;
+  double maxk=-1E100;
 
-	
-	EberhardPermeabilityGenerator<GV::dimension> field(correlation_length,variance,mean,modes,seed);
 
-	for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
-	  {
-		int id = is.index(*it);
+  EberhardPermeabilityGenerator<GV::dimension> field(correlation_length,variance,mean,modes,seed);
+
+  for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
+    {
+    int id = is.index(*it);
         Dune::GeometryType gt = it->geometry().type();
         Dune::FieldVector<DF,dim> localcenter =
           Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
         Dune::FieldVector<DF,dim> globalcenter = it->geometry().global(localcenter);
-		perm[id]=field.eval(globalcenter);
-		perm[id]=1.0;
-		mink = std::min(mink,log10(perm[id]));
-		maxk = std::max(maxk,log10(perm[id]));
-	  }
-	std::cout << "log10(mink)=" << mink << " log10(maxk)=" << maxk << std::endl;
+    perm[id]=field.eval(globalcenter);
+    perm[id]=1.0;
+    mink = std::min(mink,log10(perm[id]));
+    maxk = std::max(maxk,log10(perm[id]));
+    }
+  std::cout << "log10(mink)=" << mink << " log10(maxk)=" << maxk << std::endl;
   }
 
   K_D ( const GV& gv_, const std::vector<RF>& perm_)
     : gv(gv_), is(gv.indexSet()), perm(perm_)
   {}
-    
-  inline void evaluate (const typename Traits::ElementType& e, 
+
+  inline void evaluate (const typename Traits::ElementType& e,
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  { 
+  {
     for (int i=0; i<GV::dimension; i++)
       for (int j=0; j<GV::dimension; j++)
         if (i==j)
-		  y[i][i] = perm[is.index(e)];
+      y[i][i] = perm[is.index(e)];
         else
           y[i][j] = 0.0;
   }
-  
+
   inline const typename Traits::GridViewType& getGridView () const
   {
     return gv;
@@ -134,7 +134,7 @@ public:
   {
     return perm[is.index(*e)];
   }
-  
+
 private:
   const GV& gv;
   const typename GV::IndexSet& is;
@@ -153,8 +153,8 @@ public:
 
   A0_D (const GV& gv) : BaseT(gv) {}
 
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
-							  typename Traits::RangeType& y) const
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
+                typename Traits::RangeType& y) const
   {
     y = 0.0;
   }
@@ -171,49 +171,49 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,F_D<GV,RF> > BaseT;
 
   F_D (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
-							  typename Traits::RangeType& y) const
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
+                typename Traits::RangeType& y) const
   {
-	y = 0; 
+  y = 0;
   }
 };
 
 
-// constraints parameter class for selecting boundary condition type 
+// constraints parameter class for selecting boundary condition type
 class BCTypeParam_D
   : public Dune::PDELab::FluxConstraintsParameters,
-	public Dune::PDELab::DirichletConstraintsParameters
-	/*@\label{bcp:base}@*/
+  public Dune::PDELab::DirichletConstraintsParameters
+  /*@\label{bcp:base}@*/
 {
 public:
 
   template<typename I>
   bool isNeumann(
-				   const I & intersection,   /*@\label{bcp:name}@*/
-				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-				   ) const
+           const I & intersection,   /*@\label{bcp:name}@*/
+           const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+           ) const
   {
     Dune::FieldVector<typename I::ctype, I::dimension>
       xg = intersection.geometry().global( coord );
     if (xg[0]<1E-6 || xg[0]>1.0-1E-6)
-	  return false;  // Dirichlet
-	else
-	  return true;
+    return false;  // Dirichlet
+  else
+    return true;
   }
 
   template<typename I>
   bool isDirichlet(
-				   const I & intersection,   /*@\label{bcp:name}@*/
-				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-				   ) const
+           const I & intersection,   /*@\label{bcp:name}@*/
+           const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+           ) const
   {
-	return !isNeumann( intersection, coord );
+  return !isNeumann( intersection, coord );
   }
 
 };
 
 
-// boundary grid function selecting boundary conditions 
+// boundary grid function selecting boundary conditions
 template<typename GV>
 class B_D
   : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::
@@ -235,16 +235,16 @@ public:
   B_D (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
+  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig,
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  {  
-	Dune::FieldVector<typename GV::Grid::ctype,GV::dimension> 
+  {
+  Dune::FieldVector<typename GV::Grid::ctype,GV::dimension>
       xg = ig.geometry().global(x);
 
     if (xg[0]<1E-6 || xg[0]>1.0-1E-6)
-	  y = BC::Dirichlet;
-	else
+    y = BC::Dirichlet;
+  else
       y = BC::Neumann;
   }
 
@@ -266,12 +266,12 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G_D<GV,RF> > BaseT;
 
   G_D (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
-							  typename Traits::RangeType& y) const
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
+                typename Traits::RangeType& y) const
   {
-	y = 0;
+  y = 0;
     if (x[0]<1E-6)
-	  y = 1;
+    y = 1;
   }
 };
 
@@ -286,11 +286,11 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,J_D<GV,RF> > BaseT;
 
   J_D (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
-							  typename Traits::RangeType& y) const
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
+                typename Traits::RangeType& y) const
   {
-	y = 0;
-	return;
+  y = 0;
+  return;
   }
 };
 
@@ -298,16 +298,16 @@ public:
 template<typename GV, typename RF>
 class V_D
   : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,GV::dimension>,
-													  V_D<GV,RF> >
+                            V_D<GV,RF> >
 {
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,GV::dimension> Traits;
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,V_D<GV,RF> > BaseT;
 
   V_D (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
-							  typename Traits::RangeType& y) const
-  {  
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
+                typename Traits::RangeType& y) const
+  {
     y = 0.0;
   }
 };

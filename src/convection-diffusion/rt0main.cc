@@ -64,11 +64,11 @@ public:
 };
 
 //===============================================================
-// Problem setup and solution 
+// Problem setup and solution
 //===============================================================
 
-template<typename BCType, typename GType, typename KType, typename A0Type, typename FType, typename VType, 
-         typename GV, typename PFEM, typename VFEM> 
+template<typename BCType, typename GType, typename KType, typename A0Type, typename FType, typename VType,
+         typename GV, typename PFEM, typename VFEM>
 void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
              const GV& gv, const PFEM& pfem, const VFEM& vfem, std::string filename)
 {

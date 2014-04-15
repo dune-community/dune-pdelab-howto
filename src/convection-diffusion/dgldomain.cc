@@ -3,11 +3,11 @@
 #include <iostream>
 #include <sstream>
 #include "config.h"           // file constructed by ./configure script
-#include <dune/common/parallel/mpihelper.hh> // include mpi helper class 
+#include <dune/common/parallel/mpihelper.hh> // include mpi helper class
 #include <dune/grid/sgrid.hh> // load sgrid definition
 #include <dune/grid/onedgrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
-#if HAVE_UG 
+#if HAVE_UG
 #include <dune/grid/uggrid.hh>
 #endif
 #if HAVE_ALBERTA
@@ -57,7 +57,7 @@
 template<typename Grid,typename FEMDG,int degree,int blocksize>
 void driverDG ( Grid& grid,
                 const Dune::GeometryType& gt,
-                const FEMDG& femdg, 
+                const FEMDG& femdg,
                 const Dune::ParameterTree& configuration )
 {
 
@@ -79,7 +79,7 @@ void driverDG ( Grid& grid,
   typedef ReentrantCornerProblem<GV,Real> Problem;
   Problem problem;
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> ESOL;
-  
+
   // some arrays to store results
   std::vector<double> l2;
   std::vector<double> h1s;
@@ -87,7 +87,7 @@ void driverDG ( Grid& grid,
   std::vector<int> N;
   std::vector<int> nIterations; // of the linear solver
 
-  // make grid function space 
+  // make grid function space
   // note: adaptivity relies on leaf grid view object being updated by the grid on adaptation
   typedef Dune::PDELab::NoConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<> VBE1;
@@ -99,18 +99,18 @@ void driverDG ( Grid& grid,
 
   // some local operator parameters
   double alpha = 2.0;
-  Dune::PDELab::ConvectionDiffusionDGMethod::Type m 
+  Dune::PDELab::ConvectionDiffusionDGMethod::Type m
     = Dune::PDELab::ConvectionDiffusionDGMethod::SIPG;
-  Dune::PDELab::ConvectionDiffusionDGWeights::Type w 
+  Dune::PDELab::ConvectionDiffusionDGWeights::Type w
     = Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn;
 
-  
+
   // make a degree of freedom vector;
   typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
   U u(gfs,0.0);
   typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
 
-  
+
   int maxsteps = configuration.get<int>("adaptivity.maxsteps");
   bool bReplay = configuration.get<int>("adaptivity.replay");
   double TOL = configuration.get<double>("adaptivity.TOL");
@@ -232,7 +232,7 @@ void driverDG ( Grid& grid,
 
       // error control
       if (estimated_error <= TOL) break;
-      
+
       // adapt grid
       if (step<maxsteps-1) {
         double alpha_r(refinementfraction);
@@ -251,23 +251,23 @@ void driverDG ( Grid& grid,
     }
 
   // print results
-  std::cout << "Results for DG polynomial degree " << degree 
+  std::cout << "Results for DG polynomial degree " << degree
             << " with blocksize " << blocksize
-            << std::endl; 
+            << std::endl;
   std::cout << "           N"
-            << "    IT" 
-            << "          l2" 
-            << "      l2rate" 
-            << "      h1semi" 
+            << "    IT"
+            << "          l2"
+            << "      l2rate"
+            << "      h1semi"
             << "  h1semirate"
             << "   estimator"
             << " effectivity" << std::endl;
-  for (std::size_t i=0; i<N.size(); i++) 
+  for (std::size_t i=0; i<N.size(); i++)
     {
       double rate1=0.0;
       if (i>0) rate1=log(l2[i]/l2[i-1])/log(0.5);
       double rate2=0.0;
-      if (i>0) rate2=log(h1s[i]/h1s[i-1])/log(0.5); 
+      if (i>0) rate2=log(h1s[i]/h1s[i-1])/log(0.5);
       std::cout << std::setw(3) << i
                 << std::setw(9) << N[i]
                 << std::setw(6) << nIterations[i]
@@ -286,12 +286,12 @@ void driverDG ( Grid& grid,
 
 int main(int argc, char **argv)
 {
-  // initialize MPI, finalize is done automatically on exit 
+  // initialize MPI, finalize is done automatically on exit
   Dune::MPIHelper::instance(argc,argv);
 
   // start try/catch block to get error messages from dune
   try {
-    
+
     std::string config_file("ldomain.ini");
     Dune::ParameterTree configuration;
     Dune::ParameterTreeParser parser;
@@ -299,18 +299,18 @@ int main(int argc, char **argv)
       parser.readINITree( config_file, configuration );
     }
     catch(...){
-      std::cerr << "Could not read config file \"" 
+      std::cerr << "Could not read config file \""
                 << config_file << "\"!" << std::endl;
       exit(1);
     }
 
     // make finite element map
-    // note: adaptivity currently relies on finite element map 
+    // note: adaptivity currently relies on finite element map
     // not depending on grid view
 
     // Hint: Set the polynomial degree here
     const int degree=1;
-    
+
     // UG version
 #if HAVE_UG
     if( "ug"==configuration.get<std::string>("grid.manager") ) {

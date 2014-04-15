@@ -1,8 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 
-/** \file 
+/** \file
 
-    \brief Example applications of the local operator TaylorHoodNavierStokesJacobian (stationary case). 
+    \brief Example applications of the local operator TaylorHoodNavierStokesJacobian (stationary case).
 
     This file provides examples applications of Navier-Stokes flow in
     2- and 3-dimensional tubes with and without obstacles. An L-shape
@@ -11,7 +11,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -60,10 +60,10 @@
 //===============================================================
 
 template<typename GV, typename V_FEM, typename P_FEM, typename IF, typename PRM, int q>
-void navierstokes 
+void navierstokes
 (
- const GV& gv, 
- std::string filename, 
+ const GV& gv,
+ std::string filename,
  const PRM & parameters,
  V_FEM & vFem, P_FEM & pFem,
  IF & initial_solution )
@@ -206,18 +206,18 @@ int main(int argc, char** argv)
     std::string example_switch;
     if(argc != 2){
       std::cout << std::endl << "PDELab Stokes Examples" << std::endl
-                << "----------------------" << std::endl << std::endl 
+                << "----------------------" << std::endl << std::endl
                 << "Call with command line parameter to execute examples:" << std::endl << std::endl
                 << "              Setup                      | Parameter" << std::endl
-                << "-----------------------------------------------------" << std::endl 
+                << "-----------------------------------------------------" << std::endl
                 << "Hagen-Pouseuille 2D - YaspGrid   - Q2/Q1 :   HY2" << std::endl
                 << "Hagen-Pouseuille 2D - AluSimplex - P2/P1 :   HA2" << std::endl
                 << "Hagen-Pouseuille 3D - UG - P2/P1         :   HU3" << std::endl
                 << "Turbulence Tube  2D - UG - P2/P1         :   TU2" << std::endl
                 << "Turbulence Tube  3D - UG - P2/P1         :   TU3" << std::endl
                 << "L-Shape Domain   2D - UG - P2/P1         :   LU2" << std::endl
-                << std::endl << std::endl 
-                << "You might also want to take a look at the configuration file \"cgstokes.ini\"." 
+                << std::endl << std::endl
+                << "You might also want to take a look at the configuration file \"cgstokes.ini\"."
                 << std::endl << std::endl;
       exit(1);
     }
@@ -228,7 +228,7 @@ int main(int argc, char** argv)
     Dune::ParameterTree configuration;
 
     const std::string config_filename("cgstokes.ini");
-    std::cout << "Reading configuration file \""<< config_filename 
+    std::cout << "Reading configuration file \""<< config_filename
               << "\"" << std::endl;
     try{
       Dune::ParameterTreeParser::readINITree(config_filename, configuration);
@@ -268,7 +268,7 @@ int main(int argc, char** argv)
 
       typedef HagenPoiseuilleVelocity<GV,RF,dim> InitialVelocity;
       typedef ZeroScalarFunction<GV,RF> InitialPressure;
-      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
+      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
 
       InitialVelocity init_velocity(gv);
@@ -288,7 +288,7 @@ int main(int argc, char** argv)
       LOPParameters parameters
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
-        
+
       // solve problem
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"hagenpoiseuille_yasp_Q2Q1_2d", parameters, vFem, pFem, initial_solution);
@@ -307,7 +307,7 @@ int main(int argc, char** argv)
       // get view
       typedef UnitCube::GridType::LeafGridView GV;
       const GV& gv=unitcube.grid().leafGridView();
- 
+
       // make finite element map
       typedef UnitCube::GridType::ctype DF;
       typedef double R;
@@ -322,7 +322,7 @@ int main(int argc, char** argv)
 
       typedef HagenPoiseuilleVelocity<GV,RF,dim> InitialVelocity;
       typedef ZeroScalarFunction<GV,RF> InitialPressure;
-      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
+      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
 
       InitialVelocity init_velocity(gv);
@@ -342,7 +342,7 @@ int main(int argc, char** argv)
       LOPParameters parameters
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
-  
+
       // solve problem
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"hagenpoiseuille_alu_P2P1_2d", parameters, vFem, pFem, initial_solution);
@@ -369,7 +369,7 @@ int main(int argc, char** argv)
       // get view
       typedef GridType::LeafGridView GV;
       const GV& gv=grid.leafGridView();
- 
+
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
@@ -384,7 +384,7 @@ int main(int argc, char** argv)
       typedef TU_Velocity<GV,RF,2> InitialVelocity;
 
       typedef ZeroFunction InitialPressure;
-      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
+      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
 
       InitialVelocity init_velocity(gv);
@@ -414,7 +414,7 @@ int main(int argc, char** argv)
       LOPParameters parameters
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
-  
+
       // solve problem
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"turbtube_ug_P2P1_2d", parameters, vFem, pFem, initial_solution);
@@ -441,7 +441,7 @@ int main(int argc, char** argv)
       // get view
       typedef GridType::LeafGridView GV;
       const GV& gv=grid.leafGridView();
- 
+
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
@@ -456,7 +456,7 @@ int main(int argc, char** argv)
       typedef LU_Velocity<GV,RF,2> InitialVelocity;
 
       typedef ZeroFunction InitialPressure;
-      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
+      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
 
       InitialVelocity init_velocity(gv);
@@ -486,7 +486,7 @@ int main(int argc, char** argv)
       LOPParameters parameters
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
-  
+
       // solve problem
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"lshape_ug_P2P1_2d", parameters, vFem, pFem, initial_solution);
@@ -514,7 +514,7 @@ int main(int argc, char** argv)
       // get view
       typedef GridType::LeafGridView GV;
       const GV& gv=grid.leafGridView();
- 
+
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
@@ -527,13 +527,13 @@ int main(int argc, char** argv)
 
       typedef HagenPoiseuilleVelocity<GV,RF,3> InitialVelocity;
       typedef ZeroScalarFunction<GV,RF> InitialPressure;
-      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
+      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
 
       InitialVelocity init_velocity(gv);
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
-      
+
       typedef BCTypeParam_HagenPoiseuille BoundaryFunction;
       typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
 
@@ -549,7 +549,7 @@ int main(int argc, char** argv)
       LOPParameters parameters
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
-  
+
       // solve problem
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"hagenpoiseuille_ug_P2P1_3d", parameters, vFem, pFem, initial_solution);
@@ -573,7 +573,7 @@ int main(int argc, char** argv)
       // get view
       typedef GridType::LeafGridView GV;
       const GV& gv=grid.leafGridView();
- 
+
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
@@ -583,14 +583,14 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
       V_FEM vFem(gv); P_FEM pFem(gv);
-  
+
       typedef double RF;
 
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
       typedef TU_Velocity<GV,RF,3> InitialVelocity;
 
       typedef ZeroFunction InitialPressure;
-      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure> 
+      typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
 
       ZeroFunction zero_function(gv);
@@ -619,7 +619,7 @@ int main(int argc, char** argv)
       LOPParameters parameters
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
-  
+
       // solve problem
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"turbtube_ug_P2P1_3d", parameters, vFem, pFem, initial_solution);

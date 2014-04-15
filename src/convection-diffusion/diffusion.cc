@@ -1,5 +1,5 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief High-level test with Poisson equation
 */
 #ifdef HAVE_CONFIG_H
@@ -80,19 +80,19 @@ public:
   }
 
   //! sink term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 0.0;
   }
 
   //! source term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
-	typename Traits::RangeFieldType norm = xglobal.two_norm2();
-	return (2.0*GV::dimension-4.0*norm)*exp(-norm); 
+    typename Traits::RangeFieldType norm = xglobal.two_norm2();
+    return (2.0*GV::dimension-4.0*norm)*exp(-norm);
   }
 
   //! boundary condition type function
@@ -103,7 +103,7 @@ public:
   }
 
   //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
@@ -112,14 +112,14 @@ public:
   }
 
   //! Neumann boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
   }
 
   //! outflow boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
@@ -132,11 +132,11 @@ public:
   \tparam T2  a grid function type
 */
 template<typename T1, typename T2>
-class DifferenceSquaredAdapter 
+class DifferenceSquaredAdapter
   : public Dune::PDELab::GridFunctionBase<
   Dune::PDELab::GridFunctionTraits<typename T1::Traits::GridViewType,
-				   typename T1::Traits::RangeFieldType,
-				   1,Dune::FieldVector<typename T1::Traits::RangeFieldType,1> >
+                                   typename T1::Traits::RangeFieldType,
+                                   1,Dune::FieldVector<typename T1::Traits::RangeFieldType,1> >
   ,DifferenceSquaredAdapter<T1,T2> >
 {
 public:
@@ -144,14 +144,14 @@ public:
                                            typename T1::Traits::RangeFieldType,
                                            1,Dune::FieldVector<typename T1::Traits::RangeFieldType,1> > Traits;
 
-  //! constructor 
+  //! constructor
   DifferenceSquaredAdapter (const T1& t1_, const T2& t2_) : t1(t1_), t2(t2_) {}
 
   //! \copydoc GridFunctionBase::evaluate()
-  inline void evaluate (const typename Traits::ElementType& e, 
-                        const typename Traits::DomainType& x, 
+  inline void evaluate (const typename Traits::ElementType& e,
+                        const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  {  
+  {
     typename T1::Traits::RangeType y1;
     t1.evaluate(e,x,y1);
     typename T2::Traits::RangeType y2;
@@ -164,7 +164,7 @@ public:
   {
     return t1.getGridView();
   }
-  
+
 private:
   const T1& t1;
   const T2& t2;
@@ -172,13 +172,13 @@ private:
 
 //! solve problem with DG method
 template<class GV, class FEM, class PROBLEM, int degree, int blocksize>
-void runDG ( const GV& gv, 
-             const FEM& fem, 
+void runDG ( const GV& gv,
+             const FEM& fem,
              PROBLEM& problem,
-             std::string basename, 
-             int level, 
-             std::string method, 
-             std::string weights, 
+             std::string basename,
+             int level,
+             std::string method,
+             std::string weights,
              double alpha )
 {
   // coordinate and result type
@@ -188,7 +188,7 @@ void runDG ( const GV& gv,
   std::stringstream fullname;
   fullname << basename << "_" << method << "_w" << weights << "_k" << degree << "_dim" << dim << "_level" << level;
 
-  // make grid function space 
+  // make grid function space
   typedef Dune::PDELab::NoConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking,blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
@@ -266,7 +266,7 @@ void runFEM (const GV& gv, const FEM& fem, PROBLEM& problem, std::string basenam
   std::stringstream fullname;
   fullname << basename << "_FEM" << "_k" << degree << "_dim" << dim << "_level" << level;
 
-  // make grid function space 
+  // make grid function space
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::ConformingDirichletConstraints CON;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
@@ -310,7 +310,7 @@ void runFEM (const GV& gv, const FEM& fem, PROBLEM& problem, std::string basenam
   DifferenceSquared differencesquared(g,udgf);
   typename DifferenceSquared::Traits::RangeType l2errorsquared(0.0);
   Dune::PDELab::integrateGridFunction(differencesquared,l2errorsquared,12);
-  std::cout << fullname.str() 
+  std::cout << fullname.str()
             << " N=" << std::setw(11) << gfs.globalSize()
             << " L2ERROR=" << std::setw(11) << std::setprecision(3) << std::scientific << std::uppercase << sqrt(l2errorsquared[0]) << std::endl;
 
@@ -348,11 +348,11 @@ int main(int argc, char** argv)
       return 0;
     }
 
-    std::string mesh(argv[1]);
-    int dim_dyn; sscanf(argv[2],"%d",&dim_dyn);
-    int maxlevel; sscanf(argv[3],"%d",&maxlevel);
-    std::string method(argv[4]);
-    int degree_dyn; sscanf(argv[5],"%d",&degree_dyn);
+  std::string mesh(argv[1]);
+  int dim_dyn; sscanf(argv[2],"%d",&dim_dyn);
+  int maxlevel; sscanf(argv[3],"%d",&maxlevel);
+  std::string method(argv[4]);
+  int degree_dyn; sscanf(argv[5],"%d",&degree_dyn);
 
   try
     {
@@ -362,7 +362,7 @@ int main(int argc, char** argv)
           Dune::FieldVector<double,dim> L(1.0);
           Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
           std::bitset<dim> P(false);
-          typedef Dune::YaspGrid<dim> Grid; 
+          typedef Dune::YaspGrid<dim> Grid;
           Grid grid(L,N,P,0);
           typedef Grid::LeafGridView GV;
 
@@ -419,7 +419,7 @@ int main(int argc, char** argv)
           Dune::FieldVector<double,dim> L(1.0);
           Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
           std::bitset<dim> P(false);
-          typedef Dune::YaspGrid<dim> Grid; 
+          typedef Dune::YaspGrid<dim> Grid;
           Grid grid(L,N,P,0);
           typedef Grid::LeafGridView GV;
 
@@ -488,7 +488,7 @@ int main(int argc, char** argv)
 
           // make grid
           ALUUnitCube<dim> unitcube;
-          typedef ALUUnitCube<dim>::GridType Grid; 
+          typedef ALUUnitCube<dim>::GridType Grid;
           typedef Grid::LeafGridView GV;
 
           for (int i=0; i<=maxlevel; ++i)
@@ -496,7 +496,7 @@ int main(int argc, char** argv)
               const GV& gv=unitcube.grid().leafGridView();
               typedef Parameter<GV,double> PROBLEM;
               PROBLEM problem;
-               
+
               if (method=="SIPG") {
                 if (degree_dyn==1) {
                   const int degree=1;
@@ -552,7 +552,7 @@ int main(int argc, char** argv)
 
           // make grid
           ALUUnitCube<dim> unitcube;
-          typedef ALUUnitCube<dim>::GridType Grid; 
+          typedef ALUUnitCube<dim>::GridType Grid;
           typedef Grid::LeafGridView GV;
 
           for (int i=0; i<=maxlevel; ++i)
@@ -560,7 +560,7 @@ int main(int argc, char** argv)
               const GV& gv=unitcube.grid().leafGridView();
               typedef Parameter<GV,double> PROBLEM;
               PROBLEM problem;
-               
+
               if (method=="SIPG") {
                 if (degree_dyn==1) {
                   const int degree=1;

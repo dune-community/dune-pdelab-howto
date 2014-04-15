@@ -1,9 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief Solve Problems A-F in parallel on non-overlapping grids using conforming linear finite elements
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -21,7 +21,7 @@
 #include<dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
 #endif
-#if HAVE_UG 
+#if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
 #if HAVE_ALUGRID
@@ -81,8 +81,8 @@
 // set up diffusion problem and solve it
 //===============================================================
 
-template< typename PROBLEM, typename GV, typename FEM> 
-void driver(PROBLEM& problem, const GV& gv, const FEM& fem, 
+template< typename PROBLEM, typename GV, typename FEM>
+void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
             std::string filename, int intorder=1 )
 {
   // constants and types and global variables
@@ -105,7 +105,7 @@ void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
   Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<PROBLEM> bctype(gv,problem);
 
   // make grid operator
-  typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP; 
+  typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP;
   LOP lop(problem);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
@@ -215,7 +215,7 @@ int main(int argc, char** argv)
       int overlap=0;
       Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
       //grid.globalRefine(3);
- 
+
       typedef Dune::YaspGrid<dim>::LeafGridView GV;
       const GV& gv=grid.leafGridView();
 #ifdef PROBLEM_A
@@ -252,13 +252,13 @@ int main(int argc, char** argv)
 
         driver(problem,gv,fem,"yasp3d_Q1",2*degree);
     }
- 
+
 #if HAVE_UG
     if (false)
     {
       typedef Dune::UGGrid<3> GridType;
       GridType grid;
- 
+
       // read gmsh file
       Dune::GridFactory<GridType> factory(&grid);
       std::vector<int> boundary_id_to_physical_entity;
@@ -266,11 +266,11 @@ int main(int argc, char** argv)
       Dune::GmshReader<GridType>::read(factory,"grids/cube1045.msh",true,true);
       factory.createGrid();
       grid.loadBalance();
- 
+
       std::cout << " after load balance /" << helper.rank() << "/ " << grid.size(0) << std::endl;
       //grid.globalRefine(1);
       // std::cout << " after refinement /" << helper.rank() << "/ " << grid.size(0) << std::endl;
- 
+
       // get view
       typedef GridType::LeafGridView GV;
       const GV& gv=grid.leafGridView();
@@ -300,7 +300,7 @@ int main(int argc, char** argv)
         typedef ParameterF<GV,double> PROBLEM;
         PROBLEM problem;
 #endif
- 
+
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
@@ -310,13 +310,13 @@ int main(int argc, char** argv)
       //driver(problem,gv,fem,"UG3d_P1",q);
     }
 #endif
- 
+
 #if HAVE_ALUGRID
     // ALU Pk 3D test
     if (false)
     {
       typedef Dune::ALUSimplexGrid<3,3> GridType;
- 
+
       // read gmsh file
       Dune::GridFactory<GridType> factory(helper.getCommunicator());
       std::vector<int> boundary_id_to_physical_entity;
@@ -330,7 +330,7 @@ int main(int argc, char** argv)
       std::cout << " after load balance /" << helper.rank() << "/ " << grid->size(0) << std::endl;
       //grid->globalRefine(1);
       std::cout << " after refinement /" << helper.rank() << "/ " << grid->size(0) << std::endl;
- 
+
       // get view
       typedef GridType::LeafGridView GV;
       const GV& gv=grid->leafGridView();
@@ -360,7 +360,7 @@ int main(int argc, char** argv)
         typedef ParameterF<GV,double> PROBLEM;
         PROBLEM problem;
 #endif
- 
+
       // make finite element map
       typedef GridType::ctype DF;
       typedef double R;
@@ -368,7 +368,7 @@ int main(int argc, char** argv)
       const int q=2*k;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
- 
+
       driver(problem,gv,fem,"ALU3d_P1_PlastkDoeddel",q);
     }
 	// ALU Q1 3D test
@@ -377,7 +377,7 @@ int main(int argc, char** argv)
 	  // make grid
 	  typedef Dune::ALUCubeGrid<3,3> GridType;
 	  Dune::GridFactory<GridType> factory(helper.getCommunicator());
- 
+
 	  if (helper.rank()==0)
 		{
 		  Dune::FieldVector< double, 3 > pos;
@@ -389,22 +389,22 @@ int main(int argc, char** argv)
 		  pos[0] = 1;  pos[1] = 0;	pos[2] = 1;	   factory.insertVertex(pos);
 		  pos[0] = 0;  pos[1] = 1;	pos[2] = 1;	   factory.insertVertex(pos);
 		  pos[0] = 1;  pos[1] = 1;	pos[2] = 1;	   factory.insertVertex(pos);
- 
+
 		  const Dune::GeometryType type( Dune::GeometryType::cube, 3 );
 		  std::vector< unsigned int > cornerIDs( 8 );
 		  for( int i = 0; i < 8; ++i )
 			cornerIDs[ i ] = i;
 		  factory.insertElement( type, cornerIDs );
 		}
- 
+
 	  GridType *grid=factory.createGrid();
- 
+
 	  std::cout << " after reading /" << helper.rank() << "/ " << grid->size(0) << std::endl;
 	  grid->loadBalance();
 	  std::cout << " after load balance /" << helper.rank() << "/ " << grid->size(0) << std::endl;
- 
+
       grid->globalRefine(4);
- 
+
       // get view
       typedef GridType::LeafGridView GV;
       const GV& gv=grid->leafGridView();
@@ -434,13 +434,13 @@ int main(int argc, char** argv)
         typedef ParameterF<GV,double> PROBLEM;
         PROBLEM problem;
 #endif
- 
+
 	  // make finite element map
 	  typedef GridType::ctype DF;
       const int degree = 1;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;
       FEM fem(gv);
- 
+
       driver(problem,gv,fem,"ALU3d_Q1",2*degree);
 	}
 #endif

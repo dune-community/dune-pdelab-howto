@@ -1,10 +1,10 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief Solve heat equation with high order in space and time (known analytic solution)
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<math.h>
 #include<iostream>
@@ -24,7 +24,7 @@
 #include<dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
 #endif
-#if HAVE_UG 
+#if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
 #if HAVE_ALUGRID
@@ -80,27 +80,27 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,U<GV,RF> > B;
 
   U (const GV& gv) : B(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
-							  typename Traits::RangeType& y) const
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
+                              typename Traits::RangeType& y) const
   {
-	y = sin(2.0*pi*0.125) * sin(3.0*pi*x[0]) * sin(2.0*pi*x[1]);
+    y = sin(2.0*pi*0.125) * sin(3.0*pi*x[0]) * sin(2.0*pi*x[1]);
   }
 };
 
 //! base class for parameter class
 template<typename GV, typename RF>
-class ConvectionDiffusionProblem : 
+class ConvectionDiffusionProblem :
   public Dune::PDELab::ConvectionDiffusionParameterInterface<
-  Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF>, 
-  ConvectionDiffusionProblem<GV,RF> 
+  Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF>,
+  ConvectionDiffusionProblem<GV,RF>
   >
 {
 public:
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
   //! source/reaction term
-  typename Traits::RangeFieldType 
-  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
      typename Traits::RangeFieldType u) const
   {
     typename Traits::RangeType global = e.geometry().global(x);
@@ -111,16 +111,16 @@ public:
   }
 
   //! nonlinearity under gradient
-  typename Traits::RangeFieldType 
-  w (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  w (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
      typename Traits::RangeFieldType u) const
   {
     return u;
   }
 
   //! nonlinear scaling of diffusion tensor
-  typename Traits::RangeFieldType 
-  v (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  v (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
      typename Traits::RangeFieldType u) const
   {
     return 1.0;
@@ -139,7 +139,7 @@ public:
 
   //! nonlinear flux vector
   typename Traits::RangeType
-  q (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  q (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
      typename Traits::RangeFieldType u) const
   {
     typename Traits::RangeType flux;
@@ -151,11 +151,11 @@ public:
   //! boundary condition type function
   template<typename I>
   bool isDirichlet(
-				   const I & intersection,               /*@\label{bcp:name}@*/
-				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-				   ) const
+                   const I & intersection,               /*@\label{bcp:name}@*/
+                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                   ) const
   {
-	
+
     //Dune::FieldVector<typename I::ctype, I::dimension>
     //  xg = intersection.geometry().global( coord );
 
@@ -163,7 +163,7 @@ public:
   }
 
   //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 0.0;
@@ -172,7 +172,7 @@ public:
   //! Neumann boundary condition
   // Good: The dependence on u allows us to implement Robin type boundary conditions.
   // Bad: This interface cannot be used for mixed finite elements where the flux is the essential b.c.
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   j (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
      typename Traits::RangeFieldType u) const
   {
@@ -221,13 +221,13 @@ void sequential (const GV& gv, int t_level)
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
   Dune::PDELab::constraints( bctype, gfs, cg );
-  std::cout << "constrained dofs=" << cg.size() 
+  std::cout << "constrained dofs=" << cg.size()
             << " of " << gfs.globalSize() << std::endl;
 
   // <<<5>>> Make grid operator space for time-dependent problem
-  typedef Dune::PDELab::ConvectionDiffusion<Param> LOP; 
+  typedef Dune::PDELab::ConvectionDiffusion<Param> LOP;
   LOP lop(param,4);
-  typedef Dune::PDELab::L2 MLOP; 
+  typedef Dune::PDELab::L2 MLOP;
   MLOP mlop(4);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
@@ -241,7 +241,7 @@ void sequential (const GV& gv, int t_level)
   IGO igo(go0,go1);
   typedef typename IGO::Traits::Domain V;
 
-  // <<<6>>> Make a linear solver 
+  // <<<6>>> Make a linear solver
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
   LS ls(5000,0);
 
@@ -294,9 +294,9 @@ void sequential (const GV& gv, int t_level)
       fn.increment();
 
       // advance time step
-//       std::cout.precision(8);
-//       std::cout << "solution maximum: " 
-//                 << std::scientific << x.infinity_norm() << std::endl;
+      //       std::cout.precision(8);
+      //       std::cout << "solution maximum: "
+      //                 << std::scientific << x.infinity_norm() << std::endl;
       xold = x;
       time += dt;
     }
@@ -304,9 +304,9 @@ void sequential (const GV& gv, int t_level)
   // evaluate discretization error
   U<GV,Real> u(gv);
   std::cout.precision(8);
-  std::cout << "space time discretization error: " 
-			<< std::setw(8) << gv.size(0) << " elements " 
-			<< std::scientific << l2interpolationerror(u,gfs,x,8) << std::endl;
+  std::cout << "space time discretization error: "
+            << std::setw(8) << gv.size(0) << " elements "
+            << std::scientific << l2interpolationerror(u,gfs,x,8) << std::endl;
   {
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U<GV,Real> >(u,"exact solution"));
@@ -326,23 +326,23 @@ int main(int argc, char** argv)
     if(Dune::MPIHelper::isFake)
       std::cout<< "This is a sequential program." << std::endl;
     else
-	  {
-		if(helper.rank()==0)
-		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
-	  }
+      {
+        if(helper.rank()==0)
+          std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
+      }
 
-	if (argc!=3)
-	  {
-		if(helper.rank()==0)
-		  std::cout << "usage: ./instationarytest <t_level> <x_level>" << std::endl;
-		return 1;
-	  }
+    if (argc!=3)
+      {
+        if(helper.rank()==0)
+          std::cout << "usage: ./instationarytest <t_level> <x_level>" << std::endl;
+        return 1;
+      }
 
-	int t_level;
-	sscanf(argv[1],"%d",&t_level);
+    int t_level;
+    sscanf(argv[1],"%d",&t_level);
 
-	int x_level;
-	sscanf(argv[2],"%d",&x_level);
+    int x_level;
+    sscanf(argv[2],"%d",&x_level);
 
     // sequential version
     {
@@ -361,10 +361,10 @@ int main(int argc, char** argv)
 
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 }

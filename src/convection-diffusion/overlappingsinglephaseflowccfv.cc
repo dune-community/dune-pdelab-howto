@@ -1,9 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief Solve Problems A-F in parallel using cell-centered finite volumes (works on nonoverlapping grids in overlapping mode)
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -39,7 +39,7 @@
 #include"problemE.hh"
 #include"problemF.hh"
 
-template<class GV> 
+template<class GV>
 void test (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
@@ -50,7 +50,7 @@ void test (const GV& gv)
   // instantiate finite element maps
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
   FEM fem(Dune::GeometryType(Dune::GeometryType::cube,dim)); // works only for cubes
-  
+
   // make function space
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
@@ -101,7 +101,7 @@ void test (const GV& gv)
 
   // typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GO> LS;
   // LS ls(gfs,5000,3);
-  
+
   typedef Dune::PDELab::ISTLBackend_OVLP_CG_SSORk<GFS,CC> LS;
   LS ls(gfs,cc,100,5,2);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
@@ -152,7 +152,7 @@ int main(int argc, char** argv)
       int overlap=3;
       Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
       //      grid.globalRefine(6);
-      
+
       // solve problem :)
       test(grid.leafGridView());
     }
@@ -177,7 +177,7 @@ int main(int argc, char** argv)
 // #if HAVE_UG
 //     if (false)
 //     {
-//       // make grid 
+//       // make grid
 //       UGUnitSquareQ grid(1000);
 //       grid.globalRefine(6);
 
@@ -197,4 +197,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
     return 1;
   }
-} 
+}
