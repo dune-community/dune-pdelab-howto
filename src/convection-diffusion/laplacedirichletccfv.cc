@@ -145,7 +145,7 @@ void test (const GV& gv, std::string filename )
   LS ls (5000,2);
 #endif
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
-  SLP slp(go,x,ls,1e-12);
+  SLP slp(go,ls,x,1e-12);
   slp.apply();
   
   // make discrete function object

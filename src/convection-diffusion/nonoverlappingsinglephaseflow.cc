@@ -128,7 +128,7 @@ void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
   typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_SSORk<GO> LS;
   LS ls (go,5000,3,2);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
-  SLP slp(go,x,ls,1e-12);
+  SLP slp(go,ls,x,1e-12);
   slp.apply();
 
   // output solution and data decomposition with VTKWriter

@@ -164,7 +164,7 @@ void driverDG ( Grid& grid,
       LS ls(10000,verbose);
       typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
       double reduction = configuration.get<double>("istl.reduction");
-      SLP slp(go,u,ls,reduction);
+      SLP slp(go,ls,u,reduction);
       slp.apply();
       nIterations.push_back( slp.ls_result().iterations );
 

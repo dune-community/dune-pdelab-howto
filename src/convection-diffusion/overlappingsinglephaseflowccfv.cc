@@ -105,7 +105,7 @@ void test (const GV& gv)
   typedef Dune::PDELab::ISTLBackend_OVLP_CG_SSORk<GFS,CC> LS;
   LS ls(gfs,cc,100,5,2);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
-  SLP slp(go,x,ls,1e-10);
+  SLP slp(go,ls,x,1e-10);
   slp.apply();
 
   // make discrete function object

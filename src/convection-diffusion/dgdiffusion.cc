@@ -181,7 +181,7 @@ void runDG(
       LS ls(10000,ls_verbosity);
 
       typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
-      SLP slp(go,u,ls,1e-12);
+      SLP slp(go,ls,u,1e-12);
       slp.apply();
     }
   else
@@ -191,7 +191,7 @@ void runDG(
       typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LS;
       LS ls(10000,ls_verbosity);
       typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
-      SLP slp(go,u,ls,1e-12);
+      SLP slp(go,ls,u,1e-12);
       slp.apply();
     }
 

@@ -354,7 +354,7 @@ void driver (Dune::shared_ptr<GM> grid, int prerefine_level, double tol, int max
 
       // solve linear system in case of hanging nodes (this should go to StationaryLinearProblemSolver)
       typedef Dune::PDELab::StationaryLinearProblemSolver<typename ASS::GO,typename SBE::LS,X> SLP;
-      SLP slp(*ass,x,*sbe,1e-8);
+      SLP slp(*ass,*sbe,x,1e-8);
       slp.apply();
 
       // compute errors

@@ -138,7 +138,7 @@ void test (const GV& gv)
   typedef Dune::PDELab::ISTLBackend_OVLP_CG_SSORk<GFS,CC> LS;
   LS ls(gfs,cc,10,5,1);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
-  SLP slp(go,x,ls,1e-6);
+  SLP slp(go,ls,x,1e-6);
   slp.apply();
 
   // make discrete function object
@@ -281,7 +281,7 @@ void runDG ( const GV& gv,
       // typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
       // LS ls(10000,1);
       typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
-      SLP slp(go,u,ls,1e-6);
+      SLP slp(go,ls,u,1e-6);
       slp.apply();
     }
   else
@@ -291,7 +291,7 @@ void runDG ( const GV& gv,
       // typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LS;
       // LS ls(10000,1);
       typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
-      SLP slp(go,u,ls,1e-6);
+      SLP slp(go,ls,u,1e-6);
       slp.apply();
     }
 

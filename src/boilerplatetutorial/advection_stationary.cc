@@ -176,7 +176,7 @@ int main(int argc, char **argv)
   //typedef Dune::PDELab::ISTLSolverBackend_CG_AMG_SSOR<FS,ASSEMBLER,solvertype> SBE;
   SBE sbe(fs,assembler,5000,1);
   typedef Dune::PDELab::StationaryLinearProblemSolver<ASSEMBLER::GO,SBE::LS,X> SLP;
-  SLP slp(*assembler,x,*sbe,1e-6);
+  SLP slp(*assembler,*sbe,x,1e-6);
   slp.apply();
 
   // output grid to VTK file

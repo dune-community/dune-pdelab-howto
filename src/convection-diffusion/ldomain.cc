@@ -170,7 +170,7 @@ void driverFEM (Grid& grid,
       typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
       LS ls(10000,verbose);
       typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
-      SLP slp(go,u,ls,1e-10);
+      SLP slp(go,ls,u,1e-10);
       slp.apply();
       nIterations.push_back( slp.ls_result().iterations );
 

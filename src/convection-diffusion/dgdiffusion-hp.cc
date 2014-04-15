@@ -142,7 +142,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
     LS ls(1);
     typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
-    SLP slp(go,solution,ls,1e-12);
+    SLP slp(go,ls,solution,1e-12);
     slp.apply();
 
     // make discrete function object
