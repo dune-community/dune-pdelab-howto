@@ -42,7 +42,7 @@
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/pkfem.hh>
 #include<dune/pdelab/finiteelementmap/qkfem.hh>
-#include<dune/pdelab/finiteelementmap/rannacher_turek2dfem.hh>
+#include<dune/pdelab/finiteelementmap/rannacherturekfem.hh>
 #include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/constraints/conforming.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>

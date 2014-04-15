@@ -6,7 +6,7 @@ void example01a_RT (const GV& gv)
   typedef double Real;
 
   // <<<2>>> Make grid function space
-  typedef Dune::PDELab::RannacherTurek2DLocalFiniteElementMap<Coord,Real> FEM;
+  typedef Dune::PDELab::RannacherTurekLocalFiniteElementMap<Coord,Real,GV::dimension> FEM;
   FEM fem;
   typedef Dune::PDELab::NoConstraints CON;
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
