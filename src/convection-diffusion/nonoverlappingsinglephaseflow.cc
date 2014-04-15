@@ -315,7 +315,7 @@ int main(int argc, char** argv)
     // ALU Pk 3D test
     if (false)
     {
-      typedef Dune::ALUSimplexGrid<3,3> GridType;
+      typedef Dune::ALUGrid<3,3,Dune::simplex,Dune::nonconforming> GridType;
 
       // read gmsh file
       Dune::GridFactory<GridType> factory(helper.getCommunicator());
