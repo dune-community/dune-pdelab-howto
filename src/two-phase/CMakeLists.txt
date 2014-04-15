@@ -51,26 +51,27 @@ add_dune_alugrid_flags(dnaplfv )
 target_link_libraries(dnaplfv ${DUNE_LIBS})
 add_dune_superlu_flags(dnaplfv )
 
-if(SUPERLU_FOUND)
-add_executable(dnaplmfd dnaplmfd.cc)
-
-add_dune_alberta_flags(dnaplmfd )
-add_dune_amiramesh_flags(dnaplmfd )
-add_dune_ug_flags(dnaplmfd )
-add_dune_mpi_flags(dnaplmfd )
-target_link_libraries(dnaplmfd ${DUNE_LIBS})
-add_dune_superlu_flags(dnaplmfd )
-add_dune_alugrid_flags(dnaplmfd )
-# The following lines are comment out as the translation is not clear. TODO review
+# dnaplmfd is broken (there is no IntersectionIndexSet for the new backend structure)
+# if(SUPERLU_FOUND)
+# add_executable(dnaplmfd dnaplmfd.cc)
 #
-# set(dnaplmfd_ LDADD ${DUNEMPILDFLAGS} ${DUNEMPILIBS} ${SUPERLU_LIBS} ${ALBERTA_LDFLAGS} ${ALBERTA_LIBS} ${AMIRAMESH_LDFLAGS} ${AMIRAMESH_LIBS} ${UG_LDFLAGS} ${UG_LIBS} ${ALUGRID_LDFLAGS} ${ALUGRID_LIBS} ${DUNE_LDFLAGS} ${DUNE_LIBS})
-# The following lines are comment out as the translation is not clear. TODO review
+# add_dune_alberta_flags(dnaplmfd )
+# add_dune_amiramesh_flags(dnaplmfd )
+# add_dune_ug_flags(dnaplmfd )
+# add_dune_mpi_flags(dnaplmfd )
+# target_link_libraries(dnaplmfd ${DUNE_LIBS})
+# add_dune_superlu_flags(dnaplmfd )
+# add_dune_alugrid_flags(dnaplmfd )
+# # The following lines are comment out as the translation is not clear. TODO review
+# #
+# # set(dnaplmfd_ LDADD ${DUNEMPILDFLAGS} ${DUNEMPILIBS} ${SUPERLU_LIBS} ${ALBERTA_LDFLAGS} ${ALBERTA_LIBS} ${AMIRAMESH_LDFLAGS} ${AMIRAMESH_LIBS} ${UG_LDFLAGS} ${UG_LIBS} ${ALUGRID_LDFLAGS} ${ALUGRID_LIBS} ${DUNE_LDFLAGS} ${DUNE_LIBS})
+# # The following lines are comment out as the translation is not clear. TODO review
+# #
+# # set(dnaplmfd_ LDFLAGS ${AM_LDFLAGS} ${SUPERLU_LDFLAGS})
 #
-# set(dnaplmfd_ LDFLAGS ${AM_LDFLAGS} ${SUPERLU_LDFLAGS})
-
-target_link_libraries(dnaplmfd ${DUNE_LIBS})
-add_dune_superlu_flags(dnaplmfd )
-endif(SUPERLU_FOUND )
+# target_link_libraries(dnaplmfd ${DUNE_LIBS})
+# add_dune_superlu_flags(dnaplmfd )
+# endif(SUPERLU_FOUND )
 
 
 set(CLEANFILES  dgfparser.log q1*.vtu *.pvtu *.vtu *.png)
