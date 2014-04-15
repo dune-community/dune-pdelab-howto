@@ -248,7 +248,7 @@ void driverFEM (Grid& grid,
         else
           element_fraction( eta, alpha, beta, refine_threshold, eta_beta, verbose );
         mark_grid( grid, eta, refine_threshold, 0.0 );
-        adapt_grid( grid, gfs, u );
+        adapt_grid( grid, gfs, u, 2 * degree );
         N.push_back( gfs.globalSize() );
       }
     }
