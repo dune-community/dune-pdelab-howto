@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 #if HAVE_UG
   typedef Dune::UGGrid<dim> GM;
 #elif HAVE_ALUGRID
-  typedef Dune::ALUSimplexGrid<dim,dim> GM;
+  typedef Dune::ALUGrid<dim,dim,Dune::simplex,Dune::nonconforming> GM;
 #else  // ! (HAVE_UG || HAVE_ALUGRID)
   typedef Dune::YaspGrid<dim> GM;
 #endif

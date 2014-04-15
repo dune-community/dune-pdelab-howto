@@ -375,7 +375,7 @@ int main(int argc, char** argv)
 	if (false)
 	{
 	  // make grid
-	  typedef Dune::ALUCubeGrid<3,3> GridType;
+      typedef Dune::ALUGrid<3,3,Dune::cube,Dune::nonconforming> GridType;
 	  Dune::GridFactory<GridType> factory(helper.getCommunicator());
 
 	  if (helper.rank()==0)

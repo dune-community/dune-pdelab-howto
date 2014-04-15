@@ -125,7 +125,7 @@ template<int dim>
 class ALUUnitCube : public BasicUnitCube< dim >
 {
 public:
-    typedef Dune::ALUSimplexGrid<dim,dim> GridType;
+    typedef Dune::ALUGrid<dim,dim,Dune::simplex,Dune::nonconforming> GridType;
 
 private:  
     GridType* grid_;
