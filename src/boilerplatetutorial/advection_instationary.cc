@@ -155,6 +155,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
   G g(grid.leafGridView(),problem);
   problem.setTime(0.0);
+  Dune::PDELab::interpolate (g,fs.getGFS(),x);
 
   // linear solver backend
   typedef Dune::PDELab::ISTLSolverBackend_ExplicitDiagonal<FS,ASSEMBLER,solvertype> SBE;
