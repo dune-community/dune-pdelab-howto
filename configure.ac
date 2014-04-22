@@ -36,7 +36,6 @@ AC_CONFIG_FILES([
   src/boilerplatetutorial/Makefile
   src/linear-acoustics/Makefile
   src/maxwell/Makefile
-  src/benchmark/Makefile
   dune-pdelab-howto.pc
 ])
 AC_OUTPUT
