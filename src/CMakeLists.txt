@@ -1,13 +1,12 @@
-set(SUBDIRS                                        
-        benchmark                               
+set(SUBDIRS
 	boilerplatetutorial
-        convection-diffusion                    
-        course-examples                         
-        course-gridfunctionspace                
-        linear-acoustics                        
-        maxwell                                 
-        navier-stokes                           
-        two-phase                               
+        convection-diffusion
+        course-examples
+        course-gridfunctionspace
+        linear-acoustics
+        maxwell
+        navier-stokes
+        two-phase
         utility)
 
 # include not needed for CMake

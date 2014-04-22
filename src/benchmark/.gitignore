@@ -1,7 +1,0 @@
-*.dSYM
-.deps
-*vtu
-*pvd
-*timings.txt
-dgfparser.log
-cgstokes
