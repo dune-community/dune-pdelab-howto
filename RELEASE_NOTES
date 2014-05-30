@@ -1,25 +1,55 @@
-PDELab Howto 1.0
+PDELab Howto 2.0
 ================
 
-This is the 1.1 release of PDELab, a PDE discretization toolkit built
+This is the 2.0 release of PDELab, a PDE discretization toolkit built
 on top of the DUNE framework [0]. License information can be found in the file
 COPYING.
 
-PDELab 1.1 is a minor feature release mostly focused on fixing bugs, but it also
+PDELab 2.0 is a major release containing a large number of new features and improvements.
+Some of those changes  feature release mostly focused on fixing bugs, but it also
 includes a number of new features. For details, see the changelog below.
 
 If you need help, please ask on our mailinglist [1]. Bugs can also be submitted
 to the PDELab bugtracker at [2] instead.
 
-This release of PDELab is designed to work with the 2.2 release of the DUNE
-libraries.
+******************************************************************************************
+This release of PDELab is designed to work with the 2.3.1+ release of the
+DUNE libraries. As that release is not complete yet, you should use the releases/2.3
+branch of the core modules.
+
+WARNING: Do not try to use PDELab 2.0 with the 2.3.0 release of the core modules as there
+         are known issues, most importantly the AMG will not work!
+******************************************************************************************
 
 The dune-pdelab-howto package only contains example programs. You also need the
-actual library package dune-pdelab.
+actual library package dune-pdelab and the support library dune-typetree.
 
 
 Changes
 =======
+
+PDELab 2.0
+----------
+
+- The TypeTree library is now an external dependency. See README for information on
+  how to obtain it.
+
+- PDELab now supports building with CMake in addition to autotools.
+
+- Many small adjustments to the examples to accomodate changes in the core modules and
+  PDELab itself, most importantly
+
+  - new vector and matrix backends
+  - new matrix pattern construction method
+  - new adaptivity implementation
+  - new GridFunctionSpace VTK output mechanism
+  - modified StationaryLinearProblemSolver constructors
+
+- Documentation updates
+
+- Some old and broken examples were removed, e.g. the mimetic finite differences examples
+  that have not been working since before PDELab 1.1.
+
 
 PDELab 1.1
 ----------
