@@ -1,7 +1,7 @@
 PDELab Howto 2.0
 ================
 
-This is the 2.0 release of PDELab, a PDE discretization toolkit built
+This is the 2.0.0-rc1 release of PDELab, a PDE discretization toolkit built
 on top of the DUNE framework [0]. License information can be found in the file
 COPYING.
 
@@ -49,6 +49,11 @@ PDELab 2.0
 
 - Some old and broken examples were removed, e.g. the mimetic finite differences examples
   that have not been working since before PDELab 1.1.
+
+Releasy history
+
+  - dune-pdelab-howto 2.0.0-rc1
+    - initial release candidate
 
 
 PDELab 1.1
