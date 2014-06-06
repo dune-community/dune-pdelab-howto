@@ -332,7 +332,7 @@
 \begin{frame}
   \frametitle<presentation>{Marking Elements} 
 
-  {\bf First phase:} {Marking of elements}
+  {\bfseries First phase:} {Marking of elements}
   \begin{itemize}
     \item The method\newline
       \lstinline{bool mark (int refCount, const Codim<0>::Entity& e)}\newline
@@ -353,7 +353,7 @@
 \begin{frame}
   \frametitle<presentation>{Grid Adaptation} 
 
-  {\bf Second phase:} {Grid modification}
+  {\bfseries Second phase:} {Grid modification}
   \begin{enumerate}
     \item Call the grid's method \lstinline{grid.preAdapt()}. This method \emph{prepares}
       the grid for adaptation. It returns \lstinline{true} if at least one entity was
@@ -391,7 +391,7 @@
 \begin{frame}
   \frametitle{Data Transfer between Grids}
 
-  The {\sc Dune} \lstinline{Entity<0>} class provides two methods, which are
+  The {\scshape Dune} \lstinline{Entity<0>} class provides two methods, which are
   needed during the grid modification phase for solution transfer:
   \begin{itemize}
     \item The method\newline

@@ -132,8 +132,8 @@ between processors with messages send over a network (computer clusters, super c
 \item Portable Library with functions for message exchange between processes
 \item Developed 1993-94 by a international board
 \item Available on nearly all computer platforms
-\item Free Implementations also for LINUX Clusters: {\bf MPICH}\footnote{\href{http://www-unix.mcs.anl.gov/mpi/mpich}{{\tiny http://www-unix.mcs.anl.gov/mpi/mpich}}}
- and {\bf OpenMPI}\footnote{\href{http://www.open-mpi.org/}{{\tiny http://www.open-mpi.org/}}}
+\item Free Implementations also for LINUX Clusters: {\bfseries MPICH}\footnote{\href{http://www-unix.mcs.anl.gov/mpi/mpich}{{\tiny http://www-unix.mcs.anl.gov/mpi/mpich}}}
+ and {\bfseries OpenMPI}\footnote{\href{http://www.open-mpi.org/}{{\tiny http://www.open-mpi.org/}}}
 \item Properties of MPI:
 \begin{itemize}
 \item library with C-, C++ and Fortran bindings (no language extension)
@@ -545,9 +545,9 @@ The class  \lstinline[basicstyle=\normalfont\ttfamily] !Dune::Grid::CollectiveCo
   \item adaptation leads to unbalanced work load
   \item only 3D ALUGrid provides a working load balance methods to re-balance the work load
   \begin{description}[123]
-  \item[\tt loadBalance(DataHandle \&data)]:\\
+  \item[\ttfamily loadBalance(DataHandle \&data)]:\\
     re-balances a parallel grid, optionally sends also user data
-  \item[\tt DataHandle]:\\
+  \item[\ttfamily DataHandle]:\\
     works like the data handle for the communicate methods
   \end{description}
    \item with UGGrid you can initialize a coarse grid and then call \lstinline!loadBalance! before starting the
