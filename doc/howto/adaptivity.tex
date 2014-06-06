@@ -62,7 +62,7 @@
 
     \only<1>{
     \begin{tabular*}{0.95\textwidth}{rl}
-      $h_{\min}$:   & $2^{-3}$ \\ 
+      $h_{\min}$:   & $2^{-3}$ \\
       DOF:          & 81       \\
       Time (total): & 0.026s
     \end{tabular*}
@@ -135,7 +135,7 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle<presentation>{What is adaptivity all about?} 
+  \frametitle<presentation>{What is adaptivity all about?}
 
   Adaptive Scheme
   \[
@@ -310,7 +310,7 @@
       \begin{itemize}
         \item Read-only access to grid entities allow the consequent use of const.
         \item Access to entities is only through iterators for a
-          certain view. 
+          certain view.
           \begin{itemize}
             \item[$\Rightarrow$] \emph{This allows on-the-fly implementations.}
           \end{itemize}
@@ -330,15 +330,15 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle<presentation>{Marking Elements} 
+  \frametitle<presentation>{Marking Elements}
 
   {\bfseries First phase:} {Marking of elements}
   \begin{itemize}
     \item The method\newline
       \lstinline{bool mark (int refCount, const Codim<0>::Entity& e)}\newline
-      is used to mark an entity \lstinline{e} for 
+      is used to mark an entity \lstinline{e} for
       \begin{itemize}
-        \item refinement (refCount $> 0$) or 
+        \item refinement (refCount $> 0$) or
         \item coarsening (refCount $< 0$)
         \item neither (refCount = 0).
       \end{itemize}
@@ -351,7 +351,7 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle<presentation>{Grid Adaptation} 
+  \frametitle<presentation>{Grid Adaptation}
 
   {\bfseries Second phase:} {Grid modification}
   \begin{enumerate}
@@ -383,8 +383,8 @@
   \pause
 
   As the data management is the user's responsibility, he or she has to
-  take care of restriction and prolongation of data attached to the grid. 
-  This is possible using the persistent index maps 
+  take care of restriction and prolongation of data attached to the grid.
+  This is possible using the persistent index maps
   i.\,e., \lstinline{LocalIdSet} and \lstinline{GlobalIdSet}.
 \end{frame}
 
@@ -396,8 +396,8 @@
   \begin{itemize}
     \item The method\newline
       \lstinline{bool mightVanish () const}\newline
-      returns \lstinline{true} if the entity {\bf \emph{might}} be removed when
-      \lstinline{grid.adapt()} is called. 
+      returns \lstinline{true} if the entity {\bfseries \emph{might}} be removed when
+      \lstinline{grid.adapt()} is called.
 
       \pause
 
@@ -417,7 +417,7 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Solution Transfer during Adaptation I}  
+  \frametitle{Solution Transfer during Adaptation I}
 
   \begin{center}
     \includegraphics[width=0.9\textwidth]{EPS/adaptivity/hadapt}
@@ -426,7 +426,7 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Solution Transfer during Adaptation II}  
+  \frametitle{Solution Transfer during Adaptation II}
 
   \begin{center}
     \includegraphics[width=0.8\textwidth]{EPS/adaptivity/hadapt1}
@@ -472,8 +472,8 @@
   \frametitle<presentation>{Other Grids}
 
   \begin{block}{\emph{AlbertaGrid}}
-    The grid manager of the ALBERTA toolbox. 
-    ALBERTA is sequential code and supports simplicial grids in one, two, and 
+    The grid manager of the ALBERTA toolbox.
+    ALBERTA is sequential code and supports simplicial grids in one, two, and
     three space dimensions with \emph{bisection refinement}.
 
   \end{block}
@@ -485,8 +485,8 @@
 
   \begin{block}{\emph{UGGrid}}
     The grid manager of the UG toolbox.
-    UG provides a parallel grid manager in two and three space dimensions 
-    that supports hybrid meshes with local \emph{red--green or nonconforming 
+    UG provides a parallel grid manager in two and three space dimensions
+    that supports hybrid meshes with local \emph{red--green or nonconforming
     refinement}.
 
 
@@ -598,7 +598,7 @@ boundaries as an indicator.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
   \frametitle<presentation>{Adaptive Driver}
   \framesubtitle<presentation>{File \texttt{src/course-examples/example07\_adaptivity.hh}}
-  \lstinputlisting[basicstyle=\tiny,numbers=left, 
+  \lstinputlisting[basicstyle=\tiny,numbers=left,
     numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example07_adaptivity.hh}
 \end{frame}
 
@@ -610,4 +610,3 @@ boundaries as an indicator.
   \lstinputlisting[basicstyle=\scriptsize,numbers=left,
     numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example07_adaptivity.hh}
 \end{Lst}}
-

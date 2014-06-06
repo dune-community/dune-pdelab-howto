@@ -18,7 +18,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % only for the article version
-\mode<article> 
+\mode<article>
 {
   \usepackage[automark,komastyle]{scrpage2}
   \usepackage{amsfonts}
@@ -31,7 +31,7 @@
   \newcommand{\movie}[2]{\mbox{}}
 }
 
-% only presentation 
+% only presentation
 \mode<presentation>
 {
 %  \usepackage{times}
@@ -63,19 +63,20 @@
 \usepackage{algorithm}
 \usepackage{bm}
 \usepackage{nicefrac}
+%\usepackage{url}
 
-\mode<article> 
+\mode<article>
 {
-\usepackage{hyperref}
+  \usepackage{hyperref}
   \setkomafont{pagenumber}{\normalfont\scshape}
   \setkomafont{pagehead}{\normalfont\scshape}
-\lstset{language=C++, basicstyle=\small, 
+\lstset{language=C++, basicstyle=\small,
   keywordstyle=\bfseries, tabsize=4, stringstyle=\ttfamily,
   commentstyle=\itshape, extendedchars=true, escapeinside={/*@}{@*/}}
 }
 
 %The theorems
-\mode<article> 
+\mode<article>
 {
 \newtheoremstyle{mystyle}%
 {3pt}%
@@ -88,9 +89,9 @@
 {}%
 \theoremstyle{mystyle}
 }
-\mode<presentation> 
+\mode<presentation>
 {
-\lstset{language=C++, basicstyle=\ttfamily, 
+\lstset{language=C++, basicstyle=\ttfamily,
   keywordstyle=\color{red}\bfseries, tabsize=4, stringstyle=\ttfamily,
   commentstyle=\itshape, extendedchars=true, escapeinside={/*@}{@*/}}
 \theoremstyle{definition}
@@ -229,7 +230,7 @@ This article contains concepts for a general discretization module for
 the ``Distributed Numerics Environment'' DUNE \cite{Dune2008a,Dune2008b}. It should enable one
 to build up a library of finite element methods in an easy and
 extendable way that is closely related to the mathematical formulation
-of finite element methods. 
+of finite element methods.
 \end{abstract}
 
 \mode<article>

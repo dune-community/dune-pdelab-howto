@@ -27,10 +27,10 @@ S &= \{\sigma\in \left(L_2(\Omega)\right)^d \,|\,
 Find $(\sigma,u)\in (w+\tilde{S})\times L_2(\Omega)$ ($w$ extension of $j$ !) s. t.
 \begin{align*}
 \int\limits_\Omega \sigma\cdot v \, dx  -\int\limits_\Omega
-u \, \nabla\cdot v \, dx & =  
--\int\limits_{\Gamma_D} g v\cdot n \, ds 
+u \, \nabla\cdot v \, dx & =
+-\int\limits_{\Gamma_D} g v\cdot n \, ds
 & \forall v &\in \tilde{S}\\
-- \int\limits_\Omega \nabla\cdot\sigma \, q \, dx      &= 
+- \int\limits_\Omega \nabla\cdot\sigma \, q \, dx      &=
 - \int\limits_\Omega f q \, ds &
 \forall q &\in L_2(\Omega)
 \end{align*}
@@ -42,7 +42,7 @@ u \, \nabla\cdot v \, dx & =
 Raviart-Thomas space of lowest order on triangles is
 \begin{align*}
 S_h = \left\{\sigma\in\left(L_2(\Omega) \right)^2  \,\Bigl|\, \sigma|_{\Omega_e} =
-\left(\begin{array}{l} a_e\\ b_e \end{array}\right) + 
+\left(\begin{array}{l} a_e\\ b_e \end{array}\right) +
 c_e \left(\begin{array}{l} x\\ y \end{array}\right) \quad\forall e\in E^0_h
 \right\}
 \end{align*}
@@ -51,17 +51,17 @@ with subspace $\tilde{S}_h = \{\sigma_h\in S_h \,|\, \text{``$\sigma_h\cdot n=0$
 Define the residual form
 \begin{equation*}
 \begin{split}
-r^\text{mixed}((\sigma,u)&,(v,q)) = 
+r^\text{mixed}((\sigma,u)&,(v,q)) =
 \int\limits_\Omega \sigma\cdot v \, dx  -\int\limits_\Omega
-u \, \nabla\cdot v \, dx 
- - \int\limits_\Omega \nabla\cdot\sigma \, q \, dx\\ 
+u \, \nabla\cdot v \, dx
+ - \int\limits_\Omega \nabla\cdot\sigma \, q \, dx\\
 &\quad + \int\limits_{\Gamma_D} g v\cdot n \, ds + \int\limits_\Omega f q \,
 ds .
 \end{split}
 \end{equation*}
 Discrete problem in residual form reads
 \begin{equation*}
-(\sigma_h, u_h) \in (w_h+\tilde{S}_h)\times W_h : \quad 
+(\sigma_h, u_h) \in (w_h+\tilde{S}_h)\times W_h : \quad
 r_h^\text{mixed}\left((\sigma_h,u_h),(v,q)\right) = 0 \quad \forall
 (v,q) \in \tilde{S}_h\times W_h .
 \end{equation*}
@@ -71,7 +71,7 @@ r_h^\text{mixed}\left((\sigma_h,u_h),(v,q)\right) = 0 \quad \forall
 \begin{frame}
 \frametitle{Function Space Composition}
 Given $k>1$ function spaces $U_0, \ldots, U_{k-1}$ we define the
-composite function space 
+composite function space
 \begin{equation*}
 U = U_0 \times U_1 \times \ldots \times U_{k-1} .
 \end{equation*}
@@ -107,13 +107,13 @@ Composite function spaces have tree structure:
 
 \begin{frame}
 \frametitle{Implementation of Function Space Composition}
-\begin{itemize}    
+\begin{itemize}
 \item \lstinline{Dune::PDELab::PowerGridFunctionSpace<GFS,k,VBE,OT>} builds a
 new grid function space that is \lstinline{k}-times the product of \lstinline{GFS}.\\
 \lstinline{VBE} is a vector backend, \lstinline{OT} is an ordering tag.
 \item \lstinline{D...::CompositeGridFunctionSpace<VBE,OT,GFS0,...,GFSk>}
 builds a new grid function space out of the given grid function
-spaces. 
+spaces.
 \item \lstinline{OT} controls construction of local to global map, allowing e.g. block-wise or component-wise ordering.
 \item This can be applied recursively leading to a type tree.
 \item Leaves of the tree are scalar or vector-valued finite element spaces.
@@ -128,13 +128,13 @@ Now the Taylor-Hood interpolation example.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Taylor Hood Example Listing}
 \framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/thinterpolate.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-gridfunctionspace/thinterpolate.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/thinterpolate.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-gridfunctionspace/thinterpolate.hh}
 \end{Lst}}
 
@@ -162,14 +162,14 @@ example.
 \frametitle<presentation>{Analytic Velocity Field Listing}
 \framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/thvelocity.hh}}
 For completeness here is the definition of the analytic velocity field.
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-gridfunctionspace/thvelocity.hh}
 \end{frame}
 \mode<article>{
 For completeness here is the definition of the analytic velocity field for interpolation.
 \begin{Lst}[File src/course-gridfunctionspace/thvelocity.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-gridfunctionspace/thvelocity.hh}
 \end{Lst}}
 
@@ -177,14 +177,14 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-gridfunctionspace/thvelocity.
 
 \begin{frame}
 \frametitle{Problem Definition}
-We solve a two-component diffusion-reaction problem with FitzHugh-Nagumo 
+We solve a two-component diffusion-reaction problem with FitzHugh-Nagumo
 reaction\footnote{\url{http://en.wikipedia.org/wiki/Reaction-diffusion_system}}:
 \begin{subequations}
 \begin{align*}
 \partial_t u_0 - d_0 \Delta u_0 - f(u_0) + \sigma u_1 &= 0 &&\text{in $\Omega=(0,2)^2$},\\
 \tau\partial_t u_1 - d_1 \Delta u_1 - u_0 + u_1 &= 0 &&\text{in $\Omega$},\\
 \nabla u_0 \cdot n = \nabla u_1 \cdot n &= 0 &&\text{on $\partial\Omega$},\\
-u_0(\cdot,t_0) &= U_0(\cdot), \\ 
+u_0(\cdot,t_0) &= U_0(\cdot), \\
 u_1(\cdot,t_0) &= U_1(\cdot),
 \end{align*}
 \end{subequations}
@@ -203,8 +203,8 @@ Example 5 solves the diffusion reaction problem with conforming finite elements.
 
 It consists of the following files:
 \begin{itemize}
-\item \lstinline{example05.cc} -- the file to be compiled, main function. 
-\item \lstinline{example05_QkQk.hh} -- driver using $Q_1$ or $Q_2$ elements. 
+\item \lstinline{example05.cc} -- the file to be compiled, main function.
+\item \lstinline{example05_QkQk.hh} -- driver using $Q_1$ or $Q_2$ elements.
 \item \lstinline{example05_operator.hh} -- local operator for spatial part.
 \item \lstinline{example05_toperator.hh} -- local operator for temporal part.
 \item \lstinline{example05_initial.hh} -- set up initial conditions.
@@ -228,13 +228,13 @@ you do not use \lstinline{addSolutionToVTKWriter}).
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Driver Using $Q_1$ Elements}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example05\_QkQk.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example05_QkQk.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example05\_QkQk.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example05_QkQk.hh}
 \end{Lst}}
 
@@ -257,26 +257,26 @@ with different finite element spaces.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Operator Spatial Part}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example05\_operator.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example05_operator.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example05\_operator.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example05_operator.hh}
 \end{Lst}}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Operator Temporal Part}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example05\_toperator.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example05_toperator.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example05\_toperator.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example05_toperator.hh}
 \end{Lst}}
 
@@ -310,7 +310,7 @@ with \lstinline{example05}.
 \end{center}
 \caption{Results for example 5 computed with $Q_1$ elements on a $128\times 128$ grid
 at times $0.5, 5$ and $50$ (left to right) and components 0 and 1 (top to bottom).
-Parameters of the FitzHugh-Nagumo model were $d_0=0.00028$, $d_1=0.005$, 
+Parameters of the FitzHugh-Nagumo model were $d_0=0.00028$, $d_1=0.005$,
 $\lambda=1$, $\sigma=1$, $\kappa=-0.05$ and $\tau=0.1$.}
 \label{fig:Example05Results}
 \end{figure}
@@ -333,8 +333,8 @@ We demonstrate orthogonality of concepts by parallelizing example 5.
 
 Example 6 consist of the following files
 \begin{itemize}
-\item \lstinline{example06.cc} -- the file to be compiled, main function. 
-\item \lstinline{example06_Q1Q1.hh} -- parallel driver for \textit{overlapping} grids. 
+\item \lstinline{example06.cc} -- the file to be compiled, main function.
+\item \lstinline{example06_Q1Q1.hh} -- parallel driver for \textit{overlapping} grids.
 \item \lstinline{example06_bctype.hh} -- dummy boundary condition type for overlapping constraints class.
 \end{itemize}
 \end{frame}
@@ -356,13 +356,13 @@ to assemble Dirichlet constraints at artificial processor boundaries.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Parallel Instationary Nonlinear Driver}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example06\_Q1Q1.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example06_Q1Q1.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example06\_Q1Q1.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example06_Q1Q1.hh}
 \end{Lst}}
 
@@ -385,4 +385,3 @@ cell-centered finite volumes.
 
 
 \cleardoublepage
-

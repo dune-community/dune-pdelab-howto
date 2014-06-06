@@ -27,24 +27,24 @@ i\in\mathcal{I}_{V_h} \\
 \end{split}
 \end{equation*}
 where we introduced the nonlinear residual map $\mathcal{R} :
-\mathbf{U} = \mathbb{K}^{\mathcal{I}_{V_h}} \to \mathbb{K}^{\mathcal{I}_{V_h}}$ which is defined as 
+\mathbf{U} = \mathbb{K}^{\mathcal{I}_{V_h}} \to \mathbb{K}^{\mathcal{I}_{V_h}}$ which is defined as
 \begin{equation*}
 \left(
 \mathcal{R}(\mathbf{u})\right)_i =
 r_h(\text{FE}_{U_h}(\mathbf{u}),\psi_i).
 \end{equation*}
-$\Phi_{V_h} = \{\psi_i\,|\, i\in\mathcal{I}_{V_h}\}$ is the basis of $V_h$.  
+$\Phi_{V_h} = \{\psi_i\,|\, i\in\mathcal{I}_{V_h}\}$ is the basis of $V_h$.
 \end{frame}
 
 \begin{frame}
 \frametitle<presentation>{Evaluation of Residual Map}
 Using splitting and localization properties we obtain
 \begin{align*}
-\mathcal{R}(\mathbf{u}) 
-&= \sum_{e\in E^0_h} \mathbf{R}_e^T\bm{\alpha}^\text{vol}_{h,e}(\mathbf{R}_e\mathbf{u}) 
+\mathcal{R}(\mathbf{u})
+&= \sum_{e\in E^0_h} \mathbf{R}_e^T\bm{\alpha}^\text{vol}_{h,e}(\mathbf{R}_e\mathbf{u})
 &&+ \sum_{e\in E^0_h} \mathbf{R}_e^T\bm{\lambda}^\text{vol}_{h,e} \\
 &+ \sum_{f\in E^1_h}
-\mathbf{R}_{l(f),r(f)}^T\bm{\alpha}^\text{skel}_{h,f}(\mathbf{R}_{l(f),r(f)}\mathbf{u}) 
+\mathbf{R}_{l(f),r(f)}^T\bm{\alpha}^\text{skel}_{h,f}(\mathbf{R}_{l(f),r(f)}\mathbf{u})
 &&+ \sum_{f\in E^1_h} \mathbf{R}_{l(f),r(f)}^T\bm{\lambda}^\text{skel}_{h,f}\\
 &+ \sum_{b\in B^1_h} \mathbf{R}_{l(b)}^T\bm{\alpha}^\text{bnd}_{h,b}(\mathbf{R}_{l(b)}\mathbf{u})
 &&+ \sum_{b\in B^1_h} \mathbf{R}_{l(b)}^T\bm{\lambda}^\text{bnd}_{h,b}.
@@ -102,14 +102,14 @@ Consider
 \end{subequations}
 The discrete problem reads as follows.
 \begin{equation*}
-u_h\in w_h+\tilde{U}_h^k : \quad \int_\Omega \nabla u_h \cdot 
+u_h\in w_h+\tilde{U}_h^k : \quad \int_\Omega \nabla u_h \cdot
 \nabla v \diffd x = 0 \qquad \forall v\in \tilde{U}^k_h.
 \end{equation*}
 
 Here, $r_h$ contains just the $\bm{\alpha}^\text{vol}_{h,e}$ volume term:
 \begin{equation*}
 r_h(u,v) = \int_\Omega \nabla u_h\cdot\nabla v \diffd x = \sum_{e\in
-E_h^0} \int_{\Omega_e} \nabla u_h\cdot\nabla v \diffd x.  
+E_h^0} \int_{\Omega_e} \nabla u_h\cdot\nabla v \diffd x.
 \end{equation*}
 
 The element integral is evaluated as in the integration example above.
@@ -148,13 +148,13 @@ method \lstinline{alpha_volume}.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Dirichlet Problem Listing}
 \framesubtitle<presentation>{File \texttt{examples/laplacedirichletop.hh}}
-\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../examples/laplacedirichletop.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File examples/laplacedirichletop.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../examples/laplacedirichletop.hh}
 \end{Lst}}
 
@@ -180,10 +180,10 @@ following methods:
 \item \lstinline{residual()} to evaluate the global residual
 $\mathcal{R}(\mathbf{u})$.
 \item \lstinline{jacobian()} to assemble the Jacobian matrix
-$\nabla\mathcal{R}(\mathbf{u})$. 
+$\nabla\mathcal{R}(\mathbf{u})$.
 \item \lstinline{jacobian_apply()} to compute Jacobian times vector
-$\nabla\mathcal{R}(\mathbf{u})\mathbf{u}$. 
-\end{itemize} 
+$\nabla\mathcal{R}(\mathbf{u})\mathbf{u}$.
+\end{itemize}
 The transformations due to constraints are not implemented yet, except
 Dirichlet constraints.
 \end{frame}
@@ -192,7 +192,7 @@ Dirichlet constraints.
 \frametitle<presentation>{Dirichlet Driver (Contd.)}
 Now we go about to setup and solve the linear system in two ways:
 (1) with setting up a matrix and (2) \textit{without} setting up a
-matrix. 
+matrix.
 
 Line \ref{lapdriver:MatrixType} extracts the matrix type from the
 operator space, which is an ISTL matrix here.
@@ -208,7 +208,7 @@ solver components: An operator used by CG, an SSOR preconditioner, a
 CG solver and a status variable.
 
 Following Algorithm \ref{algo:ConstrainedNewton} specialized for a
-linear system, we 
+linear system, we
 \begin{itemize}
 \item compute the residual in line \ref{lapdriver:Residual},
 \item solve the update equation in line \ref{lapdriver:UpdateEq}
@@ -219,7 +219,7 @@ linear system, we
 \begin{frame}
 \frametitle<presentation>{Dirichlet Driver (Contd.)}
 Alternatively, we now show how to solve the system in a matrix-free
-variant. 
+variant.
 
 In line \ref{lapdriver:OnTheFlyOp} we set up an operator for the CG
 method that uses \lstinline{jacobian_apply} of the grid operator space
@@ -227,7 +227,7 @@ to do the matrix vector product.
 
 Since we do not have an assembled Jacobian only simple preconditioners
 can be used. We use Richardson (= no preconditioning) in
-line \ref{lapdriver:Richardson}. 
+line \ref{lapdriver:Richardson}.
 
 The new CG solver is setup in line \ref{lapdriver:NewCG} and used in
 lines \ref{lapdriver:AltSolverFirst}---\ref{lapdriver:AltSolverLast}
@@ -240,13 +240,13 @@ provide VTK output.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Dirichlet Driver Listing}
 \framesubtitle<presentation>{File \texttt{examples/laplacedirichlet.hh}}
-\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../examples/laplacedirichlet.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File examples/laplacedirichlet.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\ttfamily\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../examples/laplacedirichlet.hh}
 \end{Lst}}
 
@@ -264,7 +264,7 @@ Here is the Result for $Q_1$ in $2d$ and $3d$:
 \end{frame}
 
 Figure \ref{fig:LaplaceResult} shows the output of the Laplace example
-for $Q_1$ in $2d$ and $3d$. 
+for $Q_1$ in $2d$ and $3d$.
 
 \mode<article>{
 \begin{figure}
@@ -295,7 +295,7 @@ various components.
 \item Laplace equation, Dirichlet b.c., cell-centered FV (any $d$) : 138 lines.
 \item Poisson equation, Dirichlet and Neumann b.c., conforming (any $d$, any $p$) : 196 lines.
 \item Poisson equation, Dirichlet and Neumann b.c., $H(\text{div})$
-conforming (mixed) method (any $d$, any $p$) : 267 lines. 
+conforming (mixed) method (any $d$, any $p$) : 267 lines.
 \end{itemize}
 \end{itemize}
 \end{frame}
@@ -363,7 +363,7 @@ provided).
 desired or approximations (``Picard'') are required.
 \item In the linear case, implementation of Jacobian (``local stiffness
 matrix'') and default implementation of residual evaluation is more
-efficient. 
+efficient.
 \end{itemize}
 \item Put everything into a grid operator space.
 \end{itemize}
@@ -374,7 +374,7 @@ efficient.
 Things that are still to do:
 \begin{itemize}
 \item Implementation of constraints (only Dirichlet is done so far,
-the transformation matrices can be assembled but not applied). 
+the transformation matrices can be assembled but not applied).
 \item Newton and time-stepping schemes.
 \item Real applications.
 \end{itemize}

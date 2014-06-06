@@ -22,19 +22,19 @@ discretizations and solvers for systems of PDEs based on DUNE.}
 \item General approach to constraints.
 \item Nested product spaces for systems of PDEs.
 \item Handle communication on distributed grids.
-\end{itemize} 
+\end{itemize}
 \item \textbf{Generic Finite Element Assembly}
 \begin{itemize}
 \item Handle element and face integrals.
 \item Residual and matrix assembly.
 \item Linear and nonlinear, stationary and transient problems.
-\end{itemize} 
+\end{itemize}
 \item \textbf{Solvers}
 \begin{itemize}
 \item Exploitation of blocking and ordering in linear solvers.
 \item Nonlinear solver (Newton, Picard, \ldots).
 \item Single step time-stepping schemes (explicit, implicit).
-\end{itemize} 
+\end{itemize}
 \item Exchangeable linear algebra backend
 \item Still have to write C++ code, full control on element level.
 %\item User only involved with ``local'' view on (reference) element.
@@ -57,7 +57,7 @@ $-\nabla\cdot\{K\nabla u\}=f$ & CCFV & 223 \\
  & Mimetic & 278 \\
 \hline
 Two-phase flow in porous media & $p_l, p_c$, CCFV & 700 \\
-& $p_l, p_c$, DG & 931 \\  
+& $p_l, p_c$, DG & 931 \\
 & CCFV, 2c & 986 \\
 \hline
 Navier-Stokes & $P_2/P_1$, $Q_2/Q_1$ & 539 \\
@@ -84,7 +84,7 @@ Major DUNE modules are:
 
 \begin{frame}
 \frametitle<presentation>{Required Modules}
-To work through the examples the following DUNE modules are required: 
+To work through the examples the following DUNE modules are required:
 \begin{itemize}
 \item \lstinline{dune-common},
 \item \lstinline{dune-geometry},
@@ -97,7 +97,7 @@ To work through the examples the following DUNE modules are required:
 \end{itemize}
 
 In addition, at least one of the grid managers UG, ALU or Alberta is
-required to do the examples on simplex grids. 
+required to do the examples on simplex grids.
 \end{frame}
 
 
@@ -105,9 +105,9 @@ required to do the examples on simplex grids.
 \subsection<article>{How to Read this Manual}
 
 The main idea of this howto is to introduce the concepts by working
-through a set of increasingly complex examples. We will start by 
+through a set of increasingly complex examples. We will start by
 solving stationary elliptic problems first without and then with constrained spaces
-(Dirichlet boundary conditions). After some excursion to linear algebra backends and 
+(Dirichlet boundary conditions). After some excursion to linear algebra backends and
 working with CAD models instationary problems and systems will be treated.
 
 \cleardoublepage

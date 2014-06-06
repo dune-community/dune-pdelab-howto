@@ -12,7 +12,7 @@ As we have seen we often have the situation that problems have to be solved in a
 subspace $\tilde{U}_h\subset U_h$ or even an affine subspace
 $w_h+\tilde{U}_h$, where $w_h\in U_h$.
 
-\paragraph{Basis transformation} 
+\paragraph{Basis transformation}
 
 \begin{frame}
 \frametitle<presentation>{Basis Transformation}
@@ -30,8 +30,8 @@ $\text{FE}_{\Phi_{U_h}'}(\mathbf{u}') = \sum_{i\in\mathcal{I}_{U_h}}
 (\mathbf{u}')_i \phi_i'$ and get
 \begin{equation}
 \begin{split}
-u_h &= \text{FE}_{\Phi_{U_h}'}(\mathbf{u}') = 
-\sum_{j\in\mathcal{I}_{\tilde{U}_h}} (\mathbf{u}')_j \phi'_j = 
+u_h &= \text{FE}_{\Phi_{U_h}'}(\mathbf{u}') =
+\sum_{j\in\mathcal{I}_{\tilde{U}_h}} (\mathbf{u}')_j \phi'_j =
 \sum_{j\in\mathcal{I}_{U_h}} (\mathbf{u}')_j \left (
 \sum_{i\in\mathcal{I}_{U_h}}
 \left(\mathbf{T}_{U_h}\right)_{j,i} \phi_i \right)\\
@@ -42,7 +42,7 @@ u_h &= \text{FE}_{\Phi_{U_h}'}(\mathbf{u}') =
 \end{equation}
 \end{frame}
 
-\paragraph{Splitting and Subspaces} 
+\paragraph{Splitting and Subspaces}
 
 \begin{frame}
 \frametitle<presentation>{Splitting and Subspaces}
@@ -100,17 +100,17 @@ $\mathbf{T}_{\tilde{U}_h,\bar{U}_h}$ will usually be very sparse (or
 even zero).
 \end{frame}
 
-\paragraph{Restrictions} 
+\paragraph{Restrictions}
 
 \begin{frame}<article>
 \frametitle<presentation>{Restriction Operators}
 Below we will make use of the following restriction operators
 \begin{align*}
-\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'} &: \mathbf{U}' \to \tilde{\mathbf{U}}', & 
-(\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'}\mathbf{u}')_i &= 
+\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'} &: \mathbf{U}' \to \tilde{\mathbf{U}}', &
+(\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'}\mathbf{u}')_i &=
 (\mathbf{u}')_i \quad \forall i\in \tilde{\mathcal{I}}_{U_h},\\
-\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} &: \mathbf{U}' \to \bar{\mathbf{U}}', & 
-(\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}\mathbf{u}')_i &= 
+\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} &: \mathbf{U}' \to \bar{\mathbf{U}}', &
+(\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}\mathbf{u}')_i &=
 (\mathbf{u}')_i \quad \forall i\in \bar{\mathcal{I}}_{U_h}.
 \end{align*}
 
@@ -141,7 +141,7 @@ element functions.
 $\tilde{U}_h^1 = \{u\in U_h^1 \,|\, \text{``$u(x)=0$'' for
 $x\in \Gamma_D$}\}$.
 
-Then just set 
+Then just set
 \begin{align*}
 \bar{\mathcal{I}}_{U_h} &= \{i\in \mathcal{I}_{U_h} \,|\,
 x_{z_i}\in\Gamma_D\}, &
@@ -166,7 +166,7 @@ Consider a mesh obtained from non-conforming refinement.
 $U_h^1$ now is the space of piecewise linear functions with degrees of
 freedom in \textit{all} vertices of the mesh. \\
 \medskip
-To obtain the subspace $\tilde{U}_h^1 = U_h^1 \cap C^0(\Omega)$ we set 
+To obtain the subspace $\tilde{U}_h^1 = U_h^1 \cap C^0(\Omega)$ we set
 \begin{align*}
 \bar{\mathcal{I}}_{U_h} &= \{i\in \mathcal{I}_{U_h} \,|\, \text{$z_i$ is a
 hanging node} \}, \\
@@ -247,7 +247,7 @@ Constraints are a property of a grid function space.
 In addition to the local finite elements we have to
 parametrize \lstinline{Dune::PDELab::GridFunctionSpace} with a type
 that can provide the sparse transformation matrix
-$\mathbf{T}_{\tilde{U}_h,\bar{U}_h}$ from \eqref{Eq:StructureTransformation}. 
+$\mathbf{T}_{\tilde{U}_h,\bar{U}_h}$ from \eqref{Eq:StructureTransformation}.
 
 Information should be provided only locally. One
 column of $\mathbf{T}_{\tilde{U}_h,\bar{U}_h}$ may only involve
@@ -279,19 +279,19 @@ Flags \lstinline{do...} control which methods must be provided.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Constraints Assembler Listing}
 \framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q1constraints.hh}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1constraints.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/q1constraints.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1constraints.hh}
 \end{Lst}}
 
 \begin{frame}
 \frametitle<presentation>{A Boundary Condition Function}
-To use assembling of constraints 
+To use assembling of constraints
 we have to provide the parameters required by the given type of
 constraints.
 
@@ -312,19 +312,19 @@ In this example it must provide a method
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Boundary Constraints Parameters Listing}
 \framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q1constraintsparameters.hh}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1constraintsparameters.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/q1constraintsparameters.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1constraintsparameters.hh}
 \end{Lst}}
 
 \begin{frame}
 \frametitle<presentation>{Interpolation with Constraints}
-In the following listing we redo the interpolation example 
+In the following listing we redo the interpolation example
 with a constrained finite element space.
 
 In line \ref{cint:newparameter} the grid function space is
@@ -332,7 +332,7 @@ parametrized with the constraints class.
 
 In line \ref{cint:container} the grid function space exports a type to
 hold the transformation matrix
-$\mathbf{T}^T_{\tilde{U}_h,\bar{U}_h}$. 
+$\mathbf{T}^T_{\tilde{U}_h,\bar{U}_h}$.
 
 In line \ref{cint:bcparam} the function giving the boundary
 condition type is instantiated.
@@ -352,13 +352,13 @@ for the constrained degrees of freedom.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Constrained Interpolation Listing}
 \framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q1constrainedinterpolate.hh}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1constrainedinterpolate.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/q1constrainedinterpolate.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1constrainedinterpolate.hh}
 \end{Lst}}
 
@@ -386,4 +386,3 @@ subsequent modification of nonconstrained degrees of freedom.}
 
 
 \cleardoublepage
-
