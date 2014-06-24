@@ -109,17 +109,19 @@ int main(int argc, char **argv)
   // define parameters
   const unsigned int dim = 3;
   const unsigned int degree = 2;
-  const Dune::GeometryType::BasicType elemtype = Dune::GeometryType::simplex;
   const Dune::PDELab::MeshType meshtype = Dune::PDELab::MeshType::conforming;
   const Dune::SolverCategory::Category solvertype = Dune::SolverCategory::sequential;
   typedef double NumberType;
 
   // make grid
 #if HAVE_UG
+  const Dune::GeometryType::BasicType elemtype = Dune::GeometryType::simplex;
   typedef Dune::UGGrid<dim> GM;
 #elif HAVE_ALUGRID
+  const Dune::GeometryType::BasicType elemtype = Dune::GeometryType::simplex;
   typedef Dune::ALUGrid<dim,dim,Dune::simplex,Dune::nonconforming> GM;
 #else  // ! (HAVE_UG || HAVE_ALUGRID)
+  const Dune::GeometryType::BasicType elemtype = Dune::GeometryType::cube;
   typedef Dune::YaspGrid<dim> GM;
 #endif
   typedef Dune::PDELab::StructuredGrid<GM> Grid;
