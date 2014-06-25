@@ -41,7 +41,7 @@ Consider the following model problem:
 \medskip
 \textbf{Weak formulation}. Set $U = H^1(\Omega)$.
 \begin{equation*}
-u\in U \quad : \quad \underbrace{\int_\Omega \nabla u \cdot \nabla v + 
+u\in U \quad : \quad \underbrace{\int_\Omega \nabla u \cdot \nabla v +
 a u v - f v \,dx}_{r(u,v)} = 0 \qquad \forall v\in U.
 \end{equation*}
 Has unique solution for $a(x)\geq a_0>0$.
@@ -53,7 +53,7 @@ Other boundary conditions are treated later.
 
 \begin{frame}
 \frametitle{Conforming Finite Element Method}
-Needs conforming triangulation $E_h^0 = \{e_o,\ldots,e_{N_h^0-1} \}$ of $\Omega$. 
+Needs conforming triangulation $E_h^0 = \{e_o,\ldots,e_{N_h^0-1} \}$ of $\Omega$.
 
 Define the \textbf{conforming finite element space}
 \begin{equation*}
@@ -96,7 +96,7 @@ $\chi_e$ & Characteristic function of element $e$
 
 \begin{frame}
 \frametitle{Global Basis; Finite Element Isomorphism}
-For $j\in \mathcal{I}_{U_h^k}$ set $L(j) = \{ (e,l) \, : \, g(e,l) = j\}$ (all local degrees 
+For $j\in \mathcal{I}_{U_h^k}$ set $L(j) = \{ (e,l) \, : \, g(e,l) = j\}$ (all local degrees
 of freedom associated with global degree of freedom $j$).
 
 Setting $(\mathbf{u})_k = \delta_{j,k}$ we obtain the global basis functions:
@@ -155,7 +155,7 @@ It follows from the \textbf{chain rule}:
 {\small
 \begin{equation*}
 (\nabla\mu_e(\hat{x}))^{T} \nabla_{x} u_h(\mu_e(\hat{x})) = \nabla_{\hat{x}} \hat{u}_h(\hat{x})
-\ \Rightarrow \ 
+\ \Rightarrow \
 \nabla_{x} u_h(\mu_e(\hat{x})) = (\nabla\mu_e(\hat{x}))^{-T} \nabla_{\hat{x}} \hat{u}_h(\hat{x})
 \end{equation*}}
 where $\nabla\mu_e(\hat{x})$ is the jacobian of the function $\mu_e$.
@@ -168,14 +168,14 @@ where $\nabla\mu_e(\hat{x})$ is the jacobian of the function $\mu_e$.
 \begin{equation*}
 \begin{split}
 &(\mathcal{R}(\mathbf{u}) )_i  = r\left(\text{FE}(\mathbf{u}),\phi_i\right)
-= \sum_{e\in E_h^0} \int_{\Omega_e} \nabla \text{FE}(\mathbf{u}) \cdot \nabla\phi_i 
+= \sum_{e\in E_h^0} \int_{\Omega_e} \nabla \text{FE}(\mathbf{u}) \cdot \nabla\phi_i
 + a \, \text{FE}_{\Phi_{U_h^k}}(\mathbf{u}) \phi_i - f \phi_i \,dx\\
-&= \sum_{(e,m) : g(e,m)=i} \int_{\Omega_e} 
+&= \sum_{(e,m) : g(e,m)=i} \int_{\Omega_e}
 \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \nabla_x \hat\phi_{e,l}(\mu_e^{-1}(x))\right]
 \cdot \nabla_x \hat\phi_{e,m}(\mu_e^{-1}(x))\\
 & + a \, \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \hat\phi_{e,l}(\mu_e^{-1}(x))\right] \hat\phi_{e,m}(\mu_e^{-1}(x))
 - f \hat\phi_{e,m}(\mu_e^{-1}(x)) \, dx\\
-&= \sum_{(e,m) : g(e,m)=i} \int_{\hat\Omega_e} 
+&= \sum_{(e,m) : g(e,m)=i} \int_{\hat\Omega_e}
 \Biggl\{\left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} (\nabla \mu_e(\hat{x}))^{-T}\nabla_{\hat{x}} \hat\phi_{e,l}(\hat{x})\right]
 \cdot (\nabla \mu_e(\hat{x}))^{-T} \nabla_{\hat{x}} \hat\phi_{e,m}(\hat{x})\\
 & + a \, \left[ \sum_{l=0}^{n(e)-1} (\mathbf{u})_{g(e,l)} \hat\phi_{e,l}(\hat{x}) \right] \hat\phi_{e,m}(\hat{x})
@@ -195,7 +195,7 @@ Define restriction to local degrees of freedom
 Define \textit{local operator} $\bm{\alpha}^{\text{vol}}_{h,e} : \mathbf{U}_e \to \mathbf{U}_e$ (user part):
 {\small\begin{equation*}
 \begin{split}
-&\bigl(\bm{\alpha}^{\text{vol}}_{h,e}({\color{cyan}\mathbf{u}})\bigr)_m  = \int_{\hat\Omega_e} 
+&\bigl(\bm{\alpha}^{\text{vol}}_{h,e}({\color{cyan}\mathbf{u}})\bigr)_m  = \int_{\hat\Omega_e}
 \Biggl\{\left[ \sum_{l=0}^{n(e)-1} ({\color{cyan}\mathbf{u}})_{l} {\color{purple}
 (\nabla \mu_e(\hat{x}))^{-T}} {\color{blue}\nabla_{\hat{x}} \hat\phi_{e,l}(\hat{x})} \right]
 \cdot {\color{purple}(\nabla \mu_e(\hat{x}))^{-T}} {\color{blue}\nabla_{\hat{x}} \hat\phi_{e,m}(\hat{x})}\\
@@ -234,7 +234,7 @@ We need methods to compute $\mathcal{R}(\mathbf{u})$ and $\nabla\mathcal{R}(\mat
 \frametitle{Jacobian}
 The Jacobian matrix is defined as
 \begin{equation*}
-(\mathbf{A})_{i,j} = (\nabla\mathcal{R}(\mathbf{u}))_{i,j} 
+(\mathbf{A})_{i,j} = (\nabla\mathcal{R}(\mathbf{u}))_{i,j}
 = \frac{\partial (\mathcal{R})_i}{\partial (\mathbf{u})_j}(\mathbf{u})
 = \sum_{(e,m,l) : g(e,m)=i \wedge g(e,l)=j} \frac{\partial (\bm{\alpha}_{h,e}^{\text{vol}})_m }{\partial (\mathbf{u})_l } (\mathbf{R}_e \mathbf{u}).
 \end{equation*}
@@ -273,7 +273,7 @@ The first example implements model problem \eqref{Eq:Example01}.
 
 It consists of the following files:
 \begin{itemize}
-\item \lstinline{example01.cc} -- the file to be compiled. 
+\item \lstinline{example01.cc} -- the file to be compiled.
 \item \lstinline{example01_main.hh} -- main function. Instantiates a grid and runs the variants.
 \item \lstinline{example01a_Qk.hh} -- solve model problem \eqref{Eq:Example01} with $Q_1$ or $Q_2$ elements.
 \item \lstinline{example01a_RT.hh} -- same with nonconforming rotated bilinear (``Rannacher-Turek'' element).
@@ -286,7 +286,7 @@ It consists of the following files:
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Function \lstinline{main}}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example01\_main.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01_main.hh}
 \end{frame}
 \mode<article>{
@@ -297,7 +297,7 @@ Main functions will not be shown in later examples.
 
 \begin{Lst}[File src/course-examples/example01\_main.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01_main.hh}
 \end{Lst}}
 
@@ -337,13 +337,13 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01_main.hh}
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Unconstrained Elliptic Problem with $Q_1$}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example01a\_Qk.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01a_Qk.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example01a\_Qk.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01a_Qk.hh}
 \end{Lst}}
 
@@ -368,9 +368,9 @@ A local operator is a class providing the following:
 \item Method \lstinline{pattern_volume} assembling sparsity pattern (default provided).
 \item Flags controlling which terms to assemble.
 \item Method \lstinline{alpha_volume} computing $\bm{\alpha}_{h,e}^{\text{vol}}(\mathbf{u})$.
-\item Method \lstinline{jacobian_volume} computing $\nabla\bm{\alpha}_{h,e}^{\text{vol}}(\mathbf{u})$. 
+\item Method \lstinline{jacobian_volume} computing $\nabla\bm{\alpha}_{h,e}^{\text{vol}}(\mathbf{u})$.
 This method can be provided generically through numerical differentiation.
-\item Method \lstinline{jacobian_apply_volume} computing $\nabla\bm{\alpha}_{h,e}^{\text{vol}}(\mathbf{u})\mathbf{u}$. 
+\item Method \lstinline{jacobian_apply_volume} computing $\nabla\bm{\alpha}_{h,e}^{\text{vol}}(\mathbf{u})\mathbf{u}$.
 This method can be provided generically through numerical differentiation.
 \item Possibly more methods (to be introduced later):
 \begin{itemize}
@@ -382,11 +382,11 @@ This method can be provided generically through numerical differentiation.
 
 \begin{frame}[fragile]
 \frametitle{\lstinline{alpha_volume} Method}
-The method \lstinline{alpha_volume} has the following signature: 
+The method \lstinline{alpha_volume} has the following signature:
 \begin{lstlisting}[basicstyle=\scriptsize]
-template<typename EG, typename LFSU, typename X, 
+template<typename EG, typename LFSU, typename X,
          typename LFSV, typename R>
-void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, 
+void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x,
                    const LFSV& lfsv, R& r) const;
 \end{lstlisting}
 Where the arguments are:
@@ -394,7 +394,7 @@ Where the arguments are:
 \item \lstinline{eg} -- a codim 0 entity $e\in E_h^0$.
 \item \lstinline{lfsu} -- local basis $\hat\phi_{e,l}$ for trial space.
 \item \lstinline{x} -- local coefficients $(\mathbf{u})_l$.
-\item \lstinline{lfsv} -- local basis $\hat\psi_{e,l}$ for the test space 
+\item \lstinline{lfsv} -- local basis $\hat\psi_{e,l}$ for the test space
 \item \lstinline{r} -- local contribution to residual (the result).
 \end{itemize}
 \end{frame}
@@ -403,13 +403,13 @@ Where the arguments are:
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Operator for Unconstrained Elliptic Problem}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example01a\_operator.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01a_operator.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example01a\_operator.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01a_operator.hh}
 \end{Lst}}
 
@@ -463,7 +463,7 @@ with \lstinline{example01}.
 \includegraphics[width=0.32\textwidth]{./EPS/example01a_RT}
 \end{center}
 \caption{Results for example 1a computed with three different finite element spaces.
-From left: $Q_1$ elements, $Q_2$ elements, rotated bilinear (Rannacher-Turek) 
+From left: $Q_1$ elements, $Q_2$ elements, rotated bilinear (Rannacher-Turek)
 element on an $8 \times 8$ grid.}
 \label{fig:Example01aResults}
 \end{figure}
@@ -486,7 +486,7 @@ Explore the Rannacher Turek element in \lstinline{example01a_RT.hh}
 
 \begin{frame}
 \frametitle{Going Nonlinear}
-\ldots is also easy. Just 
+\ldots is also easy. Just
 \begin{itemize}
 \item Make a new local operator where the coefficients $a$ and $f$ depend on the solution $u$,
 see \lstinline{example01b_operator}.
@@ -499,13 +499,13 @@ see \lstinline{example01b_operator}.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Unconstrained Nonlinear Elliptic Problem with $Q_2$}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example01b\_Q2.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01b_Q2.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example01b\_Q2.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example01b_Q2.hh}
 \end{Lst}}
 
@@ -531,7 +531,7 @@ Consider now the following model problem:
 \end{subequations}
 where $a(x)\geq a_0 >0$ when $\Gamma_D=\emptyset$ or $a(x)\geq 0$ else.
 
-\textbf{Weak formulation}. For $w\in H^1(\Omega)$, $w = g$ on 
+\textbf{Weak formulation}. For $w\in H^1(\Omega)$, $w = g$ on
 $\Gamma_D$ (``extension of $g$''), set
 \begin{align*}
 \tilde{U} &= H_D^1(\Omega) = \{ u \in H^1(\Omega) \,:\, u|_{\Gamma_D}=0 \} \subset H^1(\Omega), \\
@@ -540,7 +540,7 @@ w + \tilde{U} &= \{ u \in H^1(\Omega) \,:\, u = w+\tilde{u} \wedge \tilde{u}\in\
 
 Then find
 \begin{equation*}
-u\in w+\tilde{U} \quad : \quad \underbrace{\int_\Omega \nabla u \cdot \nabla v + 
+u\in w+\tilde{U} \quad : \quad \underbrace{\int_\Omega \nabla u \cdot \nabla v +
 a u v - f v \,dx + \int_{\Gamma_N} j v \,ds}_{r(u,v)} = 0 \qquad \forall v\in\tilde{U}.
 \end{equation*}
 \end{frame}
@@ -552,8 +552,8 @@ a u v - f v \,dx + \int_{\Gamma_N} j v \,ds}_{r(u,v)} = 0 \qquad \forall v\in\ti
 \begin{itemize}
 \item There will be an additional method on the local operator.
 \end{itemize}
-\item The spaces for solution $u$ and test function $v$ are different. 
-\item We call $\tilde{U}$ a \textbf{constrained space}. 
+\item The spaces for solution $u$ and test function $v$ are different.
+\item We call $\tilde{U}$ a \textbf{constrained space}.
 \item We call $w+\tilde{U}$ an \textbf{affine space}.
 \item In the linear case it suffices to solve a problem in the space $\tilde{U}$:
 \begin{subequations}
@@ -565,7 +565,7 @@ a u v - f v \,dx + \int_{\Gamma_N} j v \,ds}_{r(u,v)} = 0 \qquad \forall v\in\ti
 where $w$ is an extension of $g$ to $\Omega$ and $u = w + \tilde{u}$.
 \end{subequations}
 \item In the nonlinear case this is not possible.
-\end{itemize} 
+\end{itemize}
 \end{frame}
 
 
@@ -579,23 +579,23 @@ where $w$ is an extension of $g$ to $\Omega$ and $u = w + \tilde{u}$.
 (Mesh resolves the Dirichlet boundary $\Gamma_D$).
 \item Provide extension $w\in U_h^k$ with ``$w=g$'' on $\Gamma_D$ in an appropriate sense.
 \item Obviously, $\text{dim}\tilde{U}_h^k < \text{dim} U_h^k$.
-\item Note: Dirichlet boundary conditions could also be handled by penalty methods. 
-This can be done easily in PDELab but is not shown here. 
+\item Note: Dirichlet boundary conditions could also be handled by penalty methods.
+This can be done easily in PDELab but is not shown here.
 \end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Realization of Dirichlet Constraints}
 \begin{itemize}
-\item Assume $\Phi_{U_h^k}$ is a Lagrange basis: 
+\item Assume $\Phi_{U_h^k}$ is a Lagrange basis:
 \begin{equation*}
 \phi_j(x_i)=\delta_{i,j} \quad\text{where $x_i$ are the Lagrange points}.
 \end{equation*}
 \item Construct subspace via basis representation:
 \begin{itemize}
-\item $\mathcal{I}_{\tilde{U}_h^k} = \left\{ j\in \mathcal{I}_{U_h^k} \,:\, 
+\item $\mathcal{I}_{\tilde{U}_h^k} = \left\{ j\in \mathcal{I}_{U_h^k} \,:\,
 x_j \not\in \Gamma_D \right\} \subset \mathcal{I}_{U_h^k}$.
-\item $\Phi_{\tilde{U}_h^k} = \left\{ \phi_j\in \Phi_{U_h^k} \,:\, 
+\item $\Phi_{\tilde{U}_h^k} = \left\{ \phi_j\in \Phi_{U_h^k} \,:\,
 j \in \mathcal{I}_{\tilde{U}_h^k} \right\} \subset \Phi_{U_h^k}$.
 \item $\tilde{U}_h^k = \text{span}\Phi_{\tilde{U}_h^k}$.
 \end{itemize}
@@ -603,7 +603,7 @@ j \in \mathcal{I}_{\tilde{U}_h^k} \right\} \subset \Phi_{U_h^k}$.
 \begin{enumerate}
 \item $\tilde{\mathbf{U}} = \mathbb{R}^{\mathcal{I}_{\tilde{U}_h^k}} \not\subseteq \mathbf{U}$.
 \item $\tilde{\mathbf{U}} = \left\{ \mathbf{u}\in\mathbf{U} \,:\, (\mathbf{u})_j = 0 \  \forall
-j \in \mathcal{I}_{U_h^k} \setminus \mathcal{I}_{\tilde{U}_h^k} \right\} \subset \mathbf{U}$. 
+j \in \mathcal{I}_{U_h^k} \setminus \mathcal{I}_{\tilde{U}_h^k} \right\} \subset \mathbf{U}$.
 \end{enumerate}
 \item We choose (2) because
 \begin{itemize}
@@ -625,7 +625,7 @@ j \in \mathcal{I}_{U_h^k} \setminus \mathcal{I}_{\tilde{U}_h^k} \right\} \subset
 \item Periodic boundary conditions.
 \item Artificial essential boundary conditions or ghost degrees of freedom in parallelization.
 \end{itemize}
-\item PDELab has a general concept to handle all types of constraints. 
+\item PDELab has a general concept to handle all types of constraints.
 \item Given $U_h$ with index set $\mathcal{I}_{U_h^k}$, construct a basis of the subspace:
 \begin{itemize}
 \item Partition index set: $\mathcal{I}_{U_h^k} = \tilde{\mathcal{I}} \cup \bar{\mathcal{I}}$.
@@ -636,7 +636,7 @@ j \in \mathcal{I}_{U_h^k} \setminus \mathcal{I}_{\tilde{U}_h^k} \right\} \subset
 \item $\tilde{U}_h$ is spanned by the new basis.
 \item In the Dirichlet case $\omega_{i,j}=0$.
 \end{itemize}
-\item Constrained space defined by splitting $\tilde{\mathcal{I}} \cup \bar{\mathcal{I}}$ 
+\item Constrained space defined by splitting $\tilde{\mathcal{I}} \cup \bar{\mathcal{I}}$
 and coefficients $\omega_{i,j}$.
 \end{itemize}
 \end{frame}
@@ -650,11 +650,11 @@ The first example implements model problem \eqref{Eq:Example02}.
 
 It consists of the following files:
 \begin{itemize}
-\item \lstinline{example02.cc} -- the file to be compiled, main function. 
+\item \lstinline{example02.cc} -- the file to be compiled, main function.
 \item \lstinline{example02_bctype.hh} -- a function giving the splitting $\partial\Omega = \Gamma_D \cup \Gamma_N$.
 \item \lstinline{example02_bcextension.hh} -- a function for $g$ and its extension $w$.
 \item \lstinline{example02_operator.hh} -- local operator including inhomogeneous Neumann boundary conditions.
-\item \lstinline{example02_Q1.hh} -- driver setting up and solving the problem. 
+\item \lstinline{example02_Q1.hh} -- driver setting up and solving the problem.
 \end{itemize}
 \end{frame}
 
@@ -664,7 +664,7 @@ It consists of the following files:
 \begin{itemize}
 \item Class \lstinline{ConformingDirichletConstraints} parametrizes the grid function space
 with the possibility of having Dirichlet constraints.
-\item Function \lstinline{constraints} assembles constraints (i.e. the splitting 
+\item Function \lstinline{constraints} assembles constraints (i.e. the splitting
 $\mathcal{I}_{U_h^k} = \tilde{\mathcal{I}} \cup \bar{\mathcal{I}}$) from a given function.
 \item Function \lstinline{interpolate} initializes a coefficient vector from a given function.
 (In case you asked yourself before how to do this -- here it is).
@@ -676,39 +676,39 @@ $\mathcal{I}_{U_h^k} = \tilde{\mathcal{I}} \cup \bar{\mathcal{I}}$) from a given
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Constrained Elliptic Problem}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example02\_Q1.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example02_Q1.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example02\_Q1.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example02_Q1.hh}
 \end{Lst}}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Boundary Condition Type Function}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example02\_bctype.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example02_bctype.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example02\_bctype.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example02_bctype.hh}
 \end{Lst}}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Boundary Condition Extension Function}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example02\_bcextension.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example02_bcextension.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example02\_bcextension.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example02_bcextension.hh}
 \end{Lst}}
 
@@ -717,11 +717,11 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example02_bcextensio
 Local operator is extended by a new method \lstinline{alpha_boundary}
 computing the boundary integral.
 
-\lstinline{alpha_boundary} has the following signature: 
+\lstinline{alpha_boundary} has the following signature:
 \begin{lstlisting}[basicstyle=\scriptsize]
-template<typename IG, typename LFSU, typename X, 
+template<typename IG, typename LFSU, typename X,
          typename LFSV, typename R>
-void alpha_boundary (const IG& ig, const LFSU& lfsu_s, const X& x_s, 
+void alpha_boundary (const IG& ig, const LFSU& lfsu_s, const X& x_s,
                      const LFSV& lfsv_s, R& r_s) const
 \end{lstlisting}
 Where the arguments are:
@@ -729,7 +729,7 @@ Where the arguments are:
 \item \lstinline{ig} -- intersection with domain boundary.
 \item \lstinline{lfsu_s} -- local basis $\hat\phi_{e,l}$ for trial space on inside element.
 \item \lstinline{x_s} -- local coefficients on inside element.
-\item \lstinline{lfsv_s} -- local basis $\hat\psi_{e,l}$ for test space on inside element. 
+\item \lstinline{lfsv_s} -- local basis $\hat\psi_{e,l}$ for test space on inside element.
 \item \lstinline{r_s} -- local contribution to residual on inside element.
 \end{itemize}
 \end{frame}
@@ -738,13 +738,13 @@ Where the arguments are:
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Operator with Neumann Boundary}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example02\_operator.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example02_operator.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example02\_operator.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example02_operator.hh}
 \end{Lst}}
 
@@ -768,7 +768,7 @@ with \lstinline{example01}.
 \includegraphics[width=0.48\textwidth]{./EPS/example02_Q1} \hspace{1mm}
 \includegraphics[width=0.48\textwidth]{./EPS/example04}
 \end{center}
-\caption{Result for example 2 computed with $Q_1$ elements on the right. 
+\caption{Result for example 2 computed with $Q_1$ elements on the right.
 Same problem solved with cell-centered finite volume method in example 4.}
 \label{fig:Example02Results}
 \end{figure}
@@ -782,7 +782,7 @@ function space on a grid:
 \begin{itemize}
 \item \lstinline{gfs} $\quad\leftrightarrow\quad$ $U_h(E_h^0)$.
 \end{itemize}
-\item A grid function space with a \textit{constraints container} represents a constrained 
+\item A grid function space with a \textit{constraints container} represents a constrained
 finite-dimensional function space:
 \begin{itemize}
 \item \lstinline{gfs} $+$ \lstinline{cc} $\quad\leftrightarrow\quad$ $\tilde{U}_h(E_h^0)$.
@@ -830,12 +830,12 @@ We show how to formulate this method in the framework of residual forms.
 
 \begin{frame}
 \frametitle{Discrete Weak Formulation I}
-For a grid $E_h^0$ define $W_h = \{ u \in L_2(\Omega) \,:\, 
+For a grid $E_h^0$ define $W_h = \{ u \in L_2(\Omega) \,:\,
 u|_{\Omega_e} = \text{const} \ \forall e\in E_h^0\}$. $v\in W_h$:
 {\small\begin{equation*}
 \begin{split}
-& \sum_{e\in E_h^0} \int_{\Omega_e} (-\Delta u + au - f) v \, dx = 
-\sum_{e\in E_h^0} \biggl\{ \int_{\Omega_e} (au - f) v \, dx - 
+& \sum_{e\in E_h^0} \int_{\Omega_e} (-\Delta u + au - f) v \, dx =
+\sum_{e\in E_h^0} \biggl\{ \int_{\Omega_e} (au - f) v \, dx -
 \int_{\partial\Omega_e} (\nabla u\cdot n) v \, ds \biggr\}\\
 &\quad = \sum_{e\in E_h^0} \biggl\{ \int_{\Omega_e} (au - f) v \, dx
 - \int_{\partial\Omega_e\cap\Omega} (\nabla u\cdot n) v \, ds\\
@@ -858,9 +858,9 @@ Approximation with difference quotient and midpoint rule:
 \begin{equation*}
 \begin{split}
 r_h^{\text{FV}}(u_h,v) & = \sum_{e\in E_h^0} \bigl(a(x_e)u_h(x_e) - f(x_e)\bigr) v(x_e) |\Omega_e|\\
-&\qquad - \sum_{\gamma\in E_h^1} \frac{u_h(x_\gamma^+)-u_h(x_\gamma^-)}{\|x_\gamma^+ - x_\gamma^-\|} 
+&\qquad - \sum_{\gamma\in E_h^1} \frac{u_h(x_\gamma^+)-u_h(x_\gamma^-)}{\|x_\gamma^+ - x_\gamma^-\|}
 \bigl(v(x_\gamma^-) - v(x_\gamma^+)\bigr) |\Omega_\gamma|\\
-&\qquad - \sum_{\gamma\in B_h^1; \Omega_\gamma\subseteq\Gamma_D} \frac{g(x_\gamma)-u_h(x_\gamma^-)}{\|x_\gamma - x_\gamma^-\|} 
+&\qquad - \sum_{\gamma\in B_h^1; \Omega_\gamma\subseteq\Gamma_D} \frac{g(x_\gamma)-u_h(x_\gamma^-)}{\|x_\gamma - x_\gamma^-\|}
 v(x_\gamma^-) |\Omega_\gamma|\\
 &\qquad + \sum_{\gamma\in B_h^1; \Omega_\gamma\subseteq\Gamma_N} j(x_\gamma) v(x_\gamma) |\Omega_\gamma| .
 \end{split}
@@ -882,8 +882,8 @@ It works only on axiparallel, cube grids.
 
 It consists of the following files:
 \begin{itemize}
-\item \lstinline{example04.cc} -- the file to be compiled, main function. 
-\item \lstinline{example04.hh} -- driver setting up and solving the problem. 
+\item \lstinline{example04.cc} -- the file to be compiled, main function.
+\item \lstinline{example04.hh} -- driver setting up and solving the problem.
 \item \lstinline{example04_operator.hh} -- local operator for cell centered finite volumes.
 \end{itemize}
 \end{frame}
@@ -902,13 +902,13 @@ New things in this driver are:
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Driver for Cell-Centered Finite Volumes}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example04.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example04.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example04.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example04.hh}
 \end{Lst}}
 
@@ -919,13 +919,13 @@ called once for each interior intersection.
 
 Optionally it can be called from each element touching the intersection.
 
-\lstinline{alpha_boundary} has the following signature: 
+\lstinline{alpha_boundary} has the following signature:
 \begin{lstlisting}[basicstyle=\scriptsize]
-template<typename IG, typename LFSU, typename X, typename LFSV, 
+template<typename IG, typename LFSU, typename X, typename LFSV,
          typename R>
-void alpha_skeleton (const IG& ig, 
+void alpha_skeleton (const IG& ig,
            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
            R& r_s, R& r_n) const
 \end{lstlisting}
 Where the arguments are:
@@ -933,7 +933,7 @@ Where the arguments are:
 \item \lstinline{ig} -- interior intersection.
 \item \lstinline{lfsu_s, lfsu_n} -- trial space in self (inside) and neighbor (outside).
 \item \lstinline{x_s, x_n} -- local coefficients in self and neighbor.
-\item \lstinline{lfsv_s, lfsv_n} -- test space in self and neighbor. 
+\item \lstinline{lfsv_s, lfsv_n} -- test space in self and neighbor.
 \item \lstinline{r_s, r_n} -- local contribution to residual in self and neighbor.
 \end{itemize}
 \end{frame}
@@ -941,13 +941,13 @@ Where the arguments are:
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Operator for Cell-Centered Finite Volumes}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example04\_operator.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example04_operator.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example04\_operator.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example04_operator.hh}
 \end{Lst}}
 
@@ -990,7 +990,7 @@ This method uses a discontinuous test space that is constant on
 \begin{window}[0,r,{
 \includegraphics[width=0.4\textwidth]{./EPS/SecMesh2D}},{}]
 $E_h^d=\{z_0,\ldots,z_{N_h^d-1}\}$ are the vertices of the mesh
-(entities of codimension $d$). 
+(entities of codimension $d$).
 
 $x_z$ is the position of $z\in E_h^d$.
 
@@ -1027,7 +1027,7 @@ and the boundary faces are given by
 
 For $\gamma\in\Gamma_h^{\text{int}}$, $\nu_\gamma(x)$ is
 the \textit{unique} unit
-normal vector to $\gamma$ in point $x$. 
+normal vector to $\gamma$ in point $x$.
 
 Similarly, for
 $\gamma\in\Gamma_h^{\text{ext}}$, $\nu_\gamma(x)$ is the unit outer
@@ -1080,7 +1080,7 @@ For any $x\in\Omega_f, f\in E_h^1$, define the jump of a function
 $u\in W_h^k$:
 \begin{equation*}
 \label{Eq:Jump}
-[u]_f(x) = \lim\limits_{\epsilon\to 0-} u(x+\epsilon\nu_f) - 
+[u]_f(x) = \lim\limits_{\epsilon\to 0-} u(x+\epsilon\nu_f) -
 \lim\limits_{\epsilon\to 0+} u(x+\epsilon\nu_f).
 \end{equation*}
 
@@ -1154,7 +1154,7 @@ Again $w_h\in X_h$ such that ``$w_h=g$'' on $\Gamma_D$.
 We claim that all problems we ever want to solve can be written in the form
 \begin{equation}
 \text{Find } u_h\in w_h + \tilde{U}_h : \qquad r_h(u_h,v) =
-0 \qquad \forall v\in \tilde{V}_h.  
+0 \qquad \forall v\in \tilde{V}_h.
 \end{equation}
 Where:
 \begin{itemize}
@@ -1218,7 +1218,7 @@ We assume that the following holds:
 e&\in E^0_h : & r^\text{vol}_{h,e}(u,v) &= r^\text{vol}_{h,e}(\chi_{\Omega_e} u,\chi_{\Omega_e} v),\\
 f&\in E^1_h : & r^\text{skel}_{h,f}(u,v) &=
 r^\text{skel}_{h,f}(\chi_{\Omega_{l(f)}\cup\Omega_{r(f)}}
-u,\chi_{\Omega_{l(f)}\cup\Omega_{r(f)}} v),\\ 
+u,\chi_{\Omega_{l(f)}\cup\Omega_{r(f)}} v),\\
 b&\in B^1_h : & r^\text{bnd}_{h,b}(u,v) &= r^\text{bnd}_{h,b}(\chi_{\Omega_{l(b)}} u,\chi_{\Omega_{l(b)}} v).
 \end{align*}
 \end{subequations}

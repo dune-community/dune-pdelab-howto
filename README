@@ -1,6 +1,8 @@
 PDELab Howto
 ============
 
+This is version 3.0-dev of the HOWTO package for the PDELab library.
+
 PDELab[0] is a PDE solver toolbox built on top of DUNE, the Distributed and
 Unified Numerics Environment [1].
 
@@ -40,9 +42,10 @@ PDELab-Howto depends on the following software packages:
 * DUNE core libraries (dune-common, dune-geometry, dune-grid, dune-istl,
   dune-localfunctions) version 3.0-dev, and their respective dependencies.
 
-* The dune-typetree library, version 2.3.x, which you can obtain from [10].
+* The dune-typetree library, version 3.0-dev. You can obtain a source package from [0] or
+  clone the repository at [10].
 
-* PDELab 2.0.x and its dependencies.
+* PDELab 3.0-dev and its dependencies.
 
 * PDELab's compiler requirements differ slightly from the underlying DUNE
   libraries: We require at least GCC 4.5 in C++11 mode, although we only

@@ -15,7 +15,7 @@
 \item Diagonally implicit Runge-Kutta methods.
 \item Explicit Runge-Kutta methods.
 \item Includes Explicit/implicit Euler, Crank-Nicolson, fractional
-step $\theta$, Alexanders S-stable methods \cite{alexander:77}, 
+step $\theta$, Alexanders S-stable methods \cite{alexander:77},
 Shu's explicit strong stability preserving Runge-Kutta methods \cite{shu:88}\ldots
 \end{itemize}
 \item Multistep methods (e.g. BDF) could be (and have been) implemented in current approach.
@@ -32,7 +32,7 @@ Consider the following model problem:
 \begin{subequations} \label{Eq:Example03}
 \begin{align*}
 \partial_t u -\Delta u + a u &= f &&\text{in $\Omega\times\Sigma$}, \Sigma=(t_0,t_0+T),\\
-u(\cdot,t) &= g(\cdot,t) && \text{on $\Gamma_D$},\\ 
+u(\cdot,t) &= g(\cdot,t) && \text{on $\Gamma_D$},\\
 -\nabla u(\cdot,t) \cdot n &= j(\cdot,t) &&\text{on $\Gamma_N=\partial\Omega\setminus\Gamma_D$},\\
 u(\cdot,t_0) &= u_0(\cdot) && \text{at $t=t_0$}.
 \end{align*}
@@ -40,7 +40,7 @@ u(\cdot,t_0) &= u_0(\cdot) && \text{at $t=t_0$}.
 Semi-discretization in space. Find $u_h\in L_2(t_0,t_0+T;w_h+\tilde{U}_h^k)$:
 \begin{equation*}
 \frac{d}{dt} \underbrace{\int_\Omega u_h v \,dx}_{m(u_h(t),v;t)} + \underbrace{\int_\Omega \nabla u_h \cdot \nabla v
-+ a u_h v - f v \, dx + \int_{\Gamma_N} jv \, ds}_{r(u_h,v;t)} = 0 \qquad 
++ a u_h v - f v \, dx + \int_{\Gamma_N} jv \, ds}_{r(u_h,v;t)} = 0 \qquad
 \begin{array}{l}
 \forall v \in \tilde{U}_h^k,\\
 t \in \Sigma.
@@ -181,11 +181,11 @@ with $\alpha=1-\nicefrac{\sqrt{2}}{2}$.
 suitable spatial discretization (e.g. FV) lead to
 \begin{equation*}
 \mathbf{D} \mathbf{u}^{(i)} = \mathbf{s} + k^n \mathbf{q},
-\end{equation*} 
-where 
+\end{equation*}
+where
 \begin{itemize}
 \item $\mathbf{D}$ is a (block-) diagonal or even identity matrix.
-\item $k^n$ is determined by stability limit \textit{dynamically} while 
+\item $k^n$ is determined by stability limit \textit{dynamically} while
 assembling $\mathbf{s}$, $\mathbf{q}$.
 \end{itemize}
 \item Specialized algorithm for such explicit methods:
@@ -195,7 +195,7 @@ assembling $\mathbf{s}$, $\mathbf{q}$.
 \item Vector update $\mathbf{b} = \mathbf{s} + k^n \mathbf{q}$.
 \item ``Solve'' diagonal System $\mathbf{D} \mathbf{u}^{(i)} = \mathbf{b}$.
 \end{enumerate}
-\item \textbf{Note}: Conforming FEM yields a non-diagonal mass matrix. ``Mass lumping'' or 
+\item \textbf{Note}: Conforming FEM yields a non-diagonal mass matrix. ``Mass lumping'' or
 ``under-integration'' may be used to get a diagonal mass matrix.
 \end{itemize}
 \end{frame}
@@ -206,10 +206,10 @@ assembling $\mathbf{s}$, $\mathbf{q}$.
 \begin{frame}
 \frametitle{Example 3 Overview}
 Example 3 solves the following problem
-\begin{subequations} 
+\begin{subequations}
 \begin{align*}
 \partial_t u -\Delta u + a u &= f &&\text{in $\Omega\times\Sigma$}, \Sigma=(t_0,t_0+T],\\
-u(\cdot,t) &= g(\cdot,t) && \text{on $\Gamma_D(t)$},\\ 
+u(\cdot,t) &= g(\cdot,t) && \text{on $\Gamma_D(t)$},\\
 -\nabla u(\cdot,t) \cdot n &= j(\cdot,t) &&\text{on $\Gamma_N(t)=\partial\Omega\setminus\Gamma_D(t)$},\\
 u(\cdot,t_0) &= u_0(\cdot) && \text{at $t=t_0$}.
 \end{align*}
@@ -252,39 +252,39 @@ Major extensions from the stationary \lstinline{example02} are:
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Instationary Problem Driver}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example03\_Q2.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example03_Q2.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example03\_Q2.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example03_Q2.hh}
 \end{Lst}}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Instationary Boundary Condition Type}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example03\_bctype.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example03_bctype.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example03\_bctype.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example03_bctype.hh}
 \end{Lst}}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Instationary Boundary Condition Function}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example03\_bcextension.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example03_bcextension.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example03\_bcextension.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example03_bcextension.hh}
 \end{Lst}}
 
@@ -310,26 +310,26 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example03_bcextensio
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Operator for Spatial Part}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example03\_operator.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example03_operator.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example03\_operator.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example03_operator.hh}
 \end{Lst}}
 
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{Local Operator for Temporal Part}
 \framesubtitle<presentation>{File \texttt{src/course-examples/example03\_toperator.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example03_toperator.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-examples/example03\_toperator.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example03_toperator.hh}
 \end{Lst}}
 
@@ -341,4 +341,3 @@ numberstyle=\tiny, numbersep=2pt]{../../src/course-examples/example03_toperator.
 \end{frame}
 
 \cleardoublepage
-

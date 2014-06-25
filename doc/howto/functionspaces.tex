@@ -9,7 +9,7 @@
 \begin{frame}
 \frametitle{Introduction}
 \begin{itemize}
-\item We consider mapped finite element spaces: 
+\item We consider mapped finite element spaces:
 \begin{itemize}
 \item Global functions are pieced together from local functions on each element.
 \item Local functions are constructed by transformation from a reference element.
@@ -23,7 +23,7 @@
 
 \begin{frame}
 \frametitle{Finite-dimensional Function Spaces}
-$\Omega\subset\mathbb{R}^n$, $n\geq 1$, is a domain, 
+$\Omega\subset\mathbb{R}^n$, $n\geq 1$, is a domain,
 $\mathbb{T}_h$ a grid partitioning the domain $\Omega$.
 
 \begin{Def}[Finite-dimensional function space]\label{Def:Vh}
@@ -32,12 +32,12 @@ $\mathbb{T}_h$ a grid partitioning the domain $\Omega$.
 U_h(\mathbb{T}_h) &= \Biggl\{ u_h(x) : \bigcup_{e\in E_h^0}\Omega_e
  \to \mathbb{K}^m\,\Bigg| \\
 &\quad u_h(x) = \sum_{e\in E_h^0}\sum_{i=0}^{k(e)-1} (\mathbf{u})_{g(e,i)}
-\, \pi_e(\hat{x}) \, \hat\phi_{e,i}(\hat{x}) \, \chi_e(x); \, \hat{x}=\mu_e^{-1}(x) 
+\, \pi_e(\hat{x}) \, \hat\phi_{e,i}(\hat{x}) \, \chi_e(x); \, \hat{x}=\mu_e^{-1}(x)
  \Biggr\}
 \end{split}
 \end{equation*}
 defines a general finite-dimensional function space of element-wise
-continuous functions.\hfill$\square$ 
+continuous functions.\hfill$\square$
 \end{Def}
 \end{frame}
 
@@ -45,13 +45,13 @@ continuous functions.\hfill$\square$
 \frametitle{Building Blocks}
 \begin{itemize}
 \item $\mathbb{K}=\mathbb{R}$ or $\mathbb{K}=\mathbb{C}$.
-  $m\geq 1$ denotes vector-valued function spaces. 
+  $m\geq 1$ denotes vector-valued function spaces.
 \item $\hat\Omega_e$ is the \textit{reference element} associated with
 element $e\in E_h^0$. $\mu_e : \overline{\hat\Omega}_e \to
   \overline{\Omega}_e$ maps the reference element to $\Omega$.
 \item $\hat\Phi_e
   = \left\{\hat\phi_{e,i}: \overline{\hat\Omega}_e \to \mathbb{R}^{m'}\,|\,0\leq
-  i < k(e)\right\}$ is 
+  i < k(e)\right\}$ is
   the set of \textit{local basis functions} for element $e$.
 \item $\pi_e(\hat{x})\in\mathbb{R}^{m\times m'}$ is a
   transformation. A non-trivial example is the Piola
@@ -74,7 +74,7 @@ For $j\in \mathcal{I}_{U_h}$ we define the \textit{global basis function}
 \begin{equation*}
 U_h \ni \phi_j(x) = \sum_{(e,i)\in L(j)} \pi_e(\mu_e^{-1}(x)) \,
 \hat\phi_{e,i}(\mu_e^{-1}(x)) \, \chi_e(x)
-\end{equation*} 
+\end{equation*}
 and $L(j) = \left\{ (e,i)\in L \,|\, g(e,i)=j \right\}$.
 With that we have
 \begin{align}
@@ -84,14 +84,14 @@ and the finite element isomorphism
 \begin{align}\label{Eq:FiniteElementIsomorphism}
 \text{FE}_{\Phi_{U_h}} &: \mathbf{U} \to
 U_h, & \text{FE}_{\Phi_{U_h}}(\mathbf{u})
-&= \sum_{i\in\mathcal{I}_{U_h}} (\mathbf{u})_i \phi_i \ . 
-\end{align} 
+&= \sum_{i\in\mathcal{I}_{U_h}} (\mathbf{u})_i \phi_i \ .
+\end{align}
 
 Definition \ref{Def:Vh} allows for functions that are
-\textit{discontinuous} at element boundaries. 
+\textit{discontinuous} at element boundaries.
 
 If limits on the skeleton $\Gamma_h = \Omega\setminus \bigcup_ {e\in
-  E_h^0} \Omega_e$ coincide, a function may be extended to 
+  E_h^0} \Omega_e$ coincide, a function may be extended to
 $\left(C^0(\Omega)\right)^m$.
 \end{frame}
 
@@ -103,7 +103,7 @@ finite element spaces for each element.
 
 \begin{frame}
 \frametitle{Local Finite Element Space}
-A finite element space on the reference element (compare \cite{Ciarlet}) 
+A finite element space on the reference element (compare \cite{Ciarlet})
 implements \lstinline{Dune::FiniteElementInterface}:
 \begin{enumerate}
 \item The type of reference element, given by \lstinline{Dune::GeometryType}.
@@ -111,11 +111,11 @@ implements \lstinline{Dune::FiniteElementInterface}:
 $\hat\Phi = \{\hat\phi_i : \mathbb{D}^n \to \mathbb{K}^m \,|\, 0\leq i < k\}$
 and possibly derivatives in a class implementing e.g \lstinline{C0BasisInterface}.
 \item Information that allows to construct the local to global map $g:
-(e,i) \mapsto j$ in a class implementing \lstinline{Dune::LocalCoefficientsInterface}. 
+(e,i) \mapsto j$ in a class implementing \lstinline{Dune::LocalCoefficientsInterface}.
 \item A method that allows to compute coefficients $z_i$ such that
 \begin{equation*}
-\sum_{0\leq i < k} z_i \hat\phi_i = \hat{u} \qquad \hat{u}\in\text{span}\hat\Phi 
-\end{equation*} 
+\sum_{0\leq i < k} z_i \hat\phi_i = \hat{u} \qquad \hat{u}\in\text{span}\hat\Phi
+\end{equation*}
 in a class implementing
 from \lstinline{Dune::InterpolationInterface}. For
 $\hat{u}\not\in\text{span}\hat\Phi$ the method provides a projection.
@@ -130,16 +130,16 @@ The local basis is required to contain a class \lstinline{Traits} that
 gives the types for
 $\mathbb{D}, \mathbb{D}^n, \mathbb{K}, \mathbb{K}^m$, the numbers $n$,
 $m$ and a type for the Jacobian:
-\begin{lstlisting}[basicstyle=\scriptsize,numbers=left, 
+\begin{lstlisting}[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]
-template<class DF, int n, class D, class RF, int m, class R, 
+template<class DF, int n, class D, class RF, int m, class R,
          class J, int dorder=0>
-struct LocalBasisTraits 
+struct LocalBasisTraits
 {
   typedef DF DomainFieldType;  typedef D DomainType;
   typedef RF RangeFieldType;   typedef R RangeType;
 
-  enum { dimDomain = n }; enum { dimRange = m }; 
+  enum { dimDomain = n }; enum { dimRange = m };
 
   typedef J JacobianType;
 
@@ -186,11 +186,11 @@ quadrilateral.
 \frametitle{$Q_1$ Local Basis Implementation}
 \begin{itemize}
 \item The following listing gives an implementation of the $Q_1$ local basis
-functions in 2D. 
+functions in 2D.
 \item We provide also gradients ($C^1$ function).
 \item There is also an interface for higher derivatives (not shown).
 \item Evaluation always provides the values of \textit{all} basis functions
-or gradients at \textit{one} point (in coordinates of the reference element). 
+or gradients at \textit{one} point (in coordinates of the reference element).
 \item Implementations typically use \lstinline{Dune::FieldVector<T,n>} to
 represent short vectors.
 \item \lstinline{JacobianType} is \lstinline{Dune::FieldMatrix<R,1,2>}.
@@ -198,7 +198,7 @@ represent short vectors.
 we have
 \begin{equation*}
 \text{\lstinline{out[i][j][k]}}
-= \partial_{\hat{x}_k} \left(\hat\phi_i\right)_j (\hat{x}) . 
+= \partial_{\hat{x}_k} \left(\hat\phi_i\right)_j (\hat{x}) .
 \end{equation*}
 \end{itemize}
 \end{frame}
@@ -207,13 +207,13 @@ we have
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{$Q_1$ Local Basis Listing}
 \framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q1localbasis.hh}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1localbasis.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/q1localbasis.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1localbasis.hh}
 \end{Lst}}
 
@@ -224,20 +224,20 @@ numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1localbasi
 \item Piecing together local functions to global functions (globalization)
 may involve some form of continuity.
 \item Part of this is \textit{identifying degrees of freedom}:
-Associate basis functions with 
+Associate basis functions with
 (sub-)entities of the reference element.
-\item \textit{On the reference element} each (number of a) basis function is 
+\item \textit{On the reference element} each (number of a) basis function is
 mapped to
 \begin{itemize}
 \item a subentity given by a number and a codimension.
 \item an offset with in that entity if several indices are mapped to
 the same subentity (offset is zero if only one local index is mapped
-to the subentity). 
+to the subentity).
 \item \lstinline{Dune::LocalKey} represents such a triple.
-\end{itemize} 
+\end{itemize}
 \item Globalization may also involve orientation of geometric entities.
 \item From this information a local-to-global map $g$ can be
-constructed \textit{generically}. 
+constructed \textit{generically}.
 \item This is \textit{not} part of \lstinline{dune-localfunctions}!
 \end{itemize}
 \end{frame}
@@ -245,13 +245,13 @@ constructed \textit{generically}.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{$Q_1$ Local Coefficients Listing}
 \framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q1localcoefficients.hh}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1localcoefficients.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/q1localcoefficients.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1localcoefficients.hh}
 \end{Lst}}
 
@@ -262,7 +262,7 @@ numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1localcoef
 \item Local interpolation takes a function $\hat{u}(\hat{x})$ \textit{on the
 reference element} and provides a projection onto the space spanned by
 the local basis.
-\item It does so by providing the coefficients with respect to the basis 
+\item It does so by providing the coefficients with respect to the basis
 (inverse of local finite element isomorphism).
 \item For Lagrange basis functions this is point-wise evaluation.
 \item For other basis functions this might involve the solution of a local
@@ -278,13 +278,13 @@ to \lstinline{Traits::RangeType} like the basis.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{$Q_1$ Local Interpolation Listing}
 \framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q1localinterpolation.hh}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1localinterpolation.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/q1localinterpolation.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1localinterpolation.hh}
 \end{Lst}}
 
@@ -305,13 +305,13 @@ in \lstinline{Dune::FiniteElementInterface}.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{$Q_1$ Local Finite Element Listing}
 \framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q1localfiniteelement.hh}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1localfiniteelement.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/q1localfiniteelement.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1localfiniteelement.hh}
 \end{Lst}}
 
@@ -320,7 +320,7 @@ numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1localfini
 \lstinline{dune-localfunctions} implements the
 following elements:
 \begin{itemize}
-\item $P_0$ for any reference element in any dimension. 
+\item $P_0$ for any reference element in any dimension.
 \item Piecewise linear Lagrange elements $P_1$ in $1, 2, 3d$.
 \item Piecewise multi-linear Lagrange elements $Q_1$ in $1, 2, 3d$.
 \item $P_k$ on triangles and tetrahedra
@@ -338,16 +338,16 @@ following elements:
 \begin{frame}
 \frametitle{Local Finite Element Map}
 \begin{itemize}
-\item PDELab uses classes from \lstinline{dune-localfunctions} to 
+\item PDELab uses classes from \lstinline{dune-localfunctions} to
 piece local functions together forming global functions.
 \item Each codim 0 entity may have a different local basis (i.e. local finite element).
 \item A \textit{local finite element map} provides this basis for each entity.
 \item Can handle hybrid meshes and $hp$-methods.
-\item To ease implementation there is a variant of the 
+\item To ease implementation there is a variant of the
 local finite element in \lstinline{dune-localfunctions} \textit{with virtual functions}.
 \item The local finite element map is responsible for ensuring
 the required continuity.
-\item The case where each codim 0 entity has the same basis is 
+\item The case where each codim 0 entity has the same basis is
 particularly easy. See next code example.
 \end{itemize}
 \end{frame}
@@ -355,13 +355,13 @@ particularly easy. See next code example.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{$Q_1$ Local Finite Element Map Listing}
 \framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q1localfiniteelementmap.hh}}
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1localfiniteelementmap.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/q1localfiniteelementmap.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1localfiniteelementmap.hh}
 \end{Lst}}
 
@@ -369,7 +369,7 @@ numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1localfini
 \begin{frame}
 \frametitle{$Q_1$ Grid Function Space}
 \begin{itemize}
-\item The local finite element map is a parameter to 
+\item The local finite element map is a parameter to
 the class template \lstinline{GridFunctionSpace}.
 
 \item The \lstinline{GridFunctionSpace} is responsible for:
@@ -389,13 +389,13 @@ by the \lstinline{Dune::SubsamplingVTKWriter}.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{$Q_1$ Grid Function Space Listing}
 \framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q1gridfunctionspace.hh}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1gridfunctionspace.hh}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/q1gridfunctionspace.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1gridfunctionspace.hh}
 \end{Lst}}
 
@@ -405,13 +405,13 @@ and the generic function is called.
 \begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 \frametitle<presentation>{$Q_1$ GFS Main Program Listing}
 \framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q1gridfunctionspacemain.cc}}
-\lstinputlisting[basicstyle=\tiny,numbers=left, 
+\lstinputlisting[basicstyle=\tiny,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1gridfunctionspacemain.cc}
 \end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/q1gridfunctionspacemain.cc] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1gridfunctionspacemain.cc}
 \end{Lst}}
 
@@ -456,7 +456,7 @@ conditions.
 PDELab offers several classes to represent functions:
 \begin{itemize}
 \item \lstinline{Dune::PDELab::FunctionInterface} is the interface for general
-functions $$u : \mathbb{D}^n \to \mathbb{K}^m, \qquad x \mapsto y.$$ 
+functions $$u : \mathbb{D}^n \to \mathbb{K}^m, \qquad x \mapsto y.$$
 \item \lstinline{Dune::PDELab::GridFunctionInterface} is the interface
 for functions defined on a grid:
 $$u : E_h^0 \times \mathbb{D}^n \to \mathbb{K}^m, \qquad
@@ -480,7 +480,7 @@ There are various useful adapters and base classes:
 and a coefficient vector and makes a scalar grid function out
 of it.
 
-\lstinline{Dune::PDELab::VectorDiscreteGridFunction}: Takes a 
+\lstinline{Dune::PDELab::VectorDiscreteGridFunction}: Takes a
 \lstinline{Dune::PDELab::PowerGridFunctionSpace}
 and a coefficient vector and makes a vector valued grid function out
 of it.
@@ -524,13 +524,13 @@ For more details see \lstinline{dune/pdelab/common/function.hh}.
 %\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 %\frametitle<presentation>{\texttt{AnalyticGridFunctionBase} Example Listing}
 %\framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/analyticfunction.hh}}
-%\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+%\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 %numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/analyticfunction.hh}
 %\end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/analyticfunction.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/analyticfunction.hh}
 \end{Lst}}
 
@@ -543,13 +543,13 @@ now generic.
 %\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 %\frametitle<presentation>{Generic Interpolation Listing}
 %\framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q1interpolate.hh}}
-%\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+%\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 %numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1interpolate.hh}
 %\end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/q1interpolate.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1interpolate.hh}
 \end{Lst}}
 
@@ -568,10 +568,10 @@ Now, we do a little example that shows how one can work with global
 finite element functions.
 
 For a given function $u$ and its interpolant $u_h\in
-U_h(\mathbb{T}_h)$ we want to compute the $L_2$ interpolation error 
+U_h(\mathbb{T}_h)$ we want to compute the $L_2$ interpolation error
 \begin{equation*}
 \begin{split}
-\|&u-u_h\|_{L_2(\Omega)} = \int_\Omega (u-u_h)^2\, dx 
+\|&u-u_h\|_{L_2(\Omega)} = \int_\Omega (u-u_h)^2\, dx
 = \sum_{e\in E_h^0} \int_{\Omega_e} (u-u_h)^2\, dx \\
 &= \sum_{e\in E_h^0} \int_{\hat{\Omega}_e} \left(u(\mu_e(\hat{x})) -
 u_h(\mu_e(\hat{x})) \right)^2 \text{det} \nabla\mu_e(\hat{x}) \,
@@ -580,8 +580,8 @@ d\hat{x}\\
 u_h(\mu_e(\hat{x}_{e,j})) \right)^2 \text{det} \nabla\mu_e(\hat{x}_{e,j}) \,
 d\hat{x} \text{ $+$ error}\\
 &= \sum_{e\in E_h^0} \sum_{j=0}^{q(e)-1} w_{e,j} \left(u(\mu_e(\hat{x}_{e,j})) -
-\sum_{i=0}^{k(e)-1}(\mathbf{u})_{g(e,i)} \hat\phi_{e,i}(\hat{x}_{e,j}) \right)^2  
-\text{det} \nabla\mu_e(\hat{x}_{e,j}) \,  
+\sum_{i=0}^{k(e)-1}(\mathbf{u})_{g(e,i)} \hat\phi_{e,i}(\hat{x}_{e,j}) \right)^2
+\text{det} \nabla\mu_e(\hat{x}_{e,j}) \,
 d\hat{x} \text{ $+$ error} .
 \end{split}
 \end{equation*}
@@ -593,12 +593,12 @@ d\hat{x} \text{ $+$ error} .
 In the following code example the
 function \lstinline{l2interpolationerror} is parametrized by
 \begin{itemize}
-\item \lstinline{U}: Type for a function. 
+\item \lstinline{U}: Type for a function.
 \item \lstinline{GFS}: Type for a grid function space.
 \item \lstinline{X}: Type for a coefficient vector.
 \end{itemize}
 The local function space
-\lstinline{GFS::LocalFunctionSpace} in line \ref{l2int:lfs} is a type 
+\lstinline{GFS::LocalFunctionSpace} in line \ref{l2int:lfs} is a type
 exported by a grid function space which
 \begin{itemize}
 \item is bound to an element $e$ later in line \ref{l2int:bind},
@@ -614,13 +614,13 @@ quadrature rules for many element types, dimensions and orders.
 %\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 %\frametitle<presentation>{Interpolation Error Listing}
 %\framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/l2interpolationerror.hh}}
-%\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+%\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 %numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/l2interpolationerror.hh}
 %\end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/l2interpolationerror.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/l2interpolationerror.hh}
 \end{Lst}}
 
@@ -630,13 +630,13 @@ function.
 %\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 %\frametitle<presentation>{Interpolation Error Driver Listing}
 %\framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q1interpolationerror.hh}}
-%\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+%\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 %numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1interpolationerror.hh}
 %\end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/q1interpolationerror.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q1interpolationerror.hh}
 \end{Lst}}
 
@@ -675,13 +675,13 @@ lines \ref{l2int:q2} and \ref{l2int:q22}!
 %\begin{frame}<presentation>[fragile,allowframebreaks,allowdisplaybreaks]
 %\frametitle<presentation>{$Q_2$ Interpolation Error Driver Listing}
 %\framesubtitle<presentation>{File \texttt{src/course-gridfunctionspace/q2interpolationerror.hh}}
-%\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+%\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 %numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q2interpolationerror.hh}
 %\end{frame}
 \mode<article>{
 \begin{Lst}[File src/course-gridfunctionspace/q2interpolationerror.hh] \mbox
 \nopagebreak
-\lstinputlisting[basicstyle=\scriptsize,numbers=left, 
+\lstinputlisting[basicstyle=\scriptsize,numbers=left,
 numberstyle=\tiny, numbersep=5pt]{../../src/course-gridfunctionspace/q2interpolationerror.hh}
 \end{Lst}}
 

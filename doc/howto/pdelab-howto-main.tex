@@ -18,19 +18,20 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % only for the article version
-\mode<article> 
+\mode<article>
 {
   \usepackage[automark,komastyle]{scrpage2}
   \usepackage{amsfonts}
   \usepackage{amscd}
+  \pagestyle{useheadings}
 %  \usepackage{fullpage}
-  \usepackage[headings]{fullpage}
+%  \usepackage[headings]{fullpage}
   \setlength{\parindent}{0pt}
   \setlength{\parskip}{1.25ex plus 0.5ex minus 0.2ex}
   \newcommand{\movie}[2]{\mbox{}}
 }
 
-% only presentation 
+% only presentation
 \mode<presentation>
 {
 %  \usepackage{times}
@@ -50,31 +51,25 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows}
 \usepackage{graphicx}
-\usepackage{curves}
 \usepackage{listings}
-%\usepackage{epic}
 \usepackage{calc}
 \usepackage{picinpar}
-%\usepackage{fancybox}
-%\usepackage{xspace}
 \usepackage{enumerate}
-\usepackage{algorithmic}
-\usepackage{algorithm}
 \usepackage{bm}
 \usepackage{nicefrac}
 
-\mode<article> 
+\mode<article>
 {
-\usepackage{hyperref}
+  \usepackage{hyperref}
   \setkomafont{pagenumber}{\normalfont\scshape}
   \setkomafont{pagehead}{\normalfont\scshape}
-\lstset{language=C++, basicstyle=\small, 
+\lstset{language=C++, basicstyle=\small,
   keywordstyle=\bfseries, tabsize=4, stringstyle=\ttfamily,
-  commentstyle=\it, extendedchars=true, escapeinside={/*@}{@*/}}
+  commentstyle=\itshape, extendedchars=true, escapeinside={/*@}{@*/}}
 }
 
 %The theorems
-\mode<article> 
+\mode<article>
 {
 \newtheoremstyle{mystyle}%
 {3pt}%
@@ -87,11 +82,11 @@
 {}%
 \theoremstyle{mystyle}
 }
-\mode<presentation> 
+\mode<presentation>
 {
-\lstset{language=C++, basicstyle=\ttfamily, 
+\lstset{language=C++, basicstyle=\ttfamily,
   keywordstyle=\color{red}\bfseries, tabsize=4, stringstyle=\ttfamily,
-  commentstyle=\it, extendedchars=true, escapeinside={/*@}{@*/}}
+  commentstyle=\itshape, extendedchars=true, escapeinside={/*@}{@*/}}
 \theoremstyle{definition}
 }
 \newtheorem{Def}{Definition}%[section]
@@ -228,7 +223,7 @@ This article contains concepts for a general discretization module for
 the ``Distributed Numerics Environment'' DUNE \cite{Dune2008a,Dune2008b}. It should enable one
 to build up a library of finite element methods in an easy and
 extendable way that is closely related to the mathematical formulation
-of finite element methods. 
+of finite element methods.
 \end{abstract}
 
 \mode<article>
@@ -239,7 +234,7 @@ of finite element methods.
 \mode<presentation>{
 \begin{frame}<presentation>
 \frametitle{Outline}
-\tableofcontents[section,sectionstyle=show/show,subsectionstyle=hide/hide/hide] 
+\tableofcontents[sectionstyle=show/show,subsectionstyle=hide/hide/hide]
 \end{frame}
 }
 
