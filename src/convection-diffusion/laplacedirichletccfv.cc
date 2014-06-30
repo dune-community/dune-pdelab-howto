@@ -26,12 +26,6 @@
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/localoperator/laplacedirichletccfv.hh>
-// eigen
-#if HAVE_EIGEN
-#include<dune/pdelab/backend/eigenvectorbackend.hh>
-#include<dune/pdelab/backend/eigenmatrixbackend.hh>
-#include<dune/pdelab/backend/eigensolverbackend.hh>
-#endif
 // istl
 #include<dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
@@ -96,11 +90,7 @@ void test (const GV& gv, std::string filename )
   FEM fem(Dune::GeometryType(Dune::GeometryType::cube,dim)); // works only for cubes
 
   // make function space
-#ifdef USE_EIGEN
-  typedef Dune::PDELab::EigenVectorBackend VBE;
-#else
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
-#endif
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,Dune::PDELab::NoConstraints,VBE> GFS;
   watch.reset();
   GFS gfs(gv,fem);
@@ -109,12 +99,8 @@ void test (const GV& gv, std::string filename )
   typedef G<GV,RF> GType;
   GType g(gv);
 
-#ifdef USE_EIGEN
-  typedef Dune::PDELab::SparseEigenMatrixBackend MBE;
-#else
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
-#endif
 
   // make grid function operator
   typedef Dune::PDELab::LaplaceDirichletCCFV<GType> LOP;
@@ -122,11 +108,7 @@ void test (const GV& gv, std::string filename )
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
                                      MBE,
                                      RF,RF,RF,Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation > GO;
-#ifdef USE_EIGEN
-  GO go(gfs,gfs,la);
-#else
   GO go(gfs,gfs,la,mbe);
-#endif
 
   // make coefficent Vector and initialize it from a function
   typedef typename GO::Traits::Domain V;
@@ -136,13 +118,8 @@ void test (const GV& gv, std::string filename )
 
 
   V x(gfs,0.0);
-#ifdef USE_EIGEN
-  typedef Dune::PDELab::EigenBackend_BiCGSTAB_Diagonal LS;
-  LS ls (5000);
-#else
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_AMG_SSOR<GO> LS;
   LS ls (5000,2);
-#endif
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
   SLP slp(go,ls,x,1e-12);
   slp.apply();
@@ -164,10 +141,6 @@ int main(int argc, char** argv)
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
 
     std::string basename = "laplacedirichletccfv";
-#ifdef USE_EIGEN
-    basename += "_eigen";
-#endif
-
 
     // 2D
     if(helper.size()==1){
