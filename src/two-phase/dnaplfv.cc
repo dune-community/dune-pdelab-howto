@@ -330,7 +330,7 @@ class P_g
   : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<GV,RF,1,Dune::FieldVector<RF,1> >,
                                           P_g<GV,RF> >
 {
-  GV gv;
+  const GV& gv;
   const TwoPhaseParameter<GV,RF>& tp;
 public:
   typedef Dune::PDELab::GridFunctionTraits<GV,RF,1,Dune::FieldVector<RF,1> > Traits;
@@ -451,20 +451,17 @@ void test (const GV& gv, int timesteps, double timestep)
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
   FEM fem(Dune::GeometryType(Dune::GeometryType::cube,dim));
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking,1> VBE0;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE0;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE0> GFS;
 
   typedef Dune::PDELab::ISTLVectorBackend
-    <Dune::PDELab::ISTLParameters::static_blocking> VBE;
-  //  typedef Dune::PDELab::PowerGridFunctionSpace<GFS,2,VBE,
-  //    Dune::PDELab::EntityBlockedOrderingTag> TPGFS;
-  typedef Dune::PDELab::CompositeGridFunctionSpace<VBE,Dune::PDELab::EntityBlockedOrderingTag,GFS,GFS> TPGFS;
-
+    <Dune::PDELab::ISTLParameters::static_blocking,2> VBE;
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS,2,VBE,
+    Dune::PDELab::EntityBlockedOrderingTag> TPGFS;
   watch.reset();
   CON con;
   GFS gfs(gv,fem,con);
-  //TPGFS tpgfs(gfs);
-  TPGFS tpgfs(gfs,gfs);
+  TPGFS tpgfs(gfs);
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
   // <<<2b>>> make subspaces for visualization
@@ -489,15 +486,14 @@ void test (const GV& gv, int timesteps, double timestep)
   LOP lop(tp);
   typedef Dune::PDELab::TwoPhaseOnePointTemporalOperator<TP> MLOP;
   MLOP mlop(tp);
-  typedef typename Dune::PDELab::ISTLMatrixBackend MBE;
-  // typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  //MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   Dune::PDELab::Alexander2Parameter<RF> method;
   typedef Dune::PDELab::GridOperator<TPGFS,TPGFS,LOP,MBE,RF,RF,RF,C,C> GO0;
-  GO0 go0(tpgfs,cg,tpgfs,cg,lop);
+  GO0 go0(tpgfs,cg,tpgfs,cg,lop,mbe);
    
   typedef Dune::PDELab::GridOperator<TPGFS,TPGFS,MLOP,MBE,RF,RF,RF,C,C> GO1;
-  GO1 go1(tpgfs,cg,tpgfs,cg,mlop);
+  GO1 go1(tpgfs,cg,tpgfs,cg,mlop,mbe);
    
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
   IGO igo(go0,go1);
