@@ -330,7 +330,7 @@ class P_g
   : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<GV,RF,1,Dune::FieldVector<RF,1> >,
                                           P_g<GV,RF> >
 {
-  const GV& gv;
+  GV gv;
   const TwoPhaseParameter<GV,RF>& tp;
 public:
   typedef Dune::PDELab::GridFunctionTraits<GV,RF,1,Dune::FieldVector<RF,1> > Traits;
