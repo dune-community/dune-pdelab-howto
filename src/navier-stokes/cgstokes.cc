@@ -51,7 +51,7 @@
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/cg_stokes.hh>
 #include <dune/common/parametertreeparser.hh>
-
+#include<dune/pdelab/newton/newton.hh>
 #include "../utility/gridexamples.hh"
 #include "cgstokes_initial.hh"
 
