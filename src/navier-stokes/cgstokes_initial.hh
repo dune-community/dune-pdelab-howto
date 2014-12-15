@@ -5,6 +5,10 @@
 // Define parameter functions f,g,j and \partial\Omega_D/N
 //===============================================================
 
+/** \brief Boundary conditions for Hagen-Poiseuille flow.
+
+ */
+
 // constraints parameter class for selecting boundary condition type
 class BCTypeParam_HagenPoiseuille
 {
@@ -19,13 +23,12 @@ public:
   BCTypeParam_HagenPoiseuille() {}
 
   template<typename I>
-  inline void evaluate (
-    const I & intersection,   /*@\label{bcp:name}@*/
-    const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
-    BC::Type& y) const
+  inline void evaluate (const I & intersection,   /*@\label{bcp:name}@*/
+                        const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
+                        BC::Type& y) const
   {
     Dune::FieldVector<typename I::ctype, I::dimension>
-        xg = intersection.geometry().global( coord );
+      xg = intersection.geometry().global( coord );
     if( xg[0] > 1.0-1e-6 )
       y = BC::DoNothing;
     else
@@ -33,7 +36,13 @@ public:
   }
 };
 
+/** \brief Boundary conditions for two dimensional flow around a cylinder obstacle.
 
+ * The settings come from the two dimensional Turek benchmark channel.
+ * Compare with the Article: "Benchmark Computations of Laminar Flow Around a Cylinder"
+ * by M. Schaefer and S. Turek.
+
+ */
 
 // constraints parameter class for selecting boundary condition type
 class BCTypeParam_TU
@@ -49,19 +58,26 @@ public:
   BCTypeParam_TU() {}
 
   template<typename I>
-  inline void evaluate (
-    const I & intersection,   /*@\label{bcp:name}@*/
-    const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
-    BC::Type& y) const
+  inline void evaluate (const I & intersection,   /*@\label{bcp:name}@*/
+                        const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
+                        BC::Type& y) const
   {
     Dune::FieldVector<typename I::ctype, I::dimension>
-        xg = intersection.geometry().global( coord );
+      xg = intersection.geometry().global( coord );
     if( xg[0] > 2.2-1e-6 )
       y = BC::DoNothing;
     else
       y = BC::VelocityDirichlet;
   }
 };
+
+/** \brief Boundary conditions for three dimensional flow around a cylinder obstacle
+
+ * The settings come from the three dimensional Turek benchmark channel.
+ * Compare with the Article: "Benchmark Computations of 3D Laminar Flow Around a Cylinder with CFX, OpenFOAM and FEATFLOW"
+ * by E. Bayraktar, O. Mierka and S. Turek.
+
+ */
 
 // constraints parameter class for selecting boundary condition type
 class BCTypeParam_TU_3D
@@ -77,13 +93,12 @@ public:
   BCTypeParam_TU_3D() {}
 
   template<typename I>
-  inline void evaluate (
-    const I & intersection,   /*@\label{bcp:name}@*/
-    const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
-    BC::Type& y) const
+  inline void evaluate (const I & intersection,   /*@\label{bcp:name}@*/
+                        const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
+                        BC::Type& y) const
   {
     Dune::FieldVector<typename I::ctype, I::dimension>
-        xg = intersection.geometry().global( coord );
+      xg = intersection.geometry().global( coord );
     if( xg[0] > 2.5-1e-6 )
       y = BC::DoNothing;
     else
@@ -91,6 +106,9 @@ public:
   }
 };
 
+/** \brief Boundary conditions for Backward-Facing Step.
+
+ */
 
 // constraints parameter class for selecting boundary condition type
 class BCTypeParam_LU
@@ -106,19 +124,29 @@ public:
   BCTypeParam_LU() {}
 
   template<typename I>
-  inline void evaluate (
-    const I & intersection,   /*@\label{bcp:name}@*/
-    const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
-    BC::Type& y) const
+  inline void evaluate (const I & intersection,   /*@\label{bcp:name}@*/
+                        const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
+                        BC::Type& y) const
   {
     Dune::FieldVector<typename I::ctype, I::dimension>
-        xg = intersection.geometry().global( coord );
+      xg = intersection.geometry().global( coord );
     if( xg[0] > 5.0-1e-6 )
       y = BC::DoNothing;
     else
       y = BC::VelocityDirichlet;
   }
 };
+
+/** \brief Dirichlet velocity function for two dimensional Hagen-Poiseuille flow.
+
+    \tparam GV The underlying grid view.
+    \tparam RF The type of the range field.
+    \tparam dim Dimension of the problem.
+
+    * The Hagen-Poiseuille flow is solved on the unitsquare.
+    * The maximum inflow velocity is normalized to 1.
+
+    */
 
 template<typename GV, typename RF, int dim>
 class HagenPoiseuilleVelocity :
@@ -150,6 +178,17 @@ public:
 
 };
 
+/** \brief Dirichlet velocity function for the flow around a cylinder obstacle.
+
+    \tparam GV The underlying grid view.
+    \tparam RF The type of the range field.
+    \tparam dim The dimension of the problem.
+    \param[in] meanflow Maximum inflow velocity.
+
+    * This function is used to model the inflow.
+    * It works both in two and three dimensions.
+
+    */
 
 template<typename GV, typename RF, int dim>
 class TU_Velocity :
@@ -196,7 +235,15 @@ public:
 
 };
 
+/** \brief Dirichlet velocity function for the Backward-Facing Step.
 
+    \tparam GV The underlying grid view.
+    \tparam RF The type of the range field.
+    \tparam dim The dimension of the problem.
+
+    * The inflow velocity is normalized to 1.
+
+    */
 
 template<typename GV, typename RF, int dim>
 class LU_Velocity :
@@ -239,8 +286,17 @@ public:
 
 };
 
+/** \brief Dirichlet velocity function for three dimensional Hagen-Poiseuille flow.
 
+    \tparam GV The underlying grid view.
+    \tparam RF The type of the range field.
 
+    * The Hagen-Poiseuille flow is solved in a pipe pointing in x-direction.
+    * The cross section in the yz-plane is a circle with midpoint at the origin
+    * and with radius 0.5.
+    * The inflow velocity is normalized to 1.
+
+    */
 
 template<typename GV, typename RF>
 class HagenPoiseuilleVelocity<GV,RF,3> :
@@ -309,6 +365,13 @@ public:
 
 };
 
+/** \brief Do-nothing boundary function for the Hagen-Poiseuille flow
+
+    \tparam GV The underlying grid view.
+    \tparam RF The type of the range field.
+
+*/
+
 // function for defining the flux boundary condition
 template<typename GV, typename RF>
 class HagenPoiseuilleZeroFlux
@@ -328,6 +391,17 @@ public:
     y = 0;
   }
 };
+
+/** \brief Do-nothing boundary function for the Backward-Facing Step and the flow around a cylinder
+
+    \tparam GV The underlying grid view.
+    \tparam RF The type of the range field.
+    \param[in] p_ The pressure at the inflow.
+    \param[in] l_ The length of the tube.
+    \param[in] o_ The coordinate referring to the beginning of the tube.
+    \param[in] d_ The canonical direction the tube is oriented.
+
+*/
 
 // function for defining the flux boundary condition
 template<typename GV, typename RF>
