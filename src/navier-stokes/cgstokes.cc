@@ -223,7 +223,8 @@ int main(int argc, char** argv)
                 << "Turbulence Tube  3D - UG - P2/P1         :   TU3" << std::endl
                 << "L-Shape Domain   2D - UG - P2/P1         :   LU2" << std::endl
                 << std::endl << std::endl
-                << "You might also want to take a look at the configuration file \"cgstokes.ini\"."
+                << "You might also want to take a look at the configuration file \"cgstokes.ini\"" << std::endl
+                << "and at the header file \"cgstokes_initial.hh\"."
                 << std::endl << std::endl;
       exit(1);
     }
@@ -288,6 +289,8 @@ int main(int argc, char** argv)
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
       SourceFunction source_function(gv);
 
+      // parameter class for the Stokes equations
+      // template parameter navier is set to false by default
       typedef Dune::PDELab::NavierStokesDefaultParameters
         <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
@@ -295,7 +298,7 @@ int main(int argc, char** argv)
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
 
-      // solve problem
+      // solve problem (Stokes equations by default)
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"hagenpoiseuille_yasp_Q2Q1_2d", parameters, vFem, pFem, initial_solution);
     }
@@ -347,6 +350,8 @@ int main(int argc, char** argv)
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
       SourceFunction source_function(gv);
 
+      // parameter class for the Stokes equations
+      // template parameter navier is set to false by default
       typedef Dune::PDELab::NavierStokesDefaultParameters
         <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
@@ -354,7 +359,7 @@ int main(int argc, char** argv)
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
 
-      // solve problem
+      // solve problem (Stokes equations by default)
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"hagenpoiseuille_alu_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
@@ -419,6 +424,8 @@ int main(int argc, char** argv)
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
       SourceFunction source_function(gv);
 
+      // parameter class for the Stokes equations
+      // template parameter navier is set to false by default
       typedef Dune::PDELab::NavierStokesDefaultParameters
         <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
@@ -426,7 +433,7 @@ int main(int argc, char** argv)
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
 
-      // solve problem
+      // solve problem (Stokes equations by default)
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"turbtube_ug_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
@@ -491,6 +498,8 @@ int main(int argc, char** argv)
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
       SourceFunction source_function(gv);
 
+      // parameter class for the Stokes equations
+      // template parameter navier is set to false by default
       typedef Dune::PDELab::NavierStokesDefaultParameters
         <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
@@ -498,7 +507,7 @@ int main(int argc, char** argv)
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
 
-      // solve problem
+      // solve problem (Stokes equations by default)
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"lshape_ug_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
@@ -554,6 +563,8 @@ int main(int argc, char** argv)
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
       SourceFunction source_function(gv);
 
+      // parameter class for the Stokes equations
+      // template parameter navier is set to false by default
       typedef Dune::PDELab::NavierStokesDefaultParameters
         <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
@@ -561,7 +572,7 @@ int main(int argc, char** argv)
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
 
-      // solve problem
+      // solve problem (Stokes equations by default)
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"hagenpoiseuille_ug_P2P1_3d", parameters, vFem, pFem, initial_solution);
     }
@@ -625,6 +636,8 @@ int main(int argc, char** argv)
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
       SourceFunction source_function(gv);
 
+      // parameter class for the Stokes equations
+      // template parameter navier is set to false by default
       typedef Dune::PDELab::NavierStokesDefaultParameters
         <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
@@ -632,7 +645,7 @@ int main(int argc, char** argv)
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
 
-      // solve problem
+      // solve problem (Stokes equations by default)
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"turbtube_ug_P2P1_3d", parameters, vFem, pFem, initial_solution);
 
