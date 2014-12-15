@@ -26,7 +26,7 @@ public:
   {
     Dune::FieldVector<typename I::ctype, I::dimension>
         xg = intersection.geometry().global( coord );
-    if( xg[0] < 1e-6 )
+    if( xg[0] > 1.0-1e-6 )
       y = BC::DoNothing;
     else
       y = BC::VelocityDirichlet;
@@ -56,14 +56,40 @@ public:
   {
     Dune::FieldVector<typename I::ctype, I::dimension>
         xg = intersection.geometry().global( coord );
-    if( xg[0] > 5.0-1e-6 )
+    if( xg[0] > 2.2-1e-6 )
       y = BC::DoNothing;
     else
       y = BC::VelocityDirichlet;
   }
 };
 
+// constraints parameter class for selecting boundary condition type
+class BCTypeParam_TU_3D
+{
+public:
+  typedef Dune::PDELab::StokesBoundaryCondition BC;
 
+  struct Traits
+  {
+    typedef BC::Type RangeType;
+  };
+
+  BCTypeParam_TU_3D() {}
+
+  template<typename I>
+  inline void evaluate (
+    const I & intersection,   /*@\label{bcp:name}@*/
+    const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
+    BC::Type& y) const
+  {
+    Dune::FieldVector<typename I::ctype, I::dimension>
+        xg = intersection.geometry().global( coord );
+    if( xg[0] > 2.5-1e-6 )
+      y = BC::DoNothing;
+    else
+      y = BC::VelocityDirichlet;
+  }
+};
 
 
 // constraints parameter class for selecting boundary condition type
@@ -94,51 +120,6 @@ public:
   }
 };
 
-
-
-
-
-// constraints parameter class for selecting boundary condition type
-template<typename GV>
-class BCTypeParam_PressureDrop
-{
-private:
-  typedef typename GV::ctype DFT;
-  const DFT length;
-  const DFT origin;
-  const int direction;
-
-public:
-  typedef Dune::PDELab::StokesBoundaryCondition BC;
-
-  struct Traits
-  {
-    typedef BC::Type RangeType;
-  };
-
-
-  BCTypeParam_PressureDrop (const DFT l_, const DFT o_, const int d_)
-    : length(l_), origin(o_), direction(d_)
-  {
-  }
-
-  template<typename I>
-  inline void evaluate (
-    const I & intersection,   /*@\label{bcp:name}@*/
-    const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
-    BC::Type& y) const
-  {
-    Dune::FieldVector<typename I::ctype, I::dimension>
-      xg = intersection.geometry().global( coord );
-
-    if(xg[direction]-origin < 1e-6 || xg[direction]-origin > length-1e-6)
-      y = BC::DoNothing;
-    else
-      y = BC::VelocityDirichlet;
-  }
-
-};
-
 template<typename GV, typename RF, int dim>
 class HagenPoiseuilleVelocity :
   public Dune::PDELab::AnalyticGridFunctionBase<
@@ -164,6 +145,7 @@ public:
     }
     r = sqrt(r);
     y[0] = 0.25 - r*r;
+    y[0] *= 4;
   }
 
 };
@@ -176,6 +158,7 @@ class TU_Velocity :
   TU_Velocity<GV,RF,dim> >
 {
   RF time;
+  const RF& meanflow_;
 
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim> Traits;
@@ -184,30 +167,25 @@ public:
   typedef typename Traits::DomainType DomainType;
   typedef typename Traits::RangeType RangeType;
 
-  TU_Velocity(const GV & gv) : BaseT(gv) {
+  TU_Velocity(const GV & gv, const RF& meanflow) :
+    BaseT(gv)
+    , meanflow_(meanflow)
+  {
     time = 0.0;
   }
 
   inline void evaluateGlobal(const DomainType & x, RangeType & y) const
   {
-    RF r = 0;
+    y = 0.0;
+    RF r = 1.0;
 
-    // 2d:
-    //y[1] = 0;
-    //r -= (x[1]-0.5)*(x[1]+0.5);
+    for(int i=1; i<dim; i++)
+      r *= 4.0*x[i]*(0.41-x[i])/(0.41*0.41);
 
-    for(int i=0;i<dim;i++){
-      y[i] = 0;
-      if(i>0){
-        r -= (x[i]-0.5)*(x[i]+0.5);
-      }
-    }
-
-    if(x[0] < 1e-6){
-      y[0] = r*(1.0 - std::cos(2.0*3.1415*time));
-    }
-    else{
-      y[0]=0;
+    if(x[0] < 1e-6) {
+      y[0] = r*meanflow_;
+      if(time <= 4.0)
+        y[0] *= sin(M_PI*time/8.0);
     }
   }
 
@@ -244,14 +222,13 @@ public:
   {
     RF r = 0;
 
-    y[1] = 0;
+    y = 0.0;
     r += x[1]*(1.0-x[1]);
 
-    if(x[0] < -1.0+1e-6){
-      y[0] = r*(1.0 - std::cos(2.0*3.1415*time));
-    }
-    else{
-      y[0]=0;
+    if(x[0] < -1.0+1e-6) {
+      y[0] = 4*r;
+      if(time <= 2.0)
+        y[0] *= sin(M_PI/4*time);
     }
   }
 
@@ -291,6 +268,7 @@ public:
     }
     r = sqrt(r);
     y[0] = 0.25 - r*r;
+    y[0] *= 4;
 
     if(y[0]<0)
       y[0] = 0;

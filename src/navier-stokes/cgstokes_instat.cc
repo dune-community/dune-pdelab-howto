@@ -346,7 +346,7 @@ int main(int argc, char** argv)
         InitialSolution;
 
       ZeroFunction zero_function(gv);
-      InitialVelocity init_velocity(gv);
+      InitialVelocity init_velocity(gv,1.5); // take maximum inflow velocity equal to 1.5
 
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
@@ -356,7 +356,7 @@ int main(int argc, char** argv)
 
       // Domain parameters:
       const int tube_direction = 0; // Tube in x-axes direction
-      const RF tube_length = 5.0;
+      const RF tube_length = 2.2;
       const RF tube_origin = 0.0;
 
       BoundaryFunction boundary_function;
@@ -420,7 +420,7 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_TU BoundaryFunction;
+      typedef BCTypeParam_LU BoundaryFunction;
       typedef PressureDropFlux<GV,RF> NeumannFlux;
 
       // Domain parameters:
