@@ -245,7 +245,7 @@ int main(int argc, char** argv)
         if (argc > 4)
             method = argv[4];
 
-        // YaspGrid P1/P2 2D test
+        // YaspGrid P2/P1 2D test
         if(1){
           // make grid
           const int dim = 2;
@@ -265,7 +265,7 @@ int main(int argc, char** argv)
         }
 
 
-        // YaspGrid P2/P3 2D test
+        // YaspGrid P2/P1 3D test
 #if 1
         {
           // make grid
@@ -280,8 +280,8 @@ int main(int argc, char** argv)
           typedef Dune::YaspGrid<dim>::LeafGridView GV;
           const GV& gv=grid.leafGridView();
 
-            // solve problem
-            stokes<GV,double,2,1>(gv,"dgstokes-2D-3-2", method);
+          // solve problem
+          stokes<GV,double,2,1>(gv,"dgstokes-3D-2-1", method);
         }
 #endif
 
