@@ -26,7 +26,7 @@
 #include<dune/grid/uggrid.hh>
 #endif
 #include<dune/grid/yaspgrid.hh>
-#include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include<dune/grid/io/file/vtk/vtksequencewriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
@@ -177,27 +177,19 @@ void navierstokes
   std::cout << "=== Finished interpolation:" << timer.elapsed() << std::endl;
   timer.reset();
 
-  Dune::PDELab::FilenameHelper fn(filename.c_str());
-  {
-    // Generate functions suitable for VTK output
-    typedef typename Dune::PDELab::GridFunctionSubSpace
-      <GFS,Dune::TypeTree::TreePath<0> > VelocitySubGFS;
-    VelocitySubGFS velocitySubGfs(gfs);
-    typedef typename Dune::PDELab::GridFunctionSubSpace
-      <GFS,Dune::TypeTree::TreePath<1> > PressureSubGFS;
-    PressureSubGFS pressureSubGfs(gfs);
-    typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
-    VDGF vdgf(velocitySubGfs,xold);
-    typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
-    PDGF pdgf(pressureSubGfs,xold);
-
-    // Output grid function with SubsamplingVTKWriter
-    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
-    vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
-    fn.increment();
-  }
+  typedef typename Dune::PDELab::GridFunctionSubSpace
+    <GFS,Dune::TypeTree::TreePath<0> > VelocitySubGFS;
+  VelocitySubGFS velocitySubGfs(gfs);
+  typedef typename Dune::PDELab::GridFunctionSubSpace
+    <GFS,Dune::TypeTree::TreePath<1> > PressureSubGFS;
+  PressureSubGFS pressureSubGfs(gfs);
+  typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
+  VDGF vdgf(velocitySubGfs,xold);
+  typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
+  PDGF pdgf(pressureSubGfs,xold);
+  Dune::SubsamplingVTKSequenceWriter<GV> vtkwriter(gv,2,filename.c_str(),filename.c_str(),"");
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
 
   timer.reset();
 
@@ -205,6 +197,8 @@ void navierstokes
   Real final_time = parser.get("temporal.time",double(1.0));
   Real dt = parser.get("temporal.tau",double(0.1));
   Real dt_min = 1e-6;
+  // graphics for initial guess
+  vtkwriter.write(time,Dune::VTK::appendedraw);
   V x(gfs,0.0);
   Dune::PDELab::interpolate(initial_solution,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
@@ -213,44 +207,15 @@ void navierstokes
       // do time step
       osm.apply(time,dt,xold,initial_solution,x);
 
-      {
-        // Generate functions suitable for VTK output
-        typedef typename Dune::PDELab::GridFunctionSubSpace
-          <GFS,Dune::TypeTree::TreePath<0> > VelocitySubGFS;
-        VelocitySubGFS velocitySubGfs(gfs);
-        typedef typename Dune::PDELab::GridFunctionSubSpace
-          <GFS,Dune::TypeTree::TreePath<1> > PressureSubGFS;
-        PressureSubGFS pressureSubGfs(gfs);
-        typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
-        VDGF vdgf(velocitySubGfs,x);
-        typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
-        PDGF pdgf(pressureSubGfs,x);
-
-        // Output grid function with SubsamplingVTKWriter
-        Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-        vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
-        vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
-        vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
-        fn.increment();
-      }
-
       xold = x;
       time += dt;
+
+      vtkwriter.write(time,Dune::VTK::appendedraw);
     }
 
   std::cout << "=== Total time:" << timer.elapsed() << std::endl;
 
   // Compute norm of final solution
-  typedef typename Dune::PDELab::GridFunctionSubSpace
-    <GFS,Dune::TypeTree::TreePath<0> > VelocitySubGFS;
-  VelocitySubGFS velocitySubGfs(gfs);
-  typedef typename Dune::PDELab::GridFunctionSubSpace
-    <GFS,Dune::TypeTree::TreePath<1> > PressureSubGFS;
-  PressureSubGFS pressureSubGfs(gfs);
-  typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
-  VDGF vdgf(velocitySubGfs,x);
-  typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
-  PDGF pdgf(pressureSubGfs,x);
   typename PDGF::Traits::RangeType l1norm(0);
   Dune::PDELab::integrateGridFunction(pdgf,l1norm,q);
   std::cout << std::setw(12) << std::setprecision(7) << std::scientific
