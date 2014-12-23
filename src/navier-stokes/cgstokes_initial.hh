@@ -10,7 +10,7 @@
  */
 
 // constraints parameter class for selecting boundary condition type
-class BCTypeParam_HagenPoiseuille
+class BCTypeParamHagenPoiseuille
 {
 public:
   typedef Dune::PDELab::StokesBoundaryCondition BC;
@@ -20,7 +20,7 @@ public:
     typedef BC::Type RangeType;
   };
 
-  BCTypeParam_HagenPoiseuille() {}
+  BCTypeParamHagenPoiseuille() {}
 
   template<typename I>
   inline void evaluate (const I & intersection,   /*@\label{bcp:name}@*/
@@ -45,7 +45,7 @@ public:
  */
 
 // constraints parameter class for selecting boundary condition type
-class BCTypeParam_TU
+class BCTypeParamTU
 {
 public:
   typedef Dune::PDELab::StokesBoundaryCondition BC;
@@ -55,7 +55,7 @@ public:
     typedef BC::Type RangeType;
   };
 
-  BCTypeParam_TU() {}
+  BCTypeParamTU() {}
 
   template<typename I>
   inline void evaluate (const I & intersection,   /*@\label{bcp:name}@*/
@@ -80,7 +80,7 @@ public:
  */
 
 // constraints parameter class for selecting boundary condition type
-class BCTypeParam_TU_3D
+class BCTypeParamTU3D
 {
 public:
   typedef Dune::PDELab::StokesBoundaryCondition BC;
@@ -90,7 +90,7 @@ public:
     typedef BC::Type RangeType;
   };
 
-  BCTypeParam_TU_3D() {}
+  BCTypeParamTU3D() {}
 
   template<typename I>
   inline void evaluate (const I & intersection,   /*@\label{bcp:name}@*/
@@ -111,7 +111,7 @@ public:
  */
 
 // constraints parameter class for selecting boundary condition type
-class BCTypeParam_LU
+class BCTypeParamLU
 {
 public:
   typedef Dune::PDELab::StokesBoundaryCondition BC;
@@ -121,7 +121,7 @@ public:
     typedef BC::Type RangeType;
   };
 
-  BCTypeParam_LU() {}
+  BCTypeParamLU() {}
 
   template<typename I>
   inline void evaluate (const I & intersection,   /*@\label{bcp:name}@*/
@@ -191,22 +191,22 @@ public:
     */
 
 template<typename GV, typename RF, int dim>
-class TU_Velocity :
+class TUVelocity :
   public Dune::PDELab::AnalyticGridFunctionBase<
   Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim>,
-  TU_Velocity<GV,RF,dim> >
+  TUVelocity<GV,RF,dim> >
 {
   RF time;
   const RF& meanflow_;
 
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,TU_Velocity<GV,RF,dim> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,TUVelocity<GV,RF,dim> > BaseT;
 
   typedef typename Traits::DomainType DomainType;
   typedef typename Traits::RangeType RangeType;
 
-  TU_Velocity(const GV & gv, const RF& meanflow) :
+  TUVelocity(const GV & gv, const RF& meanflow) :
     BaseT(gv)
     , meanflow_(meanflow)
   {
@@ -246,22 +246,22 @@ public:
     */
 
 template<typename GV, typename RF, int dim>
-class LU_Velocity :
+class LUVelocity :
   public Dune::PDELab::AnalyticGridFunctionBase<
   Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim>,
-  LU_Velocity<GV,RF,dim> >
+  LUVelocity<GV,RF,dim> >
 {
 private:
   RF time;
 
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,LU_Velocity<GV,RF,dim> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,LUVelocity<GV,RF,dim> > BaseT;
 
   typedef typename Traits::DomainType DomainType;
   typedef typename Traits::RangeType RangeType;
 
-  LU_Velocity(const GV & gv) : BaseT(gv) {
+  LUVelocity(const GV & gv) : BaseT(gv) {
     time = 0.0;
   }
 

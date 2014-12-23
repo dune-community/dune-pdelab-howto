@@ -282,7 +282,7 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_HagenPoiseuille BoundaryFunction;
+      typedef BCTypeParamHagenPoiseuille BoundaryFunction;
       BoundaryFunction boundary_function;
       typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
       NeumannFlux neumann_flux(gv);
@@ -397,7 +397,7 @@ int main(int argc, char** argv)
       V_FEM vFem(gv); P_FEM pFem(gv);
 
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
-      typedef TU_Velocity<GV,RF,2> InitialVelocity;
+      typedef TUVelocity<GV,RF,2> InitialVelocity;
 
       typedef ZeroFunction InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
@@ -409,7 +409,7 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_TU BoundaryFunction;
+      typedef BCTypeParamTU BoundaryFunction;
       typedef PressureDropFlux<GV,RF> NeumannFlux;
 
       // Domain parameters:
@@ -471,7 +471,7 @@ int main(int argc, char** argv)
       V_FEM vFem(gv); P_FEM pFem(gv);
 
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
-      typedef LU_Velocity<GV,RF,2> InitialVelocity;
+      typedef LUVelocity<GV,RF,2> InitialVelocity;
 
       typedef ZeroFunction InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
@@ -483,7 +483,7 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_LU BoundaryFunction;
+      typedef BCTypeParamLU BoundaryFunction;
       typedef PressureDropFlux<GV,RF> NeumannFlux;
 
       // Domain parameters:
@@ -554,7 +554,7 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_HagenPoiseuille BoundaryFunction;
+      typedef BCTypeParamHagenPoiseuille BoundaryFunction;
       typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
 
       BoundaryFunction boundary_function;
@@ -609,7 +609,7 @@ int main(int argc, char** argv)
       typedef double RF;
 
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
-      typedef TU_Velocity<GV,RF,3> InitialVelocity;
+      typedef TUVelocity<GV,RF,3> InitialVelocity;
 
       typedef ZeroFunction InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
@@ -621,7 +621,7 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_TU_3D BoundaryFunction;
+      typedef BCTypeParamTU3D BoundaryFunction;
       typedef PressureDropFlux<GV,RF> NeumannFlux;
 
       // Domain parameters:
