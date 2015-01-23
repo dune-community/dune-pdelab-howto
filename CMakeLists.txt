@@ -24,7 +24,7 @@ include(DuneMacros)
 
 # start a dune project with information from dune.module
 dune_project()
-
+dune_enable_all_packages()
 # $Id: duneproject 5425 2009-02-10 09:31:08Z sander $
 
 # we need the module file to be able to build via dunecontrol
