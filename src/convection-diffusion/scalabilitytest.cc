@@ -346,7 +346,7 @@ int main(int argc, char** argv)
       std::bitset<dim> B(false);
       int overlap=1;
 
-      typedef YaspPartition<dim,Dune::FieldVector<int,dim>> YP;
+      typedef YaspPartition<dim, std::array<int,dim>> YP;
       YP* yp = (YP*) Dune::YaspGrid<dim>::defaultLoadbalancer();
       if( px*py*pz==0 ){
         // If px,py,pz were not specified choose the default load balancer
@@ -363,13 +363,13 @@ int main(int argc, char** argv)
       }
 
       else {
-        Dune::FieldVector<int,dim> yasppartitions;
+        std::array<int,dim> yasppartitions;
         yasppartitions[0] = px;
         yasppartitions[1] = py;
         yasppartitions[2] = pz;
         yp = new YP(yasppartitions);
         if( helper.rank() == 0 )
-          std::cout << "Partitioning of YASP: " << yasppartitions << std::endl;
+          std::cout << "Partitioning of YASP: " << px << "x" << py << "x" << pz << std::endl;
       }
 
       Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap,yp);
