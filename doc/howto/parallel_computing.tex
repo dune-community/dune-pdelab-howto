@@ -45,11 +45,12 @@
 \begin{itemize}
 \item The speed of individual computer cores is not increasing
 essentially since some years
-\item The number of cores is increasing. Dual-cores are the rule,
+\item However, the number of cores is increasing. Quad-cores are the rule,
 up to 16-core processors are available.
 \item Several multi-core processors can be used on one mainboard (e.g. four 12-core processors)
 \item Computer cluster with several multi-core multi-processor servers are affordable even for small companies.
-\item High-performance computer have up to 1'572'864 cores (Sequoia - BlueGene/Q).
+\item High-performance computer have up to 1'572'864 cores (Sequoia - Bluegene/Q, Livermore, USA)
+or 3'120'000 cores (Tianhe-2, Guangzhou, China, 384'000 Intel Xeon, 2'736'000 Intel Phi) .
 \end{itemize}
 
 \end{frame}
@@ -63,14 +64,14 @@ up to 16-core processors are available.
 \begin{itemize}
 \item Shared-memory computing: all cores have access to the whole memory
 \begin{itemize}
-\item Uniform memory access architecture (UMA): access to every memory location from every processor takes the
-same amount of time (multi-core CPUs)
-\item Non-uniform memory access architecture (NUMA): memory is associated with processors but address space is
+\item Uniform memory access architecture (UMA): access to every memory location from every process takes the
+same amount of time (most multi-core CPUs)
+\item Non-uniform memory access architecture (NUMA): memory is associated with processors or a group of processor cores but address space is
 global. Local memory can be accessed faster than memory attached
-to other processors (multi-processor servers)
+to other processes (some multi-core CPUs, multi-processor servers)
 \end{itemize}
-\item Message passing architecture (MP): each processor can only access local memory, information is exchanged
-between processors with messages send over a network (computer clusters, super computer)
+\item Message passing architecture (MP): each process can only access local memory, information is exchanged
+between processes with messages send over a network (computer clusters, super computer)
 \end{itemize}
 \end{frame}
 
@@ -96,7 +97,7 @@ between processors with messages send over a network (computer clusters, super c
 \begin{center}
   \includegraphics[width=0.9\textwidth]{EPS/numalayout}
 \end{center}
-\item \textit{Private memory architecture}: Same as for NUMA!
+\item \textit{Message passing architecture}: Same as for NUMA!
 \item Distributing data structures is hard and not automatic in
   general.
 \item Parallelisation effort for NUMA and MP is almost the same.
@@ -111,7 +112,7 @@ between processors with messages send over a network (computer clusters, super c
 \begin{itemize}
 \item Users view: Copy (contiguous) memory block from one address space to the
   other.
-\item Message is subdivided into individual packets.
+\item During transmission the message is subdivided into individual packets.
 \item Network is packet-switched.
 \item A packet consists of an envelope and
   the data:
@@ -120,7 +121,7 @@ between processors with messages send over a network (computer clusters, super c
 \end{center}
 \item Header: Destination, size and kind of data.
 \item Payload: Size ranges from some bytes to kilobytes.
-\item Trailer: E.g. checksum for error detection.
+\item Trailer: e.g. checksum for error detection.
 \end{itemize}
 \end{frame}
 
@@ -132,19 +133,18 @@ between processors with messages send over a network (computer clusters, super c
 \item Portable Library with functions for message exchange between processes
 \item Developed 1993-94 by a international board
 \item Available on nearly all computer platforms
-\item Free Implementations also for LINUX Clusters: {\bfseries MPICH}\footnote{\href{http://www-unix.mcs.anl.gov/mpi/mpich}{{\tiny http://www-unix.mcs.anl.gov/mpi/mpich}}}
- and {\bfseries OpenMPI}\footnote{\href{http://www.open-mpi.org/}{{\tiny http://www.open-mpi.org/}}}
+\item Free Implementations also for LINUX Clusters: {\bfseries MPICH}
+ and {\bfseries OpenMPI} \footnote{\tiny \href{http://www-unix.mcs.anl.gov/mpi/mpich}{http://www-unix.mcs.anl.gov/mpi/mpich} and \href{http://www.open-mpi.org/}{http://www.open-mpi.org/}}
 \item Properties of MPI:
 \begin{itemize}
-\item library with C-, C++ and Fortran bindings (no language extension)
+\item library with C- and Fortran bindings (no language extension)
 \item large variety of point-to-point communication functions
 \item global communication
 \item data conversion for heterogeneous systems
 \item subset formation and topologies possible
 \end{itemize}
-
 \end{itemize}
-
+\only<presentation>{\vskip-3mm}
 \begin{small}\textit{Remark:} There is a special MPICH version for shared-memory machines using memory copy operations instead of slower mesage passing algorithms.
 OpenMPI can even distinguish between processes which share the same address space and
 processes on remote machines and use either memory copy or message passing.
@@ -164,11 +164,10 @@ processes on remote machines and use either memory copy or message passing.
 \begin{frame}
 \frametitle<presentation>{Strong Scalability of 3D Parallel Computation}
 Simulation of a DNAPL infiltration with a coarse lense on a grid with  $160 \times 160 \times 96$
-unknowns on a server with 4$\times$12  AMD Magny Cours, 2.1 GHz, 12$\times$0.5MB L2, 12MB
+unknowns on a server with 4$\times$12  AMD Magny Cours, 2.1~GHz, 12$\times$0.5MB L2, 12MB
 L3 processors.
 
 Computation time for one time step with BiCGStab + AMG prec.:
-
 \begin{center}
 \begin{tabular}{r|rrr|rr|rr}
 \hline
@@ -184,7 +183,6 @@ P  & \#IT(max) & $T_{it}$ & S & $T_{asm}$ & S & $T_{total}$ & S \\
 \end{center}
 
 Comparison with T3E from 1999
-
 \begin{center}
 \begin{tabular}{r|rrrr}
 \hline
@@ -195,6 +193,7 @@ Machine  & Cells & Time steps & Newton steps & $T_{total}$ \\
 \hline
 \end{tabular}
 \end{center}
+\vfill
 \end{frame}
 
 
@@ -204,7 +203,7 @@ Machine  & Cells & Time steps & Newton steps & $T_{total}$ \\
 
   \begin{itemize}
   \item partition a problem by splitting the domain into smaller subdomains
-  \item each part is solved by a different processor
+  \item each part is solved by a different process
   \item goes back to an idea of H.A. Schwarz who in 1890 presented a method to prove the existence of
         solutions of the Laplace equation on ``complicated'' domains.
   \item Different variants:
@@ -239,7 +238,7 @@ Machine  & Cells & Time steps & Newton steps & $T_{total}$ \\
       \item Given a domain $\Omega\subseteq\mathbb{R}^d$
         % and a triangulation $T(\Omega) = \{E\}$
         % \item partition the cells $E$ such that there is exactly one
-        %   processor with $E \in T(\Omega_i)$
+        %   process with $E \in T(\Omega_i)$
       \item partition $\Omega$ into \emph{non-overlapping}
         sub-domains:
         \[
@@ -302,15 +301,56 @@ Machine  & Cells & Time steps & Newton steps & $T_{total}$ \\
 \end{frame}
 
 \subsection{Parallel Grids}
+
 %-----------------------------------------------------------------------------
+
+\begin{frame} \frametitle{Recapitulation: The Grid: A Container of Entities}
+
+  In the DUNE sense a \emph{Grid} is a container of entities:
+
+  \only<presentation>{\vspace*{5mm}}
+  \begin{columns}
+    \begin{column}{5mm}
+    \end{column}
+    \begin{column}{0.5\linewidth-5mm}
+      \begin{onlyenv}<presentation>
+        \includegraphics<1-2>[width=\linewidth]{EPS/entities}
+        \includegraphics<3->[width=\linewidth]{EPS/entities_cd}
+      \end{onlyenv}
+      \begin{onlyenv}<article>
+        \vspace*{2ex}
+        ~\hfill\includegraphics[width=0.4\linewidth]{EPS/entities}\hfill
+        \includegraphics[width=0.4\linewidth]{EPS/entities_cd}\hfill~
+      \end{onlyenv}
+    \end{column}\hfill
+    \begin{column}{0.5\linewidth}
+      \begin{itemize}
+      \item vertices \only<3->{\emph{(Entity codim = $d$)}},
+      \item edges \only<3->{\emph{(Entity codim = $d-1$)}},
+      \item faces \only<3->{\emph{(Entity codim = $1$)}},
+      \item cells \only<3->{\emph{(Entity codim = $0$)}}, \ldots{}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \only<presentation>{\vspace*{5mm}}
+
+  \pause{In order to do dimension independent programming, we need a
+    dimension independent naming for different entities.}
+  \only<presentation>{\par}
+  \pause{We distinguish entities according to their codimension.}
+  \only<presentation>{\par}
+  Entities of codim = $c$ contain subentities of codim = $c+1$. This
+  gives a recursive construction down to codim = $d$.
+
+\end{frame}
 
 \subsubsection{Partition Types}
 \begin{frame}[fragile]
 \frametitle<presentation>{Partition Types}
 
 \begin{itemize}
-\item Each grid entity can be present on one or more processors.
-\item Each entity on one processor has a partition type, which can be determined
+\item Each grid entity can be present on one or more processes.
+\item Each entity on one process has a partition type, which can be determined
 by the method\\
         \hspace*{1cm}\lstinline!entity.partitionType()!
 \item The possible partition types are:\\
@@ -365,33 +405,122 @@ by the method\\
 \begin{frame}
   \frametitle<presentation>{Parallel Grids in Dune}
   \begin{itemize}
-  \item<1-> \lstinline[basicstyle=\normalfont\ttfamily]!YaspGrid!
+  \item<1-> \lstinline!YaspGrid!
       \begin{itemize}
       \item structured
       \item 2D/3D
       \item arbitrary overlap
       \end{itemize}
-  \item<2-> \lstinline[basicstyle=\normalfont\ttfamily]!UGGrid!
+  \item<2-> \lstinline!UGGrid!
       \begin{itemize}
       \item unstructured
       \item 2D/3D
       \item multi-element
-      \item one layer of ghost cells
-      \item (conforming) red-green refinement
-      \item (non-free!)
+      \item ghost cells
+      \item non-conforming/conforming (red-green) refinement
       \end{itemize}
-  \item<3-> \lstinline[basicstyle=\normalfont\ttfamily]!ALUGrid!
+  \item<3-> \lstinline!ALUGrid!
       \begin{itemize}
       \item unstructured
       \item 3D
       \item tetrahedral or hexahedral elements
       \item ghost cells
-      \item (non-conforming) bisection refinement
+      \item non-conforming/conforming bisection refinement
       \end{itemize}
   \end{itemize}
 \end{frame}
 
-\subsubsection{Iterators in a parallel Grid}
+\subsubsection{Iterators in a Parallel Grid}
+
+\begin{frame}
+  \frametitle{Recapitulation: Iterators}
+  Access to the entities of a grid is given by iterators provided by a \lstinline!GridView!. DUNE provides
+  appropriate iterators for both \lstinline!LeafGridView! and \lstinline!LevelGridView!.
+  \begin{columns}
+    \begin{column}{0.47\linewidth}
+      \begin{center}
+        \begin{onlyenv}<article>
+          \includegraphics[width=0.7\linewidth]{EPS/iterators}
+        \end{onlyenv}
+      \end{center}
+      \begin{onlyenv}<presentation>
+        \includegraphics[width=\linewidth]{EPS/iterators}
+      \end{onlyenv}
+    \end{column}
+    \begin{column}{0.53\linewidth}
+      \lstinline!GridView::Codim<c>::Iterator!\\ iterates over codimension
+        $c$ entities on a given view.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Example}
+    \only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
+  \lstinputlisting[breaklines=true]{src_examples/iterators.cc}
+\end{frame}
+
+\begin{frame} \frametitle{Entities}
+
+  \structure{Iterating over a grid view, we get access to the entities.}
+
+%  \begin{block}{}%
+    \only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
+      \lstinputlisting[breaklines=true]{src_examples/entity.cc}%
+%  \end{block}
+
+%  \pause
+  \begin{itemize}
+  \item Entities can not be modified.
+  \item Entities can not be stored.
+%    \pause
+  \item Entities provide topological and geometrical information.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Entities}
+
+  \structure{An Entity $E$ provides both topological information}
+  \begin{itemize}
+  \item Type of the entity (triangle, quadrilateral, etc.).
+  \item Relations to other entities.
+  \end{itemize}
+  \structure{and geometrical information}
+  \begin{itemize}
+  \item Position of the entity in the grid.
+  \end{itemize}
+
+  \only<presentation>{\vfill}
+%  \pause
+  \begin{columns}
+    \begin{column}{5mm}
+    \end{column}
+    \begin{column}{0.4\textwidth}
+      \begin{center}
+        \visible<presentation|1->{
+          \includegraphics[width=\linewidth]{EPS/refelem-mapping}}\\
+        \begin{onlyenv}<article>
+          \includegraphics[width=0.6\linewidth]{EPS/refelem-mapping}\\
+        \end{onlyenv}
+        \centerline{\tiny Mapping from $\hat{\Omega}$ into global coordinates.}
+      \end{center}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \structure{Entity $E$ is defined by\dots{}}
+        \begin{itemize}
+        \item Reference Element $\hat{\Omega}$
+        \item Transformation $T_E$
+        \end{itemize}
+    \end{column}
+  \end{columns}
+
+  \only<presentation>{\vfill}
+%  \pause
+  \lstinline!GridView::Codim<c>::Entity!
+  implements the entity concept.
+
+\end{frame}
 
 \begin{frame}[fragile]
   \frametitle<presentation>{Iterators in a parallel Grid}
@@ -424,120 +553,101 @@ Grid::template Codim<c>::template Partition<ptype>::Iterator it
 %   \end{description}
 \end{frame}
 
-\subsubsection{Additional Remarks}
+\begin{frame} \only<presentation>{\frametitle{Intersections}}
+
+  \begin{columns}
+    \begin{column}{0.4\linewidth}
+      \begin{center}
+        \includegraphics<presentation>[width=\linewidth]{EPS/intersection}
+        \includegraphics<article>[width=0.45\linewidth]{EPS/intersection}
+      \end{center}
+    \end{column}
+    \begin{column}{0.6\linewidth}
+      \begin{itemize}
+      \item Grids may be non conforming.
+      \item Entities can intersect with neighbours and boundary.
+      \item IntersectionIterators give access to intersections of
+        an Entity in a given view.
+      \item Intersections hold topological and
+        geometrical information.
+      \item Intersections depend on the view:
+%      \item The \lstinline!GridView! provides access to the IntersectionIterator:
+        \begin{itemize}
+        \item \lstinline!GridView::IntersectionIterator!
+        \item \lstinline!GridView::ibegin(entity)!
+          \\\hspace*{1.2cm}and \lstinline!iend(entity)!
+        \end{itemize}
+      \item \textbf{Note:} Intersections are always of
+        codimension 1!
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
+\end{frame}
+
+\begin{frame} \frametitle{Intersection Interface}
+  Dereferencing \lstinline!IntersectionIterator! yields \lstinline!Intersection!:\bigskip
+
+  \begin{columns}
+    \begin{column}{0.4\linewidth}
+      \begin{center}
+        \includegraphics<presentation>[width=\linewidth]{EPS/intersection}
+      \end{center}
+    \end{column}
+    \begin{column}{0.6\linewidth}
+    \only<presentation>{\scriptsize}
+    \begin{tabular}{l|p{0.3\linewidth}}
+      \hline
+      Method name & Result \\\hline
+      \lstinline!boundary! &
+      Boolean \\
+      \lstinline!neighbor! &
+      Boolean \\
+      \lstinline!inside! &
+      EntityPointer to $E$ \\
+      \lstinline!outside! &
+      EntityPointer to $E'$ \\
+      \lstinline!geometry! &
+      Geometry $T_{I}$ \\
+      \lstinline!geometryInInside! &
+      Geometry $T_{I,E}$ \\
+      \lstinline!geometryInOutside! &
+      Geometry $T_{I,E'}$ \\
+      \lstinline!unitOuterNormal! &
+      outer normal $n$, $|n| = 1$\\
+      \lstinline!centerUnitOuterNormal! &
+      outer normal at \mbox{geometry().center()}
+      \\\hline
+    \end{tabular}
+    \end{column}
+  \end{columns}
+
+\end{frame}
 
 %-----------------------------------------------------------------------------
 \begin{frame}
-\frametitle<presentation>{Additional Remarks}
+\frametitle{Intersections and Domain Decomposition}
 \begin{itemize}
 \item On each intersection there exists a method \lstinline!neighbor()!. This method returns \lstinline!true! if there is a
 neighbor available on the same process.
 \item The method \lstinline!boundary()! only returns \lstinline!true! at the domain boundary (even if the grid is periodic at this boundary) not at a process boundary.
+\item If there is no neighbor but also no domain boundary, there is a process boundary.
 \end{itemize}
 \end{frame}
 
-\subsection{Communicating Data with Dune}
-\begin{frame}[fragile]
-  \frametitle<presentation>{Communicating Data with Dune}
-
-%% local index
-
-  \begin{itemize}
-  \item Data is associated with grid entities using an \texttt{IndexSet}.
-  \item The index set provides indices for all entities stored on the process (i.e. the \texttt{All\_Partition})
-  \item Data is stored locally.
-  \item Algorithms may require data exchange e.g. for synchronization or the calculation of updates
-  \item Dune provides methods for the communication of data and methods for collective communication
-  \end{itemize}
-
-\end{frame}
-
-\subsubsection{Communication API}
-\begin{frame}[fragile]
-  \frametitle<presentation>{Communication API}
-
-  \texttt{GridView} provides a method for the communication between processes
+\begin{frame} \frametitle{Example}
 \only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
-    \begin{lstlisting}
-template<class DHImp, class DataType>
-void communicate ( CommDataHandleIF<DHImp, DataType> &datahandle,
-                   InterfaceType interface,
-                   CommunicationDirection dir ) const;
-    \end{lstlisting}
-\only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
-where
-    \begin{itemize}
-    \item \lstinline!CommDataHandleIF!\\
-      is a user defined class describing what data should be communicated. The class has to provide methods to read (gather) the data on the
-      source process and write (scatter) the data on the target process.
-    \end{itemize}
+  \lstinputlisting[breaklines=true]{src_examples/intersection.cc}
 \end{frame}
 
-
-\begin{frame}[fragile]
-  \frametitle<presentation>{Communication API}
-  \begin{onlyenv}<presentation>
-\lstset{basicstyle=\scriptsize\ttfamily}
-    \begin{lstlisting}
-template<class DHImp, class DataType>
-void communicate ( CommDataHandleIF<DHImp, DataType> &datahandle,
-                   InterfaceType interface,
-                   CommunicationDirection dir ) const;
-    \end{lstlisting}
-\lstset{basicstyle=\normalsize\ttfamily}
-where
-    \end{onlyenv}
-    \begin{itemize}
-    \item \lstinline!InterfaceType!\\
-    Determines the partition type of the entities to be sent and received. With \lstinline!InteriorBorder_InteriorBorder_Interface! only
-border entities are sent. With \lstinline!All_All_Interface!,
-    \lstinline!InteriorBorder_All_Interface! and
-    \lstinline!Overlap_All_Interface! all entities, only interior and border entities or only overlap entities are sent. Only processes with common
-data communicate and only the entities present on both processes are included in the communication.
-    \item \lstinline!CommunicationDirection!
-      The direction of the communication can be changed with either \lstinline!ForwardDirection! or
-      \lstinline!BackwardDirection!
-    \end{itemize}
-\end{frame}
-
-
-
-\subsubsection{Collective Communication}
-
-\begin{frame}[fragile]
-  \frametitle<presentation>{CollectiveCommunication}
-  \structure{Problem:}
-  \begin{itemize}
-  \item parallel computations require global communication (e.g. sum(defect) or $\min(\Delta t)$
-        and synchronization (e.g. a barrier needed for a timing)
-  \item Dune grids provide a method which returns a collective communicator object:
-    \lstinline!  const CollectiveCommunication & comm () const;!
-  \end{itemize}
-
-The class  \lstinline[basicstyle=\normalfont\ttfamily] !Dune::Grid::CollectiveCommunication! provides the methods:
- \begin{center}
-    \scriptsize
-    \begin{tabular}{l|l}
-      \hline
-      Method name & Description\\\hline
-      \lstinline!rank! & obtain number (rank) of this process\\
-      \lstinline!size! & obtain number of processes \\
-      \lstinline!barrier! & wait until all process arrived at the barrier\\
-      \lstinline!min! & global min of local values\\
-      \lstinline!max! & global max of local values\\
-      \lstinline!sum! & global sum of local values\\
-      \lstinline!broadcast! & broadcast from one process to all other processes\\
-      \dots\\
-      \hline
-    \end{tabular}
- \end{center}
-
+\begin{frame} \frametitle{Example II}
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
+  \lstinputlisting[breaklines=true]{src_examples/intersection2.cc}
 \end{frame}
 
 \subsubsection{Load-Balancing and Adaptation}
 \begin{frame}[fragile]
   \frametitle<presentation>{Load-Balancing}
-  \structure{Problem:}
   \begin{itemize}
   \item parallelization only scales well if all processes have the
     same work load\\
@@ -566,17 +676,12 @@ adaptive grid refinement and load-balancing are not possible) by writing a class
 template<int dim>
 class YaspPartition : public Dune::YLoadBalance<dim>
 {
-  private:
-    const unsigned &numProc;  // number of processes
   public:
-    YaspPartition( const unsigned &numProc_ ) : numProc( numProc_ )
-    {}
-
     typedef Dune::FieldVector<int, dim>  iTupel;
     void loadbalance (const iTupel& size, int P, iTupel& dims) const
     {
-      dims = 1;
-      dims[1]= numProc;
+      dims[0] = 1;
+      dims[1] = P;
     }
 };
 \end{lstlisting}
@@ -587,17 +692,167 @@ class YaspPartition : public Dune::YLoadBalance<dim>
   \frametitle<presentation>{Grid-Distribution with YaspGrid}
 Now you can pass the object to the constructor during grid creation
 \only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
-\begin{lstlisting}
-Dune::FieldVector<int,2> n(10), overlap(1);
+\begin{lstlisting}[breaklines=true]
+Dune::FieldVector<int,2> n(10);
 Dune::FieldVector<double,2> upper(1.0);
-Dune::FieldVector<bool,dim> periodic(false);
-YaspGrid<2> grid(upper, n, periodic, 0);
-YaspPartition<dim> yp(mpiHelper.size());
-GRID grid(mpiHelper.getCommunicator(), upper, n, periodic,
-          overlap, &yp );
+Dune::FieldVector<bool,2> periodic(false);
+int overlap = 1;
+YaspPartition<2> yp;
+YaspGrid<2> grid(mpiHelper.getCommunicator(), upper, n, periodic,overlap, &yp );
 \end{lstlisting}
 \only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
 \end{frame}
+
+\subsection{Communicating Data with Dune}
+\begin{frame}[fragile]
+  \frametitle<presentation>{Communicating Data with Dune}
+
+%% local index
+
+  \begin{itemize}
+  \item Data is associated with grid entities using an \texttt{IndexSet}.
+  \item The index set provides indices for all entities stored by the process (i.e. the \texttt{All\_Partition})
+  \item Data is stored locally.
+  \item Algorithms may require data exchange e.g. for synchronization or the calculation of updates
+  \item Dune provides methods for the communication of data and methods for collective communication
+  \end{itemize}
+
+\end{frame}
+
+
+\subsubsection{DUNE Lowlevel Communication API}
+\begin{frame}[fragile]
+  \frametitle<presentation>{DUNE Lowlevel Communication API}
+
+  \texttt{GridView} provides a method for the communication between processes
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
+    \begin{lstlisting}
+template<class DHImp, class DataType>
+void communicate ( CommDataHandleIF<DHImp, DataType> &datahandle,
+                   InterfaceType interface,
+                   CommunicationDirection dir ) const;
+    \end{lstlisting}
+\only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
+where
+    \begin{itemize}
+    \item \lstinline!CommDataHandleIF!\\
+      is a user defined class describing what data should be communicated. The class has to provide methods to assemble the data on the
+      source process and write distribute the data on the target process.
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle<presentation>{DUNE Lowlevel Communication API}
+  \begin{onlyenv}<presentation>
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
+    \begin{lstlisting}
+template<class DHImp, class DataType>
+void communicate ( CommDataHandleIF<DHImp, DataType> &datahandle,
+                   InterfaceType interface,
+                   CommunicationDirection dir ) const;
+    \end{lstlisting}
+\lstset{basicstyle=\normalsize\ttfamily}
+where
+    \end{onlyenv}
+    \begin{itemize}
+    \item \lstinline!InterfaceType!\\
+    Determines the partition type of the entities to be sent and received. With \lstinline!InteriorBorder_InteriorBorder_Interface! only
+border entities are sent. With \lstinline!All_All_Interface!,
+    \lstinline!InteriorBorder_All_Interface! and
+    \lstinline!Overlap_All_Interface! all entities, only interior and border entities or only overlap entities are sent. Only processes with common
+data communicate and only the entities present on both processes are included in the communication.
+    \item \lstinline!CommunicationDirection!
+      The direction of the communication can be changed with either \lstinline!ForwardDirection! or
+      \lstinline!BackwardDirection!
+    \end{itemize}
+\end{frame}
+
+
+
+\subsubsection{Collective Communication}
+
+\begin{frame}[fragile]
+  \frametitle<presentation>{Collective Communication}
+  \begin{itemize}
+  \item parallel computations require global communication (e.g. sum(defect) or $\min(\Delta t)$
+        and synchronization (e.g. a barrier needed for a timing)
+  \item You can get a collective communicator object by the following method of a \lstinline!GridView!:
+    \lstinline!  const CollectiveCommunication & comm () const;!
+  \end{itemize}
+
+The class  \lstinline!Dune::Grid::CollectiveCommunication! provides comfortable access to a lot of MPI methods, e.g.
+
+    \resizebox{0.9\textwidth}{!}{
+    \begin{tabular}{l|l}
+      \hline
+      Method name & Description\\\hline
+      \lstinline!rank! & obtain number (rank) of this process\\
+      \lstinline!size! & obtain number of processes \\
+      \lstinline!barrier! & wait until all process arrived at the barrier\\
+      \lstinline!min! & global min of local values\\
+      \lstinline!max! & global max of local values\\
+      \lstinline!sum! & global sum of local values\\
+      \lstinline!allreduce! & Compute something over all processes for each component of an array \\
+      &and return result in every process\\
+      \lstinline!broadcast! & broadcast from one process to all other processes\\
+      \lstinline!scatter! & scatter individual data from root process to all other tasks\\
+      \lstinline!gather, allgather! & gather data on root process (and distribute it to all other tasks)\\
+      \hline
+    \end{tabular}}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Example}
+\only<presentation>{\lstset{basicstyle=\small\ttfamily}}
+\lstinputlisting[lastline=12]{src_examples/communicate.cc}
+\end{frame}
+\subsubsection{MPIHelper}
+\begin{frame}[fragile]
+  \frametitle<presentation>{MPIHelper}
+  Dune parallel programs use a tool to help in setting up and handling the
+parallel communication with MPI. It also takes care that the parallel program
+is finished in a defined way. It is called \lstinline!MPIHelper!. It has to be
+created at the very beginning of the program
+using the \lstinline!instance! method of the \lstinline!Dune::MPIHelper! class.
+\only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily,breaklines=true}}
+\lstinputlisting[lastline=12]{../../src/course-examples/example01_main.hh}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle<presentation>{MPIHelper}
+  \begin{itemize}
+  \item MPIHelper provides the methods\medskip
+
+    \only<presentation>{\scriptsize}
+    \begin{tabular}{l|l}
+      \hline
+      Method name & Description\\\hline
+      \lstinline!rank! & obtain number (rank) of this process\\
+      \lstinline!size! & obtain number of processes \\
+      \hline
+    \end{tabular}\medskip
+  \item MPIHelper provides the static methods\medskip
+
+    \only<presentation>{\scriptsize}
+    \resizebox{0.9\textwidth}{!}{
+    \begin{tabular}{l|l}
+      \hline
+      Method name & Description\\\hline
+      \lstinline!getCommunicator! & get communicator to exchange data
+      with\\ & all process (\lstinline!MPI_COMM_WORLD!)\\
+      \lstinline!getLocalCommunicator! & get communicator to exchange data with\\& the local process only (\lstinline!MPI_COMM_SELF!)\\
+      \lstinline!getCollectiveCommunication! & get collective communication object for \lstinline!MPI_COMM_WORLD!\\
+      \lstinline!instance! & get access to the helper singleton\\
+      \hline
+    \end{tabular}}\medskip
+   \item MPIHelper additionally provides an \lstinline!enum! \lstinline!isFake! which is \lstinline!true! if the program was compiled
+without MPI support
+ \end{itemize}
+\end{frame}
+
 
 \subsection{Parallel PDELab}
 
@@ -609,7 +864,7 @@ Parallel computing in PDELab is very easy.
     \begin{enumerate}
     \item a suitable parallel grid,
     \item the correct constraints for the discretization of
-      the PDE (either \lstinline!OverlappingConformingDirichletConstraints! or \lstinline!NonoverlappingConformingDirichletConstraints!) , and
+      the PDE (either \lstinline!OverlappingConformingDirichletConstraints! or \lstinline!NonoverlappingConformingDirichletConstraints<GV>!) , and
     \item a suitable and matching parallel solver backend of the
       PDELab backend.
     \end{enumerate}
@@ -617,6 +872,11 @@ Parallel computing in PDELab is very easy.
 \end{frame}
 
 \subsubsection{Parallel Solver Backends}
+\begin{frame}
+  \frametitle<presentation>{Building Blocks for Parallel Solvers}
+  \includegraphics[width=\textwidth]{EPS/istlsolver}
+\end{frame}
+
 \begin{frame}
   \frametitle<presentation>{Parallel Solver Backends}
 
@@ -634,14 +894,6 @@ decomposition.
 \lstinline!dune/pdelab/backend/novlpistlsolverbackend.hh!.
 \end{itemize}
 
-\only<2>{
-\alert{Please make sure that you always choose a matching solver for your type
-of domain decomposition!!!}}
-\end{frame}
-
-\begin{frame}
-  \frametitle<presentation>{Building Blocks for Parallel Solvers}
-  \includegraphics[width=\textwidth]{EPS/istlsolver}
 \end{frame}
 
 %-----------------------------------------------------------------------------
@@ -653,7 +905,7 @@ of domain decomposition!!!}}
 products and scalar products.
 \item As parallel preconditioners to the CG and BiCGStab solvers additive Schwarz methods can be used:
 \begin{itemize}
-\item In this schemes the local subproblem on each processor is solved
+\item In this schemes the local subproblem on each process is solved
 where the values of the last iteration are used as Dirichlet constraints at the process boundary.
 \item Different solvers can be choosen for the local problems (e.g. a direct solver like SuperLU or some steps of an
 iterative solver like SSOR).
@@ -669,8 +921,9 @@ coefficient is applied.
 \begin{frame}
   \frametitle{Parallel Solver Backends for Overlapping DD}
 The linear solvers in this table are preconditioned with an overlapping domain decomposition
-using the respective smoother or with a parallel algebraic multigrid scheme with an SSOR smoother (AMG).
-\begin{center}
+using the respective smoother or with a parallel algebraic multigrid scheme with an SSOR smoother (AMG).\medskip
+
+\resizebox{0.9\textwidth}{!}{
 \begin{tabular}{|l|l|l|}\hline
 solver backend & smoother & linear solver\\\hline
 \lstinline!ISTLBackend_OVLP_CG_SSORk<GFS,C>! & SSOR & CG\\\hline
@@ -679,10 +932,10 @@ solver backend & smoother & linear solver\\\hline
 \lstinline!ISTLBackend_OVLP_BCGS_SSORk<GFS,C>! & SSOR & BiCGStab\\\hline
 \lstinline!ISTLBackend_OVLP_BCGS_SuperLU<GFS,C>! & SuperLU & BiCGStab\\\hline
 \lstinline!ISTLBackend_BCGS_AMG_SSOR<GO>! & AMG & BiCGStab\\\hline
-\end{tabular}
-\end{center}
+\end{tabular}}\medskip
+
 \lstinline!ISTLBackend_OVLP_ExplicitDiagonal<GFS>! is a solver for explicit
-time-steppers with (block-)diagonal mass matrix.
+time-steppers with (block-) diagonal mass matrix.
 
 The template parameter \lstinline!GFS! is the grid function space, \lstinline!GO! is the grid operator, \lstinline!C! is the type of the
 constraints container (usually \lstinline!OverlappingConformingDirichletConstraints!).
@@ -691,7 +944,7 @@ constraints container (usually \lstinline!OverlappingConformingDirichletConstrai
 \begin{frame}[fragile]
   \frametitle{Overlapping Example}
 \only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
-  \begin{lstlisting}
+  \begin{lstlisting}[breaklines=true]
 // 1. Create an overlapping grid
 Dune::FieldVector<double,2> L(1.0);
 Dune::FieldVector<int,2> N(16);
@@ -708,14 +961,12 @@ typedef Dune::PDELab::OverlappingConformingDirichletConstraints CON;
 typedef Dune::PDELab::ISTLVectorBackend<> VBE;
 typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
 GFS gfs(gv,fem);
-
 \end{lstlisting}
 \end{frame}
 \begin{frame}[fragile]
 \frametitle<presentation>{Overlapping Example Continued}
 \only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
-  \begin{lstlisting}
-
+  \begin{lstlisting}[breaklines=true]
 //  define problem parameters
 typedef ConvectionDiffusionProblem<GV,Real> Param;
 Param param;
@@ -734,14 +985,12 @@ LOP lop(param,2);
 typedef Dune::PDELab::ISTLMatrixBackend MBE;
 typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,double,double,double,C,C> GO;
 GO go(gfs,cg,gfs,cg,lop);
-
 \end{lstlisting}
 \end{frame}
 \begin{frame}[fragile]
 \frametitle<presentation>{Overlapping Example Continued}
 \only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
-  \begin{lstlisting}
-
+  \begin{lstlisting}[breaklines=true]
 //  Compute affine shift
 typedef typename GO::Traits::Domain V;
 V x(gfs,0.0);
@@ -758,8 +1007,9 @@ LS ls(gfs,cg,5000,2);
 \begin{frame}
   \frametitle{Parallel Solver Backends for Nonoverlapping DD}
 The linear solvers in this table are preconditioned with a nonoverlapping domain decomposition
-using the respective smoother.
-\begin{center}
+using the respective smoother.\medskip
+
+\resizebox{0.9\textwidth}{!}{
 \begin{tabular}{|l|l|l|}\hline
 solver backend & smoother & linear solver\\\hline
 \lstinline!ISTLBackend_NOVLP_CG_NOPREC<GFS>! & -- & CG\\\hline
@@ -769,10 +1019,10 @@ solver backend & smoother & linear solver\\\hline
 \lstinline!ISTLBackend_NOVLP_BCGS_NOPREC<GFS>! & -- & BiCGStab\\\hline
 \lstinline!ISTLBackend_NOVLP_BCGS_SSORk<GO>! & SSOR & BiCGStab\\\hline
 \lstinline!ISTLBackend_NOVLP_BCGS_AMG_SSOR<GO>! & AMG & BiCGStab\\\hline
-\end{tabular}
-\end{center}
+\end{tabular}}\medskip
+
 \lstinline!ISTLBackend_NOVLP_ExplicitDiagonal! is a solver for explicit
-time-steppers with (block-)diagonal mass matrix.
+time-steppers with (block-) diagonal mass matrix.
 
 The template parameter \lstinline!GFS! is the grid function space, \lstinline!GO! is the grid operator
 and \lstinline!Scalar! the type of a scalar value in the matrix.
@@ -781,7 +1031,7 @@ and \lstinline!Scalar! the type of a scalar value in the matrix.
 \begin{frame}[fragile]
   \frametitle{Nonoverlapping example}
 \only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
-  \begin{lstlisting}
+  \begin{lstlisting}[breaklines=true]
 // 1. Create an non-overlapping grid
 Dune::FieldVector<double,2> L(1.0);
 Dune::FieldVector<int,2> N(16);
@@ -794,7 +1044,7 @@ const GV& gv=grid.leafView();
 // 2. Create correctly constrained grid function space
 typedef Dune::PDELab::Q1LocalFiniteElementMap<Coord,Real,dim> FEM;
 FEM fem;
-typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
+typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints<GV> CON;
 CON con(gv);
 typedef Dune::PDELab::ISTLVectorBackend<> VBE;
 typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
@@ -808,7 +1058,7 @@ Param param;
 \begin{frame}[fragile]
 \frametitle<presentation>{Nonoverlapping Example Continued}
 \only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
-  \begin{lstlisting}
+  \begin{lstlisting}[breaklines=true]
 typedef Dune::PDELab::BCTypeParam_CD<Param> B;
 B b(gv,param);
 typedef Dune::PDELab::DirichletBoundaryCondition_CD<Param> G;
@@ -824,16 +1074,13 @@ LOP lop(param,2);
 typedef Dune::PDELab::ISTLMatrixBackend MBE;
 typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,double,double,double,C,C,true> GO;
 GO gos(gfs,cg,gfs,cg,lop);
-
 \end{lstlisting}
 \only<presentation>{\lstset{basicstyle=\normalsize\ttfamily}}
 \end{frame}
 \begin{frame}[fragile]
 \frametitle<presentation>{Nonoverlapping Example Continued}
 \only<presentation>{\lstset{basicstyle=\scriptsize\ttfamily}}
-  \begin{lstlisting}
-
-
+  \begin{lstlisting}[breaklines=true]
 // Compute affine shift
 typedef typename GO::Traits::Domain V;
 V x(gfs,0.0);
