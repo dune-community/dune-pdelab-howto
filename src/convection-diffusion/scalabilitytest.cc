@@ -53,33 +53,6 @@
 
 const bool graphics = true;
 
-/*
-  With this class you can specify how to distribute the total number of
-  processes to the YASP grid by passing a vector of type
-  Dune::FieldVector<int,dim> to the constructor.
-*/
-template<int dim, class iTupel>
-class YaspPartition : public Dune::YLoadBalance<dim>
-{
-private:
-  const iTupel& yasppartitions;
-
-public:
-  //constructor:
-  YaspPartition( const iTupel& yasppartitions_ )
-    : yasppartitions( yasppartitions_ )
-  {
-  }
-
-  void loadbalance (const iTupel& size, int P, iTupel& dims) const
-  {
-    dims = yasppartitions;
-  }
-};
-
-
-
-
 template<class GV>
 void test (const GV& gv)
 {
@@ -346,7 +319,7 @@ int main(int argc, char** argv)
       std::bitset<dim> B(false);
       int overlap=1;
 
-      typedef YaspPartition<dim,Dune::FieldVector<int,dim>> YP;
+      typedef Dune::YaspFixedSizePartitioner<dim> YP;
       YP* yp = (YP*) Dune::YaspGrid<dim>::defaultLoadbalancer();
       if( px*py*pz==0 ){
         // If px,py,pz were not specified choose the default load balancer
@@ -363,13 +336,11 @@ int main(int argc, char** argv)
       }
 
       else {
-        Dune::FieldVector<int,dim> yasppartitions;
+        std::array<int,dim> yasppartitions;
         yasppartitions[0] = px;
         yasppartitions[1] = py;
         yasppartitions[2] = pz;
         yp = new YP(yasppartitions);
-        if( helper.rank() == 0 )
-          std::cout << "Partitioning of YASP: " << yasppartitions << std::endl;
       }
 
       Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap,yp);
