@@ -2,10 +2,10 @@
 
 set(SUBDIRS )
 
-if(EIGEN_FOUND)
+if(EIGEN3_FOUND)
 set(EIGENPROGRAMS
     laplacedirichletccfv-eigen)
-endif(EIGEN_FOUND )
+endif(EIGEN3_FOUND )
 
 if(SUPERLU_FOUND)
 set(SUPERLUPROGRAMS
@@ -293,14 +293,10 @@ target_link_libraries(laplacedirichletccfv ${DUNE_LIBS})
 #
 # set(laplacedirichletccfv_ LDADD ${DUNEMPILDFLAGS} ${DUNEMPILIBS} ${UG_LDFLAGS} ${UG_LIBS} ${DUNE_LDFLAGS} ${DUNE_LIBS})
 
-if(EIGEN_FOUND)
+if(EIGEN3_FOUND)
 add_executable(laplacedirichletccfv_eigen laplacedirichletccfv.cc)
-
-
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(laplacedirichletccfv_eigen_ LDADD ${laplacedirichletccfv_LDADD})
-endif(EIGEN_FOUND )
+target_link_libraries(laplacedirichletccfv_eigen ${DUNE_LIBS})
+endif(EIGEN3_FOUND )
 
 add_executable(reentrantcorner reentrantcorner.cc)
 
