@@ -186,7 +186,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   { // start a new block to automatically delete the VTKWriter object
     Dune::SubsamplingVTKWriter<typename GM::LeafGridView> vtkwriter(grid.leafGridView(),degree-1);
     typename FS::DGF xdgf(fs.getGFS(),x);
-    vtkwriter.addVertexData(new typename FS::VTKF(xdgf,"x_h"));
+    vtkwriter.addVertexData(std::make_shared<typename FS::VTKF>(xdgf,"x_h"));
     vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
     fn.increment();
   }
@@ -209,7 +209,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
       {
         Dune::SubsamplingVTKWriter<typename GM::LeafGridView> vtkwriter(grid.leafGridView(),degree-1);
         typename FS::DGF xdgf(fs.getGFS(),xnew);
-        vtkwriter.addVertexData(new typename FS::VTKF(xdgf,"x_h"));
+        vtkwriter.addVertexData(std::make_shared<typename FS::VTKF>(xdgf,"x_h"));
         vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
         fn.increment();
       }

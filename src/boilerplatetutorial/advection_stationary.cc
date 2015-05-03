@@ -181,7 +181,7 @@ int main(int argc, char **argv)
   // output grid to VTK file
   Dune::SubsamplingVTKWriter<GM::LeafGridView> vtkwriter(grid->leafGridView(),degree-1);
   FS::DGF xdgf(fs.getGFS(),x);
-  vtkwriter.addVertexData(new FS::VTKF(xdgf,"x_h"));
+  vtkwriter.addVertexData(std::make_shared<FS::VTKF>(xdgf,"x_h"));
   vtkwriter.write("advection_stationary",Dune::VTK::appendedraw);
 
   // done
