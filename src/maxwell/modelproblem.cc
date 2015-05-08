@@ -19,17 +19,8 @@
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/grid/yaspgrid.hh>
-#if HAVE_ALBERTA
-#include<dune/grid/albertagrid.hh>
-#include <dune/grid/albertagrid/dgfparser.hh>
-#endif
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
-#endif
-#if HAVE_ALUGRID
-#include<dune/grid/alugrid.hh>
-#include<dune/grid/io/file/dgfparser/dgfalu.hh>
-#include<dune/grid/io/file/dgfparser/dgfparser.hh>
 #endif
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
@@ -218,7 +209,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   Dune::PDELab::MaxwellInitialValueAdapter<Param> u0(gv,param);
   Dune::PDELab::interpolate(u0,gfs,xold);
 
-  // <<<5>>> Make a linear solver backend
+  // <<<5>>> Make a linear solver backend $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS)
   //typedef Dune::PDELab::ISTLBackend_SEQ_CG_SSOR LS;
   //LS ls(10000,1);
   typedef Dune::PDELab::ISTLBackend_OVLP_ExplicitDiagonal<GFS> LS;

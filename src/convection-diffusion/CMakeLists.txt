@@ -37,4 +37,7 @@ add_executable(scalabilitytest scalabilitytest.cc)
 add_dune_alberta_flags(scalabilitytest)
 add_executable(ldomain ldomain.cc)
 
+# set a symlink for the grid subfolder in the build directory
+dune_symlink_to_source_files(grids)
+
 set(CLEANFILES  poisson_*.vtu reentrant_*.vtu dgfparser.log q1*.vtu *.vtu *.png)

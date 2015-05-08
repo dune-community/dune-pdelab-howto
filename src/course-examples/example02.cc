@@ -26,8 +26,8 @@
 #if HAVE_ALBERTA
 #include<dune/grid/albertagrid.hh>
 #endif
-#if HAVE_ALUGRID
-#include<dune/grid/alugrid.hh>
+#if HAVE_DUNE_ALUGRID
+#include<dune/alugrid/grid.hh>
 #endif
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>

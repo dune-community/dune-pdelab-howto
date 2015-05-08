@@ -408,7 +408,7 @@ int main(int argc, char** argv)
             }
         }
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
       if (mesh=="simplex" && dim_dyn==2)
         {
           const int dim = 2;

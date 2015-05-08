@@ -299,7 +299,7 @@ int main(int argc, char** argv)
       dispatcher(problem,grid.leafGridView(),p0fem,rt0fem,"Yasp3d_rt0q");
     }
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
     if (true)
     {
       ALUUnitSquare grid;

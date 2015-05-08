@@ -294,7 +294,7 @@ int main(int argc, char** argv)
         (gv,"hagenpoiseuille_yasp_Q2Q1_2d", parameters, vFem, pFem, initial_solution);
     }
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
     // ALU Grid Hagen-Poiseuille test 2D
     if(example_switch.find("HA2") != std::string::npos)
     {

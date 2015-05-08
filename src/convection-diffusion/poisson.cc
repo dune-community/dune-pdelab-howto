@@ -322,7 +322,7 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
     {
 #ifdef HANGING_NODES_REFINEMENT
       std::cout
@@ -391,7 +391,7 @@ int main(int argc, char** argv)
 #endif
 
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
     {
 #ifdef HANGING_NODES_REFINEMENT
       std::cout
@@ -450,7 +450,7 @@ int main(int argc, char** argv)
 #endif
 
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
     {
 #ifdef HANGING_NODES_REFINEMENT
       std::cout
