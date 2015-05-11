@@ -47,8 +47,6 @@
 #include<dune/pdelab/instationary/onestep.hh>
 #include<dune/pdelab/localoperator/maxwelldg.hh>
 
-#include"../utility/gridexamples.hh"
-
 //==============================================================================
 // Parameter class for Maxwell Problem
 //==============================================================================

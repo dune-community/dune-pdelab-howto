@@ -22,6 +22,9 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/float_cmp.hh>
 #include<dune/common/static_assert.hh>
+#if HAVE_UG
+#include<dune/grid/uggrid.hh>
+#endif
 #include<dune/grid/yaspgrid.hh>
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
@@ -60,7 +63,6 @@
 #include<dune/pdelab/instationary/onestep.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
-#include "../utility/gridexamples.hh"
 #include "cgstokes_initial.hh"
 
 //===============================================================

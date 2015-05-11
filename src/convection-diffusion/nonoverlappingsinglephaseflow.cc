@@ -50,7 +50,6 @@
 #include<dune/pdelab/localoperator/convectiondiffusionfem.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 
-#include"../utility/gridexamples.hh"
 #define PROBLEM_A
 
 #ifdef PROBLEM_A
@@ -151,10 +150,10 @@ int main(int argc, char** argv)
     if(Dune::MPIHelper::isFake)
       std::cout<< "This is a sequential program." << std::endl;
     else
-	  {
-		if(helper.rank()==0)
-		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
-	  }
+      {
+        if(helper.rank()==0)
+          std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
+      }
 
     // Q1, 2d
     if (true)
@@ -316,16 +315,11 @@ int main(int argc, char** argv)
     if (false)
     {
       typedef Dune::ALUGrid<3,3,Dune::simplex,Dune::nonconforming> GridType;
-
-      // read gmsh file
-      Dune::GridFactory<GridType> factory(helper.getCommunicator());
-      std::vector<int> boundary_id_to_physical_entity;
-      std::vector<int> element_index_to_physical_entity;
+      GridType* grid;
       if (helper.rank()==0)
-        {
-          Dune::GmshReader<GridType>::read(factory,"grids/cube1045.msh",true,false);
-        }
-      GridType *grid=factory.createGrid();
+      {
+        grid = Dune::GmshReader<GridType>::read("grids/cube1045.msh", true, false);
+      }
       grid->loadBalance();
       std::cout << " after load balance /" << helper.rank() << "/ " << grid->size(0) << std::endl;
       //grid->globalRefine(1);
@@ -371,37 +365,37 @@ int main(int argc, char** argv)
 
       driver(problem,gv,fem,"ALU3d_P1_PlastkDoeddel",q);
     }
-	// ALU Q1 3D test
-	if (false)
-	{
-	  // make grid
+    // ALU Q1 3D test
+    if (false)
+    {
+      // make grid
       typedef Dune::ALUGrid<3,3,Dune::cube,Dune::nonconforming> GridType;
-	  Dune::GridFactory<GridType> factory(helper.getCommunicator());
+      Dune::GridFactory<GridType> factory;
 
-	  if (helper.rank()==0)
-		{
-		  Dune::FieldVector< double, 3 > pos;
-		  pos[0] = 0;  pos[1] = 0;	pos[2] = 0;	   factory.insertVertex(pos);
-		  pos[0] = 1;  pos[1] = 0;	pos[2] = 0;	   factory.insertVertex(pos);
-		  pos[0] = 0;  pos[1] = 1;	pos[2] = 0;	   factory.insertVertex(pos);
-		  pos[0] = 1;  pos[1] = 1;	pos[2] = 0;	   factory.insertVertex(pos);
-		  pos[0] = 0;  pos[1] = 0;	pos[2] = 1;	   factory.insertVertex(pos);
-		  pos[0] = 1;  pos[1] = 0;	pos[2] = 1;	   factory.insertVertex(pos);
-		  pos[0] = 0;  pos[1] = 1;	pos[2] = 1;	   factory.insertVertex(pos);
-		  pos[0] = 1;  pos[1] = 1;	pos[2] = 1;	   factory.insertVertex(pos);
+      if (helper.rank()==0)
+        {
+          Dune::FieldVector< double, 3 > pos;
+          pos[0] = 0;  pos[1] = 0;    pos[2] = 0;       factory.insertVertex(pos);
+          pos[0] = 1;  pos[1] = 0;    pos[2] = 0;       factory.insertVertex(pos);
+          pos[0] = 0;  pos[1] = 1;    pos[2] = 0;       factory.insertVertex(pos);
+          pos[0] = 1;  pos[1] = 1;    pos[2] = 0;       factory.insertVertex(pos);
+          pos[0] = 0;  pos[1] = 0;    pos[2] = 1;       factory.insertVertex(pos);
+          pos[0] = 1;  pos[1] = 0;    pos[2] = 1;       factory.insertVertex(pos);
+          pos[0] = 0;  pos[1] = 1;    pos[2] = 1;       factory.insertVertex(pos);
+          pos[0] = 1;  pos[1] = 1;    pos[2] = 1;       factory.insertVertex(pos);
 
-		  const Dune::GeometryType type( Dune::GeometryType::cube, 3 );
-		  std::vector< unsigned int > cornerIDs( 8 );
-		  for( int i = 0; i < 8; ++i )
-			cornerIDs[ i ] = i;
-		  factory.insertElement( type, cornerIDs );
-		}
+          const Dune::GeometryType type( Dune::GeometryType::cube, 3 );
+          std::vector< unsigned int > cornerIDs( 8 );
+          for( int i = 0; i < 8; ++i )
+            cornerIDs[ i ] = i;
+          factory.insertElement( type, cornerIDs );
+        }
 
-	  GridType *grid=factory.createGrid();
+      GridType *grid=factory.createGrid();
 
-	  std::cout << " after reading /" << helper.rank() << "/ " << grid->size(0) << std::endl;
-	  grid->loadBalance();
-	  std::cout << " after load balance /" << helper.rank() << "/ " << grid->size(0) << std::endl;
+      std::cout << " after reading /" << helper.rank() << "/ " << grid->size(0) << std::endl;
+      grid->loadBalance();
+      std::cout << " after load balance /" << helper.rank() << "/ " << grid->size(0) << std::endl;
 
       grid->globalRefine(4);
 
@@ -435,24 +429,24 @@ int main(int argc, char** argv)
         PROBLEM problem;
 #endif
 
-	  // make finite element map
-	  typedef GridType::ctype DF;
+      // make finite element map
+      typedef GridType::ctype DF;
       const int degree = 1;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;
       FEM fem(gv);
 
       driver(problem,gv,fem,"ALU3d_Q1",2*degree);
-	}
+    }
 #endif
 
-	return 0;
+    return 0;
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 }

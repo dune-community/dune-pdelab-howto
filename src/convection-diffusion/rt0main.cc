@@ -11,7 +11,15 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
+#include<dune/grid/yaspgrid.hh>
+#if HAVE_UG
+#include<dune/grid/uggrid.hh>
+#endif
+#if HAVE_DUNE_ALUGRID
+#include<dune/alugrid/grid.hh>
+#endif
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include<dune/grid/utility/structuredgridfactory.hh>
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
 #include<dune/istl/solvers.hh>
@@ -36,7 +44,6 @@
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/localoperator/diffusionmixed.hh>
 
-#include"../utility/gridexamples.hh"
 #include"problemA.hh"
 #include"problemB.hh"
 #include"problemC.hh"
@@ -55,11 +62,11 @@ public:
 
   template<typename I>
   bool isDirichlet(
-				   const I & intersection,   /*@\label{bcp:name}@*/
-				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-				   ) const
+                   const I & intersection,   /*@\label{bcp:name}@*/
+                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                   ) const
   {
-	return false;
+    return false;
   }
 };
 
@@ -302,79 +309,96 @@ int main(int argc, char** argv)
 #if HAVE_DUNE_ALUGRID
     if (true)
     {
-      ALUUnitSquare grid;
-      grid.globalRefine(7);
+      // make grid
+      typedef Dune::ALUGrid<2, 2, Dune::simplex, Dune::conforming> Grid;
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ll(0.0);
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ur(1.0);
+      std::array<unsigned int, Grid::dimension> elements;
+       std::fill(elements.begin(), elements.end(), 1);
+
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
+      grid->globalRefine(7);
 
       // instantiate finite element maps
-      typedef ALUUnitSquare::ctype DF;
-      typedef ALUUnitSquare::LeafGridView GV;
+      typedef Grid::LeafGridView GV;
       const int dim = 2;
       typedef double R;
-      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
+      typedef Dune::PDELab::P0LocalFiniteElementMap<Grid::ctype, R, dim> P0FEM;
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
 
-      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,R,0,Dune::GeometryType::simplex> RT0FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV, Grid::ctype, R, 0, Dune::GeometryType::simplex> RT0FEM;
 
-      RT0FEM rt0fem(grid.leafGridView());
+      RT0FEM rt0fem(grid->leafGridView());
 
-      dispatcher(problem,grid.leafGridView(),p0fem,rt0fem,"ALU2d_rt0");
+      dispatcher(problem, grid->leafGridView(), p0fem, rt0fem, "ALU2d_rt0");
     }
 #endif
 
 #if HAVE_UG
     if (true)
     {
-      UGUnitSquare grid;
-      grid.globalRefine(6);
+      // make grid
+      const int dim = 2;
+      typedef Dune::UGGrid<2> Grid;
+      Dune::FieldVector<Grid::ctype, dim> ll(0.0);
+      Dune::FieldVector<Grid::ctype, dim> ur(1.0);
+      std::array<unsigned int, dim> elements;
+      std::fill(elements.begin(), elements.end(), 1);
+
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
+      grid->globalRefine(6);
 
       // instantiate finite element maps
-      typedef UGUnitSquare::ctype DF;
-      typedef UGUnitSquare::LeafGridView GV;
-      const int dim = 2;
+      typedef Grid::LeafGridView GV;
       typedef double R;
-      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
+      typedef Dune::PDELab::P0LocalFiniteElementMap<Grid::ctype, R, dim> P0FEM;
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
 
-      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,R,0,Dune::GeometryType::simplex> RT0FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV, Grid::ctype, R, 0, Dune::GeometryType::simplex> RT0FEM;
 
-      RT0FEM rt0fem(grid.leafGridView());
+      RT0FEM rt0fem(grid->leafGridView());
 
-      dispatcher(problem,grid.leafGridView(),p0fem,rt0fem,"UG2d_rt0");
+      dispatcher(problem,grid->leafGridView(),p0fem,rt0fem,"UG2d_rt0");
     }
 #endif
 
 #if HAVE_ALBERTA
     if (true)
     {
-      AlbertaUnitSquare grid;
+      // make grid
+      const int dim = 2;
+      typedef Dune::AlbertaGrid<dim, dim> Grid;
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ll(0.0);
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ur(1.0);
+      std::array<unsigned int, Grid::dimension> elements;
+      std::fill(elements.begin(), elements.end(), 1);
+
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
       grid.globalRefine(8);
 
       // instantiate finite element maps
-      typedef AlbertaUnitSquare::ctype DF;
-      typedef AlbertaUnitSquare::LeafGridView GV;
-      const int dim = 2;
       typedef double R;
-      typedef Dune::PDELab::P0LocalFiniteElementMap<DF,R,dim> P0FEM;
+      typedef Dune::PDELab::P0LocalFiniteElementMap<Grid::ctype, R, dim> P0FEM;
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
 
-      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,R,0,Dune::GeometryType::simplex> RT0FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV, Grid::ctype, R, 0, Dune::GeometryType::simplex> RT0FEM;
 
-      RT0FEM rt0fem(grid.leafGridView());
+      RT0FEM rt0fem(grid->leafGridView());
 
-      dispatcher(problem,grid.leafGridView(),p0fem,rt0fem,"Alberta2d_rt0");
+      dispatcher(problem, grid->leafGridView(), p0fem, rt0fem, "Alberta2d_rt0");
     }
 #endif
 
-	// test passed
-	return 0;
+    // test passed
+    return 0;
 
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 }

@@ -23,7 +23,14 @@
 #include<dune/common/float_cmp.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/grid/yaspgrid.hh>
+#if HAVE_UG
+#include<dune/grid/uggrid.hh>
+#endif
+#if HAVE_DUNE_ALUGRID
+#include<dune/alugrid/grid.hh>
+#endif
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include<dune/grid/utility/structuredgridfactory.hh>
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
@@ -52,7 +59,6 @@
 #include<dune/pdelab/localoperator/cg_stokes.hh>
 #include <dune/common/parametertreeparser.hh>
 #include<dune/pdelab/newton/newton.hh>
-#include "../utility/gridexamples.hh"
 #include "cgstokes_initial.hh"
 
 //===============================================================
@@ -300,16 +306,21 @@ int main(int argc, char** argv)
     {
       // make grid
       const int dim = 2;
-      typedef ALUUnitCube<dim> UnitCube;
-      UnitCube unitcube;
-      unitcube.grid().globalRefine(configuration.get<int>("domain.level"));
+      typedef Dune::ALUGrid<dim, dim, Dune::simplex, Dune::conforming> Grid;
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ll(0.0);
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ur(1.0);
+      std::array<unsigned int, Grid::dimension> elements;
+      std::fill(elements.begin(), elements.end(), 1);
+
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
+      grid->globalRefine(configuration.get<int>("domain.level"));
 
       // get view
-      typedef UnitCube::GridType::LeafGridView GV;
-      const GV& gv=unitcube.grid().leafGridView();
+      typedef Grid::LeafGridView GV;
+      GV gv = grid->leafGridView();
 
       // make finite element map
-      typedef UnitCube::GridType::ctype DF;
+      typedef Grid::ctype DF;
       typedef double R;
       const int k=2;
       const int q=2*k;

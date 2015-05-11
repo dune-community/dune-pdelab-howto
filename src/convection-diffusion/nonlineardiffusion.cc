@@ -48,8 +48,6 @@
 
 #include<dune/pdelab/instationary/onestep.hh>
 
-#include"../utility/gridexamples.hh"
-
 //==============================================================================
 // Parameter class for the convection diffusion problem
 //==============================================================================
@@ -112,9 +110,9 @@ public:
   //! boundary condition type function
   template<typename I>
   bool isDirichlet(
-				   const I & intersection,               /*@\label{bcp:name}@*/
-				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-				   ) const
+                   const I & intersection,               /*@\label{bcp:name}@*/
+                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                   ) const
   {
     return true;  // Dirichlet b.c. everywhere
     /*
@@ -391,20 +389,20 @@ int main(int argc, char** argv)
     if(Dune::MPIHelper::isFake)
       std::cout<< "This is a sequential program." << std::endl;
     else
-	  {
-		if(helper.rank()==0)
-		  std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
-	  }
+      {
+        if(helper.rank()==0)
+          std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
+      }
 
-	if (argc!=2)
-	  {
-		if(helper.rank()==0)
-		  std::cout << "usage: ./nonlineardiffusion <level>" << std::endl;
-		return 1;
-	  }
+    if (argc!=2)
+      {
+        if(helper.rank()==0)
+          std::cout << "usage: ./nonlineardiffusion <level>" << std::endl;
+        return 1;
+      }
 
-	int level;
-	sscanf(argv[1],"%d",&level);
+    int level;
+    sscanf(argv[1],"%d",&level);
 
     // sequential version
     if (helper.size()==1)
@@ -451,10 +449,10 @@ int main(int argc, char** argv)
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 }

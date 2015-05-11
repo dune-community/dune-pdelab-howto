@@ -20,18 +20,10 @@
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/grid/yaspgrid.hh>
-#if HAVE_ALBERTA
-#include<dune/grid/albertagrid.hh>
-#include <dune/grid/albertagrid/dgfparser.hh>
-#endif
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
-#if HAVE_DUNE_ALUGRID
-#include<dune/alugrid/grid.hh>
-#include<dune/grid/io/file/dgfparser/dgfalu.hh>
-#include<dune/grid/io/file/dgfparser/dgfparser.hh>
-#endif
+#include<dune/grid/utility/structuredgridfactory.hh>
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
 #include<dune/istl/solvers.hh>
@@ -57,8 +49,6 @@
 #include<dune/pdelab/stationary/linearproblem.hh>
 
 #include<dune/pdelab/adaptivity/adaptivity.hh>
-
-#include"../utility/gridexamples.hh"
 
 #include"example02_bctype.hh"
 #include"example02_bcextension.hh"
@@ -104,11 +94,20 @@ int main(int argc, char** argv)
     if (1 && helper.size()==1)
     {
 #if HAVE_UG
-      UGUnitSquare grid;
-      grid.globalRefine(startLevel);
-      typedef UGUnitSquare::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
-      adaptivity(grid,gv,startLevel,maxLevel);
+      // make grid
+      const int dim = 2;
+      typedef Dune::UGGrid<dim> Grid;
+      Dune::FieldVector<Grid::ctype, dim> ll(0.0);
+      Dune::FieldVector<Grid::ctype, dim> ur(1.0);
+      std::array<unsigned int, dim> elements;
+      std::fill(elements.begin(), elements.end(), 1);
+
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
+      grid->globalRefine(startLevel);
+
+      typedef Grid::LeafGridView GV;
+      GV gv = grid->leafGridView();
+      adaptivity(*grid,gv,startLevel,maxLevel);
 #else
       std::cout << "This example requires UG!" << std::endl;
 #endif

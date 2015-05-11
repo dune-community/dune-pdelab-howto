@@ -13,8 +13,11 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/common/timer.hh>
+#if HAVE_UG
+#include<dune/grid/uggrid.hh>
+#endif
 #include<dune/grid/yaspgrid.hh>
-
+#include<dune/grid/utility/structuredgridfactory.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 #include<dune/pdelab/finiteelementmap/pkfem.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
@@ -33,9 +36,6 @@
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 
-#include"../utility/gridexamples.hh"
-
-
 // define some grid functions to interpolate from
 template<typename GV, typename RF>
 class G
@@ -48,12 +48,12 @@ public:
 
   G (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x,
-							  typename Traits::RangeType& y) const
+                              typename Traits::RangeType& y) const
   {
     typename Traits::DomainType center;
     for (int i=0; i<GV::dimension; i++) center[i] = 0.5;
     center -= x;
-	y = exp(-center.two_norm2());
+    y = exp(-center.two_norm2());
   }
 };
 
@@ -65,9 +65,9 @@ public:
 
   template<typename I>
   bool isDirichlet(
-				   const I & intersection,   /*@\label{bcp:name}@*/
-				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-				   ) const
+                   const I & intersection,   /*@\label{bcp:name}@*/
+                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                   ) const
   {
 
     //Dune::FieldVector<typename I::ctype, I::dimension>
@@ -164,23 +164,29 @@ int main(int argc, char** argv)
 #if HAVE_UG
     if(helper.size()==1){
       // make grid
-      UGUnitSquareQ grid(1000);
-      grid.globalRefine(6);
+      typedef Dune::UGGrid<2> Grid;
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ll(0.0);
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ur(1.0);
+      std::array<unsigned int, Grid::dimension> elements;
+      std::fill(elements.begin(), elements.end(), 1);
 
-      test(grid.leafGridView(),basename+"_ug2d");
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Dune::UGGrid<2> >::createCubeGrid(ll, ur, elements);
+      grid->globalRefine(6);
+
+      test(grid->leafGridView(),basename+"_ug2d");
     }
 #endif
 
-	// test passed
-	return 0;
+    // test passed
+    return 0;
 
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 }

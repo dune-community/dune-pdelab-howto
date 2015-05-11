@@ -21,8 +21,15 @@
 #include<dune/istl/io.hh>
 #include<dune/istl/paamg/amg.hh>
 #include<dune/istl/superlu.hh>
+#include<dune/grid/yaspgrid.hh>
+#if HAVE_UG
+#include<dune/grid/uggrid.hh>
+#endif
+#if HAVE_DUNE_ALUGRID
+#include<dune/alugrid/grid.hh>
+#endif
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
-
+#include<dune/grid/utility/structuredgridfactory.hh>
 #include<dune/pdelab/finiteelementmap/monomfem.hh>
 #include<dune/pdelab/finiteelementmap/opbfem.hh>
 #include<dune/pdelab/finiteelementmap/qkdg.hh>
@@ -47,8 +54,6 @@
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
 #include<dune/pdelab/gridfunctionspace/vtk.hh>
-
-#include"../utility/gridexamples.hh"
 
 const bool graphics = true;
 
@@ -485,15 +490,18 @@ int main(int argc, char** argv)
       if (mesh=="simplex" && dim_dyn==2)
         {
           const int dim = 2;
+          typedef Dune::ALUGrid<dim, dim, Dune::simplex, Dune::nonconforming> Grid;
+          Dune::FieldVector<Grid::ctype, Grid::dimension> ll(0.0);
+          Dune::FieldVector<Grid::ctype, Grid::dimension> ur(1.0);
+          std::array<unsigned int, Grid::dimension> elements;
+           std::fill(elements.begin(), elements.end(), 1);
 
-          // make grid
-          ALUUnitCube<dim> unitcube;
-          typedef ALUUnitCube<dim>::GridType Grid;
+          std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
           typedef Grid::LeafGridView GV;
 
           for (int i=0; i<=maxlevel; ++i)
             {
-              const GV& gv=unitcube.grid().leafGridView();
+              GV gv = grid->leafGridView();
               typedef Parameter<GV,double> PROBLEM;
               PROBLEM problem;
 
@@ -543,21 +551,24 @@ int main(int argc, char** argv)
               }
 
               // refine grid
-              if (i<maxlevel) unitcube.grid().globalRefine(1);
+              if (i<maxlevel) grid->globalRefine(1);
             }
         }
       if (mesh=="simplex" && dim_dyn==3)
         {
           const int dim = 3;
+          typedef Dune::ALUGrid<dim, dim, Dune::simplex, Dune::nonconforming> Grid;
+          Dune::FieldVector<Grid::ctype, Grid::dimension> ll(0.0);
+          Dune::FieldVector<Grid::ctype, Grid::dimension> ur(1.0);
+          std::array<unsigned int, Grid::dimension> elements;
+          std::fill(elements.begin(), elements.end(), 1);
 
-          // make grid
-          ALUUnitCube<dim> unitcube;
-          typedef ALUUnitCube<dim>::GridType Grid;
+          std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
           typedef Grid::LeafGridView GV;
 
           for (int i=0; i<=maxlevel; ++i)
             {
-              const GV& gv=unitcube.grid().leafGridView();
+              GV gv = grid->leafGridView();
               typedef Parameter<GV,double> PROBLEM;
               PROBLEM problem;
 
@@ -613,7 +624,7 @@ int main(int argc, char** argv)
               }
 
               // refine grid
-              if (i<maxlevel) unitcube.grid().globalRefine(1);
+              if (i<maxlevel) grid->globalRefine(1);
             }
         }
 #endif

@@ -14,6 +14,10 @@
 #include<dune/common/static_assert.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/yaspgrid.hh>
+#if HAVE_ALBERTA
+#include<dune/grid/alberta.hh>
+#endif
+#include<dune/grid/utility/structuredgridfactory.hh>
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
 #include<dune/istl/solvers.hh>
@@ -42,8 +46,6 @@
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/diffusiondg.hh>
-
-#include"../utility/gridexamples.hh"
 
 // Select Problem
 #include"problemA.hh"  // exp(-norm(x,y))
@@ -368,13 +370,18 @@ int main(int argc, char** argv)
 #if HAVE_ALBERTA
       if (true)
         {
-          typedef AlbertaUnitSquare GridType;
-          GridType grid;
-          grid.globalRefine(10);
+          // make grid
+          const int dim = 2;
+          typedef Dune::AlbertaGrid<dim, dim> Grid;
+          Dune::FieldVector<Grid::ctype, Grid::dimension> ll(0.0);
+          Dune::FieldVector<Grid::ctype, Grid::dimension> ur(1.0);
+          std::array<unsigned int, Grid::dimension> elements;
+          std::fill(elements.begin(), elements.end(), 1);
+          std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
 
           // get view
           typedef GridType::LeafGridView GV;
-          const GV& gv=grid.leafGridView();
+          GV gv = grid->leafGridView();
 
           // instantiate finite element maps
           typedef Dune::PDELab::MonomLocalFiniteElementMap<double,double,2,MONOM_BASIS_ORDER> FEM;

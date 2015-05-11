@@ -40,8 +40,6 @@
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
-#include"../utility/gridexamples.hh"
-
 // Select Problem
 #include"problemA.hh"  // exp(-norm(x,y))
 #include"problemB.hh"  // Like problem A but corners have small parts with Neumann boundary

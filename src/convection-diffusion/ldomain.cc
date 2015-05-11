@@ -4,7 +4,6 @@
 #include <sstream>
 #include "config.h"           // file constructed by ./configure script
 #include <dune/common/parallel/mpihelper.hh> // include mpi helper class
-#include <dune/grid/sgrid.hh> // load sgrid definition
 #include <dune/grid/onedgrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #if HAVE_UG
@@ -44,7 +43,6 @@
 // Using new adaptivity implementation with grid marking based on error-fraction:
 #include<dune/pdelab/adaptivity/adaptivity.hh>
 
-#include"../utility/gridexamples.hh"
 #include "reentrantcornerproblem.hh"
 
 #include<dune/common/parametertree.hh>
@@ -336,9 +334,7 @@ int main(int argc, char **argv)
 #if HAVE_ALBERTA
     if( "alberta"==configuration.get<std::string>("grid.manager") ) {
       // make Alberta grid
-      typedef AlbertaLDomain::Grid GridType;
-      AlbertaLDomain gridp;
-      GridType &grid = gridp;
+      Dune::AlbertaGrid<2,2> grid("grids/ldomain.al")
       grid.globalRefine( configuration.get<int>("grid.baselevel") );
 
       std::cout << "Conforming Refinement on Alberta grid (simplices)" << std::endl;

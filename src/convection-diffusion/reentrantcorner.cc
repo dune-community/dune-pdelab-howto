@@ -47,8 +47,6 @@
 #include<dune/pdelab/localoperator/poisson.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 
-#include"../utility/gridexamples.hh"
-
 //===============================================================
 //===============================================================
 // Solve the Poisson equation
@@ -265,10 +263,9 @@ int main(int argc, char** argv)
 
 #if HAVE_ALBERTA
     {
-      typedef AlbertaReentrantCorner::Grid Grid;
       // make grid
-      AlbertaReentrantCorner gridp;
-      Grid &grid = *gridp;
+      typedef Dune::AlbertaGrid<2,2> Grid;
+      Dune::AlbertaGrid<2,2> grid("grids/2dreentrantcorner.dgf");
       grid.globalRefine(0);
 
       // get view

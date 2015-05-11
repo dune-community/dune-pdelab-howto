@@ -31,7 +31,6 @@
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 
-#include"../utility/gridexamples.hh"
 #include"problemA.hh"
 #include"problemB.hh"
 #include"problemC.hh"

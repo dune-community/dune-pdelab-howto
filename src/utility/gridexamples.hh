@@ -111,6 +111,7 @@ public:
   ALUCubeUnitSquare () :
     Dune::ALUGrid<3,3,Dune::cube,Dune::nonconforming>
     ("grids/3drefinedcube.alu") {}
+
 };
 
 // class ALUReentrantCorner : public Dune::GridPtr<Dune::ALUSimplexGrid<2,2> >
