@@ -39,8 +39,7 @@ add_executable(ldomain ldomain.cc)
 add_dune_alberta_flags(ldomain)
 
 # set a symlink for the grid subfolder in the build directory
-dune_symlink_to_source_files(grids)
-dune_symlink_to_source_files(ldomain.ini)
+dune_symlink_to_source_files(FILES grids ldomain.ini)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vtk)
 
 set(CLEANFILES  poisson_*.vtu reentrant_*.vtu dgfparser.log q1*.vtu *.vtu *.png)
