@@ -18,7 +18,7 @@
 #include<dune/common/static_assert.hh>
 #include<dune/grid/yaspgrid.hh>
 #if HAVE_ALBERTA
-#include<dune/grid/alberta.hh>
+#include<dune/grid/albertagrid.hh>
 #endif
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
@@ -424,7 +424,7 @@ int main(int argc, char** argv)
       std::array<unsigned int, Grid::dimension> elements;
       std::fill(elements.begin(), elements.end(), 1);
 
-      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(ll, ur, elements);
       grid->globalRefine(4);
 
 #ifdef HANGING_NODES_REFINEMENT

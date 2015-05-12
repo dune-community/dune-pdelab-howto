@@ -15,7 +15,7 @@
 #include<dune/common/timer.hh>
 #include<dune/grid/yaspgrid.hh>
 #if HAVE_ALBERTA
-#include<dune/grid/alberta.hh>
+#include<dune/grid/albertagrid.hh>
 #endif
 #include<dune/grid/utility/structuredgridfactory.hh>
 #include<dune/istl/bvector.hh>
@@ -380,7 +380,7 @@ int main(int argc, char** argv)
           std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
 
           // get view
-          typedef GridType::LeafGridView GV;
+          typedef Grid::LeafGridView GV;
           GV gv = grid->leafGridView();
 
           // instantiate finite element maps

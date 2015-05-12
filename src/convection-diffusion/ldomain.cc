@@ -334,11 +334,11 @@ int main(int argc, char **argv)
 #if HAVE_ALBERTA
     if( "alberta"==configuration.get<std::string>("grid.manager") ) {
       // make Alberta grid
-      Dune::AlbertaGrid<2,2> grid("grids/ldomain.al")
-      grid.globalRefine( configuration.get<int>("grid.baselevel") );
+      Dune::AlbertaGrid<2,2> grid("grids/ldomain.al");
+      grid.globalRefine(configuration.get<int>("grid.baselevel"));
 
       std::cout << "Conforming Refinement on Alberta grid (simplices)" << std::endl;
-      driverFEM<GridType,degree>(grid,configuration);
+      driverFEM<Dune::AlbertaGrid<2,2>,degree>(grid,configuration);
     }
 #endif
   }

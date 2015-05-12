@@ -3,3 +3,7 @@ add_executable(cgstokes cgstokes.cc)
 add_executable(cgstokes_instat cgstokes_instat.cc)
 add_executable(dgstokes dgstokes.cc)
 endif()
+
+dune_symlink_to_source_files(cgstokes.ini)
+dune_symlink_to_source_files(cgstokes_instat.ini)
+dune_symlink_to_source_files(grids)

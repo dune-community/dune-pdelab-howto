@@ -15,9 +15,13 @@
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
+#if HAVE_ALBERTA
+#include<dune/grid/albertagrid.hh>
+#endif
 #if HAVE_DUNE_ALUGRID
 #include<dune/alugrid/grid.hh>
 #endif
+#include<dune/grid/utility/structuredgridfactory.hh>
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/utility/structuredgridfactory.hh>
 #include<dune/istl/bvector.hh>
@@ -374,10 +378,11 @@ int main(int argc, char** argv)
       std::fill(elements.begin(), elements.end(), 1);
 
       std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
-      grid.globalRefine(8);
+      grid->globalRefine(8);
 
       // instantiate finite element maps
       typedef double R;
+      typedef Grid::LeafGridView GV;
       typedef Dune::PDELab::P0LocalFiniteElementMap<Grid::ctype, R, dim> P0FEM;
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
 

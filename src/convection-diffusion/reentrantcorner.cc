@@ -21,6 +21,10 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/grid/yaspgrid.hh>
+#if HAVE_ALBERTA
+#include<dune/grid/albertagrid.hh>
+#include<dune/grid/albertagrid/dgfparser.hh>
+#endif
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
