@@ -33,7 +33,6 @@
 #include<dune/pdelab/localoperator/convectiondiffusionfem.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 
-#include"../utility/gridexamples.hh"
 #define PROBLEM_A
 
 #ifdef PROBLEM_A
@@ -157,7 +156,7 @@ int main(int argc, char** argv)
         Dune::array<int,dim> N(Dune::fill_array<int,dim>(size));
         std::bitset<dim> B(false);
         int overlap=3;
-        Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
+        Dune::YaspGrid<dim> grid(L,N,B,overlap);
         //grid.globalRefine(4);
         typedef Dune::YaspGrid<dim>::LeafGridView GV;
         const GV& gv=grid.leafGridView();
@@ -210,7 +209,7 @@ int main(int argc, char** argv)
         Dune::array<int,dim> N(Dune::fill_array<int,dim>(4));
         std::bitset<dim> B(false);
         int overlap=0;
-        Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
+        Dune::YaspGrid<dim> grid(L,N,B,overlap);
         grid.globalRefine(4);
         typedef Dune::YaspGrid<dim>::LeafGridView GV;
         const GV& gv=grid.leafGridView();

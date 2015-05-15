@@ -17,7 +17,17 @@
 #include<dune/common/float_cmp.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/grid/yaspgrid.hh>
+#if HAVE_ALBERTA
+#include<dune/grid/albertagrid.hh>
+#endif
+#if HAVE_UG
+#include<dune/grid/uggrid.hh>
+#endif
+#if HAVE_DUNE_ALUGRID
+#include<dune/alugrid/grid.hh>
+#endif
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include<dune/grid/utility/structuredgridfactory.hh>
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
 #include<dune/istl/solvers.hh>
@@ -45,8 +55,6 @@
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/gridfunctionspace/vtk.hh>
-
-#include "../utility/gridexamples.hh"
 
 /*
   HANGING_NODES_REFINEMENT is macro used to switch on hanging nodes tests.
@@ -78,7 +86,7 @@ public:
 
   F (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x,
-							  typename Traits::RangeType& y) const
+                              typename Traits::RangeType& y) const
   {
     if (x[0]>0.25 && x[0]<0.375 && x[1]>0.25 && x[1]<0.375)
       y = 50.0;
@@ -98,9 +106,9 @@ public:
 
   template<typename I>
   bool isDirichlet(
-				   const I & intersection,   /*@\label{bcp:name}@*/
-				   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-				   ) const
+                   const I & intersection,   /*@\label{bcp:name}@*/
+                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                   ) const
   {
 
     Dune::FieldVector<typename I::ctype, I::dimension>
@@ -137,12 +145,12 @@ public:
 
   G (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x,
-							  typename Traits::RangeType& y) const
+                              typename Traits::RangeType& y) const
   {
     typename Traits::DomainType center;
     for (int i=0; i<GV::dimension; i++) center[i] = 0.5;
     center -= x;
-	y = exp(-center.two_norm2());
+    y = exp(-center.two_norm2());
   }
 };
 
@@ -158,7 +166,7 @@ public:
 
   J (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x,
-							  typename Traits::RangeType& y) const
+                              typename Traits::RangeType& y) const
   {
     if (x[1]<1E-6 || x[1]>1.0-1E-6)
       {
@@ -322,7 +330,7 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
     {
 #ifdef HANGING_NODES_REFINEMENT
       std::cout
@@ -337,16 +345,21 @@ int main(int argc, char** argv)
 #endif
 
       // make grid
-      typedef ALUUnitSquare Grid;
-      Grid grid;
-      grid.globalRefine(4);
+      typedef Dune::ALUGrid<2, 2, Dune::simplex, Dune::conforming> Grid;
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ll(0.0);
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ur(1.0);
+      std::array<unsigned int, Grid::dimension> elements;
+      std::fill(elements.begin(), elements.end(), 1);
+
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
+      grid->globalRefine(4);
 
 #ifdef HANGING_NODES_REFINEMENT
       doSomeRandomRefinement<Grid>( grid );
 #endif
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      GV gv = grid->leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -391,7 +404,7 @@ int main(int argc, char** argv)
 #endif
 
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
     {
 #ifdef HANGING_NODES_REFINEMENT
       std::cout
@@ -405,17 +418,21 @@ int main(int argc, char** argv)
         << std::endl;
 #endif
 
-      // make grid
-      typedef ALUCubeUnitSquare Grid;
-      Grid grid;
-      grid.globalRefine(2);
+      typedef Dune::ALUGrid<3,3,Dune::cube,Dune::nonconforming> Grid;
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ll(0.0);
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ur(1.0);
+      std::array<unsigned int, Grid::dimension> elements;
+      std::fill(elements.begin(), elements.end(), 1);
+
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(ll, ur, elements);
+      grid->globalRefine(4);
 
 #ifdef HANGING_NODES_REFINEMENT
       doSomeRandomRefinement<Grid>( grid );
 #endif
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      GV gv = grid->leafGridView();
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
@@ -450,7 +467,7 @@ int main(int argc, char** argv)
 #endif
 
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
     {
 #ifdef HANGING_NODES_REFINEMENT
       std::cout
@@ -463,23 +480,26 @@ int main(int argc, char** argv)
         << "Alternative Testcase 3.) ALUGrid 3D tetrahedral cells (uniform refinement) - Pk elements"
         << std::endl;
 #endif
-      // make grid
-      typedef ALUUnitCube<3> UnitCube;
-      UnitCube unitcube;
-      typedef ALUUnitCube<3>::GridType Grid;
-      Grid &grid = unitcube.grid();
-      grid.globalRefine(1);
+
+      typedef Dune::ALUGrid<3,3,Dune::simplex,Dune::nonconforming> Grid;
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ll(0.0);
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ur(1.0);
+      std::array<unsigned int, Grid::dimension> elements;
+      std::fill(elements.begin(), elements.end(), 1);
+
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
+      grid->globalRefine(1);
 
 #ifdef HANGING_NODES_REFINEMENT
       doSomeRandomRefinement<Grid>( grid );
 #endif
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      GV gv= grid->leafGridView();
 
       // make finite element map
 
-      typedef UnitCube::GridType::ctype DF;
+      typedef Grid::ctype DF;
       typedef double R;
       const int k=1;
       const int q=2*k;
@@ -619,20 +639,25 @@ int main(int argc, char** argv)
         << "Alternative Testcase 7.) UG 2D triangular cells (uniform refinement) - P1 elements"
         << std::endl;
 #endif
-
       // make grid
-      typedef UGUnitSquare Grid;
-      Grid grid;
-      grid.setRefinementType( Grid::LOCAL );
-      grid.setClosureType( Grid::NONE );  // This is needed to get hanging nodes refinement! Otherwise you would get triangles.
-      grid.globalRefine(4);
+      const int dim = 2;
+      typedef Dune::UGGrid<dim> Grid;
+      Dune::FieldVector<Grid::ctype, dim> ll(0.0);
+      Dune::FieldVector<Grid::ctype, dim> ur(1.0);
+      std::array<unsigned int, dim> elements;
+      std::fill(elements.begin(), elements.end(), 1);
+
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
+      grid->setRefinementType( Grid::LOCAL );
+      grid->setClosureType( Grid::NONE );  // This is needed to get hanging nodes refinement! Otherwise you would get triangles.
+      grid->globalRefine(4);
 
 #ifdef HANGING_NODES_REFINEMENT
       doSomeRandomRefinement<Grid>( grid );
 #endif
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      GV gv = grid->leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -685,20 +710,25 @@ int main(int argc, char** argv)
         << "Alternative Testcase 8.) UG 2D rectangular cells (uniform refinement) - Q1 elements"
         << std::endl;
 #endif
-      // make grid (unitcube made of cubes)
-      typedef UGUnitSquareQ Grid;
-      Grid grid;
+      // make grid
+      const int dim = 2;
+      typedef Dune::UGGrid<dim> Grid;
+      Dune::FieldVector<Grid::ctype, dim> ll(0.0);
+      Dune::FieldVector<Grid::ctype, dim> ur(1.0);
+      std::array<unsigned int, dim> elements;
+      std::fill(elements.begin(), elements.end(), 1);
 
-      grid.setRefinementType( Grid::LOCAL );
-      grid.setClosureType( Grid::NONE );  // This is needed to get hanging nodes refinement! Otherwise you would get triangles.
-      grid.globalRefine(4);
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(ll, ur, elements);
+      grid->setRefinementType( Grid::LOCAL );
+      grid->setClosureType( Grid::NONE );  // This is needed to get hanging nodes refinement! Otherwise you would get triangles.
+      grid->globalRefine(4);
 
 #ifdef HANGING_NODES_REFINEMENT
       doSomeRandomRefinement<Grid>( grid );
 #endif
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      GV gv = grid->leafGridView();
 
       const int k=1;
       const int q=2*k;
@@ -744,13 +774,18 @@ int main(int argc, char** argv)
         << "Testcase 9.) UG 3D cubical cells (hanging nodes refinement) - Q1 elements"
         << std::endl;
 #endif
-      // get grid and do a single global refine
-      typedef UGUnitCube<3,1>::GridType Grid;
-      UGUnitCube<3,1> ugunitcube;
-      Grid & grid = ugunitcube.grid();
-      grid.setRefinementType(Grid::LOCAL);
-      grid.setClosureType(Grid::NONE);
-      grid.globalRefine(1);
+      // make grid
+      const int dim = 3;
+      typedef Dune::UGGrid<dim> Grid;
+      Dune::FieldVector<Grid::ctype, dim> ll(0.0);
+      Dune::FieldVector<Grid::ctype, dim> ur(1.0);
+      std::array<unsigned int, dim> elements;
+      std::fill(elements.begin(), elements.end(), 1);
+
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(ll, ur, elements);
+      grid->setRefinementType( Grid::LOCAL );
+      grid->setClosureType( Grid::NONE );  // This is needed to get hanging nodes refinement! Otherwise you would get triangles.
+      grid->globalRefine(1);
 
 #ifdef HANGING_NODES_REFINEMENT
       doSomeRandomRefinement<Grid>( grid );
@@ -810,20 +845,25 @@ int main(int argc, char** argv)
         << std::endl;
 #endif
 
-      // UG Grid made of tetrahedrons - test Pk3D with hanging nodes!
-      typedef UGUnitCube<3,2>::GridType Grid;
-      UGUnitCube<3,2> ugunitcube;
-      Grid & grid = ugunitcube.grid();
-      grid.setRefinementType(Grid::LOCAL);
-      grid.setClosureType(Grid::NONE);
-      grid.globalRefine(1);
+      // make grid
+      const int dim = 3;
+      typedef Dune::UGGrid<dim> Grid;
+      Dune::FieldVector<Grid::ctype, dim> ll(0.0);
+      Dune::FieldVector<Grid::ctype, dim> ur(1.0);
+      std::array<unsigned int, dim> elements;
+      std::fill(elements.begin(), elements.end(), 1);
+
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
+      grid->setRefinementType( Grid::LOCAL );
+      grid->setClosureType( Grid::NONE );  // This is needed to get hanging nodes refinement! Otherwise you would get triangles.
+      grid->globalRefine(1);
 
 #ifdef HANGING_NODES_REFINEMENT
       doSomeRandomRefinement<Grid>( grid );
 #endif
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      GV gv = grid->leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -856,12 +896,6 @@ int main(int argc, char** argv)
 #endif // HAVE_UG
 
 
-
-
-
-
-
-
 #if HAVE_ALBERTA
     {
       std::cout
@@ -870,12 +904,19 @@ int main(int argc, char** argv)
         << std::endl;
 
       // make grid
-      AlbertaUnitSquare grid;
-      grid.globalRefine(8);
+      const int dim = 2;
+      typedef Dune::AlbertaGrid<dim, dim> Grid;
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ll(0.0);
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ur(1.0);
+      std::array<unsigned int, Grid::dimension> elements;
+      std::fill(elements.begin(), elements.end(), 1);
+
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
+
 
       // get view
-      typedef AlbertaUnitSquare::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      typedef Grid::LeafGridView GV;
+      GV gv = grid->leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -893,15 +934,15 @@ int main(int argc, char** argv)
 #endif
 
 
-	// test passed
-	return 0;
+    // test passed
+    return 0;
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 }

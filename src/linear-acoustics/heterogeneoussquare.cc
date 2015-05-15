@@ -23,17 +23,8 @@
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/grid/yaspgrid.hh>
-#if HAVE_ALBERTA
-#include<dune/grid/albertagrid.hh>
-#include <dune/grid/albertagrid/dgfparser.hh>
-#endif
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
-#endif
-#if HAVE_ALUGRID
-#include<dune/grid/alugrid.hh>
-#include<dune/grid/io/file/dgfparser/dgfalu.hh>
-#include<dune/grid/io/file/dgfparser/dgfparser.hh>
 #endif
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
@@ -60,8 +51,6 @@
 #include<dune/pdelab/gridoperator/onestep.hh>
 #include<dune/pdelab/instationary/onestep.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
-
-#include"../utility/gridexamples.hh"
 
 //==============================================================================
 // Parameter class for the linear acoustics problem

@@ -21,6 +21,10 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/grid/yaspgrid.hh>
+#if HAVE_ALBERTA
+#include<dune/grid/albertagrid.hh>
+#include<dune/grid/albertagrid/dgfparser.hh>
+#endif
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
@@ -46,8 +50,6 @@
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/localoperator/poisson.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
-
-#include"../utility/gridexamples.hh"
 
 //===============================================================
 //===============================================================
@@ -265,10 +267,9 @@ int main(int argc, char** argv)
 
 #if HAVE_ALBERTA
     {
-      typedef AlbertaReentrantCorner::Grid Grid;
       // make grid
-      AlbertaReentrantCorner gridp;
-      Grid &grid = *gridp;
+      typedef Dune::AlbertaGrid<2,2> Grid;
+      Dune::AlbertaGrid<2,2> grid("grids/2dreentrantcorner.dgf");
       grid.globalRefine(0);
 
       // get view

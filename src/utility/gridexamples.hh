@@ -10,8 +10,8 @@
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
-#if HAVE_ALUGRID
-#include<dune/grid/alugrid.hh>
+#if HAVE_DUNE_ALUGRID
+#include<dune/alugrid/grid.hh>
 #include<dune/grid/io/file/dgfparser/dgfalu.hh>
 #include<dune/grid/io/file/dgfparser/dgfparser.hh>
 #endif
@@ -96,7 +96,7 @@ public:
   {}
 };
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
 class ALUUnitSquare :
   public Dune::ALUGrid<2,2,Dune::simplex,Dune::conforming>
 {
@@ -105,12 +105,13 @@ public:
     Dune::ALUGrid<2,2,Dune::simplex,Dune::conforming>("grids/2dsimplex.alu") {}
 };
 
-class ALUCubeUnitSquare : public Dune::ALUGrid<3,3,Dune::cube,Dune::conforming>
+class ALUCubeUnitSquare : public Dune::ALUGrid<3,3,Dune::cube,Dune::nonconforming>
 {
 public:
   ALUCubeUnitSquare () :
-    Dune::ALUGrid<3,3,Dune::cube,Dune::conforming>
+    Dune::ALUGrid<3,3,Dune::cube,Dune::nonconforming>
     ("grids/3drefinedcube.alu") {}
+
 };
 
 // class ALUReentrantCorner : public Dune::GridPtr<Dune::ALUSimplexGrid<2,2> >
@@ -150,7 +151,7 @@ public:
   }
 };
 
-#endif //HAVE_ALUGRID
+#endif //HAVE_DUNE_ALUGRID
 
 
 #if HAVE_ALBERTA

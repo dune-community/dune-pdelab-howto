@@ -102,7 +102,7 @@ class ExactGradient
                                                                            GV::dimension,Dune::FieldVector<RF,GV::dimension> >,
                                           ExactGradient<GV,RF> >
 {
-  const GV& gv;
+  GV gv;
 
 public:
   typedef Dune::PDELab::GridFunctionTraits<GV,RF,
@@ -524,7 +524,7 @@ int main(int argc, char **argv)
       }
 #endif
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
     if (mode==3)
       {
         const Dune::GeometryType::BasicType elemtype = Dune::GeometryType::simplex;
