@@ -21,7 +21,7 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/float_cmp.hh>
-#include<dune/common/static_assert.hh>
+#include<dune/common/typetraits.hh>
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
@@ -188,8 +188,8 @@ void navierstokes
   typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
   PDGF pdgf(pressureSubGfs,xold);
   Dune::SubsamplingVTKSequenceWriter<GV> vtkwriter(gv,2,filename.c_str(),filename.c_str(),"");
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<VDGF> >(vdgf,"v"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<PDGF> >(pdgf,"p"));
 
   timer.reset();
 

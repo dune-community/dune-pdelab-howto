@@ -181,8 +181,8 @@ void navierstokes
     PDGF pdgf(pressureSubGfs,x0);
 
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
+    vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<PDGF> >(pdgf,"p"));
+    vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<VDGF> >(vdgf,"v"));
     vtkwriter.write(filename + std::string("_dgf"),Dune::VTK::appendedraw);
   }
 
