@@ -193,8 +193,8 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
 #ifdef USE_SUPER_LU // use lu decomposition as solver
 #if HAVE_SUPERLU
   // make ISTL solver
-  typedef typename V::BaseT ISTLV;
-  typedef typename M::BaseT ISTLM;
+  typedef typename Dune::PDELab::istl::raw_type<V>::type ISTLV;
+  typedef typename Dune::PDELab::istl::raw_type<M>::type ISTLM;
   Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(Dune::PDELab::istl::raw(m));
   Dune::SuperLU<ISTLM> solver(Dune::PDELab::istl::raw(m), verbose?1:0);
   Dune::InverseOperatorResult stat;
@@ -205,8 +205,8 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
   // make ISTL solver
 
 
-  typedef typename M::BaseT ISTLM;
-  typedef typename V::BaseT ISTLV;
+  typedef typename Dune::PDELab::istl::raw_type<M>::type ISTLM;
+  typedef typename Dune::PDELab::istl::raw_type<V>::type ISTLV;
   typedef  Dune::SeqOverlappingSchwarz<ISTLM,ISTLV,Dune::AdditiveSchwarzMode,
 #if defined SUPERLU_SD && HAVE_SUPERLU
     Dune::SuperLU<ISTLM>

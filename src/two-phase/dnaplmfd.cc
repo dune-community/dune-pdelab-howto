@@ -1,5 +1,5 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief Solve two-phase flow in porous media with mimetic finite-difference method in pressure-saturation formulation
 */
 #include "config.h"
@@ -496,7 +496,7 @@ public:
         //     //           << r[i][1];
         //   }
 
-        Dune::SuperLU<typename M::BaseT> superlu(A.base());
+        Dune::SuperLU<typename Dune::PDELab::istl::raw_type<M>::type> superlu(A.base());
         Dune::InverseOperatorResult stat;
         superlu.apply(z, r, reduction, stat);
 

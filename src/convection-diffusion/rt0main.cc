@@ -142,7 +142,7 @@ void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // set up solver
-  typedef typename M::BaseT ISTLM;
+  typedef typename Dune::PDELab::istl::raw_type<M>::type ISTLM;
 #if HAVE_SUPERLU
   Dune::SuperLU<ISTLM> solver(Dune::PDELab::istl::raw(m), true);
   Dune::InverseOperatorResult stat;
