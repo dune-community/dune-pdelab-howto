@@ -175,8 +175,8 @@ void stokes (const GV& gv, std::string filename, const std::string method)
 
   bool verbose = true;
 
-  typedef typename M::BaseT ISTLM;
-  typedef typename V::BaseT ISTLV;
+  typedef typename Dune::PDELab::istl::raw_type<M>::type ISTLM;
+  typedef typename Dune::PDELab::istl::raw_type<V>::type ISTLV;
 #ifdef USE_SUPER_LU // use lu decomposition as solver
 #if HAVE_SUPERLU
   // make ISTL solver
@@ -190,7 +190,7 @@ void stokes (const GV& gv, std::string filename, const std::string method)
   // make ISTL solver
   Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
   Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(m.base(),1.0);
-  typedef typename M::BaseT ISTLM;
+  typedef typename Dune::PDELab::istl::raw_type<M>::type ISTLM;
   Dune::BiCGSTABSolver<ISTLV> solver(opa,ilu0,1E-10,20000, verbose?2:1);
   Dune::InverseOperatorResult stat;
 #endif
