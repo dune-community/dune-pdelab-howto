@@ -63,7 +63,7 @@
 #include<dune/pdelab/instationary/onestep.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
-#include "cgstokes_initial.hh"
+#include "navierstokes_initial.hh"
 
 //===============================================================
 // The driver for all examples
@@ -250,7 +250,7 @@ int main(int argc, char** argv)
                 << "L-Shape Domain   2D - UG - P2/P1         :   LU2" << std::endl
                 << std::endl << std::endl
                 << "You might also want to take a look at the configuration file \"cgstokes_instat.ini\"" << std::endl
-                << "and at the header file \"cgstokes_initial.hh\"."
+                << "and at the header file \"navierstokes_initial.hh\"."
                 << std::endl << std::endl;
       exit(1);
     }

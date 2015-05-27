@@ -35,7 +35,7 @@
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 
-#include "sproblemA.hh"
+#include "navierstokes_initial.hh"
 
 #define USE_SUPER_LU
 #define MAKE_VTK_OUTPUT
@@ -121,13 +121,13 @@ void stokes (const GV& gv, std::string filename, const std::string method)
   typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
   V x(gfs);
 
-  typedef B_A<GV> BType;
-  BType b(gv);
-  typedef F_A<GV,RF> FType;
+  typedef BCTypeParamGlobalDirichlet BType;
+  BType b;
+  typedef ZeroVectorFunction<GV,RF,dim> FType;
   FType f(gv);
-  typedef V_A<GV,RF> VType;
+  typedef HagenPoiseuilleVelocityBox<GV,RF,dim> VType;
   VType v(gv);
-  typedef P_A<GV,RF> PType;
+  typedef ZeroScalarFunction<GV,RF> PType;
   PType p(gv);
 
   // <<<4>>> Make grid Function operator

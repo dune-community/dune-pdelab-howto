@@ -59,7 +59,7 @@
 #include<dune/pdelab/localoperator/cg_stokes.hh>
 #include <dune/common/parametertreeparser.hh>
 #include<dune/pdelab/newton/newton.hh>
-#include "cgstokes_initial.hh"
+#include "navierstokes_initial.hh"
 
 //===============================================================
 // The driver for all examples
@@ -224,7 +224,7 @@ int main(int argc, char** argv)
                 << "L-Shape Domain   2D - UG - P2/P1         :   LU2" << std::endl
                 << std::endl << std::endl
                 << "You might also want to take a look at the configuration file \"cgstokes.ini\"" << std::endl
-                << "and at the header file \"cgstokes_initial.hh\"."
+                << "and at the header file \"navierstokes_initial.hh\"."
                 << std::endl << std::endl;
       exit(1);
     }
@@ -273,7 +273,7 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,p-1> P_FEM;
       P_FEM pFem(gv);
 
-      typedef HagenPoiseuilleVelocity<GV,RF,dim> InitialVelocity;
+      typedef HagenPoiseuilleVelocityBox<GV,RF,dim> InitialVelocity;
       typedef ZeroScalarFunction<GV,RF> InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
@@ -334,7 +334,7 @@ int main(int argc, char** argv)
 
       typedef double RF;
 
-      typedef HagenPoiseuilleVelocity<GV,RF,dim> InitialVelocity;
+      typedef HagenPoiseuilleVelocityBox<GV,RF,dim> InitialVelocity;
       typedef ZeroScalarFunction<GV,RF> InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
@@ -545,7 +545,7 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
       V_FEM vFem(gv); P_FEM pFem(gv);
 
-      typedef HagenPoiseuilleVelocity<GV,RF,3> InitialVelocity;
+      typedef HagenPoiseuilleVelocitySpherical<GV,RF> InitialVelocity;
       typedef ZeroScalarFunction<GV,RF> InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;

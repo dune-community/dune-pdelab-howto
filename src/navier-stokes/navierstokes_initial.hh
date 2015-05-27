@@ -5,6 +5,33 @@
 // Define parameter functions f,g,j and \partial\Omega_D/N
 //===============================================================
 
+/** \brief Global Dirichlet boundary conditions
+
+ */
+
+// constraints parameter class for selecting boundary condition type
+class BCTypeParamGlobalDirichlet
+{
+public :
+  typedef Dune::PDELab::StokesBoundaryCondition BC;
+
+  struct Traits
+  {
+    typedef BC::Type RangeType;
+  };
+
+  BCTypeParamGlobalDirichlet() {}
+
+  template<typename I>
+  inline void evaluate (const I & intersection,   /*@\label{bcp:name}@*/
+                        const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord,
+                        BC::Type& y) const
+  {
+    y = BC::VelocityDirichlet;
+  }
+
+};
+
 /** \brief Boundary conditions for Hagen-Poiseuille flow.
 
  */
@@ -137,43 +164,39 @@ public:
   }
 };
 
-/** \brief Dirichlet velocity function for two dimensional Hagen-Poiseuille flow.
+/** \brief Dirichlet velocity function for Hagen-Poiseuille flow in a box.
 
     \tparam GV The underlying grid view.
     \tparam RF The type of the range field.
     \tparam dim Dimension of the problem.
 
-    * The Hagen-Poiseuille flow is solved on the unitsquare.
+    * The Hagen-Poiseuille flow is solved on the dim-dimensional unitcube.
     * The maximum inflow velocity is normalized to 1.
+    * In three dimensions, the two dimensional flow is trivially extended
+    * to the z-direction.
 
     */
 
 template<typename GV, typename RF, int dim>
-class HagenPoiseuilleVelocity :
+class HagenPoiseuilleVelocityBox :
   public Dune::PDELab::AnalyticGridFunctionBase<
   Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim>,
-  HagenPoiseuilleVelocity<GV,RF,dim> >
+  HagenPoiseuilleVelocityBox<GV,RF,dim> >
 {
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits, HagenPoiseuilleVelocity<GV,RF,dim> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits, HagenPoiseuilleVelocityBox<GV,RF,dim> > BaseT;
 
   typedef typename Traits::DomainType DomainType;
   typedef typename Traits::RangeType RangeType;
 
-  HagenPoiseuilleVelocity(const GV & gv) : BaseT(gv) {}
+  HagenPoiseuilleVelocityBox(const GV & gv) : BaseT(gv) {}
 
   inline void evaluateGlobal(const DomainType & x, RangeType & y) const
   {
-    RF r = 0;
-
-    for(int i=1; i<dim; ++i){
-      r += (x[i]-0.5)*(x[i]-0.5);
-      y[i] = 0;
-    }
-    r = sqrt(r);
-    y[0] = 0.25 - r*r;
-    y[0] *= 4;
+    y = 0;
+    y[0] = x[1]*(1.0-x[1]);
+    y[0] *= 4.0;
   }
 
 };
@@ -299,20 +322,23 @@ public:
     */
 
 template<typename GV, typename RF>
-class HagenPoiseuilleVelocity<GV,RF,3> :
+class HagenPoiseuilleVelocitySpherical :
   public Dune::PDELab::AnalyticGridFunctionBase<
   Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,3>,
-  HagenPoiseuilleVelocity<GV,RF,3> >
+  HagenPoiseuilleVelocitySpherical<GV,RF> >
 {
 public:
   enum {dim = 3};
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits, HagenPoiseuilleVelocity<GV,RF,dim> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits, HagenPoiseuilleVelocitySpherical<GV,RF> > BaseT;
 
   typedef typename Traits::DomainType DomainType;
   typedef typename Traits::RangeType RangeType;
 
-  HagenPoiseuilleVelocity(const GV & gv) : BaseT(gv) {}
+  HagenPoiseuilleVelocitySpherical(const GV & gv) : BaseT(gv)
+  {
+    assert(GV::dimension == dim);
+  }
 
   inline void evaluateGlobal(const DomainType & x, RangeType & y) const
   {
