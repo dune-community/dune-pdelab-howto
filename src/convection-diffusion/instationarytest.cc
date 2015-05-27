@@ -48,6 +48,7 @@
 #include<dune/pdelab/newton/newton.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/instationary/onestep.hh>
+#include<dune/pdelab/common/instationaryfilenamehelper.hh>
 #include"l2interpolationerror.hh"
 
 //==============================================================================

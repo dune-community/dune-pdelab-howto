@@ -46,6 +46,7 @@
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/instationary/onestep.hh>
+#include<dune/pdelab/common/instationaryfilenamehelper.hh>
 
 #include"example05_operator.hh"
 #include"example05_toperator.hh"
