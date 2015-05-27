@@ -322,20 +322,20 @@ public:
     */
 
 template<typename GV, typename RF>
-class HagenPoiseuilleVelocitySpherical :
+class HagenPoiseuilleVelocityCylindrical :
   public Dune::PDELab::AnalyticGridFunctionBase<
   Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,3>,
-  HagenPoiseuilleVelocitySpherical<GV,RF> >
+  HagenPoiseuilleVelocityCylindrical<GV,RF> >
 {
 public:
   enum {dim = 3};
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits, HagenPoiseuilleVelocitySpherical<GV,RF> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits, HagenPoiseuilleVelocityCylindrical<GV,RF> > BaseT;
 
   typedef typename Traits::DomainType DomainType;
   typedef typename Traits::RangeType RangeType;
 
-  HagenPoiseuilleVelocitySpherical(const GV & gv) : BaseT(gv)
+  HagenPoiseuilleVelocityCylindrical(const GV & gv) : BaseT(gv)
   {
     assert(GV::dimension == dim);
   }

@@ -545,7 +545,7 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
       V_FEM vFem(gv); P_FEM pFem(gv);
 
-      typedef HagenPoiseuilleVelocitySpherical<GV,RF> InitialVelocity;
+      typedef HagenPoiseuilleVelocityCylindrical<GV,RF> InitialVelocity;
       typedef ZeroScalarFunction<GV,RF> InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
