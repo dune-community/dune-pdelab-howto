@@ -283,7 +283,7 @@ void driverFEM (Grid& grid,
                 << std::endl;
     }
 
-  std::cout << "View results using: \n paraview --data=" << vtu.str() << "_step..vtu" << std::endl;
+  std::cout << "View results using: \n paraview --data=vtk/" << vtu.str() << "_step..vtu" << std::endl;
 
 }
 
