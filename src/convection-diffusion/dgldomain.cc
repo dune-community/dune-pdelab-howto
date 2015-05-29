@@ -4,16 +4,18 @@
 #include <sstream>
 #include "config.h"           // file constructed by ./configure script
 #include <dune/common/parallel/mpihelper.hh> // include mpi helper class
-#include <dune/grid/sgrid.hh> // load sgrid definition
 #include <dune/grid/onedgrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+
 #if HAVE_UG
 #include <dune/grid/uggrid.hh>
 #endif
+
 #if HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
 #endif
+
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
@@ -142,9 +144,9 @@ void driverDG ( Grid& grid,
         DGF pre_udgf(gfs,u);
         Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,degree-1);
         std::stringstream fullname;
-        fullname << filename_base << "_prestep" << step;
+        fullname  << "vtk/" << filename_base << "_prestep" << step;
         // plot analytical solution on the refined gridview
-        vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(pre_udgf,"pre_u_h"));
+        vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(pre_udgf,"pre_u_h"));
         vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
       }
 
@@ -223,11 +225,11 @@ void driverDG ( Grid& grid,
       Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,degree-1);
       //Dune::VTKWriter<GV> vtkwriter(gv);
       std::stringstream fullname;
-      fullname << filename_base << "_step" << step;
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"u_h"));
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<ESOL>(exactsolution,"u"));
-      vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<Difference>(difference,"u-u_h"));
-      vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(udgf0,"estimated error"));
+      fullname << "vtk/" << filename_base << "_step" << step;
+      vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(udgf,"u_h"));
+      vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<ESOL> >(exactsolution,"u"));
+      vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<Difference> >(difference,"u-u_h"));
+      vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF0> >(udgf0,"estimated error"));
       vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
 
       // error control
@@ -280,7 +282,7 @@ void driverDG ( Grid& grid,
                 << std::endl;
     }
 
-  std::cout << "View results using: \n paraview --data=" << vtu.str() << "_step..vtu" << std::endl;
+  std::cout << "View results using: \n paraview --data=vtk/" << vtu.str() << "_step..vtu" << std::endl;
 
 }
 
@@ -308,12 +310,13 @@ int main(int argc, char **argv)
     // note: adaptivity currently relies on finite element map
     // not depending on grid view
 
-    // Hint: Set the polynomial degree here
-    const int degree=1;
 
     // UG version
-#if HAVE_UG
     if( "ug"==configuration.get<std::string>("grid.manager") ) {
+
+#if HAVE_UG
+      // Hint: Set the polynomial degree here
+      const int degree=1;
       // make UG grid
       const int dim=2;
 
@@ -362,13 +365,19 @@ int main(int argc, char **argv)
         FEMDG femdg;
         const int blocksize = Dune::PB::PkSize<degree,dim>::value;
         driverDG<GridType,FEMDG,degree,blocksize>(grid,gt,femdg,configuration);
+
       }
-
-    }
+#else
+      std::cout << "UG is not installed. You may choose alberta in the 'ldomain.ini'." << std::endl;
 #endif
+    }
 
-#if HAVE_ALBERTA
+
     if( "alberta"==configuration.get<std::string>("grid.manager") ) {
+#if HAVE_ALBERTA
+      // Hint: Set the polynomial degree here
+      const int degree=1;
+
       // make Alberta grid
       const int dim=2;
       typedef AlbertaLDomain::Grid GridType;
@@ -383,8 +392,11 @@ int main(int argc, char **argv)
       FEMDG femdg(gt);
       const int blocksize = Dune::PB::PkSize<degree,dim>::value;
       driverDG<GridType,FEMDG,degree,blocksize>(grid,gt,femdg,configuration);
-    }
+#else
+      std::cout << "Alberta is not installed. You may choose ug in the 'ldomain.ini'." << std::endl;
 #endif
+    }
+
   }
   catch (std::exception & e) {
     std::cout << "STL ERROR: " << e.what() << std::endl;
