@@ -189,6 +189,7 @@ void runDG ( const GV& gv,
       vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF> >(udgf,"u_h"));
       vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<G> >(g,"u"));
       vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
+      std::cout << "Run: \n paraview --data=" << fullname.str() << ".vtu \n" << std::endl;
     }
 }
 
