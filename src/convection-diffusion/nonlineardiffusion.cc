@@ -239,6 +239,7 @@ void sequential (const GV& gv)
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
     vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"solution"));
     vtkwriter.write("nonlineardiffusion_sequential_Q2",Dune::VTK::ascii);
+    std::cout << "View result: \n paraview --data=nonlineardiffusion_sequential_Q2.vtu" << std::endl;
   }
 }
 
@@ -313,6 +314,8 @@ void parallel_nonoverlapping_Q1 (const GV& gv)
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"solution"));
   vtkwriter.write("nonlineardiffusion_nonoverlapping_Q1",Dune::VTK::ascii);
+  if(gv.comm().rank()==0)
+    std::cout << "View result: \n paraview --data=s...-nonlineardiffusion_nonoverlapping_Q1.pvtu" << std::endl;
 }
 
 // a parallel variant for overlapping grids
@@ -386,6 +389,8 @@ void parallel_overlapping_Q1 (const GV& gv)
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"solution"));
   vtkwriter.write("nonlineardiffusion_overlapping_Q1",Dune::VTK::ascii);
+  if(gv.comm().rank()==0)
+    std::cout << "View result: \n paraview --data=s...-nonlineardiffusion_overlapping_Q1.pvtu" << std::endl;
 }
 
 
