@@ -11,7 +11,7 @@
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
+#include<dune/common/typetraits.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/yaspgrid.hh>
 #include<dune/istl/bvector.hh>
@@ -22,9 +22,11 @@
 #include<dune/istl/paamg/amg.hh>
 #include<dune/istl/superlu.hh>
 #include<dune/grid/yaspgrid.hh>
+
 #if HAVE_DUNE_ALUGRID
 #include<dune/alugrid/grid.hh>
 #endif
+
 #include<dune/grid/utility/structuredgridfactory.hh>
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/pdelab/finiteelementmap/monomfem.hh>
@@ -143,7 +145,7 @@ void runDG(
   const int dim = GV::Grid::dimension;
 
   std::stringstream fullname;
-  fullname << basename << "_" << method << "_w" << weights << "_k" << degree << "_dim" << dim << "_level" << level;
+  fullname << "vtk/" << basename << "_" << method << "_w" << weights << "_k" << degree << "_dim" << dim << "_level" << level;
 
   // make grid function space
   typedef Dune::PDELab::NoConstraints CON;
@@ -212,9 +214,10 @@ void runDG(
   if (graphics)
     {
       Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,degree-1);
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<UDGF>(udgf,"u_h"));
-      //vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<G>(g,"u"));
+      vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF>>(udgf,"u_h"));
+      //vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<G> >(g,"u"));
       vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
+      std::cout << "Run: \n paraview --data=" << fullname.str() << ".vtu \n" << std::endl;
     }
 }
 
