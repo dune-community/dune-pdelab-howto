@@ -11,7 +11,6 @@
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/yaspgrid.hh>
 #include<dune/istl/bvector.hh>
@@ -22,12 +21,15 @@
 #include<dune/istl/paamg/amg.hh>
 #include<dune/istl/superlu.hh>
 #include<dune/grid/yaspgrid.hh>
+
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
+
 #if HAVE_DUNE_ALUGRID
 #include<dune/alugrid/grid.hh>
 #endif
+
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/utility/structuredgridfactory.hh>
 #include<dune/pdelab/finiteelementmap/monomfem.hh>
@@ -55,81 +57,11 @@
 
 #include<dune/pdelab/gridfunctionspace/vtk.hh>
 
+#include "parameterA.hh"
+
+
 const bool graphics = true;
 
-template<typename GV, typename RF>
-class Parameter
-{
-  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
-
-public:
-  typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
-
-  //! tensor diffusion coefficient
-  typename Traits::PermTensorType
-  A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::PermTensorType I;
-    for (std::size_t i=0; i<Traits::dimDomain; i++)
-      for (std::size_t j=0; j<Traits::dimDomain; j++)
-        I[i][j] = (i==j) ? 1 : 0;
-    return I;
-  }
-
-  //! velocity field
-  typename Traits::RangeType
-  b (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::RangeType v(0.0);
-    return v;
-  }
-
-  //! sink term
-  typename Traits::RangeFieldType
-  c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    return 0.0;
-  }
-
-  //! source term
-  typename Traits::RangeFieldType
-  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::DomainType xglobal = e.geometry().global(x);
-    typename Traits::RangeFieldType norm = xglobal.two_norm2();
-    return (2.0*GV::dimension-4.0*norm)*exp(-norm);
-  }
-
-  //! boundary condition type function
-  BCType
-  bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
-  }
-
-  //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType
-  g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::DomainType xglobal = e.geometry().global(x);
-    typename Traits::RangeFieldType norm = xglobal.two_norm2();
-    return exp(-norm);
-  }
-
-  //! Neumann boundary condition
-  typename Traits::RangeFieldType
-  j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return 0.0;
-  }
-
-  //! outflow boundary condition
-  typename Traits::RangeFieldType
-  o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return 0.0;
-  }
-};
 
 /*! \brief Adapter returning ||f1(x)-f2(x)||^2 for two given grid functions
 
@@ -191,7 +123,7 @@ void runDG ( const GV& gv,
   const int dim = GV::Grid::dimension;
 
   std::stringstream fullname;
-  fullname << basename << "_" << method << "_w" << weights << "_k" << degree << "_dim" << dim << "_level" << level;
+  fullname << "vtk/" << basename << "_" << method << "_w" << weights << "_k" << degree << "_dim" << dim << "_level" << level;
 
   // make grid function space
   typedef Dune::PDELab::NoConstraints CON;
@@ -254,8 +186,8 @@ void runDG ( const GV& gv,
   if (graphics)
     {
       Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,degree-1);
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<UDGF>(udgf,"u_h"));
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<G>(g,"u"));
+      vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF> >(udgf,"u_h"));
+      vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<G> >(g,"u"));
       vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
     }
 }
@@ -269,7 +201,7 @@ void runFEM (const GV& gv, const FEM& fem, PROBLEM& problem, std::string basenam
   typedef double Real;
   const int dim = GV::Grid::dimension;
   std::stringstream fullname;
-  fullname << basename << "_FEM" << "_k" << degree << "_dim" << dim << "_level" << level;
+  fullname << "vtk/" << basename << "_FEM" << "_k" << degree << "_dim" << dim << "_level" << level;
 
   // make grid function space
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
@@ -323,8 +255,8 @@ void runFEM (const GV& gv, const FEM& fem, PROBLEM& problem, std::string basenam
   if (graphics)
     {
       Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,degree-1);
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<UDGF>(udgf,"u_h"));
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<G>(g,"u"));
+      vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF> >(udgf,"u_h"));
+      vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<G> >(g,"u"));
       vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
     }
 }
@@ -374,7 +306,7 @@ int main(int argc, char** argv)
           for (int i=0; i<=maxlevel; ++i)
             {
               const GV& gv=grid.leafGridView();
-              typedef Parameter<GV,double> PROBLEM;
+              typedef ParameterA<GV,double> PROBLEM;
               PROBLEM problem;
 
               if (method=="SIPG") {
@@ -431,7 +363,7 @@ int main(int argc, char** argv)
           for (int i=0; i<=maxlevel; ++i)
             {
               const GV& gv=grid.leafGridView();
-              typedef Parameter<GV,double> PROBLEM;
+              typedef ParameterA<GV,double> PROBLEM;
               PROBLEM problem;
 
               if (method=="SIPG") {
@@ -502,7 +434,7 @@ int main(int argc, char** argv)
           for (int i=0; i<=maxlevel; ++i)
             {
               GV gv = grid->leafGridView();
-              typedef Parameter<GV,double> PROBLEM;
+              typedef ParameterA<GV,double> PROBLEM;
               PROBLEM problem;
 
               if (method=="SIPG") {
@@ -569,7 +501,7 @@ int main(int argc, char** argv)
           for (int i=0; i<=maxlevel; ++i)
             {
               GV gv = grid->leafGridView();
-              typedef Parameter<GV,double> PROBLEM;
+              typedef ParameterA<GV,double> PROBLEM;
               PROBLEM problem;
 
               if (method=="SIPG") {
