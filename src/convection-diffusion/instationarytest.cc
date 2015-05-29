@@ -15,7 +15,7 @@
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
+#include<dune/common/typetraits.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
@@ -253,7 +253,7 @@ void sequential (const GV& gv, int t_level)
     typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
     DGF xdgf(gfs,xold);
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
+    vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"solution"));
     vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
     fn.increment();
   }
@@ -275,7 +275,7 @@ void sequential (const GV& gv, int t_level)
       typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
       DGF xdgf(gfs,x);
       Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"solution"));
+      vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"solution"));
       vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
       fn.increment();
 
@@ -295,7 +295,7 @@ void sequential (const GV& gv, int t_level)
             << std::scientific << l2interpolationerror(u,gfs,x,8) << std::endl;
   {
     Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U<GV,Real> >(u,"exact solution"));
+    vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<U<GV,Real> > >(u,"exact solution"));
     vtkwriter.write("instationarytest_exact",Dune::VTK::appendedraw);
   }
 }
