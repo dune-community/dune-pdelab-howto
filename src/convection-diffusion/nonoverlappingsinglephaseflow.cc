@@ -12,18 +12,21 @@
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
+#include<dune/common/typetraits.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/grid/yaspgrid.hh>
+
 #if HAVE_ALBERTA
 #include<dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
 #endif
+
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
+
 #if HAVE_DUNE_ALUGRID
 #include<dune/alugrid/grid.hh>
 #include<dune/grid/io/file/dgfparser/dgfalu.hh>
@@ -134,8 +137,12 @@ void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
   DGF dgf(gfs,x);
 
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(dgf,"solution"));
   vtkwriter.write(filename,Dune::VTK::appendedraw);
+  if( gv.comm().size()>1 )
+    std::cout << "Run: \n paraview --data=" << filename << ".pvtu \n" << std::endl;
+  else
+    std::cout << "Run: \n paraview --data=" << filename << ".vtu \n" << std::endl;
 }
 
 //===============================================================
@@ -164,7 +171,7 @@ int main(int argc, char** argv)
       Dune::array<int,dim> N(Dune::fill_array<int,dim>(32));
       std::bitset<dim> B(false);
       int overlap=0;
-      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<dim> grid(L,N,B,overlap,helper.getCommunicator());
       //grid.globalRefine(4);
       typedef Dune::YaspGrid<dim>::LeafGridView GV;
       const GV& gv=grid.leafGridView();
@@ -200,7 +207,7 @@ int main(int argc, char** argv)
         typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;
         FEM fem(gv);
 
-        driver(problem,gv,fem,"yasp2d_Q1",2*degree);
+        driver(problem,gv,fem,"nonoverlapping_spf_yasp2d_Q1",2*degree);
     }
 
     // Q1, 3d
@@ -212,7 +219,7 @@ int main(int argc, char** argv)
       Dune::array<int,dim> N(Dune::fill_array<int,dim>(8));
       std::bitset<dim> B(false);
       int overlap=0;
-      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<dim> grid(L,N,B,overlap,helper.getCommunicator());
       //grid.globalRefine(3);
 
       typedef Dune::YaspGrid<dim>::LeafGridView GV;
@@ -249,7 +256,7 @@ int main(int argc, char** argv)
         typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;
         FEM fem(gv);
 
-        driver(problem,gv,fem,"yasp3d_Q1",2*degree);
+        driver(problem,gv,fem,"nonoverlapping_spf_yasp3d_Q1",2*degree);
     }
 
 #if HAVE_UG
@@ -306,7 +313,7 @@ int main(int argc, char** argv)
       const int k=1;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
-      //driver(problem,gv,fem,"UG3d_P1",q);
+      driver(problem,gv,fem,"nonoverlapping_spf_UG3d_P1",2*k);
     }
 #endif
 
@@ -363,7 +370,7 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> FEM;
       FEM fem(gv);
 
-      driver(problem,gv,fem,"ALU3d_P1_PlastkDoeddel",q);
+      driver(problem,gv,fem,"nonoverlapping_spf_ALU3d_P1_PlastkDoeddel",q);
     }
     // ALU Q1 3D test
     if (false)
@@ -435,7 +442,7 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;
       FEM fem(gv);
 
-      driver(problem,gv,fem,"ALU3d_Q1",2*degree);
+      driver(problem,gv,fem,"nonoverlapping_spf_ALU3d_Q1",2*degree);
     }
 #endif
 
