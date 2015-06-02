@@ -2,8 +2,9 @@
 #define DUNE_PARAMETERF_HH
 
 #include<math.h>
+#include "parameter_base.hh"
 
-static char DurlofskyField[401] = 
+static char DurlofskyField[401] =
 "\
 X..XX....XX....X.X..\
 ....X...XXX.........\
@@ -28,7 +29,7 @@ X.X..X.XX...........\
 ";
 
 template<typename GV, typename RF>
-class ParameterF
+class ParameterF : public ParameterBase<GV,RF>
 {
 private:
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
@@ -42,17 +43,17 @@ public:
   A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
-	RF k;
-	int X,Y,N;
-	
-	X = (int) (xglobal[0]*20); X = std::max(X,0); X = std::min(X,19);
-	Y = (int) (xglobal[1]*20); Y = std::max(Y,0); Y = std::min(Y,19);
-	N = (19-Y)*20+X;
+    RF k;
+    int X,Y,N;
 
-	if (DurlofskyField[N]=='X')
-	  k = 1E-6;
-	else
-	  k = 1.0;
+    X = (int) (xglobal[0]*20); X = std::max(X,0); X = std::min(X,19);
+    Y = (int) (xglobal[1]*20); Y = std::max(Y,0); Y = std::min(Y,19);
+    N = (19-Y)*20+X;
+
+    if (DurlofskyField[N]=='X')
+      k = 1E-6;
+    else
+      k = 1.0;
 
     typename Traits::PermTensorType I;
     for (int i=0; i<GV::dimension; i++)
@@ -61,7 +62,7 @@ public:
           I[i][i] = k;
         else
           I[i][j] = 0.0;
-	
+
     return I;
   }
 
@@ -74,17 +75,17 @@ public:
   }
 
   //! sink term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 0.0;
   }
 
   //! source term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-	return 1.0; 
+    return 1.0;
   }
 
   //! boundary condition type function
@@ -93,35 +94,40 @@ public:
   {
     typename Traits::DomainType xglobal = is.geometry().global(x);
     if (xglobal[0]<1E-6 || xglobal[0]>1.0-1E-6)
-	  return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
-	else
-	  return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
+      return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
+    else
+      return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
   }
 
   //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
     if (xglobal[0]<1E-6 )
-	  return 1.0;
-	else
-	  return 0.0;
+      return 1.0;
+    else
+      return 0.0;
   }
 
   //! Neumann boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
   }
 
   //! outflow boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
   }
+};
+
+template<typename GV, typename RF>
+ParameterBase<GV,RF>* createParameterF(const GV& gv){
+  return new ParameterF<GV,RF>();
 };
 
 

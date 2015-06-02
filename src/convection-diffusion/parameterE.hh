@@ -3,8 +3,10 @@
 
 #include<math.h>
 
+#include "parameter_base.hh"
+
 template<typename GV, typename RF>
-class ParameterE
+class ParameterE : public ParameterBase<GV,RF>
 {
 private:
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
@@ -24,8 +26,8 @@ public:
           I[i][i] = 1.0;
         else
           I[i][j] = 0.0;
-	I[0][0] = 1E-6;
-	
+    I[0][0] = 1E-6;
+
     return I;
   }
 
@@ -38,47 +40,54 @@ public:
   }
 
   //! sink term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 0.0;
   }
 
   //! source term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-	return 1.0; 
+    return 1.0;
   }
 
   //! boundary condition type function
   BCType
   bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
-	return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
+    return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
   }
 
   //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-	return 0.0;
+    return 0.0;
   }
 
   //! Neumann boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
   }
 
   //! outflow boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
   }
 };
+
+
+template<typename GV, typename RF>
+ParameterBase<GV,RF>* createParameterE(const GV& gv){
+  return new ParameterE<GV,RF>();
+};
+
 
 
 #endif // DUNE_PARAMETERE_HH

@@ -1,8 +1,10 @@
 #ifndef DUNE_PARAMETERA_HH
 #define DUNE_PARAMETERA_HH
 
+#include "parameter_base.hh"
+
 template<typename GV, typename RF>
-class ParameterA
+class ParameterA : public ParameterBase<GV,RF>
 {
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
@@ -29,19 +31,19 @@ public:
   }
 
   //! sink term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 0.0;
   }
 
   //! source term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
-	typename Traits::RangeFieldType norm = xglobal.two_norm2();
-	return (2.0*GV::dimension-4.0*norm)*exp(-norm); 
+    typename Traits::RangeFieldType norm = xglobal.two_norm2();
+    return (2.0*GV::dimension-4.0*norm)*exp(-norm);
   }
 
   //! boundary condition type function
@@ -52,7 +54,7 @@ public:
   }
 
   //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
@@ -61,21 +63,26 @@ public:
   }
 
   //! Neumann boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
   }
 
   //! outflow boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
   }
+
 };
 
 
+template<typename GV, typename RF>
+ParameterBase<GV,RF>* createParameterA(const GV& gv){
+  return new ParameterA<GV,RF>();
+};
 
 
 #endif // DUNE_PARAMETERA_HH
