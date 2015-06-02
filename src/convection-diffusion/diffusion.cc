@@ -57,7 +57,7 @@
 
 #include<dune/pdelab/gridfunctionspace/vtk.hh>
 
-#include "parameterA.hh"
+#include "parameter_factory.hh"
 
 
 const bool graphics = true;
@@ -108,7 +108,7 @@ private:
 };
 
 //! solve problem with DG method
-template<class GV, class FEM, class PROBLEM, int degree, int blocksize>
+template<class GV, class FEM, class PROBLEM, class Real, int degree, int blocksize>
 void runDG ( const GV& gv,
              const FEM& fem,
              PROBLEM& problem,
@@ -116,10 +116,9 @@ void runDG ( const GV& gv,
              int level,
              std::string method,
              std::string weights,
-             double alpha )
+             Real alpha )
 {
   // coordinate and result type
-  typedef double Real;
   const int dim = GV::Grid::dimension;
 
   std::stringstream fullname;
@@ -199,7 +198,7 @@ template<class GV, class FEM, class PROBLEM, int degree>
 void runFEM (const GV& gv, const FEM& fem, PROBLEM& problem, std::string basename, int level)
 {
   // coordinate and result type
-  typedef double Real;
+  typedef typename FEM::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType Real;
   const int dim = GV::Grid::dimension;
   std::stringstream fullname;
   fullname << "vtk/" << basename << "_FEM" << "_k" << degree << "_dim" << dim << "_level" << level;
@@ -264,6 +263,7 @@ void runFEM (const GV& gv, const FEM& fem, PROBLEM& problem, std::string basenam
 
 int main(int argc, char** argv)
 {
+
   //Maybe initialize Mpi
   Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
   if(Dune::MPIHelper::isFake)
@@ -275,76 +275,87 @@ int main(int argc, char** argv)
     }
 
   // read command line arguments
-  if (argc!=6)
+  if (argc!=7)
     {
-      std::cout << "usage: diffusion <mesh> <dim> <maxlevel> <method> <degree>" << std::endl;
+      std::cout << "usage: diffusion <mesh> <dim> <maxlevel> <method> <degree> <choice>" << std::endl;
       std::cout << "       <mesh> = cube | simplex" << std::endl;
       std::cout << "       <dim> = 2 | 3" << std::endl;
       std::cout << "       <maxlevel> = a nonnegative integer" << std::endl;
       std::cout << "       <method> = FEM | SIPG" << std::endl;
       std::cout << "       <degree> : polynomial degree (integer)" << std::endl;
+      std::cout << "       <choice> = A | B | ... | F" << std::endl;
+      std::cout << std::endl;
+      std::cout << "e.g.: ./diffusion cube 2 3 SIPG 1 C" << std::endl;
+      std::cout << std::endl;
       return 0;
     }
+
+  typedef double Real;
 
   std::string mesh(argv[1]);
   int dim_dyn; sscanf(argv[2],"%d",&dim_dyn);
   int maxlevel; sscanf(argv[3],"%d",&maxlevel);
   std::string method(argv[4]);
   int degree_dyn; sscanf(argv[5],"%d",&degree_dyn);
+  char choice; sscanf(argv[6],"%c",&choice);
 
-  try
-    {
+
+  try {
+
+
       if (mesh=="cube" && dim_dyn==2)
         {
           const int dim = 2;
-          Dune::FieldVector<double,dim> L(1.0);
+          Dune::FieldVector<Real,dim> L(1.0);
           Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
           std::bitset<dim> P(false);
           typedef Dune::YaspGrid<dim> Grid;
           Grid grid(L,N,P,0);
           typedef Grid::LeafGridView GV;
+          typedef ParameterBase<GV,Real> PROBLEM;
+          typedef ParameterFactory<PROBLEM,char> ProblemFactory;
 
           for (int i=0; i<=maxlevel; ++i)
             {
               const GV& gv=grid.leafGridView();
-              typedef ParameterA<GV,double> PROBLEM;
-              PROBLEM problem;
+              ProblemFactory::template registerAll<GV,Real,char>(gv);
+              PROBLEM* pProblem = ProblemFactory::getInstance().createParameter( gv, choice );
 
               if (method=="SIPG") {
                 if (degree_dyn==1) {
                   const int degree=1;
-                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
+                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,Real,degree,dim> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-                  runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"CUBE",i,"SIPG","ON",2.0);
+                  runDG<GV,FEMDG,PROBLEM,Real,degree,blocksize>(gv,femdg, *pProblem ,"CUBE",i,"SIPG","ON",2.0);
                 }
                 if (degree_dyn==2) {
                   const int degree=2;
-                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
+                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,Real,degree,dim> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-                  runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"CUBE",i,"SIPG","ON",2.0);
+                  runDG<GV,FEMDG,PROBLEM,Real,degree,blocksize>(gv,femdg, *pProblem ,"CUBE",i,"SIPG","ON",2.0);
                 }
                 if (degree_dyn==3) {
                   const int degree=3;
-                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
+                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,Real,degree,dim> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-                  runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"CUBE",i,"SIPG","ON",2.0);
+                  runDG<GV,FEMDG,PROBLEM,Real,degree,blocksize>(gv,femdg, *pProblem ,"CUBE",i,"SIPG","ON",2.0);
                 }
               }
               if (method=="FEM") {
                 if (degree_dyn==1) {
                   const int degree=1;
-                  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
+                  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Grid::ctype,Real,degree> FEMCG;
                   FEMCG femcg(gv);
-                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"CUBE",i);
+                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg, *pProblem ,"CUBE",i);
                 }
                 if (degree_dyn==2) {
                   const int degree=2;
-                  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
+                  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Grid::ctype,Real,degree> FEMCG;
                   FEMCG femcg(gv);
-                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"CUBE",i);
+                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg, *pProblem ,"CUBE",i);
                 }
               }
               // refine grid
@@ -354,64 +365,66 @@ int main(int argc, char** argv)
       if (mesh=="cube" && dim_dyn==3)
         {
           const int dim = 3;
-          Dune::FieldVector<double,dim> L(1.0);
+          Dune::FieldVector<Real,dim> L(1.0);
           Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
           std::bitset<dim> P(false);
           typedef Dune::YaspGrid<dim> Grid;
           Grid grid(L,N,P,0);
           typedef Grid::LeafGridView GV;
+          typedef ParameterBase<GV,Real> PROBLEM;
+          typedef ParameterFactory<PROBLEM,char> ProblemFactory;
 
           for (int i=0; i<=maxlevel; ++i)
             {
               const GV& gv=grid.leafGridView();
-              typedef ParameterA<GV,double> PROBLEM;
-              PROBLEM problem;
+              ProblemFactory::template registerAll<GV,Real,char>(gv);
+              PROBLEM* pProblem = ProblemFactory::getInstance().createParameter( gv, choice );
 
               if (method=="SIPG") {
                 if (degree_dyn==1) {
                   const int degree=1;
                   //use MonomImp to get correct blocksize for OBP
-                  //typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::cube> FEMDG;
+                  //typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,Real,degree,dim,Dune::GeometryType::cube> FEMDG;
                   //const int blocksize = Dune::MonomImp::Size<dim,degree>::val;
-                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
+                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,Real,degree,dim> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-                  runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"CUBE",i,"SIPG","ON",2.0);
+                  runDG<GV,FEMDG,PROBLEM,Real,degree,blocksize>(gv,femdg,*pProblem,"CUBE",i,"SIPG","ON",2.0);
                 }
                 if (degree_dyn==2) {
                   const int degree=2;
-                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
+                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,Real,degree,dim> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-                  runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"CUBE",i,"SIPG","ON",2.0);
+                  runDG<GV,FEMDG,PROBLEM,Real,degree,blocksize>(gv,femdg,*pProblem,"CUBE",i,"SIPG","ON",2.0);
                 }
                 if (degree_dyn==3) {
                   const int degree=3;
-                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
+                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,Real,degree,dim> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-                  runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"CUBE",i,"SIPG","ON",2.0);
+                  runDG<GV,FEMDG,PROBLEM,Real,degree,blocksize>(gv,femdg,*pProblem,"CUBE",i,"SIPG","ON",2.0);
                 }
                 if (degree_dyn==4) {
                   const int degree=4;
-                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
+                  typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,Real,degree,dim> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-                  runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"CUBE",i,"SIPG","ON",2.0);
+                  runDG<GV,FEMDG,PROBLEM,Real,degree,blocksize>(gv,femdg,*pProblem,"CUBE",i,"SIPG","ON",2.0);
                 }
               }
               if (method=="FEM") {
                 if (degree_dyn==1) {
                   const int degree=1;
-                  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
+                  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Grid::ctype,Real,degree> FEMCG;
                   FEMCG femcg(gv);
-                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"CUBE",i);
+                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,*pProblem,"CUBE",i);
                 }
                 if (degree_dyn==2) {
                   const int degree=2;
-                  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
+                  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Grid::ctype,Real,degree> FEMCG;
                   FEMCG femcg(gv);
-                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"CUBE",i);
+                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,*pProblem,"CUBE",i);
                 }
               }
               // refine grid
@@ -431,55 +444,57 @@ int main(int argc, char** argv)
 
           std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
           typedef Grid::LeafGridView GV;
+          typedef ParameterBase<GV,Real> PROBLEM;
+          typedef ParameterFactory<PROBLEM,char> ProblemFactory;
 
           for (int i=0; i<=maxlevel; ++i)
             {
-              GV gv = grid->leafGridView();
-              typedef ParameterA<GV,double> PROBLEM;
-              PROBLEM problem;
+              const GV& gv=grid->leafGridView();
+              ProblemFactory::template registerAll<GV,Real,char>(gv);
+              PROBLEM* pProblem = ProblemFactory::getInstance().createParameter( gv, choice );
 
               if (method=="SIPG") {
                 if (degree_dyn==1) {
                   const int degree=1;
-                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::simplex> FEMDG;
+                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,Real,degree,dim,Dune::GeometryType::simplex> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::PB::PkSize<degree,dim>::value;
-                  runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"SIMPLEX",i,"SIPG","ON",2.0);
+                  runDG<GV,FEMDG,PROBLEM,Real,degree,blocksize>(gv,femdg,*pProblem,"SIMPLEX",i,"SIPG","ON",2.0);
                 }
                 if (degree_dyn==2) {
                   const int degree=2;
-                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::simplex> FEMDG;
+                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,Real,degree,dim,Dune::GeometryType::simplex> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::PB::PkSize<degree,dim>::value;
-                  runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"SIMPLEX",i,"SIPG","ON",2.0);
+                  runDG<GV,FEMDG,PROBLEM,Real,degree,blocksize>(gv,femdg,*pProblem,"SIMPLEX",i,"SIPG","ON",2.0);
                 }
                 if (degree_dyn==3) {
                   const int degree=3;
-                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::simplex> FEMDG;
+                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,Real,degree,dim,Dune::GeometryType::simplex> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::PB::PkSize<degree,dim>::value;
-                  runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"SIMPLEX",i,"SIPG","ON",2.0);
+                  runDG<GV,FEMDG,PROBLEM,Real,degree,blocksize>(gv,femdg,*pProblem,"SIMPLEX",i,"SIPG","ON",2.0);
                 }
               }
 
               if (method=="FEM") {
                 if (degree_dyn==1) {
                   const int degree=1;
-                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
+                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,Real,degree> FEMCG;
                   FEMCG femcg(gv);
-                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"SIMPLEX",i);
+                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,*pProblem,"SIMPLEX",i);
                 }
                 if (degree_dyn==2) {
                   const int degree=2;
-                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
+                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,Real,degree> FEMCG;
                   FEMCG femcg(gv);
-                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"SIMPLEX",i);
+                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,*pProblem,"SIMPLEX",i);
                 }
                 if (degree_dyn==3) {
                   const int degree=3;
-                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
+                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,Real,degree> FEMCG;
                   FEMCG femcg(gv);
-                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"SIMPLEX",i);
+                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,*pProblem,"SIMPLEX",i);
                 }
               }
 
@@ -498,61 +513,63 @@ int main(int argc, char** argv)
 
           std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
           typedef Grid::LeafGridView GV;
+          typedef ParameterBase<GV,Real> PROBLEM;
+          typedef ParameterFactory<PROBLEM,char> ProblemFactory;
 
           for (int i=0; i<=maxlevel; ++i)
             {
-              GV gv = grid->leafGridView();
-              typedef ParameterA<GV,double> PROBLEM;
-              PROBLEM problem;
+              const GV& gv=grid->leafGridView();
+              ProblemFactory::template registerAll<GV,Real,char>(gv);
+              PROBLEM* pProblem = ProblemFactory::getInstance().createParameter( gv, choice );
 
               if (method=="SIPG") {
                 if (degree_dyn==1) {
                   const int degree=1;
-                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::simplex> FEMDG;
+                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,Real,degree,dim,Dune::GeometryType::simplex> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::PB::PkSize<degree,dim>::value;
-                  runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"SIMPLEX",i,"SIPG","ON",2.0);
+                  runDG<GV,FEMDG,PROBLEM,Real,degree,blocksize>(gv,femdg,*pProblem,"SIMPLEX",i,"SIPG","ON",2.0);
                 }
                 if (degree_dyn==2) {
                   const int degree=2;
-                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::simplex> FEMDG;
+                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,Real,degree,dim,Dune::GeometryType::simplex> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::PB::PkSize<degree,dim>::value;
-                  runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"SIMPLEX",i,"SIPG","ON",2.0);
+                  runDG<GV,FEMDG,PROBLEM,Real,degree,blocksize>(gv,femdg,*pProblem,"SIMPLEX",i,"SIPG","ON",2.0);
                 }
                 if (degree_dyn==3) {
                   const int degree=3;
-                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,double,degree,dim,Dune::GeometryType::simplex> FEMDG;
+                  typedef Dune::PDELab::OPBLocalFiniteElementMap<Grid::ctype,Real,degree,dim,Dune::GeometryType::simplex> FEMDG;
                   FEMDG femdg;
                   const int blocksize = Dune::PB::PkSize<degree,dim>::value;
-                  runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"SIMPLEX",i,"SIPG","ON",2.0);
+                  runDG<GV,FEMDG,PROBLEM,Real,degree,blocksize>(gv,femdg,*pProblem,"SIMPLEX",i,"SIPG","ON",2.0);
                 }
               }
 
               if (method=="FEM") {
                 if (degree_dyn==1) {
                   const int degree=1;
-                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
+                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,Real,degree> FEMCG;
                   FEMCG femcg(gv);
-                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"SIMPLEX",i);
+                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,*pProblem,"SIMPLEX",i);
                 }
                 if (degree_dyn==2) {
                   const int degree=2;
-                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
+                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,Real,degree> FEMCG;
                   FEMCG femcg(gv);
-                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"SIMPLEX",i);
+                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,*pProblem,"SIMPLEX",i);
                 }
                 if (degree_dyn==3) {
                   const int degree=3;
-                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
+                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,Real,degree> FEMCG;
                   FEMCG femcg(gv);
-                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"SIMPLEX",i);
+                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,*pProblem,"SIMPLEX",i);
                 }
                 if (degree_dyn==4) {
                   const int degree=4;
-                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,double,degree> FEMCG;
+                  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Grid::ctype,Real,degree> FEMCG;
                   FEMCG femcg(gv);
-                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,problem,"SIMPLEX",i);
+                  runFEM<GV,FEMCG,PROBLEM,degree>(gv,femcg,*pProblem,"SIMPLEX",i);
                 }
               }
 
