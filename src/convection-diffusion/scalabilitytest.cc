@@ -11,7 +11,7 @@
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
+#include<dune/common/typetraits.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/yaspgrid.hh>
 #include<dune/istl/bvector.hh>
@@ -41,24 +41,29 @@
 #include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
+
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 #include<dune/pdelab/localoperator/convectiondiffusiondg.hh>
-#include<dune/pdelab/localoperator/diffusionccfv.hh>
+#include<dune/pdelab/localoperator/convectiondiffusionccfv.hh>
+
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
-#include"problemA.hh"
-
+#include "parameter_factory.hh"
 
 
 const bool graphics = true;
 
-template<class GV>
-void test (const GV& gv)
+template<typename GV,typename PROBLEM>
+void test_ccfv (const GV& gv,PROBLEM& problem)
 {
   typedef typename GV::Grid::ctype DF;
-  typedef double RF;
+  typedef typename PROBLEM::RangeFieldType RF;
   const int dim = GV::dimension;
+
+  std::stringstream fullname;
+  fullname << "scalabilitytest_CCFV_dim" << dim;
+
   Dune::Timer watch;
 
   // instantiate finite element maps
@@ -73,20 +78,12 @@ void test (const GV& gv)
 
   // local operator
   watch.reset();
-  typedef k_A<GV,RF> KType;
-  KType k(gv);
-  typedef A0_A<GV,RF> A0Type;
-  A0Type a0(gv);
-  typedef F_A<GV,RF> FType;
-  FType f(gv);
-  typedef B_A<GV> BType;
-  BType b(gv);
-  typedef J_A<GV,RF> JType;
-  JType j(gv);
-  typedef G_A<GV,RF> GType;
-  GType g(gv);
-  typedef Dune::PDELab::DiffusionCCFV<KType,A0Type,FType,BType,JType,GType> LOP;
-  LOP lop(k,a0,f,b,j,g);
+
+  typedef Dune::PDELab::ConvectionDiffusionCCFV<PROBLEM> LOP;
+  LOP lop(problem);
+
+  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
+  G g(gv,problem);
 
   // make constraints map and initialize it from a function
   typedef typename GFS::template ConstraintsContainer<RF>::Type CC;
@@ -115,83 +112,16 @@ void test (const GV& gv)
   slp.apply();
 
   // make discrete function object
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  DGF dgf(gfs,x);
+  if( graphics ){
+    typedef Dune::PDELab::DiscreteGridFunction<GFS,V> UDGF;
+    UDGF udgf(gfs,x);
+    Dune::VTKWriter<GV> vtkwriter(gv);
+    vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF> >(udgf,"u_h"));
+    vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
+  }
+
 }
 
-template<typename GV, typename RF>
-class Parameter
-{
-  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
-
-public:
-  typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
-
-  //! tensor diffusion coefficient
-  typename Traits::PermTensorType
-  A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::PermTensorType I;
-    for (std::size_t i=0; i<Traits::dimDomain; i++)
-      for (std::size_t j=0; j<Traits::dimDomain; j++)
-        I[i][j] = (i==j) ? 1 : 0;
-    return I;
-  }
-
-  //! velocity field
-  typename Traits::RangeType
-  b (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::RangeType v(0.0);
-    return v;
-  }
-
-  //! sink term
-  typename Traits::RangeFieldType
-  c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    return 0.0;
-  }
-
-  //! source term
-  typename Traits::RangeFieldType
-  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::DomainType xglobal = e.geometry().global(x);
-    typename Traits::RangeFieldType norm = xglobal.two_norm2();
-    return (2.0*GV::dimension-4.0*norm)*exp(-norm);
-  }
-
-  //! boundary condition type function
-  BCType
-  bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
-  }
-
-  //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType
-  g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::DomainType xglobal = e.geometry().global(x);
-    typename Traits::RangeFieldType norm = xglobal.two_norm2();
-    return exp(-norm);
-  }
-
-  //! Neumann boundary condition
-  typename Traits::RangeFieldType
-  j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return 0.0;
-  }
-
-  //! outflow boundary condition
-  typename Traits::RangeFieldType
-  o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return 0.0;
-  }
-};
 
 
 //! solve problem with DG method
@@ -210,6 +140,8 @@ void runDG ( const GV& gv,
   const int dim = GV::Grid::dimension;
 
   std::stringstream fullname;
+  fullname << "scalabilitytest_";
+
   fullname << basename << "_" << method << "_w" << weights << "_k" << degree << "_dim" << dim << "_level" << level;
 
   // make grid function space
@@ -271,7 +203,7 @@ void runDG ( const GV& gv,
     typedef Dune::PDELab::DiscreteGridFunction<GFS,U> UDGF;
     UDGF udgf(gfs,u);
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,std::max(0,degree-1));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<UDGF>(udgf,"u_h"));
+    vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF> >(udgf,"u_h"));
     vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
   }
 
@@ -291,29 +223,33 @@ int main(int argc, char** argv)
         std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
     }
 
-  if (argc!=8 && argc!=5) {
+  if (argc!=9 && argc!=6) {
     if(helper.rank()==0) {
-      std::cout << "usage option 1: " << argv[0] << " <order> <nx> <ny> <nz>" << std::endl;
-      std::cout << "usage option 2: " << argv[0] << " <order> <nx> <ny> <nz> <px> <py> <pz>" << std::endl;
+      std::cout << "usage option 1: " << argv[0] << " <problem> <order> <nx> <ny> <nz>" << std::endl;
+      std::cout << "usage option 2: " << argv[0] << " <problem> <order> <nx> <ny> <nz> <px> <py> <pz>" << std::endl;
+      std::cout << "       <problem> = A | C | E " << std::endl;
     }
     return 0;
   }
-  int degree_dyn; sscanf(argv[1],"%d",&degree_dyn);
-  int nx; sscanf(argv[2],"%d",&nx);
-  int ny; sscanf(argv[3],"%d",&ny);
-  int nz; sscanf(argv[4],"%d",&nz);
+  char choice; sscanf(argv[1],"%c",&choice);
+  int degree_dyn; sscanf(argv[2],"%d",&degree_dyn);
+  int nx; sscanf(argv[3],"%d",&nx);
+  int ny; sscanf(argv[4],"%d",&ny);
+  int nz; sscanf(argv[5],"%d",&nz);
 
   int px=0; int py=0; int pz=0;
-  if (argc==8){
-    sscanf(argv[5],"%d",&px);
-    sscanf(argv[6],"%d",&py);
-    sscanf(argv[7],"%d",&pz);
+  if (argc==9){
+    sscanf(argv[6],"%d",&px);
+    sscanf(argv[7],"%d",&py);
+    sscanf(argv[8],"%d",&pz);
   }
 
   try
     {
+      typedef double Real;
+
       const int dim = 3;
-      Dune::FieldVector<double,dim> L(1.0);
+      Dune::FieldVector<Real,dim> L(1.0);
       Dune::array<int,dim> N;
       N[0] = nx; N[1] = ny; N[2] = nz;
       std::bitset<dim> B(false);
@@ -343,38 +279,42 @@ int main(int argc, char** argv)
         yp = new YP(yasppartitions);
       }
 
-      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap,yp);
+      Dune::YaspGrid<dim> grid(L,N,B,overlap,helper.getCommunicator(),yp);
 
       typedef Dune::YaspGrid<dim> Grid;
       typedef Grid::LeafGridView GV;
 
       const GV& gv=grid.leafGridView();
-      typedef Parameter<GV,double> PROBLEM;
-      PROBLEM problem;
+
+      typedef ParameterBase<GV,Real> PROBLEM;
+      typedef ParameterFactory<PROBLEM,char> ProblemFactory;
+      ProblemFactory::template registerAll<GV,Real,char>(gv);
+      PROBLEM* pProblem = ProblemFactory::getInstance().createParameter( gv, choice );
 
       if (degree_dyn==0) {
-        test(gv);
+        //test_old_ccfv(gv);
+        test_ccfv(gv,*pProblem);
       }
       if (degree_dyn==1) {
         const int degree=1;
         typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
         FEMDG femdg;
         const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-        runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"CUBE",0,"SIPG","ON",2.0);
+        runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,*pProblem,"CUBE",0,"SIPG","ON",2.0);
       }
       if (degree_dyn==2) {
         const int degree=2;
         typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
         FEMDG femdg;
         const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-        runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"CUBE",0,"SIPG","ON",2.0);
+        runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,*pProblem,"CUBE",0,"SIPG","ON",2.0);
       }
       if (degree_dyn==3) {
         const int degree=3;
         typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
         FEMDG femdg;
         const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-        runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,problem,"CUBE",0,"SIPG","ON",2.0);
+        runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,*pProblem,"CUBE",0,"SIPG","ON",2.0);
       }
     }
   catch (Dune::Exception &e)
