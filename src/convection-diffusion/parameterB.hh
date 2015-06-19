@@ -34,6 +34,7 @@ public:
   b (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::RangeType v(0.0);
+    /*
     typename Traits::DomainType xglobal = e.geometry().global(x);
 
     if( xglobal[1]<1E-6 || xglobal[1]>1.0-1E-6)
@@ -47,7 +48,7 @@ public:
         v[0] = -5.0;
         v[1] = 0.0;
       }
-
+    */
     return v;
   }
 
@@ -80,6 +81,7 @@ public:
 
     if (xglobal[0]>1.0-1E-6 && xglobal[1]>0.5+1E-6)
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
+
 
     return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
   }
@@ -121,7 +123,7 @@ public:
 
 template<typename GV, typename RF>
 ParameterBase<GV,RF>* createParameterB(const GV& gv){
-  return NULL;//new ParameterB<GV,RF>();
+  return new ParameterB<GV,RF>();
 };
 
 #endif // DUNE_PARAMETERB_HH
