@@ -100,6 +100,7 @@ void driver (PROBLEM& problem,
   G g(gv,problem);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::constraints(bctype,gfs,cc,false);
+  Dune::PDELab::set_nonconstrained_dofs(cc,0.0,x);
 
   // typedef Dune::PDELab::ISTLBackend_CG_AMG_SSOR<GO> LS;
   // LS ls(gfs,5000,3);
