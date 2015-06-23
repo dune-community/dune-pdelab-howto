@@ -44,7 +44,7 @@
 // Problem setup and solution
 //===============================================================
 
-// generate a P1 function and output it
+// generate a composite P2/P1 function and output it
 template<typename GV, typename RF, int vOrder, int pOrder>
 void stokes (const GV& gv, std::string filename, const std::string method)
 {
@@ -103,20 +103,6 @@ void stokes (const GV& gv, std::string filename, const std::string method)
   GFS gfs(velocityGfs, pGfs);
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
-#if 0
-  // enable for output of DOFIndices and mapped container indices
-  {
-    Dune::PDELab::LocalFunctionSpace<GFS> lfs(gfs);
-    for (auto it = gv.template begin<0>(); it != gv.template end<0>(); ++it)
-      {compile
-          lfs.bind(*it);
-        for (int i = 0; i < lfs.size(); ++i)
-          std::cout << lfs.dofIndex(i) << "  " << gfs.ordering().map_index(lfs.dofIndex(i)) << std::endl;
-        std::cout << std::endl;
-      }
-  }
-#endif
-
   // <<<3>>> Make coefficient Vector and initialize it from a function
   typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
   V x(gfs);
@@ -162,8 +148,8 @@ void stokes (const GV& gv, std::string filename, const std::string method)
   gos.jacobian(x,m);
   std::cout << "=== jacobian assembly " <<  watch.elapsed() << " s" << std::endl;
 
-  std::ofstream matrix("Matrix");
-  Dune::printmatrix(matrix, m.base(), "M", "r", 6, 3);
+  // std::ofstream matrix("Matrix");
+  // Dune::printmatrix(matrix, m.base(), "M", "r", 6, 3);
 
   // evaluate residual w.r.t initial guess
   V r(gfs);
@@ -190,7 +176,6 @@ void stokes (const GV& gv, std::string filename, const std::string method)
   // make ISTL solver
   Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
   Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(m.base(),1.0);
-  typedef typename Dune::PDELab::istl::raw_type<M>::type ISTLM;
   Dune::BiCGSTABSolver<ISTLV> solver(opa,ilu0,1E-10,20000, verbose?2:1);
   Dune::InverseOperatorResult stat;
 #endif
@@ -199,20 +184,6 @@ void stokes (const GV& gv, std::string filename, const std::string method)
   r *= -1.0; // need -residual
   x = r;
   solver.apply(x.base(),r.base(),stat);
-
-  // // Create VTK Output
-  // using namespace Dune::TypeTree;
-  // typedef typename Dune::PDELab::GridFunctionSubSpace
-  //   <GFS,TypePath<0> > velocitySubGFS;
-  // velocitySubGFS velocitySubGfs(gfs);
-  // typedef typename Dune::PDELab::GridFunctionSubSpace
-  //   <GFS,TypePath<1> > pSubGFS;
-  // pSubGFS pSubGfs(gfs);
-
-  // typedef Dune::PDELab::VectorDiscreteGridFunction<velocitySubGFS,V> VDGF;
-  // VDGF vdgf(velocitySubGfs,x);
-  // typedef Dune::PDELab::DiscreteGridFunction<pSubGFS,V> PDGF;
-  // PDGF pdgf(pSubGfs,x);
 
   //    #ifdef MAKE_VTK_OUTPUT
   // output grid function with SubsamplingVTKWriter
