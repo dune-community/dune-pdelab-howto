@@ -114,7 +114,7 @@ void driver (BCType& bctype, GType& g, KType& k, A0Type& a0, FType& f, VType& v,
   UType u(rv,g);
 
   // make coefficent Vectors
-  typedef typename Dune::PDELab::BackendVectorSelector<MGFS,R>::Type X;
+  using X = Dune::PDELab::Backend::Vector<MGFS,R>;
   X x(mgfs,0.0);
 
   // do interpolation

@@ -96,7 +96,7 @@ void testp0 (const GV& gv)
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
   // make vector for old time step and initialize
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
+  using V = Dune::PDELab::Backend::Vector<GFS,RF>;
   V v(gfs);
 
   // test generic communication
@@ -119,7 +119,7 @@ void testp0 (const GV& gv)
     Dune::PDELab::LexicographicOrderingTag
   > PGFS;
   PGFS pgfs(gfs);
-  typedef typename Dune::PDELab::BackendVectorSelector<PGFS,RF>::Type PV;
+  using PV = Dune::PDELab::Backend::Vector<PGFS,RF>;
   PV pv(pgfs);
   typename PV::iterator pvi = pv.begin();
   for (size_t i=0; pvi!=pv.end(); i++, ++pvi) *pvi = i;
@@ -131,7 +131,7 @@ void testp0 (const GV& gv)
 	  GFS,PGFS> CGFS;              
   CGFS cgfs(gfs,pgfs);
   
-  typedef typename Dune::PDELab::BackendVectorSelector<CGFS,RF>::Type CV;
+  using CV = Dune::PDELab::Backend::Vector<CGFS,RF>;
   CV cv(cgfs);
   typename PV::iterator cvi = cv.begin();
   for (size_t i=0; cvi!=cv.end(); i++, ++cvi) *cvi = 100*i;
@@ -161,7 +161,7 @@ void testp1 (const GV& gv)
   std::cout << "=== function space setup " <<  watch.elapsed() << " s" << std::endl;
 
   // make vector for old time step and initialize
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
+  using V = Dune::PDELab::Backend::Vector<GFS,RF>;
   V v(gfs);
 
   // test generic communication
@@ -185,7 +185,7 @@ void testp1 (const GV& gv)
     Dune::PDELab::EntityBlockedOrderingTag
     > PGFS;
   PGFS pgfs(gfs);
-  typedef typename Dune::PDELab::BackendVectorSelector<PGFS,RF>::Type PV;
+  using PV = Dune::PDELab::Backend::Vector<PGFS,RF>;
   PV pv(pgfs);
   typename PV::iterator pvi = pv.begin();
   for (size_t i=0; pvi!=pv.end(); i++, ++pvi) *pvi = i;

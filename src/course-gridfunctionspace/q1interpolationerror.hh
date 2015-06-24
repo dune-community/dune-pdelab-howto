@@ -22,7 +22,7 @@ void q1interpolationerror (const GV& gv)
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);                    // make grid function space
 
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,R>::Type X;
+  using X = Dune::PDELab::Backend::Vector<GFS,R>;
   X x(gfs,0.0);                       // make coefficient vector
 
   U<GV,R> u(gv);                      // make analytic function object

@@ -16,7 +16,7 @@ void example01a_Qk (const GV& gv)
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
 
   // <<<3>>> Make DOF vector
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
+  using U = Dune::PDELab::Backend::Vector<GFS,Real>;
   U u(gfs,0.0); // initial value
 
   // <<<4>>> Make grid operator
