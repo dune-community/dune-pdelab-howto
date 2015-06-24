@@ -33,9 +33,7 @@
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/gridoperator/onestep.hh>
 #include<dune/pdelab/localoperator/twophaseccfv.hh>
-#include<dune/pdelab/backend/istlvectorbackend.hh>
-#include<dune/pdelab/backend/istlmatrixbackend.hh>
-#include<dune/pdelab/backend/istlsolverbackend.hh>
+#include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/newton/newton.hh>
 
 #include"twophasemfd.hh"
