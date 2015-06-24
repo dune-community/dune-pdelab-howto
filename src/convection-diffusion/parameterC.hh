@@ -36,6 +36,8 @@ public:
   }
 
 
+  std::string name() const {return "C";};
+
   //! tensor diffusion coefficient
   typename Traits::PermTensorType
   A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
@@ -113,7 +115,7 @@ public:
     if( xglobal[0] < 1E-6 )
       return 1.0;
     else
-      return 0.0;
+      return 2.0;
   }
 
   //! Neumann boundary condition

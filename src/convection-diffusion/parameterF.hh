@@ -37,6 +37,7 @@ private:
 public:
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
+  std::string name() const {return "F";};
 
   //! tensor diffusion coefficient
   typename Traits::PermTensorType

@@ -13,6 +13,7 @@ class ParameterB : public ParameterBase<GV,RF>
 public:
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
+  std::string name() const {return "B";};
 
   //! tensor diffusion coefficient
   typename Traits::PermTensorType

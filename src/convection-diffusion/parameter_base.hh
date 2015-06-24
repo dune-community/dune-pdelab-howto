@@ -14,6 +14,8 @@ public:
   typedef RF RangeFieldType;
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
+  virtual std::string name() const = 0;
+
   //! tensor diffusion coefficient
   virtual typename Traits::PermTensorType
   A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const = 0;

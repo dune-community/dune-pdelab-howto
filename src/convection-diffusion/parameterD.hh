@@ -58,6 +58,8 @@ public:
   }
 
 
+  std::string name() const {return "D";};
+
   //! tensor diffusion coefficient
   typename Traits::PermTensorType
   A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
