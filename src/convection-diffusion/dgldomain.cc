@@ -308,9 +308,15 @@ int main(int argc, char **argv)
     // Hint: Set the polynomial degree here
     const int degree=1;
 
+    bool foundGridManager = false;
+
     // UG version
 #if HAVE_UG
+#ifndef HAVE_SOME_GRID
+#define HAVE_SOME_GRID
+#endif
     if( "ug"==configuration.get<std::string>("grid.manager") ) {
+      foundGridManager = true;
       // make UG grid
       const int dim=2;
 
@@ -365,7 +371,11 @@ int main(int argc, char **argv)
 #endif
 
 #if HAVE_ALBERTA
+#ifndef HAVE_SOME_GRID
+#define HAVE_SOME_GRID
+#endif
     if( "alberta"==configuration.get<std::string>("grid.manager") ) {
+      foundGridManager = true;
       // make Alberta grid
       const int dim=2;
       typedef AlbertaLDomain::Grid GridType;
@@ -382,6 +392,19 @@ int main(int argc, char **argv)
       driverDG<GridType,FEMDG,degree,blocksize>(grid,gt,femdg,configuration);
     }
 #endif
+
+#ifndef HAVE_SOME_GRID
+#error No suitable gridmanager available.
+#endif
+
+    if(!foundGridManager)
+    {
+      std::cerr << "The grid manager "
+                << configuration.get<std::string>("grid.manager") << " is "
+                << "unrecognised (hint: was it found during configuration?)"
+                << std::endl;
+      return 1;
+    }
   }
   catch (std::exception & e) {
     std::cout << "STL ERROR: " << e.what() << std::endl;
