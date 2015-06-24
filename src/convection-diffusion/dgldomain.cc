@@ -1,52 +1,54 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 
+#include "config.h"           // file constructed by ./configure script
+
 #include <iostream>
 #include <sstream>
-#include "config.h"           // file constructed by ./configure script
+
 #include <dune/common/parallel/mpihelper.hh> // include mpi helper class
-#include <dune/grid/sgrid.hh> // load sgrid definition
-#include <dune/grid/onedgrid.hh>
-#include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
+#include <dune/common/parametertree.hh>
+#include <dune/common/parametertreeparser.hh>
+
 #if HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
 #endif
-#include<dune/grid/io/file/gmshreader.hh>
-#include<dune/istl/bvector.hh>
-#include<dune/istl/operators.hh>
-#include<dune/istl/solvers.hh>
-#include<dune/istl/preconditioners.hh>
-#include<dune/istl/io.hh>
-#include<dune/istl/paamg/amg.hh>
+#include <dune/grid/io/file/gmshreader.hh>
+#include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include <dune/grid/onedgrid.hh>
+#include <dune/grid/sgrid.hh> // load sgrid definition
+#if HAVE_UG
+#include <dune/grid/uggrid.hh>
+#endif
+
+#include <dune/istl/bvector.hh>
+#include <dune/istl/io.hh>
+#include <dune/istl/operators.hh>
+#include <dune/istl/paamg/amg.hh>
+#include <dune/istl/preconditioners.hh>
+#include <dune/istl/solvers.hh>
+
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/functionutilities.hh>
 #include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/backend/istl.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
+#include <dune/pdelab/constraints/conforming.hh>
+#include <dune/pdelab/finiteelementmap/monomfem.hh>
+#include <dune/pdelab/finiteelementmap/opbfem.hh>
+#include <dune/pdelab/finiteelementmap/p0fem.hh>
+#include <dune/pdelab/finiteelementmap/qkdg.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/constraints/common/constraints.hh>
-#include <dune/pdelab/constraints/conforming.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
-#include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/monomfem.hh>
-#include<dune/pdelab/finiteelementmap/opbfem.hh>
-#include<dune/pdelab/finiteelementmap/qkdg.hh>
-#include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
-#include<dune/pdelab/localoperator/convectiondiffusiondg.hh>
-#include<dune/pdelab/localoperator/errorindicatordg.hh>
+#include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
+#include <dune/pdelab/localoperator/convectiondiffusionparameter.hh>
+#include <dune/pdelab/localoperator/errorindicatordg.hh>
+#include <dune/pdelab/stationary/linearproblem.hh>
+#include <dune/pdelab/adaptivity/adaptivity.hh>
 
-#include<dune/pdelab/stationary/linearproblem.hh>
-
-#include<dune/pdelab/adaptivity/adaptivity.hh>
-
-#include<dune/common/parametertree.hh>
-#include<dune/common/parametertreeparser.hh>
-
-#include"../utility/gridexamples.hh"
+#include "../utility/gridexamples.hh"
 
 #include "reentrantcornerproblem.hh"
 
