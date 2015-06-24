@@ -45,6 +45,8 @@
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 #include<dune/pdelab/localoperator/convectiondiffusiondg.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionccfv.hh>
+#include<dune/pdelab/localoperator/darcy_CCFV.hh>
+#include<dune/pdelab/localoperator/permeability_adapter.hh>
 
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
@@ -113,11 +115,24 @@ void test_ccfv (const GV& gv,PROBLEM& problem)
 
   // make discrete function object
   if( graphics ){
+
     typedef Dune::PDELab::DiscreteGridFunction<GFS,V> UDGF;
     UDGF udgf(gfs,x);
     Dune::VTKWriter<GV> vtkwriter(gv);
-    vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF> >(udgf,"u_h"));
+    vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF> >(udgf,"pressure_h"));
+
+    typedef DarcyVelocityFromHeadCCFV<PROBLEM,UDGF> DarcyDGF;
+    DarcyDGF darcydgf(problem,udgf);
+    typedef Dune::PDELab::VTKGridFunctionAdapter<DarcyDGF> DarcyVTKDGF;
+    vtkwriter.addVertexData(std::make_shared<DarcyVTKDGF>(darcydgf,"velocity_h"));
+
+    typedef PermeabilityAdapter<PROBLEM> PermDGF;
+    PermDGF permdgf(gv,problem);
+    typedef Dune::PDELab::VTKGridFunctionAdapter<PermDGF> PermVTKDGF;
+    vtkwriter.addCellData(std::make_shared<PermVTKDGF>(permdgf,"logK"));
+
     vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
+
   }
 
 }
