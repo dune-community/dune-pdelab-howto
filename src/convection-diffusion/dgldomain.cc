@@ -15,8 +15,6 @@
 #endif
 #include <dune/grid/io/file/gmshreader.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
-#include <dune/grid/onedgrid.hh>
-#include <dune/grid/sgrid.hh> // load sgrid definition
 #if HAVE_UG
 #include <dune/grid/uggrid.hh>
 #endif
