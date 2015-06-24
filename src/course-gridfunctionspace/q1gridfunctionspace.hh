@@ -3,7 +3,7 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/finiteelementmap/qkfem.hh>
-#include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl.hh>
 
 template<typename GV> void q1GridFunctionSpace (const GV& gv) {
   typedef typename GV::Grid::ctype D;// domain type
