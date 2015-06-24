@@ -7,7 +7,7 @@
 #include<dune/pdelab/gridfunctionspace/vtk.hh>
 #include<dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
 #include<dune/pdelab/finiteelementmap/qkfem.hh>
-#include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl.hh>
 
 template<class GV> 
 void thinterpolate (const GV& gv)

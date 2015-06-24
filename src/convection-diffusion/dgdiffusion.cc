@@ -40,10 +40,7 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/backend/istlvectorbackend.hh>
-#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
-#include<dune/pdelab/backend/istlmatrixbackend.hh>
-#include<dune/pdelab/backend/istlsolverbackend.hh>
+#include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 #include<dune/pdelab/localoperator/convectiondiffusiondg.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>

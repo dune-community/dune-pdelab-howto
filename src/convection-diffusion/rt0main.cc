@@ -40,10 +40,7 @@
 #include<dune/pdelab/constraints/common/constraintsparameters.hh>
 #include<dune/pdelab/constraints/raviartthomas0.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
-#include<dune/pdelab/backend/istlvectorbackend.hh>
-#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
-#include<dune/pdelab/backend/istlmatrixbackend.hh>
-#include<dune/pdelab/backend/istlsolverbackend.hh>
+#include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/localoperator/diffusionmixed.hh>
