@@ -22,7 +22,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   Dune::PDELab::constraints( bctype, gfs, cc );               // assemble constraints
 
   // <<<4>>> make DOF vector
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
+  using U = Dune::PDELab::Backend::Vector<GFS,Real>;
   U u(gfs,0.0);
   typedef BCExtension<GV,Real> G;                        // boundary value + extension
   G g(gv);
@@ -60,7 +60,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
     typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,Dune::PDELab::NoConstraints,VBE> P0GFS;
     typedef Dune::PDELab::ExampleErrorEstimator ESTLOP;
     typedef Dune::PDELab::EmptyTransformation NoTrafo;
-    typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,Real>::Type U0;
+    using U0 = Dune::PDELab::Backend::Vector<P0GFS,Real>;
 
     // <<<8>>> Solve linear problem.
     slp.apply();

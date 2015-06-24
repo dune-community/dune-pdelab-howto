@@ -118,7 +118,7 @@ void stokes (const GV& gv, std::string filename, const std::string method)
 #endif
 
     // <<<3>>> Make coefficient Vector and initialize it from a function
-    typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
+    using V = Dune::PDELab::Backend::Vector<GFS,RF>;
     V x(gfs);
 
     typedef B_A<GV> BType;

@@ -134,7 +134,7 @@ void solve_dg (const GV& gv, const FEM& fem, std::string filename, const bool ve
     }
 
   // make coefficient Vector and initialize it from a function
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
+  using V = Dune::PDELab::Backend::Vector<GFS,RF>;
   V x0(gfs);
   x0 = 0.0;
   typedef K_A<GV,RF> KType;

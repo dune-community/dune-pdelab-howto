@@ -106,7 +106,7 @@ void driverDG ( Grid& grid,
 
 
   // make a degree of freedom vector;
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
+  using U = Dune::PDELab::Backend::Vector<GFS,Real>;
   U u(gfs,0.0);
   typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
 
@@ -204,7 +204,7 @@ void driverDG ( Grid& grid,
       typedef Dune::PDELab::EmptyTransformation NoTrafo;
       typedef Dune::PDELab::GridOperator<GFS,P0GFS,ESTLOP,MBE,Real,Real,Real,NoTrafo,NoTrafo> ESTGO;
       ESTGO estgo(gfs,p0gfs,estlop,mbe);
-      typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,Real>::Type U0;
+      using U0 = Dune::PDELab::Backend::Vector<P0GFS,Real>;
       U0 eta(p0gfs,0.0);
       estgo.residual(u,eta);
 
