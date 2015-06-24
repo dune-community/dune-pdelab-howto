@@ -5,42 +5,46 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include<math.h>
-#include<iostream>
-#include<vector>
-#include<map>
-#include<string>
 
-#include<dune/common/parallel/mpihelper.hh>
+#include<iostream>
+#include<map>
+#include<memory>
+#include<string>
+#include<vector>
+
+#include<math.h>
+
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/timer.hh>
-#include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+
 #include<dune/grid/io/file/gmshreader.hh>
-#include<dune/grid/yaspgrid.hh>
+#include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
+#include<dune/grid/yaspgrid.hh>
+
 #include<dune/istl/bvector.hh>
-#include<dune/istl/operators.hh>
-#include<dune/istl/solvers.hh>
-#include<dune/istl/preconditioners.hh>
 #include<dune/istl/io.hh>
+#include<dune/istl/operators.hh>
+#include<dune/istl/preconditioners.hh>
+#include<dune/istl/solvers.hh>
 #include<dune/istl/superlu.hh>
 
-#include<dune/pdelab/constraints/common/constraints.hh>
-#include<dune/pdelab/finiteelementmap/opbfem.hh>
-#include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include<dune/pdelab/gridfunctionspace/subspace.hh>
-#include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
-#include<dune/pdelab/gridfunctionspace/interpolate.hh>
+#include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
+#include<dune/pdelab/constraints/common/constraints.hh>
+#include<dune/pdelab/finiteelementmap/opbfem.hh>
+#include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
+#include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
+#include<dune/pdelab/gridfunctionspace/interpolate.hh>
+#include<dune/pdelab/gridfunctionspace/subspace.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/gridoperator/onestep.hh>
-#include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/instationary/onestep.hh>
 #include<dune/pdelab/localoperator/maxwelldg.hh>
 
@@ -140,6 +144,68 @@ private:
 // driver
 //===============================================================
 
+template<class FN, class GFS, class V>
+void do_output(FN& fn, const GFS& gfs, const V& x, int degree)
+{
+  using std::make_shared;
+  using std::max;
+  using Dune::TypeTree::TreePath;
+  using Dune::PDELab::DiscreteGridFunction;
+  using Dune::PDELab::GridFunctionSubSpace;
+  using Dune::PDELab::VTKGridFunctionAdapter;
+
+  using U0SUB = GridFunctionSubSpace<GFS, TreePath<0> >;
+  using U1SUB = GridFunctionSubSpace<GFS, TreePath<1> >;
+  using U2SUB = GridFunctionSubSpace<GFS, TreePath<2> >;
+  using U3SUB = GridFunctionSubSpace<GFS, TreePath<3> >;
+  using U4SUB = GridFunctionSubSpace<GFS, TreePath<4> >;
+  using U5SUB = GridFunctionSubSpace<GFS, TreePath<5> >;
+
+  U0SUB u0sub(gfs);
+  U1SUB u1sub(gfs);
+  U2SUB u2sub(gfs);
+  U3SUB u3sub(gfs);
+  U4SUB u4sub(gfs);
+  U5SUB u5sub(gfs);
+
+  using U0DGF = DiscreteGridFunction<U0SUB, V>;
+  using U1DGF = DiscreteGridFunction<U1SUB, V>;
+  using U2DGF = DiscreteGridFunction<U2SUB, V>;
+  using U3DGF = DiscreteGridFunction<U3SUB, V>;
+  using U4DGF = DiscreteGridFunction<U4SUB, V>;
+  using U5DGF = DiscreteGridFunction<U5SUB, V>;
+
+  U0DGF u0dgf(u0sub,x);
+  U1DGF u1dgf(u1sub,x);
+  U2DGF u2dgf(u2sub,x);
+  U3DGF u3dgf(u3sub,x);
+  U4DGF u4dgf(u4sub,x);
+  U5DGF u5dgf(u5sub,x);
+
+  int refinement = max(degree-1,0);
+  if (degree>=2) refinement+=1;
+
+  using GV = typename GFS::Traits::GridViewType;
+  const GV& gv = gfs.gridView();
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,refinement);
+
+  vtkwriter.addVertexData
+    (make_shared<VTKGridFunctionAdapter<U0DGF> >(u0dgf,"D_x"));
+  vtkwriter.addVertexData
+    (make_shared<VTKGridFunctionAdapter<U1DGF> >(u1dgf,"D_y"));
+  vtkwriter.addVertexData
+    (make_shared<VTKGridFunctionAdapter<U2DGF> >(u2dgf,"D_z"));
+  vtkwriter.addVertexData
+    (make_shared<VTKGridFunctionAdapter<U3DGF> >(u3dgf,"B_x"));
+  vtkwriter.addVertexData
+    (make_shared<VTKGridFunctionAdapter<U4DGF> >(u4dgf,"B_y"));
+  vtkwriter.addVertexData
+    (make_shared<VTKGridFunctionAdapter<U5DGF> >(u5dgf,"B_z"));
+
+  vtkwriter.pwrite(fn.getName(), "vtk", "", Dune::VTK::appendedraw);
+  fn.increment();
+}
+
 // example using explicit time-stepping
 template<class GV, class FEMDG, int degree>
 void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double timestep, std::string name, int modulo)
@@ -218,44 +284,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
 
   // <<<7>>> graphics for initial guess
   Dune::PDELab::FilenameHelper fn(name);
-  using namespace Dune::TypeTree;
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,TreePath<0> > U0SUB;
-  U0SUB u0sub(gfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,TreePath<1> > U1SUB;
-  U1SUB u1sub(gfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,TreePath<2> > U2SUB;
-  U2SUB u2sub(gfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,TreePath<3> > U3SUB;
-  U3SUB u3sub(gfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,TreePath<4> > U4SUB;
-  U4SUB u4sub(gfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<GFS,TreePath<5> > U5SUB;
-  U5SUB u5sub(gfs);
-  {
-    typedef Dune::PDELab::DiscreteGridFunction<U0SUB,V> U0DGF;
-    U0DGF u0dgf(u0sub,xold);
-    typedef Dune::PDELab::DiscreteGridFunction<U1SUB,V> U1DGF;
-    U1DGF u1dgf(u1sub,xold);
-    typedef Dune::PDELab::DiscreteGridFunction<U2SUB,V> U2DGF;
-    U2DGF u2dgf(u2sub,xold);
-    typedef Dune::PDELab::DiscreteGridFunction<U3SUB,V> U3DGF;
-    U3DGF u3dgf(u3sub,xold);
-    typedef Dune::PDELab::DiscreteGridFunction<U4SUB,V> U4DGF;
-    U4DGF u4dgf(u4sub,xold);
-    typedef Dune::PDELab::DiscreteGridFunction<U5SUB,V> U5DGF;
-    U5DGF u5dgf(u5sub,xold);
-    int refinement = std::max(degree-1,0);
-    if (degree>=2) refinement+=1;
-    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,refinement);
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U0DGF>(u0dgf,"D_x"));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U1DGF>(u1dgf,"D_y"));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U2DGF>(u2dgf,"D_z"));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U3DGF>(u3dgf,"B_x"));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U4DGF>(u4dgf,"B_y"));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U5DGF>(u5dgf,"B_z"));
-    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
-    fn.increment();
-  }
+  do_output(fn, gfs, xold, degree);
 
   // <<<8>>> time loop
   int counter=0;
@@ -270,31 +299,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
       // graphics
       counter++;
       if (counter%modulo==0)
-        {
-          typedef Dune::PDELab::DiscreteGridFunction<U0SUB,V> U0DGF;
-          U0DGF u0dgf(u0sub,x);
-          typedef Dune::PDELab::DiscreteGridFunction<U1SUB,V> U1DGF;
-          U1DGF u1dgf(u1sub,x);
-          typedef Dune::PDELab::DiscreteGridFunction<U2SUB,V> U2DGF;
-          U2DGF u2dgf(u2sub,x);
-          typedef Dune::PDELab::DiscreteGridFunction<U3SUB,V> U3DGF;
-          U3DGF u3dgf(u3sub,x);
-          typedef Dune::PDELab::DiscreteGridFunction<U4SUB,V> U4DGF;
-          U4DGF u4dgf(u4sub,x);
-          typedef Dune::PDELab::DiscreteGridFunction<U5SUB,V> U5DGF;
-          U5DGF u5dgf(u5sub,x);
-          int refinement = std::max(degree-1,0);
-          if (degree>=2) refinement+=1;
-          Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,refinement);
-          vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U0DGF>(u0dgf,"D_x"));
-          vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U1DGF>(u1dgf,"D_y"));
-          vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U2DGF>(u2dgf,"D_z"));
-          vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U3DGF>(u3dgf,"B_x"));
-          vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U4DGF>(u4dgf,"B_y"));
-          vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<U5DGF>(u5dgf,"B_z"));
-          vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
-          fn.increment();
-        }
+        do_output(fn, gfs, x, degree);
 
       xold = x;
       time += dt;
@@ -347,7 +352,8 @@ int main(int argc, char** argv)
         Dune::array<int,dim> N(Dune::fill_array<int,dim>(max_level));
         std::bitset<dim> periodic(false);
         int overlap=1;
-        Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,periodic,overlap);
+        Dune::YaspGrid<dim>
+          grid(L,N,periodic,overlap,helper.getCommunicator());
         typedef Dune::YaspGrid<dim>::LeafGridView GV;
         const GV& gv=grid.leafGridView();
         if (p==0)
