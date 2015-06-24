@@ -52,6 +52,7 @@
 #include<dune/pdelab/common/vtkexport.hh>
 
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
+#include<dune/pdelab/localoperator/permeability_adapter.hh>
 #include<dune/pdelab/localoperator/diffusionmixed.hh>
 
 #include "parameter_factory.hh"
@@ -138,8 +139,8 @@ void driver( const GV& gv,
   X x(mgfs,0.0);
 
   // do interpolation
-  Dune::PDELab::interpolate(u,mgfs,x);
-  Dune::PDELab::set_nonconstrained_dofs(t,0.0,x);  // clear interior
+  // Dune::PDELab::interpolate(u,mgfs,x);
+  // Dune::PDELab::set_nonconstrained_dofs(t,0.0,x);  // clear interior
 
   // make grid operator
   typedef Dune::PDELab::DiffusionMixed<PROBLEM> LOP;
@@ -180,7 +181,11 @@ void driver( const GV& gv,
   typedef Dune::PDELab::GridFunctionSubSpace<MGFS,Dune::TypeTree::TreePath<1> > PSUB;
   PSUB psub(mgfs);                   // pressure subspace
 
-  // make discrete function object
+  // make discrete function objects
+  typedef PermeabilityAdapter<PROBLEM> PermDGF;
+  PermDGF permdgf(gv,problem);
+  typedef Dune::PDELab::VTKGridFunctionAdapter<PermDGF> PermVTKDGF;
+
   typedef Dune::PDELab::DiscreteGridFunctionPiola<VSUB,X> RT0DGF;
   RT0DGF rt0dgf(vsub,x);
 
@@ -191,6 +196,7 @@ void driver( const GV& gv,
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,1); // plot result
   vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<P0DGF> >(p0dgf,"pressure"));
   vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<RT0DGF> >(rt0dgf,"velocity"));
+  vtkwriter.addCellData(std::make_shared<PermVTKDGF>(permdgf,"logK"));
   vtkwriter.write(filename,Dune::VTK::ascii);
   std::cout << "View result using:\n paraview --data=" << filename << ".vtu \n" << std::endl;
 }
@@ -223,23 +229,23 @@ int main(int argc, char** argv)
 
     // read command line arguments
     if (argc!=5) {
-      std::cout << "usage: rt0main <maxlevel> <problem>" << std::endl;
-      std::cout << "       <mesh> = cube | simplex" << std::endl;
-      std::cout << "       <dim> = 2 | 3" << std::endl;
-      std::cout << "       <maxlevel> = a nonnegative integer" << std::endl;
+      std::cout << "usage: rt0main <problem> <dim> <geometry> <maxlevel>" << std::endl;
       std::cout << "       <problem> = A | B | ... | E " << std::endl;
+      std::cout << "       <dim> = 2 | 3" << std::endl;
+      std::cout << "       <mesh> = cube | simplex" << std::endl;
+      std::cout << "       <maxlevel> = a nonnegative integer" << std::endl;
       std::cout << std::endl;
-      std::cout << "e.g.: ./rt0main cube 2 5 C" << std::endl;
+      std::cout << "e.g.: ./rt0main C 2 cube 5" << std::endl;
       std::cout << std::endl;
       return 0;
     }
 
 
     typedef double Real;
-    std::string mesh(argv[1]);
+    char choice; sscanf(argv[1],"%c",&choice);
     int dim_dyn; sscanf(argv[2],"%d",&dim_dyn);
-    int maxlevel; sscanf(argv[3],"%d",&maxlevel);
-    char choice; sscanf(argv[4],"%c",&choice);
+    std::string mesh(argv[3]);
+    int maxlevel; sscanf(argv[4],"%d",&maxlevel);
 
     // YaspGrid 2D test
     if (mesh=="cube" && dim_dyn==2) {
