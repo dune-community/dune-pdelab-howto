@@ -1,29 +1,14 @@
-PDELab Howto 2.0
+PDELab Howto 2.4
 ================
 
-This is the 2.0.0 release of PDELab, a PDE discretization toolkit built
+This is the 2.4-dev release of PDELab, a PDE discretization toolkit built
 on top of the DUNE framework [0]. License information can be found in the file
 COPYING.
 
-PDELab 2.0 is a major release containing a large number of new features and improvements.
-Most importantly, the DOF handling and the interface to linear algebra have been completely
-rewritten, bringing improvements like faster and more memory-efficient matrix pattern
-construction, easier iteration over DOF vectors, built-in support for applying arbitrary
-permutations to the DOF order, among others. Another important new feature is the ability
-to do computations on non-overlapping grids without storing the ghost DOFs, reducing both
-the parallelization overhead and the complexity of the underlying code, in particular when
-using AMG. Finally, it is now possible to do adaptive calculations with nested function spaces.
-For details and an overview of the bug fixes in this release, see the changelog below.
+PDELab 2.4 is a minor release.
 
 If you need help, please ask on our mailinglist [1]. Bugs can also be submitted
 to the PDELab bugtracker at [2] instead.
-
-******************************************************************************************
-This release of PDELab is designed to work with the 2.3.1+ release of the DUNE libraries.
-
-WARNING: Do not try to use PDELab 2.0 with the 2.3.0 release of the core modules as there
-         are known issues, most importantly the AMG will not work!
-******************************************************************************************
 
 The dune-pdelab-howto package only contains example programs. You also need the
 actual library package dune-pdelab and the support library dune-typetree.
@@ -32,12 +17,16 @@ actual library package dune-pdelab and the support library dune-typetree.
 Changes
 =======
 
-PDELab 3.0
+PDELab 2.4
 ----------
 
 - PDELab has updated its minimum compiler requirements. You now need a compiler that is at
-  least compatible with GCC 4.5 in C++11 mode.
+  least compatible with GCC 4.7 in C++11 mode.
 
+- PDELab 2.4-dev requires at least version 2.4-dev of the core modules.
+
+- In stride with the changes to the core modules, a lot of backwards compatibility code for
+  older compilers was removed.
 
 PDELab 2.0
 ----------
