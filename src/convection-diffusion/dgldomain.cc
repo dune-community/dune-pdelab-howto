@@ -3,6 +3,7 @@
 #include "config.h"           // file constructed by ./configure script
 
 #include <iostream>
+#include <memory>
 #include <sstream>
 
 #include <dune/common/parallel/mpihelper.hh> // include mpi helper class
@@ -141,7 +142,9 @@ void driverDG ( Grid& grid,
         std::stringstream fullname;
         fullname << filename_base << "_prestep" << step;
         // plot analytical solution on the refined gridview
-        vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(pre_udgf,"pre_u_h"));
+        vtkwriter.addVertexData
+          (std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >
+             (pre_udgf,"pre_u_h"));
         vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
       }
 
@@ -221,10 +224,18 @@ void driverDG ( Grid& grid,
       //Dune::VTKWriter<GV> vtkwriter(gv);
       std::stringstream fullname;
       fullname << filename_base << "_step" << step;
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf,"u_h"));
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<ESOL>(exactsolution,"u"));
-      vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<Difference>(difference,"u-u_h"));
-      vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(udgf0,"estimated error"));
+      vtkwriter.addVertexData
+        (std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >
+           (udgf,"u_h"));
+      vtkwriter.addVertexData
+        (std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<ESOL> >
+           (exactsolution,"u"));
+      vtkwriter.addCellData
+        (std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<Difference> >
+           (difference,"u-u_h"));
+      vtkwriter.addCellData
+        (std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF0> >
+           (udgf0,"estimated error"));
       vtkwriter.write(fullname.str(),Dune::VTK::appendedraw);
 
       // error control
