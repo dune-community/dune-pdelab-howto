@@ -26,7 +26,7 @@
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/localoperator/stokesdg.hh>
+#include <dune/pdelab/localoperator/dgnavierstokes.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
@@ -119,13 +119,14 @@ void stokes (const GV& gv, std::string filename, const std::string method)
   // <<<4>>> Make grid Function operator
   watch.reset();
   const double mu = 1.0;
+  const double rho = 1.0;
   typedef typename Dune::PDELab::DefaultInteriorPenalty<RF> PenaltyTerm;
   PenaltyTerm ip_term(method,mu);
 
-  typedef Dune::PDELab::StokesDGParameters<GV,RF,FType,BType,VType,PType,PenaltyTerm>
+  typedef Dune::PDELab::DGNavierStokesParameters<GV,RF,FType,BType,VType,PType,false,false,PenaltyTerm>
     LocalDGOperatorParameters;
-  LocalDGOperatorParameters lop_params(method, mu, f,b,v,p, ip_term);
-  typedef Dune::PDELab::StokesDG<LocalDGOperatorParameters> LocalDGOperator;
+  LocalDGOperatorParameters lop_params(method,mu,rho,f,b,v,p,ip_term);
+  typedef Dune::PDELab::DGNavierStokes<LocalDGOperatorParameters> LocalDGOperator;
   const int superintegration_order = 0;
   LocalDGOperator lop(lop_params,superintegration_order);
 
