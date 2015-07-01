@@ -343,7 +343,7 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_HagenPoiseuille BoundaryFunction;
+      typedef BCTypeParamHagenPoiseuille BoundaryFunction;
       BoundaryFunction boundary_function;
       typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
       NeumannFlux neumann_flux(gv);
