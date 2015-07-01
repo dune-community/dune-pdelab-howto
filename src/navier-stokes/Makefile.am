@@ -22,8 +22,7 @@ endif
 noinst_PROGRAMS = $(SUPERLUPROGRAMS)
 
 noinst_HEADERS =				\
-	cgstokes_initial.hh			\
-	sproblemA.hh
+	navierstokes_initial.hh
 
 #	novlp_test
 

@@ -21,7 +21,7 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/float_cmp.hh>
-#include<dune/common/static_assert.hh>
+#include<dune/common/typetraits.hh>
 #include<dune/grid/yaspgrid.hh>
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
@@ -56,7 +56,7 @@
 #include<dune/pdelab/localoperator/cg_stokes.hh>
 #include <dune/common/parametertreeparser.hh>
 #include<dune/pdelab/newton/newton.hh>
-#include "cgstokes_initial.hh"
+#include "navierstokes_initial.hh"
 
 //===============================================================
 // The driver for all examples
@@ -178,8 +178,8 @@ void navierstokes
     PDGF pdgf(pressureSubGfs,x0);
 
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
+    vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<PDGF> >(pdgf,"p"));
+    vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<VDGF> >(vdgf,"v"));
     vtkwriter.write(filename + std::string("_dgf"),Dune::VTK::appendedraw);
   }
 
@@ -220,7 +220,8 @@ int main(int argc, char** argv)
                 << "Turbulence Tube  3D - UG - P2/P1         :   TU3" << std::endl
                 << "L-Shape Domain   2D - UG - P2/P1         :   LU2" << std::endl
                 << std::endl << std::endl
-                << "You might also want to take a look at the configuration file \"cgstokes.ini\"."
+                << "You might also want to take a look at the configuration file \"cgstokes.ini\"" << std::endl
+                << "and at the header file \"navierstokes_initial.hh\"."
                 << std::endl << std::endl;
       exit(1);
     }
@@ -269,7 +270,7 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,p-1> P_FEM;
       P_FEM pFem(gv);
 
-      typedef HagenPoiseuilleVelocity<GV,RF,dim> InitialVelocity;
+      typedef HagenPoiseuilleVelocityBox<GV,RF,dim> InitialVelocity;
       typedef ZeroScalarFunction<GV,RF> InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
@@ -278,13 +279,15 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_HagenPoiseuille BoundaryFunction;
+      typedef BCTypeParamHagenPoiseuille BoundaryFunction;
       BoundaryFunction boundary_function;
       typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
       NeumannFlux neumann_flux(gv);
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
       SourceFunction source_function(gv);
 
+      // parameter class for the Stokes equations
+      // template parameter navier is set to false by default
       typedef Dune::PDELab::NavierStokesDefaultParameters
         <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
@@ -292,7 +295,7 @@ int main(int argc, char** argv)
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
 
-      // solve problem
+      // solve problem (Stokes equations by default)
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"hagenpoiseuille_yasp_Q2Q1_2d", parameters, vFem, pFem, initial_solution);
     }
@@ -328,7 +331,7 @@ int main(int argc, char** argv)
 
       typedef double RF;
 
-      typedef HagenPoiseuilleVelocity<GV,RF,dim> InitialVelocity;
+      typedef HagenPoiseuilleVelocityBox<GV,RF,dim> InitialVelocity;
       typedef ZeroScalarFunction<GV,RF> InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
@@ -337,13 +340,15 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_HagenPoiseuille BoundaryFunction;
+      typedef BCTypeParamHagenPoiseuille BoundaryFunction;
       BoundaryFunction boundary_function;
       typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
       NeumannFlux neumann_flux(gv);
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
       SourceFunction source_function(gv);
 
+      // parameter class for the Stokes equations
+      // template parameter navier is set to false by default
       typedef Dune::PDELab::NavierStokesDefaultParameters
         <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
@@ -351,7 +356,7 @@ int main(int argc, char** argv)
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
 
-      // solve problem
+      // solve problem (Stokes equations by default)
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"hagenpoiseuille_alu_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
@@ -389,24 +394,24 @@ int main(int argc, char** argv)
       V_FEM vFem(gv); P_FEM pFem(gv);
 
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
-      typedef TU_Velocity<GV,RF,2> InitialVelocity;
+      typedef TUVelocity<GV,RF,2> InitialVelocity;
 
       typedef ZeroFunction InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
 
-      InitialVelocity init_velocity(gv);
-      init_velocity.setTime(1.0); // Take v(t=1.0) as initial velocity!
+      InitialVelocity init_velocity(gv,1.5); // take maximum inflow velocity equal to 1.5
+      init_velocity.setTime(4.0); // Take v(t=4.0) as initial velocity!
 
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_TU BoundaryFunction;
+      typedef BCTypeParamTU BoundaryFunction;
       typedef PressureDropFlux<GV,RF> NeumannFlux;
 
       // Domain parameters:
       const int tube_direction = 0; // Tube in x-axes direction
-      const RF tube_length = 5.0;
+      const RF tube_length = 2.2;
       const RF tube_origin = 0.0;
 
       const RF boundary_pressure = configuration.get<double>("boundaries.pressure");
@@ -416,6 +421,8 @@ int main(int argc, char** argv)
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
       SourceFunction source_function(gv);
 
+      // parameter class for the Stokes equations
+      // template parameter navier is set to false by default
       typedef Dune::PDELab::NavierStokesDefaultParameters
         <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
@@ -423,7 +430,7 @@ int main(int argc, char** argv)
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
 
-      // solve problem
+      // solve problem (Stokes equations by default)
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"turbtube_ug_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
@@ -461,19 +468,19 @@ int main(int argc, char** argv)
       V_FEM vFem(gv); P_FEM pFem(gv);
 
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
-      typedef LU_Velocity<GV,RF,2> InitialVelocity;
+      typedef LUVelocity<GV,RF,2> InitialVelocity;
 
       typedef ZeroFunction InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
 
       InitialVelocity init_velocity(gv);
-      init_velocity.setTime(1.0); // Take v(t=1.0) as initial velocity!
+      init_velocity.setTime(2.0); // Take v(t=2.0) as initial velocity!
 
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_LU BoundaryFunction;
+      typedef BCTypeParamLU BoundaryFunction;
       typedef PressureDropFlux<GV,RF> NeumannFlux;
 
       // Domain parameters:
@@ -488,6 +495,8 @@ int main(int argc, char** argv)
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
       SourceFunction source_function(gv);
 
+      // parameter class for the Stokes equations
+      // template parameter navier is set to false by default
       typedef Dune::PDELab::NavierStokesDefaultParameters
         <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
@@ -495,7 +504,7 @@ int main(int argc, char** argv)
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
 
-      // solve problem
+      // solve problem (Stokes equations by default)
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"lshape_ug_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
@@ -533,7 +542,7 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
       V_FEM vFem(gv); P_FEM pFem(gv);
 
-      typedef HagenPoiseuilleVelocity<GV,RF,3> InitialVelocity;
+      typedef HagenPoiseuilleVelocityCylindrical<GV,RF> InitialVelocity;
       typedef ZeroScalarFunction<GV,RF> InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
@@ -542,7 +551,7 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_HagenPoiseuille BoundaryFunction;
+      typedef BCTypeParamHagenPoiseuille BoundaryFunction;
       typedef HagenPoiseuilleZeroFlux<GV,RF> NeumannFlux;
 
       BoundaryFunction boundary_function;
@@ -551,6 +560,8 @@ int main(int argc, char** argv)
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
       SourceFunction source_function(gv);
 
+      // parameter class for the Stokes equations
+      // template parameter navier is set to false by default
       typedef Dune::PDELab::NavierStokesDefaultParameters
         <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
@@ -558,7 +569,7 @@ int main(int argc, char** argv)
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
 
-      // solve problem
+      // solve problem (Stokes equations by default)
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"hagenpoiseuille_ug_P2P1_3d", parameters, vFem, pFem, initial_solution);
     }
@@ -595,23 +606,24 @@ int main(int argc, char** argv)
       typedef double RF;
 
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
-      typedef TU_Velocity<GV,RF,3> InitialVelocity;
+      typedef TUVelocity<GV,RF,3> InitialVelocity;
 
       typedef ZeroFunction InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
 
       ZeroFunction zero_function(gv);
-      InitialVelocity init_velocity(gv);
+      InitialVelocity init_velocity(gv,2.25); // take maximum inflow velocity equal to 2.25
+      init_velocity.setTime(4.0); // take v(t=4.0) as initial velocity!
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_TU BoundaryFunction;
+      typedef BCTypeParamTU3D BoundaryFunction;
       typedef PressureDropFlux<GV,RF> NeumannFlux;
 
       // Domain parameters:
-      const int tube_direction = 2; // Tube in z-axes direction
-      const RF tube_length = 5.0;
+      const int tube_direction = 0; // Tube in x-axes direction
+      const RF tube_length = 2.5;
       const RF tube_origin = 0.0;
 
       const RF boundary_pressure = configuration.get<double>("boundaries.pressure");
@@ -621,6 +633,8 @@ int main(int argc, char** argv)
       typedef ZeroVectorFunction<GV,RF,dim> SourceFunction;
       SourceFunction source_function(gv);
 
+      // parameter class for the Stokes equations
+      // template parameter navier is set to false by default
       typedef Dune::PDELab::NavierStokesDefaultParameters
         <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
         LOPParameters;
@@ -628,7 +642,7 @@ int main(int argc, char** argv)
         (configuration.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
 
-      // solve problem
+      // solve problem (Stokes equations by default)
       navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
         (gv,"turbtube_ug_P2P1_3d", parameters, vFem, pFem, initial_solution);
 

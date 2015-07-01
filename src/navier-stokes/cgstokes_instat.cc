@@ -21,12 +21,12 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/float_cmp.hh>
-#include<dune/common/static_assert.hh>
+#include<dune/common/typetraits.hh>
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
 #include<dune/grid/yaspgrid.hh>
-#include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include<dune/grid/io/file/vtk/vtksequencewriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
@@ -60,7 +60,7 @@
 #include<dune/pdelab/instationary/onestep.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
-#include "cgstokes_initial.hh"
+#include "navierstokes_initial.hh"
 
 //===============================================================
 // The driver for all examples
@@ -174,27 +174,19 @@ void navierstokes
   std::cout << "=== Finished interpolation:" << timer.elapsed() << std::endl;
   timer.reset();
 
-  Dune::PDELab::FilenameHelper fn(filename.c_str());
-  {
-    // Generate functions suitable for VTK output
-    typedef typename Dune::PDELab::GridFunctionSubSpace
-      <GFS,Dune::TypeTree::TreePath<0> > VelocitySubGFS;
-    VelocitySubGFS velocitySubGfs(gfs);
-    typedef typename Dune::PDELab::GridFunctionSubSpace
-      <GFS,Dune::TypeTree::TreePath<1> > PressureSubGFS;
-    PressureSubGFS pressureSubGfs(gfs);
-    typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
-    VDGF vdgf(velocitySubGfs,xold);
-    typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
-    PDGF pdgf(pressureSubGfs,xold);
-
-    // Output grid function with SubsamplingVTKWriter
-    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
-    vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
-    fn.increment();
-  }
+  typedef typename Dune::PDELab::GridFunctionSubSpace
+    <GFS,Dune::TypeTree::TreePath<0> > VelocitySubGFS;
+  VelocitySubGFS velocitySubGfs(gfs);
+  typedef typename Dune::PDELab::GridFunctionSubSpace
+    <GFS,Dune::TypeTree::TreePath<1> > PressureSubGFS;
+  PressureSubGFS pressureSubGfs(gfs);
+  typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
+  VDGF vdgf(velocitySubGfs,xold);
+  typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
+  PDGF pdgf(pressureSubGfs,xold);
+  Dune::SubsamplingVTKSequenceWriter<GV> vtkwriter(gv,2,filename.c_str(),filename.c_str(),"");
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<VDGF> >(vdgf,"v"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<PDGF> >(pdgf,"p"));
 
   timer.reset();
 
@@ -202,6 +194,8 @@ void navierstokes
   Real final_time = parser.get("temporal.time",double(1.0));
   Real dt = parser.get("temporal.tau",double(0.1));
   Real dt_min = 1e-6;
+  // graphics for initial guess
+  vtkwriter.write(time,Dune::VTK::appendedraw);
   V x(gfs,0.0);
   Dune::PDELab::interpolate(initial_solution,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
@@ -210,44 +204,15 @@ void navierstokes
       // do time step
       osm.apply(time,dt,xold,initial_solution,x);
 
-      {
-        // Generate functions suitable for VTK output
-        typedef typename Dune::PDELab::GridFunctionSubSpace
-          <GFS,Dune::TypeTree::TreePath<0> > VelocitySubGFS;
-        VelocitySubGFS velocitySubGfs(gfs);
-        typedef typename Dune::PDELab::GridFunctionSubSpace
-          <GFS,Dune::TypeTree::TreePath<1> > PressureSubGFS;
-        PressureSubGFS pressureSubGfs(gfs);
-        typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
-        VDGF vdgf(velocitySubGfs,x);
-        typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
-        PDGF pdgf(pressureSubGfs,x);
-
-        // Output grid function with SubsamplingVTKWriter
-        Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,2);
-        vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF>(pdgf,"p"));
-        vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<VDGF>(vdgf,"v"));
-        vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
-        fn.increment();
-      }
-
       xold = x;
       time += dt;
+
+      vtkwriter.write(time,Dune::VTK::appendedraw);
     }
 
   std::cout << "=== Total time:" << timer.elapsed() << std::endl;
 
   // Compute norm of final solution
-  typedef typename Dune::PDELab::GridFunctionSubSpace
-    <GFS,Dune::TypeTree::TreePath<0> > VelocitySubGFS;
-  VelocitySubGFS velocitySubGfs(gfs);
-  typedef typename Dune::PDELab::GridFunctionSubSpace
-    <GFS,Dune::TypeTree::TreePath<1> > PressureSubGFS;
-  PressureSubGFS pressureSubGfs(gfs);
-  typedef Dune::PDELab::VectorDiscreteGridFunction<VelocitySubGFS,V> VDGF;
-  VDGF vdgf(velocitySubGfs,x);
-  typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
-  PDGF pdgf(pressureSubGfs,x);
   typename PDGF::Traits::RangeType l1norm(0);
   Dune::PDELab::integrateGridFunction(pdgf,l1norm,q);
   std::cout << std::setw(12) << std::setprecision(7) << std::scientific
@@ -281,7 +246,8 @@ int main(int argc, char** argv)
                 << "Turbulence Tube  2D - UG - P2/P1         :   TU2" << std::endl
                 << "L-Shape Domain   2D - UG - P2/P1         :   LU2" << std::endl
                 << std::endl << std::endl
-                << "You might also want to take a look at the configuration file \"cgstokes_instat.ini\"."
+                << "You might also want to take a look at the configuration file \"cgstokes_instat.ini\"" << std::endl
+                << "and at the header file \"navierstokes_initial.hh\"."
                 << std::endl << std::endl;
       exit(1);
     }
@@ -336,24 +302,24 @@ int main(int argc, char** argv)
       V_FEM vFem(gv); P_FEM pFem(gv);
 
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
-      typedef TU_Velocity<GV,RF,2> InitialVelocity;
+      typedef TUVelocity<GV,RF,2> InitialVelocity;
 
       typedef ZeroFunction InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
 
       ZeroFunction zero_function(gv);
-      InitialVelocity init_velocity(gv);
+      InitialVelocity init_velocity(gv,1.5); // take maximum inflow velocity equal to 1.5
 
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_TU BoundaryFunction;
+      typedef BCTypeParamTU BoundaryFunction;
       typedef PressureDropFlux<GV,RF> NeumannFlux;
 
       // Domain parameters:
       const int tube_direction = 0; // Tube in x-axes direction
-      const RF tube_length = 5.0;
+      const RF tube_length = 2.2;
       const RF tube_origin = 0.0;
 
       BoundaryFunction boundary_function;
@@ -362,14 +328,16 @@ int main(int argc, char** argv)
       typedef ZeroVectorFunction<GV,RF,2> SourceFunction;
       SourceFunction source_function(gv);
 
+      // parameter class for the Navier-Stokes equations
+      // template parameter navier has to be set to true
       typedef Dune::PDELab::NavierStokesDefaultParameters
-        <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
+        <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux,true>
         LOPParameters;
       LOPParameters parameters
         (config_parser.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
 
-      // solve problem
+      // solve problem (Navier-Stokes equations)
       navierstokes<q>
         (gv,"turbtube_ug_P2P1_2d", parameters, config_parser, vFem, pFem, initial_solution);
     }
@@ -407,7 +375,7 @@ int main(int argc, char** argv)
       V_FEM vFem(gv); P_FEM pFem(gv);
 
       typedef ZeroScalarFunction<GV,RF> ZeroFunction;
-      typedef LU_Velocity<GV,RF,2> InitialVelocity;
+      typedef LUVelocity<GV,RF,2> InitialVelocity;
       typedef ZeroFunction InitialPressure;
       typedef Dune::PDELab::CompositeGridFunction<InitialVelocity,InitialPressure>
         InitialSolution;
@@ -417,7 +385,7 @@ int main(int argc, char** argv)
       InitialPressure init_pressure(gv);
       InitialSolution initial_solution(init_velocity,init_pressure);
 
-      typedef BCTypeParam_TU BoundaryFunction;
+      typedef BCTypeParamLU BoundaryFunction;
       typedef PressureDropFlux<GV,RF> NeumannFlux;
 
       // Domain parameters:
@@ -431,14 +399,16 @@ int main(int argc, char** argv)
       typedef ZeroVectorFunction<GV,RF,2> SourceFunction;
       SourceFunction source_function(gv);
 
+      // parameter class for the Navier-Stokes equations
+      // template parameter navier has to be set to true"
       typedef Dune::PDELab::NavierStokesDefaultParameters
-        <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux>
+        <GV,RF,SourceFunction,BoundaryFunction,InitialSolution,NeumannFlux,true>
         LOPParameters;
       LOPParameters parameters
         (config_parser.sub("physics"),source_function,boundary_function,
          initial_solution,neumann_flux);
 
-      // solve problem
+      // solve problem (Navier-Stokes equations)
       navierstokes<q>
         (gv,"lshape_ug_P2P1_2d", parameters, config_parser, vFem, pFem, initial_solution);
     }
