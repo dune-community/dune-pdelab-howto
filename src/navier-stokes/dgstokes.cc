@@ -62,16 +62,16 @@ void stokes (const GV& gv, std::string filename, const std::string method)
   static const unsigned int vBlockSize = Dune::MonomImp::Size<dim,vOrder>::val;
   static const unsigned int pBlockSize = Dune::MonomImp::Size<dim,pOrder>::val;
 
-  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking,vBlockSize> VVectorBackend;
-  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking,pBlockSize> PVectorBackend;
-  typedef Dune::PDELab::ISTLVectorBackend<> VelocityVectorBackend;
+  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::none,vBlockSize> VVectorBackend;
+  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::none,pBlockSize> PVectorBackend;
+  typedef Dune::PDELab::istl::VectorBackend<> VelocityVectorBackend;
 
 #if 1
   // this creates a flat backend (i.e. blocksize == 1)
-  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking> VectorBackend;
+  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::none> VectorBackend;
 #else
   // this creates a backend with static blocks matching the size of the LFS
-  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking> VectorBackend;
+  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::fixed> VectorBackend;
 #endif
   // velocity
   Dune::dinfo << "--- v^dim" << std::endl;
@@ -159,21 +159,22 @@ void stokes (const GV& gv, std::string filename, const std::string method)
 
   bool verbose = true;
 
-  typedef typename Dune::PDELab::istl::raw_type<M>::type ISTLM;
-  typedef typename Dune::PDELab::istl::raw_type<V>::type ISTLV;
+  using Dune::PDELab::Backend::native;
+  typedef Dune::PDELab::Backend::Native<M> ISTLM;
+  typedef Dune::PDELab::Backend::Native<V> ISTLV;
 #ifdef USE_SUPER_LU // use lu decomposition as solver
 #if HAVE_SUPERLU
   // make ISTL solver
-  Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
-  Dune::SuperLU<ISTLM> solver(m.base(), verbose?1:0);
+  Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
+  Dune::SuperLU<ISTLM> solver(native(m), verbose?1:0);
   Dune::InverseOperatorResult stat;
 #else
 #error No superLU support, please install and configure it.
 #endif
 #else // Use iterative solver
   // make ISTL solver
-  Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
-  Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(m.base(),1.0);
+  Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
+  Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(native(m),1.0);
   Dune::BiCGSTABSolver<ISTLV> solver(opa,ilu0,1E-10,20000, verbose?2:1);
   Dune::InverseOperatorResult stat;
 #endif
@@ -181,7 +182,7 @@ void stokes (const GV& gv, std::string filename, const std::string method)
   // solve the jacobian system
   r *= -1.0; // need -residual
   x = r;
-  solver.apply(x.base(),r.base(),stat);
+  solver.apply(native(x),native(r),stat);
 
   //    #ifdef MAKE_VTK_OUTPUT
   // output grid function with SubsamplingVTKWriter

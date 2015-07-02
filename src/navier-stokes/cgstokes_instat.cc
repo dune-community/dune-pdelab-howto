@@ -88,7 +88,7 @@ void navierstokes
   ///////////////////////////////////////////////////////
   // Construct grid function spaces
   typedef Dune::PDELab::ConformingDirichletConstraints ConstraintsAssembler;
-  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking,1>
+  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::none,1>
     VectorBackend;
   typedef Dune::PDELab::VectorGridFunctionSpace
     <GV,V_FEM,dim,VectorBackend,VectorBackend,ConstraintsAssembler> PGFS_V_GFS;

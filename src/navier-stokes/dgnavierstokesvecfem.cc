@@ -60,7 +60,7 @@ void navierstokesvecfem(
   typedef Dune::PDELab::ISTLVectorBackend<> PVectorBackend;
 
   // this creates a flat backend (i.e. blocksize == 1)
-  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking> VectorBackend;
+  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::none> VectorBackend;
 
   // velocity grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,vFEM,Dune::PDELab::NoConstraints,VelocityVectorBackend> velocityGFS;
@@ -120,7 +120,7 @@ void navierstokesvecfem(
   // random initial guess
   V x(gfs);
   for(typename V::size_type i=0; i<x.N(); i++)
-    Dune::PDELab::istl::raw(x)[i] = (static_cast<RF>(random()))/RAND_MAX;
+    Dune::PDELab::Backend::native(x)[i] = (static_cast<RF>(random()))/RAND_MAX;
 
   // linear solver
   typedef Dune::PDELab::ISTLBackend_SEQ_GMRES_ILU0 LinearSolver;
