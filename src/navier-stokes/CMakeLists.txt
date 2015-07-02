@@ -1,6 +1,7 @@
 if(SUPERLU_FOUND)
 add_executable(cgstokes cgstokes.cc)
 add_executable(cgstokes_instat cgstokes_instat.cc)
+add_executable(dgnavierstokesvecfem dgnavierstokesvecfem.cc)
 add_executable(dgstokes dgstokes.cc)
 endif()
 
