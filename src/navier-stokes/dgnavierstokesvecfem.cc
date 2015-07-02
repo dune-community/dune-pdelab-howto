@@ -14,8 +14,8 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/grid/yaspgrid.hh>
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
+#if HAVE_DUNE_ALUGRID
+#include<dune/alugrid/grid.hh>
 #endif
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
@@ -155,7 +155,8 @@ int main(int argc, char** argv)
               << "Call with command line parameter to execute examples:" << std::endl << std::endl
               << "            Setup                        | Parameter " << std::endl
               << "-----------------------------------------------------" << std::endl
-              << "Hagen-Poiseuille 2D - YaspGrid - BDM1/Q0 : HY2 " << std::endl
+              << "Hagen-Poiseuille 2D - YaspGrid   - BDM1/Q0 : HY2 " << std::endl
+              << "Hagen-Poiseuille 2D - AluSimplex - BDM1/P0 : HA2 " << std::endl
               << std::endl << std::endl
               << "You might also want to take a look at the configuration file \"navierstokes_initial.hh\"."
               << std::endl << std::endl;
@@ -195,14 +196,61 @@ int main(int argc, char** argv)
         (gv,"hagenpoiseuille_yasp_BDM1Q0_2d",vFem,pFem);
     }
 
-  return 0;
+    //==================================================================//
+    // NOTE
+    // -----
+    // At the moment BDM1 on triangles seems to be broken.
+    // Therefore we have the switch below deactivated.
+    //==================================================================//
+
+#if 0
+#if HAVE_DUNE_ALUGRID
+    // ALU Grid Hagen-Poiseuille test
+    if(example_switch.find("HA2") != std::string::npos) {
+      typedef double RF;
+      // make grid
+      const int dim = 2;
+      typedef Dune::ALUGrid<dim, dim, Dune::simplex, Dune::conforming> Grid;
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ll(0.0);
+      Dune::FieldVector<Grid::ctype, Grid::dimension> ur(1.0);
+      std::array<unsigned int, Grid::dimension> elements;
+      std::fill(elements.begin(), elements.end(), 20);
+
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
+
+      // get view
+      typedef Grid::LeafGridView GV;
+      // TODO Why not const reference?
+      const GV& gv = grid->leafGridView();
+
+      // make finite element map
+      const int vOrder = 1;
+      const int pOrder = vOrder - 1;
+
+      typedef Grid::ctype DF;
+      // This doesn't work yet !!!
+      typedef Dune::PDELab::BrezziDouglasMariniLocalFiniteElementMap<GV,DF,RF,vOrder> vFEM;
+
+      // typedef Dune::PDELab::BrezziDouglasMariniLocalFiniteElementMap<GV,DF,RF,vOrder,Dune::GeometryType::simplex> vFEM;
+      vFEM vFem(gv);
+      typedef Dune::PDELab::MonomLocalFiniteElementMap<DF,RF,dim,pOrder> pFEM;
+      pFEM pFem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
+
+      // solve problem
+      navierstokesvecfem<GV,RF,vFEM,pFEM>
+        (gv,"hagenpoiseuille_alu_BDM1P0_2d",vFem,pFem);
+    }
+#endif
+#endif
+
+    return 0;
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-  return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-  return 1;
+    return 1;
   }
 }
