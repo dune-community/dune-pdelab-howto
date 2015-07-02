@@ -220,7 +220,6 @@ int main(int argc, char** argv)
 
       // get view
       typedef Grid::LeafGridView GV;
-      // TODO Why not const reference?
       const GV& gv = grid->leafGridView();
 
       // make finite element map
@@ -228,10 +227,7 @@ int main(int argc, char** argv)
       const int pOrder = vOrder - 1;
 
       typedef Grid::ctype DF;
-      // This doesn't work yet !!!
       typedef Dune::PDELab::BrezziDouglasMariniLocalFiniteElementMap<GV,DF,RF,vOrder> vFEM;
-
-      // typedef Dune::PDELab::BrezziDouglasMariniLocalFiniteElementMap<GV,DF,RF,vOrder,Dune::GeometryType::simplex> vFEM;
       vFEM vFem(gv);
       typedef Dune::PDELab::MonomLocalFiniteElementMap<DF,RF,dim,pOrder> pFEM;
       pFEM pFem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
