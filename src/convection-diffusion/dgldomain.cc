@@ -88,8 +88,9 @@ void driverDG ( Grid& grid,
   // make grid function space
   // note: adaptivity relies on leaf grid view object being updated by the grid on adaptation
   typedef Dune::PDELab::NoConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend<> VBE1;
-  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking,blocksize> VBE;
+  typedef Dune::PDELab::istl::VectorBackend<> VBE1;
+  typedef Dune::PDELab::istl::VectorBackend
+    <Dune::PDELab::istl::Blocking::fixed,blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEMDG,CON,VBE> GFS;
   GFS gfs(grid.leafGridView(),femdg);
   gfs.update();
