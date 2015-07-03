@@ -33,7 +33,6 @@ noinst_PROGRAMS =				\
 	reentrantcorner				\
 	diffusion				\
 	scalabilitytest				\
-	dgldomain				\
 	ldomain
 
 # mimetic is broken (probably irreparably...)
@@ -204,6 +203,14 @@ ldomain_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLA
 ldomain_LDFLAGS= $(AM_LDFLAGS) $(SUPERLU_LDFLAGS)
 ldomain_CPPFLAGS=$(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS)
 
+# enable if either alberta or ug is present.  having it twice in here should
+# not cause any problems.
+if ALBERTA
+noinst_PROGRAMS += dgldomain
+endif ALBERTA
+if UG
+noinst_PROGRAMS += dgldomain
+endif UG
 dgldomain_SOURCES = dgldomain.cc
 dgldomain_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(DUNEMPICPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(DUNE_ALUGRID_CPPFLAGS)
 dgldomain_LDADD = $(DUNEMPILDFLAGS) $(DUNEMPILIBS) $(SUPERLU_LIBS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(DUNE_ALUGRID_LDFLAGS) $(DUNE_ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
