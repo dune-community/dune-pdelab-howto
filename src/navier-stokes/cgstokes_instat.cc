@@ -48,8 +48,7 @@
 #include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/backend/istl.hh>
-#include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
-#include<dune/pdelab/localoperator/cg_stokes.hh>
+#include<dune/pdelab/localoperator/taylorhoodnavierstokes.hh>
 #include <dune/common/parametertreeparser.hh>
 
 #include<dune/pdelab/localoperator/l2.hh>

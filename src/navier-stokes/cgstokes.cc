@@ -53,7 +53,7 @@
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istl.hh>
-#include<dune/pdelab/localoperator/cg_stokes.hh>
+#include<dune/pdelab/localoperator/taylorhoodnavierstokes.hh>
 #include <dune/common/parametertreeparser.hh>
 #include<dune/pdelab/newton/newton.hh>
 #include "navierstokes_initial.hh"
