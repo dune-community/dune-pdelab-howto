@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 /** \file
-    \brief Solve Problems A-F using lowest order Raviart-Thomas elements (sequential)
+    \brief Solve Problems A-F using lowest order Raviart-Thomas elements (sequential, works only with a direct solver only)
 */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -44,9 +44,8 @@
 #include<dune/pdelab/constraints/common/constraintsparameters.hh>
 #include<dune/pdelab/constraints/raviartthomas0.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
-#include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
-#include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
@@ -96,7 +95,7 @@ void driver( const GV& gv,
 
 
   // make a grid function space
-  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::istl::VectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,PFEM,Dune::PDELab::NoConstraints,VBE> P0GFS;
   P0GFS p0gfs(gv,pfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,VFEM,Dune::PDELab::RT0Constraints,VBE> RT0GFS;
@@ -162,7 +161,7 @@ void driver( const GV& gv,
   // set up solver
   typedef typename M::BaseT ISTLM;
 #if HAVE_SUPERLU
-  Dune::SuperLU<ISTLM> solver(Dune::PDELab::istl::raw(m), true);
+  Dune::SuperLU<ISTLM> solver(Dune::PDELab::Backend::native(m), true);
   Dune::InverseOperatorResult stat;
 
   X r(mgfs,0.0);
@@ -247,7 +246,7 @@ int main(int argc, char** argv)
     std::string mesh(argv[3]);
     int maxlevel; sscanf(argv[4],"%d",&maxlevel);
 
-    // YaspGrid 2D test
+    // 2D YASP
     if (mesh=="cube" && dim_dyn==2) {
 
       const int dim = 2;
@@ -273,7 +272,7 @@ int main(int argc, char** argv)
 
     }
 
-    // YaspGrid 3D test
+    // 3D YASP
     if (mesh=="cube" && dim_dyn==3) {
 
       const int dim = 3;
@@ -293,7 +292,7 @@ int main(int argc, char** argv)
 
       typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,Real,0,Dune::GeometryType::cube> RT0FEM;
 
-      RT0FEM rt0fem(grid.leafGridView());
+      RT0FEM rt0fem(gv);
 
       std::stringstream filename;
       filename << "rt0q_Yasp3d_problem" << choice << "_level" << maxlevel;
@@ -301,6 +300,7 @@ int main(int argc, char** argv)
     }
 
 #if HAVE_DUNE_ALUGRID
+    // 2D ALUGRID
     if (mesh=="simplex" && dim_dyn==2) {
 
       const int dim = 2;
@@ -309,21 +309,21 @@ int main(int argc, char** argv)
       Dune::FieldVector<Grid::ctype, Grid::dimension> ll(0.0);
       Dune::FieldVector<Grid::ctype, Grid::dimension> ur(1.0);
       std::array<unsigned int, Grid::dimension> elements;
-       std::fill(elements.begin(), elements.end(), 1);
+      std::fill(elements.begin(), elements.end(), 1);
 
       std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(ll, ur, elements);
       grid->globalRefine(maxlevel);
 
       // instantiate finite element maps
       typedef Grid::LeafGridView GV;
-      const GV gv = grid.leafGridView();
+      const GV gv = grid->leafGridView();
 
       typedef Dune::PDELab::P0LocalFiniteElementMap<Grid::ctype, Real, dim> P0FEM;
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
 
       typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV, Grid::ctype, Real, 0, Dune::GeometryType::simplex> RT0FEM;
 
-      RT0FEM rt0fem(grid->leafGridView());
+      RT0FEM rt0fem(gv);
 
       std::stringstream filename;
       filename << "rt0q_Alu2d_problem" << choice << "_level" << maxlevel;
@@ -353,7 +353,7 @@ int main(int argc, char** argv)
 
       typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV, Grid::ctype, Real, 0, Dune::GeometryType::simplex> RT0FEM;
 
-      RT0FEM rt0fem(grid->leafGridView());
+      RT0FEM rt0fem(gv);
 
       std::stringstream filename;
       filename << "rt0q_Ug2d_problem" << choice << "_level" << maxlevel;
@@ -362,6 +362,7 @@ int main(int argc, char** argv)
 #endif
 
 #if HAVE_ALBERTA
+    // 2D ALBERTA
     if (mesh=="simplex" && dim_dyn==2) {
 
       // make grid
@@ -377,14 +378,14 @@ int main(int argc, char** argv)
 
       // instantiate finite element maps
       typedef Grid::LeafGridView GV;
-      const GV gv = grid.leafGridView();
+      const GV gv = grid->leafGridView();
 
       typedef Dune::PDELab::P0LocalFiniteElementMap<Grid::ctype, Real, dim> P0FEM;
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
 
       typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV, Grid::ctype, Real, 0, Dune::GeometryType::simplex> RT0FEM;
 
-      RT0FEM rt0fem(grid->leafGridView());
+      RT0FEM rt0fem(gv);
 
       std::stringstream filename;
       filename << "rt0q_Alberta2d_problem" << choice << "_level" << maxlevel;
