@@ -37,9 +37,8 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
-#include<dune/pdelab/backend/istlmatrixbackend.hh>
 #include<dune/pdelab/backend/istlsolverbackend.hh>
 
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
@@ -55,6 +54,9 @@
 
 
 const bool graphics = true;
+const int maxIter = 1000;        // maximal number of linear solver iterations
+int verbose = 2;                 // verbosity level of the linear solver
+const double reduction = 1.0e-10; // reduction level of the linear solver
 
 template<typename GV,typename PROBLEM>
 void test_ccfv (const GV& gv,PROBLEM& problem)
@@ -73,7 +75,7 @@ void test_ccfv (const GV& gv,PROBLEM& problem)
   FEM fem(Dune::GeometryType(Dune::GeometryType::cube,dim)); // works only for cubes
 
   // make function space
-  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::istl::VectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,Dune::PDELab::P0ParallelConstraints,VBE> GFS;
   watch.reset();
   GFS gfs(gv,fem);
@@ -108,9 +110,9 @@ void test_ccfv (const GV& gv,PROBLEM& problem)
   // typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GO> LS;
   // LS ls(gfs,5000,3);
   typedef Dune::PDELab::ISTLBackend_OVLP_CG_SSORk<GFS,CC> LS;
-  LS ls(gfs,cc,10,5,1);
+  LS ls(gfs,cc,maxIter,5,verbose);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
-  SLP slp(go,ls,x,1e-6);
+  SLP slp(go,ls,x,reduction);
   slp.apply();
 
   // make discrete function object
@@ -161,9 +163,7 @@ void runDG ( const GV& gv,
 
   // make grid function space
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  const Dune::PDELab::ISTLParameters::Blocking blocking
-    = Dune::PDELab::ISTLParameters::static_blocking;
-  typedef Dune::PDELab::ISTLVectorBackend<blocking,blocksize> VBE;
+  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::fixed,blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
@@ -191,26 +191,25 @@ void runDG ( const GV& gv,
   U u(gfs,0.0);
 
   // make linear solver and solve problem
-  int verbose=1;
   if (gv.comm().rank()!=0) verbose=0;
   if (method=="SIPG")
     {
       typedef Dune::PDELab::ISTLBackend_OVLP_CG_SSORk<GFS,CC> LS;
-      LS ls(gfs,cc,10,5,verbose);
+      LS ls(gfs,cc,maxIter,5,verbose);
       // typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
       // LS ls(10000,1);
       typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
-      SLP slp(go,ls,u,1e-6);
+      SLP slp(go,ls,u,reduction);
       slp.apply();
     }
   else
     {
       typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<GFS,CC> LS;
-      LS ls(gfs,cc,10,5,verbose);
+      LS ls(gfs,cc,maxIter,5,verbose);
       // typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LS;
       // LS ls(10000,1);
       typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
-      SLP slp(go,ls,u,1e-6);
+      SLP slp(go,ls,u,reduction);
       slp.apply();
     }
 
@@ -242,7 +241,10 @@ int main(int argc, char** argv)
     if(helper.rank()==0) {
       std::cout << "usage option 1: " << argv[0] << " <problem> <order> <nx> <ny> <nz>" << std::endl;
       std::cout << "usage option 2: " << argv[0] << " <problem> <order> <nx> <ny> <nz> <px> <py> <pz>" << std::endl;
-      std::cout << "       <problem> = A | C | E " << std::endl;
+      std::cout << "       <problem> = A | B | C | D | E | F " << std::endl;
+      std::cout << std::endl;
+      std::cout << "example 1: " << argv[0] << " C 0 64 64 32" << std::endl;
+      std::cout << "example 2: mpirun -np 8 " << argv[0] << " C 0 64 64 32 2 2 2" << std::endl;
     }
     return 0;
   }
