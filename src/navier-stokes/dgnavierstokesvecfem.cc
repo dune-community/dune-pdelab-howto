@@ -56,8 +56,8 @@ void navierstokesvecfem(
   const unsigned int dim = GV::dimension;
 
   // vector backend for velocity and pressure
-  typedef Dune::PDELab::ISTLVectorBackend<> VelocityVectorBackend;
-  typedef Dune::PDELab::ISTLVectorBackend<> PVectorBackend;
+  typedef Dune::PDELab::istl::VectorBackend<> VelocityVectorBackend;
+  typedef Dune::PDELab::istl::VectorBackend<> PVectorBackend;
 
   // this creates a flat backend (i.e. blocksize == 1)
   typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::none> VectorBackend;
