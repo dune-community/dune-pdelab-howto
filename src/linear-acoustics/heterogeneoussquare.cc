@@ -18,7 +18,7 @@
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
+#include<dune/common/typetraits.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
@@ -204,12 +204,11 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   // <<<2>>> Make grid function space
   const int blocksize = Dune::PB::PkSize<degree,dim>::value;
   typedef Dune::PDELab::NoConstraints CON;
-  typedef Dune::PDELab::ISTLVectorBackend
-    <Dune::PDELab::ISTLParameters::static_blocking,blocksize> VBE;
+  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::fixed,blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEMDG,CON,VBE> GFSDG;
   GFSDG gfsdg(gv,femdg);
   typedef Dune::PDELab::PowerGridFunctionSpace
-    <GFSDG,dim+1,Dune::PDELab::ISTLVectorBackend<> > GFS;
+    <GFSDG,dim+1,Dune::PDELab::istl::VectorBackend<> > GFS;
   GFS gfs(gfsdg);
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
@@ -277,8 +276,9 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
     int refinement = std::max(degree-1,0);
     if (degree>=2) refinement+=2;
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,refinement);
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"u"));
+    vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"u"));
     vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
+
     fn.increment();
   }
 
@@ -300,7 +300,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
           int refinement = std::max(degree-1,0);
           if (degree>=2) refinement+=2;
           Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,refinement);
-          vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"u"));
+          vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"u"));
           vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
           fn.increment();
         }
@@ -358,9 +358,10 @@ int main(int argc, char** argv)
         Dune::array<int,dim> N(Dune::fill_array<int,dim>(20));
         std::bitset<dim> periodic(false);
         int overlap=1;
-        Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
+        Dune::YaspGrid<dim> grid(L,N,periodic,overlap,helper.getCommunicator());
+
         for (int i=0; i<max_level; i++) grid.globalRefine(1);
-        typedef Dune::YaspGrid<2>::LeafGridView GV;
+        typedef Dune::YaspGrid<dim>::LeafGridView GV;
         const GV& gv=grid.leafGridView();
         if (p==0)
           {
