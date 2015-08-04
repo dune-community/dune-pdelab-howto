@@ -23,27 +23,24 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
-#include<dune/pdelab/localoperator/diffusionccfv.hh>
-#include<dune/pdelab/localoperator/laplacedirichletccfv.hh>
-#include<dune/pdelab/backend/istlvectorbackend.hh>
-#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
-#include<dune/pdelab/backend/istlmatrixbackend.hh>
-#include<dune/pdelab/backend/istlsolverbackend.hh>
+#include<dune/pdelab/localoperator/convectiondiffusionccfv.hh>
+#include<dune/pdelab/localoperator/darcy_CCFV.hh>
+#include<dune/pdelab/localoperator/permeability_adapter.hh>
+#include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 
-#include"problemA.hh"
-#include"problemB.hh"
-#include"problemC.hh"
-#include"problemD.hh"
-#include"problemE.hh"
-#include"problemF.hh"
+#include"parameterA.hh"
 
-template<class GV>
+template<typename GV>
 void test (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
   typedef double RF;
   const int dim = GV::dimension;
+
+  typedef ParameterA<GV,RF> PROBLEM;
+  PROBLEM problem;
+
   Dune::Timer watch;
 
   // instantiate finite element maps
@@ -60,23 +57,13 @@ void test (const GV& gv)
 
   // local operator
   watch.reset();
-  typedef k_A<GV,RF> KType;
-  KType k(gv);
-  // Dune::FieldVector<double,dim> correlation_length;
-  // correlation_length = 1.0/64.0;
-  // KType k(gv,correlation_length,0.5,0.0,5000,-1083);
-  typedef A0_A<GV,RF> A0Type;
-  A0Type a0(gv);
-  typedef F_A<GV,RF> FType;
-  FType f(gv);
-  typedef B_A<GV> BType;
-  BType b(gv);
-  typedef J_A<GV,RF> JType;
-  JType j(gv);
-  typedef G_A<GV,RF> GType;
-  GType g(gv);
-  typedef Dune::PDELab::DiffusionCCFV<KType,A0Type,FType,BType,JType,GType> LOP;
-  LOP lop(k,a0,f,b,j,g);
+
+  typedef Dune::PDELab::ConvectionDiffusionCCFV<PROBLEM> LOP;
+  LOP lop(problem);
+
+  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
+  G g(gv,problem);
+
   std::cout << "=== local operator setup " <<  watch.elapsed() << " s" << std::endl;
 
   // make constraints map and initialize it from a function
@@ -113,8 +100,21 @@ void test (const GV& gv)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  vtkwriter.pwrite("single_phase_yasp2d_CCFV","vtk","",Dune::VTK::appendedraw);
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(dgf,"solution"));
+
+  typedef DarcyVelocityFromHeadCCFV<PROBLEM,DGF> DarcyDGF;
+  DarcyDGF darcydgf(problem,dgf);
+  typedef Dune::PDELab::VTKGridFunctionAdapter<DarcyDGF> DarcyVTKDGF;
+  vtkwriter.addVertexData(std::make_shared<DarcyVTKDGF>(darcydgf,"darcyvelocity"));
+
+  typedef PermeabilityAdapter<PROBLEM> PermDGF;
+  PermDGF permdgf(gv,problem);
+  typedef Dune::PDELab::VTKGridFunctionAdapter<PermDGF> PermVTKDGF;
+  vtkwriter.addCellData(std::make_shared<PermVTKDGF>(permdgf,"logK"));
+
+  std::stringstream filename;
+  filename << "single_phase_yasp" << dim << "d_CCFV";
+  vtkwriter.pwrite(filename.str(),"vtk","",Dune::VTK::appendedraw);
 }
 
 int main(int argc, char** argv)
@@ -149,7 +149,7 @@ int main(int argc, char** argv)
       N[0] = nx; N[1] = ny;
       std::bitset<dim> B(false);
       int overlap=3;
-      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<dim> grid(L,N,B,overlap);
       //      grid.globalRefine(6);
 
       // solve problem :)
@@ -157,7 +157,7 @@ int main(int argc, char** argv)
     }
 
     // Q1, 3d
-    if (false)
+    if (true)
     {
       // make grid
       const int dim = 3;
@@ -166,7 +166,7 @@ int main(int argc, char** argv)
       N[0] = nx; N[1] = ny; N[2] = nz;
       std::bitset<dim> B(false);
       int overlap=1;
-      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<dim> grid(L,N,B,overlap);
 
       // solve problem :)
       test(grid.leafGridView());

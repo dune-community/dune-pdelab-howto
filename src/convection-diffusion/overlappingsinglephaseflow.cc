@@ -11,7 +11,7 @@
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
+#include<dune/common/typetraits.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/yaspgrid.hh>
 
@@ -25,12 +25,11 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
-#include<dune/pdelab/backend/istlvectorbackend.hh>
-#include<dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
-#include<dune/pdelab/backend/istlmatrixbackend.hh>
-#include<dune/pdelab/backend/istlsolverbackend.hh>
+#include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionfem.hh>
+#include<dune/pdelab/localoperator/darcy_FEM.hh>
+#include<dune/pdelab/localoperator/permeability_adapter.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 
 #define PROBLEM_A
@@ -118,8 +117,20 @@ void driver (PROBLEM& problem,
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  vtkwriter.write(filename,Dune::VTK::appendedraw);
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(dgf,"solution"));
+
+  typedef DarcyVelocityFromHeadFEM<PROBLEM,GFS,V> DarcyDGF;
+  DarcyDGF darcydgf(problem,gfs,x);
+  typedef Dune::PDELab::VTKGridFunctionAdapter<DarcyDGF> DarcyVTKDGF;
+  vtkwriter.addVertexData(std::make_shared<DarcyVTKDGF>(darcydgf,"darcyvelocity"));
+
+  typedef PermeabilityAdapter<PROBLEM> PermDGF;
+  PermDGF permdgf(gv,problem);
+  typedef Dune::PDELab::VTKGridFunctionAdapter<PermDGF> PermVTKDGF;
+  vtkwriter.addCellData(std::make_shared<PermVTKDGF>(permdgf,"logK"));
+
+
+  vtkwriter.pwrite(filename,"vtk","",Dune::VTK::appendedraw);
 }
 
 //===============================================================
@@ -201,7 +212,7 @@ int main(int argc, char** argv)
       }
 
     // Q1, 3d
-    if (false)
+    if (true)
       {
         // make grid
         const int dim = 3;
