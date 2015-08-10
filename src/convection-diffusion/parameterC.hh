@@ -1,11 +1,10 @@
 #ifndef DUNE_PARAMETERC_HH
 #define DUNE_PARAMETERC_HH
 
-#include "parameter_base.hh"
-
 template<typename GV, typename RF>
-class ParameterC : public ParameterBase<GV,RF>
+class ParameterC
 {
+  const GV gv;
   RF K000;
   RF K001;
   RF K010;
@@ -19,10 +18,11 @@ class ParameterC : public ParameterBase<GV,RF>
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
 public:
+  typedef RF RangeFieldType;
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
 
-  ParameterC()
+  ParameterC( const GV gv_ ) : gv(gv_)
   {
     K000=20.0;
     K001=0.002;
@@ -133,10 +133,5 @@ public:
   }
 };
 
-
-template<typename GV, typename RF>
-ParameterBase<GV,RF>* createParameterC(const GV& gv){
-  return new ParameterC<GV,RF>();
-};
 
 #endif // DUNE_PARAMETERC_HH

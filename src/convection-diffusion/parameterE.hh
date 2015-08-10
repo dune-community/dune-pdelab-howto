@@ -3,19 +3,23 @@
 
 #include<math.h>
 
-#include "parameter_base.hh"
-
 template<typename GV, typename RF>
-class ParameterE : public ParameterBase<GV,RF>
+class ParameterE
 {
 private:
+  const GV gv;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
 public:
+  typedef RF RangeFieldType;
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
 
   std::string name() const {return "E";};
+
+  ParameterE( const GV gv_ ) : gv(gv_)
+  {
+  }
 
   //! tensor diffusion coefficient
   typename Traits::PermTensorType
@@ -83,13 +87,6 @@ public:
     return 0.0;
   }
 };
-
-
-template<typename GV, typename RF>
-ParameterBase<GV,RF>* createParameterE(const GV& gv){
-  return new ParameterE<GV,RF>();
-};
-
 
 
 #endif // DUNE_PARAMETERE_HH

@@ -54,8 +54,13 @@
 #include<dune/pdelab/localoperator/permeability_adapter.hh>
 #include<dune/pdelab/localoperator/diffusionmixed.hh>
 
-#include "parameter_factory.hh"
 
+//===============================================================
+// Choose among one of the problems A-F here:
+//===============================================================
+#include "parameterC.hh"
+#define PARAMETERCLASS ParameterC
+#define PROBLEMNAME "C"
 
 //===============================================================
 // dummy boundary condition function for the pressure component
@@ -201,24 +206,6 @@ void driver( const GV& gv,
 }
 
 
-template<typename GV,typename PFEM,typename VFEM>
-void dispatcher(const GV& gv,
-                const char choice,
-                const PFEM& pfem,
-                const VFEM& vfem,
-                std::string filename){
-
-  typedef typename PFEM::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType Real;
-  typedef ParameterBase<GV,Real> PROBLEM;
-  typedef ParameterFactory<PROBLEM,char> ProblemFactory;
-  ProblemFactory::template registerAll<GV,Real,char>(gv);
-  PROBLEM* pProblem = nullptr;
-  pProblem = ProblemFactory::getInstance().createParameter( gv, choice );
-  driver(gv,pfem,vfem,*pProblem,filename);
-  return;
-
-}
-
 
 int main(int argc, char** argv)
 {
@@ -227,24 +214,22 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc, argv);
 
     // read command line arguments
-    if (argc!=5) {
-      std::cout << "usage: rt0main <problem> <dim> <geometry> <maxlevel>" << std::endl;
-      std::cout << "       <problem> = A | B | ... | E " << std::endl;
+    if (argc!=4) {
+      std::cout << "usage: rt0main <dim> <geometry> <maxlevel>" << std::endl;
       std::cout << "       <dim> = 2 | 3" << std::endl;
       std::cout << "       <mesh> = cube | simplex" << std::endl;
       std::cout << "       <maxlevel> = a nonnegative integer" << std::endl;
       std::cout << std::endl;
-      std::cout << "e.g.: ./rt0main C 2 cube 5" << std::endl;
+      std::cout << "e.g.: ./rt0main 2 cube 5" << std::endl;
       std::cout << std::endl;
       return 0;
     }
 
 
     typedef double Real;
-    char choice; sscanf(argv[1],"%c",&choice);
-    int dim_dyn; sscanf(argv[2],"%d",&dim_dyn);
-    std::string mesh(argv[3]);
-    int maxlevel; sscanf(argv[4],"%d",&maxlevel);
+    int dim_dyn; sscanf(argv[1],"%d",&dim_dyn);
+    std::string mesh(argv[2]);
+    int maxlevel; sscanf(argv[3],"%d",&maxlevel);
 
     // 2D YASP
     if (mesh=="cube" && dim_dyn==2) {
@@ -267,8 +252,10 @@ int main(int argc, char** argv)
       RT0FEM rt0fem(gv);
 
       std::stringstream filename;
-      filename << "rt0q_Yasp2d_problem" << choice << "_level" << maxlevel;
-      dispatcher(gv, choice, p0fem, rt0fem, filename.str());
+      filename << "rt0q_" << PROBLEMNAME << "_Yasp2d_level" << maxlevel;
+      typedef PARAMETERCLASS<GV,Real> Problem;
+      Problem problem(gv);
+      driver(gv,p0fem,rt0fem,problem,filename.str());
 
     }
 
@@ -291,12 +278,14 @@ int main(int argc, char** argv)
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::cube,dim));
 
       typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,Real,0,Dune::GeometryType::cube> RT0FEM;
-
       RT0FEM rt0fem(gv);
 
       std::stringstream filename;
-      filename << "rt0q_Yasp3d_problem" << choice << "_level" << maxlevel;
-      dispatcher(gv, choice, p0fem, rt0fem, filename.str());
+      filename << "rt0q_" << PROBLEMNAME << "_Yasp3d_level" << maxlevel;
+      typedef PARAMETERCLASS<GV,Real> Problem;
+      Problem problem(gv);
+      driver(gv,p0fem,rt0fem,problem,filename.str());
+
     }
 
 #if HAVE_DUNE_ALUGRID
@@ -326,8 +315,11 @@ int main(int argc, char** argv)
       RT0FEM rt0fem(gv);
 
       std::stringstream filename;
-      filename << "rt0q_Alu2d_problem" << choice << "_level" << maxlevel;
-      dispatcher(gv, choice, p0fem, rt0fem, filename.str());
+      filename << "rt0q_" << PROBLEMNAME << "_Alu2d_level" << maxlevel;
+      typedef PARAMETERCLASS<GV,Real> Problem;
+      Problem problem(gv);
+      driver(gv,p0fem,rt0fem,problem,filename.str());
+
     }
 #endif
 
@@ -352,12 +344,14 @@ int main(int argc, char** argv)
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
 
       typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV, Grid::ctype, Real, 0, Dune::GeometryType::simplex> RT0FEM;
-
       RT0FEM rt0fem(gv);
 
       std::stringstream filename;
-      filename << "rt0q_Ug2d_problem" << choice << "_level" << maxlevel;
-      dispatcher(gv, choice, p0fem, rt0fem, filename.str());
+      filename << "rt0q_" << PROBLEMNAME << "_Ug2d_level" << maxlevel;
+      typedef PARAMETERCLASS<GV,Real> Problem;
+      Problem problem(gv);
+      driver(gv,p0fem,rt0fem,problem,filename.str());
+
     }
 #endif
 
@@ -384,12 +378,14 @@ int main(int argc, char** argv)
       P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
 
       typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV, Grid::ctype, Real, 0, Dune::GeometryType::simplex> RT0FEM;
-
       RT0FEM rt0fem(gv);
 
       std::stringstream filename;
-      filename << "rt0q_Alberta2d_problem" << choice << "_level" << maxlevel;
-      dispatcher(gv, choice, p0fem, rt0fem, filename.str());
+      filename << "rt0q_" << PROBLEMNAME << "_Alberta2d_level" << maxlevel;
+      typedef PARAMETERCLASS<GV,Real> Problem;
+      Problem problem(gv);
+      driver(gv,p0fem,rt0fem,problem,filename.str());
+
     }
 #endif
 

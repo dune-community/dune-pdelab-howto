@@ -1,15 +1,19 @@
 #ifndef DUNE_PARAMETERA_HH
 #define DUNE_PARAMETERA_HH
 
-#include "parameter_base.hh"
-
 template<typename GV, typename RF>
-class ParameterA : public ParameterBase<GV,RF>
+class ParameterA
 {
+  const GV gv;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
 public:
+  typedef RF RangeFieldType;
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
+
+  ParameterA( const GV gv_ ) : gv(gv_)
+  {
+  }
 
   std::string name() const {return "A";};
 
@@ -78,12 +82,6 @@ public:
     return 0.0;
   }
 
-};
-
-
-template<typename GV, typename RF>
-ParameterBase<GV,RF>* createParameterA(const GV& gv){
-  return new ParameterA<GV,RF>();
 };
 
 

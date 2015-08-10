@@ -3,30 +3,30 @@
 
 #include<math.h>
 #include"../utility/permeability_generator.hh"
-#include "parameter_base.hh"
 
 template<typename GV, typename RF>
-class ParameterD : public ParameterBase<GV,RF>
+class ParameterD
 {
 
 private:
 
-  const GV& gv;
+  const GV gv;
   const typename GV::IndexSet& is;
   std::vector<RF> perm;
 
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
 public:
+  typedef RF RangeFieldType;
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
 
   ParameterD(
-             const GV& gv_,
-             Dune::FieldVector<double,GV::dimension> correlation_length,
+             const GV gv_,
+             Dune::FieldVector<double,GV::dimension> correlation_length = Dune::FieldVector<double,GV::dimension>(1.0/32.0),
              double variance = 1.0,
              double mean = 0.0,
-             long modes = 1000,
+             long modes = 5000,
              long seed = -1083
              )
   :
@@ -135,13 +135,6 @@ public:
   {
     return 0.0;
   }
-};
-
-template<typename GV, typename RF>
-ParameterBase<GV,RF>* createParameterD(const GV& gv){
-  Dune::FieldVector<double,GV::Grid::dimension> correlation_length;
-  correlation_length = 1.0/64.0;
-  return new ParameterD<GV,RF>(gv,correlation_length,1.0,0.0,5000,-1083);
 };
 
 #endif // DUNE_PARAMETERD_HH

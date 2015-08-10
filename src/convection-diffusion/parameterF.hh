@@ -2,7 +2,6 @@
 #define DUNE_PARAMETERF_HH
 
 #include<math.h>
-#include "parameter_base.hh"
 
 static char DurlofskyField[401] =
 "\
@@ -29,15 +28,21 @@ X.X..X.XX...........\
 ";
 
 template<typename GV, typename RF>
-class ParameterF : public ParameterBase<GV,RF>
+class ParameterF
 {
 private:
+  const GV gv;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
 public:
+  typedef RF RangeFieldType;
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
   std::string name() const {return "F";};
+
+  ParameterF( const GV gv_ ) : gv(gv_)
+  {
+  }
 
   //! tensor diffusion coefficient
   typename Traits::PermTensorType
@@ -124,11 +129,6 @@ public:
   {
     return 0.0;
   }
-};
-
-template<typename GV, typename RF>
-ParameterBase<GV,RF>* createParameterF(const GV& gv){
-  return new ParameterF<GV,RF>();
 };
 
 

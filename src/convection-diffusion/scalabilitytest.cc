@@ -50,8 +50,13 @@
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
-#include "parameter_factory.hh"
 
+//===============================================================
+// Choose among one of the problems A-F here:
+//===============================================================
+#include "parameterC.hh"
+#define PARAMETERCLASS ParameterC
+#define PROBLEMNAME "C"
 
 const bool graphics = true;
 const int maxIter = 1000;        // maximal number of linear solver iterations
@@ -237,28 +242,26 @@ int main(int argc, char** argv)
         std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
     }
 
-  if (argc!=9 && argc!=6) {
+  if (argc!=8 && argc!=5) {
     if(helper.rank()==0) {
-      std::cout << "usage option 1: " << argv[0] << " <problem> <order> <nx> <ny> <nz>" << std::endl;
-      std::cout << "usage option 2: " << argv[0] << " <problem> <order> <nx> <ny> <nz> <px> <py> <pz>" << std::endl;
-      std::cout << "       <problem> = A | B | C | D | E | F " << std::endl;
+      std::cout << "usage option 1: " << argv[0] << " <degree> <nx> <ny> <nz>" << std::endl;
+      std::cout << "usage option 2: " << argv[0] << " <degree> <nx> <ny> <nz> <px> <py> <pz>" << std::endl;
       std::cout << std::endl;
-      std::cout << "example 1: " << argv[0] << " C 0 64 64 32" << std::endl;
-      std::cout << "example 2: mpirun -np 8 " << argv[0] << " C 0 64 64 32 2 2 2" << std::endl;
+      std::cout << "example 1: " << argv[0] << " 0 64 64 32" << std::endl;
+      std::cout << "example 2: mpirun -np 8 " << argv[0] << " 0 64 64 32 2 2 2" << std::endl;
     }
     return 0;
   }
-  char choice; sscanf(argv[1],"%c",&choice);
-  int degree_dyn; sscanf(argv[2],"%d",&degree_dyn);
-  int nx; sscanf(argv[3],"%d",&nx);
-  int ny; sscanf(argv[4],"%d",&ny);
-  int nz; sscanf(argv[5],"%d",&nz);
+  int degree_dyn; sscanf(argv[1],"%d",&degree_dyn);
+  int nx; sscanf(argv[2],"%d",&nx);
+  int ny; sscanf(argv[3],"%d",&ny);
+  int nz; sscanf(argv[4],"%d",&nz);
 
   int px=0; int py=0; int pz=0;
-  if (argc==9){
-    sscanf(argv[6],"%d",&px);
-    sscanf(argv[7],"%d",&py);
-    sscanf(argv[8],"%d",&pz);
+  if (argc==8){
+    sscanf(argv[5],"%d",&px);
+    sscanf(argv[6],"%d",&py);
+    sscanf(argv[7],"%d",&pz);
   }
 
   try
@@ -301,37 +304,37 @@ int main(int argc, char** argv)
       typedef Dune::YaspGrid<dim> Grid;
       typedef Grid::LeafGridView GV;
 
-      const GV& gv=grid.leafGridView();
+      const GV gv = grid.leafGridView();
 
-      typedef ParameterBase<GV,Real> PROBLEM;
-      typedef ParameterFactory<PROBLEM,char> ProblemFactory;
-      ProblemFactory::template registerAll<GV,Real,char>(gv);
-      PROBLEM* pProblem = ProblemFactory::getInstance().createParameter( gv, choice );
+      typedef PARAMETERCLASS<GV,Real> Problem;
+      Problem problem(gv);
+
+      std::string problemlabel(PROBLEMNAME);
+      problemlabel.append("_CUBE");
 
       if (degree_dyn==0) {
-        //test_old_ccfv(gv);
-        test_ccfv(gv,*pProblem);
+        test_ccfv(gv,problem);
       }
       if (degree_dyn==1) {
         const int degree=1;
         typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
         FEMDG femdg;
         const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-        runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,*pProblem,"CUBE",0,"SIPG","ON",2.0);
+        runDG<GV,FEMDG,Problem,degree,blocksize>(gv,femdg,problem,problemlabel,0,"SIPG","ON",2.0);
       }
       if (degree_dyn==2) {
         const int degree=2;
         typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
         FEMDG femdg;
         const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-        runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,*pProblem,"CUBE",0,"SIPG","ON",2.0);
+        runDG<GV,FEMDG,Problem,degree,blocksize>(gv,femdg,problem,problemlabel,0,"SIPG","ON",2.0);
       }
       if (degree_dyn==3) {
         const int degree=3;
         typedef Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,double,degree,dim> FEMDG;
         FEMDG femdg;
         const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-        runDG<GV,FEMDG,PROBLEM,degree,blocksize>(gv,femdg,*pProblem,"CUBE",0,"SIPG","ON",2.0);
+        runDG<GV,FEMDG,Problem,degree,blocksize>(gv,femdg,problem,problemlabel,0,"SIPG","ON",2.0);
       }
     }
   catch (Dune::Exception &e)
