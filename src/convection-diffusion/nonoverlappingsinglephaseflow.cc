@@ -12,7 +12,6 @@
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
@@ -40,7 +39,7 @@
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 #include<dune/pdelab/common/function.hh>
-#include<dune/pdelab/common/vtkexport.hh>
+#include<dune/pdelab/gridfunctionspace/vtk.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
@@ -77,9 +76,9 @@
 // set up diffusion problem and solve it
 //===============================================================
 
-template< typename PROBLEM, typename GV, typename FEM>
-void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
-            std::string filename, int intorder=1 )
+template< typename PROBLEM, typename ES, typename FEM>
+void driver(PROBLEM& problem, ES es, const FEM& fem,
+            std::string filename)
 {
   // constants and types and global variables
   typedef typename FEM::Traits::FiniteElementType::Traits::
@@ -87,18 +86,20 @@ void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
   Dune::Timer watch;
 
   // make function space
-  typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints<GV> CON;
+  //typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints<GV> CON;
+  using CON = Dune::PDELab::ConformingDirichletConstraints;
   typedef Dune::PDELab::GridFunctionSpace
-    <GV,FEM,CON,Dune::PDELab::ISTLVectorBackend<> > GFS;
-  CON con(gv);
-  GFS gfs(gv,fem,con);
-  con.compute_ghosts(gfs);
+    <ES,FEM,CON,Dune::PDELab::istl::VectorBackend<> > GFS;
+  CON con; // (gv);
+  GFS gfs(es,fem,con);
+  gfs.name("solution");
+  // con.compute_ghosts(gfs);
 
   // make constraints map and initialize it from a function and ghost
   typedef typename GFS::template ConstraintsContainer<R>::Type CC;
   CC cc;
   cc.clear();
-  Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<PROBLEM> bctype(gv,problem);
+  Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<PROBLEM> bctype(es,problem);
 
   // make grid operator
   typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP;
@@ -108,14 +109,14 @@ void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
   typedef Dune::PDELab::GridOperator
       <GFS,GFS,LOP,
        MBE,
-       R,R,R,CC,CC,true> GO;
+       R,R,R,CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop,mbe);
 
   // make coefficent Vector and initialize it from a function
   typedef typename GO::Traits::Domain V;
   V x(gfs,0.0);
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
-  G g(gv,problem);
+  G g(es,problem);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::constraints(bctype,gfs,cc,false);
   Dune::PDELab::set_nonconstrained_dofs(cc,0.0,x);
@@ -126,13 +127,10 @@ void driver(PROBLEM& problem, const GV& gv, const FEM& fem,
   SLP slp(go,ls,x,1e-12);
   slp.apply();
 
-  // output solution and data decomposition with VTKWriter
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  DGF dgf(gfs,x);
-
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  vtkwriter.write(filename,Dune::VTK::appendedraw);
+  using GV = typename ES::Traits::GridView;
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(es.gridView(),3);
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
+  vtkwriter.write(filename,Dune::VTK::ascii);
 }
 
 //===============================================================
@@ -153,7 +151,7 @@ int main(int argc, char** argv)
       }
 
     // Q1, 2d
-    if (true)
+    if (false)
     {
       // make grid
       const int dim = 2;
@@ -161,43 +159,45 @@ int main(int argc, char** argv)
       Dune::array<int,dim> N(Dune::fill_array<int,dim>(32));
       std::bitset<dim> B(false);
       int overlap=0;
-      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<dim> grid(L,N,B,overlap);
       //grid.globalRefine(4);
       typedef Dune::YaspGrid<dim>::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      using ES = Dune::PDELab::NonOverlappingEntitySet<GV>;
+      ES es(grid.leafGridView());
+
 #ifdef PROBLEM_A
-        typedef ParameterA<GV,double> PROBLEM;
+        typedef ParameterA<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_B
-        typedef ParameterB<GV,double> PROBLEM;
+        typedef ParameterB<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_C
-        typedef ParameterC<GV,double> PROBLEM;
+        typedef ParameterC<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_D
-        typedef ParameterD<GV,double> PROBLEM;
+        typedef ParameterD<ES,double> PROBLEM;
         Dune::FieldVector<double,GV::Grid::dimension> correlation_length;
         correlation_length = 1.0/64.0;
-        PROBLEM problem(gv,correlation_length,1.0,0.0,5000,-1083);
+        PROBLEM problem(es,correlation_length,1.0,0.0,5000,-1083);
 #endif
 #ifdef PROBLEM_E
-        typedef ParameterE<GV,double> PROBLEM;
+        typedef ParameterE<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_F
-        typedef ParameterF<GV,double> PROBLEM;
+        typedef ParameterF<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 
         typedef Dune::YaspGrid<dim>::ctype DF;
         const int degree = 1;
-        typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;
-        FEM fem(gv);
+        typedef Dune::PDELab::QkLocalFiniteElementMap<ES,DF,double,degree> FEM;
+        FEM fem(es);
 
-        driver(problem,gv,fem,"yasp2d_Q1",2*degree);
+        driver(problem,es,fem,"yasp2d_Q1");
     }
 
     // Q1, 3d
@@ -209,48 +209,50 @@ int main(int argc, char** argv)
       Dune::array<int,dim> N(Dune::fill_array<int,dim>(8));
       std::bitset<dim> B(false);
       int overlap=0;
-      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<dim> grid(L,N,B,overlap);
       //grid.globalRefine(3);
 
       typedef Dune::YaspGrid<dim>::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      using ES = Dune::PDELab::NonOverlappingEntitySet<GV>;
+      ES es(grid.leafGridView());
+
 #ifdef PROBLEM_A
-        typedef ParameterA<GV,double> PROBLEM;
+        typedef ParameterA<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_B
-        typedef ParameterB<GV,double> PROBLEM;
+        typedef ParameterB<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_C
-        typedef ParameterC<GV,double> PROBLEM;
+        typedef ParameterC<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_D
-        typedef ParameterD<GV,double> PROBLEM;
-        Dune::FieldVector<double,GV::Grid::dimension> correlation_length;
+        typedef ParameterD<ES,double> PROBLEM;
+        Dune::FieldVector<double,ES::Grid::dimension> correlation_length;
         correlation_length = 1.0/64.0;
-        PROBLEM problem(gv,correlation_length,1.0,0.0,5000,-1083);
+        PROBLEM problem(es,correlation_length,1.0,0.0,5000,-1083);
 #endif
 #ifdef PROBLEM_E
-        typedef ParameterE<GV,double> PROBLEM;
+        typedef ParameterE<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_F
-        typedef ParameterF<GV,double> PROBLEM;
+        typedef ParameterF<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 
         typedef Dune::YaspGrid<dim>::ctype DF;
         const int degree = 1;
-        typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;
-        FEM fem(gv);
+        typedef Dune::PDELab::QkLocalFiniteElementMap<ES,DF,double,degree> FEM;
+        FEM fem(es);
 
-        driver(problem,gv,fem,"yasp3d_Q1",2*degree);
+        driver(problem,es,fem,"yasp3d_Q1");
     }
 
 #if HAVE_UG
-    if (false)
+    if (true)
     {
       typedef Dune::UGGrid<3> GridType;
       GridType grid;
@@ -269,31 +271,32 @@ int main(int argc, char** argv)
 
       // get view
       typedef GridType::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      using ES = Dune::PDELab::NonOverlappingEntitySet<GV>;
+      ES es(grid.leafGridView());
 #ifdef PROBLEM_A
-        typedef ParameterA<GV,double> PROBLEM;
+        typedef ParameterA<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_B
-        typedef ParameterB<GV,double> PROBLEM;
+        typedef ParameterB<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_C
-        typedef ParameterC<GV,double> PROBLEM;
+        typedef ParameterC<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_D
-        typedef ParameterD<GV,double> PROBLEM;
-        Dune::FieldVector<double,GV::Grid::dimension> correlation_length;
+        typedef ParameterD<ES,double> PROBLEM;
+        Dune::FieldVector<double,ES::Grid::dimension> correlation_length;
         correlation_length = 1.0/64.0;
-        PROBLEM problem(gv,correlation_length,1.0,0.0,5000,-1083);
+        PROBLEM problem(es,correlation_length,1.0,0.0,5000,-1083);
 #endif
 #ifdef PROBLEM_E
-        typedef ParameterE<GV,double> PROBLEM;
+        typedef ParameterE<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_F
-        typedef ParameterF<GV,double> PROBLEM;
+        typedef ParameterF<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 
@@ -301,9 +304,9 @@ int main(int argc, char** argv)
       typedef GridType::ctype DF;
       typedef double R;
       const int k=1;
-      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> FEM;
-      FEM fem(gv);
-      //driver(problem,gv,fem,"UG3d_P1",q);
+      typedef Dune::PDELab::PkLocalFiniteElementMap<ES,DF,R,k> FEM;
+      FEM fem(es);
+      driver(problem,es,fem,"UG3d_P1");
     }
 #endif
 
@@ -324,31 +327,32 @@ int main(int argc, char** argv)
 
       // get view
       typedef GridType::LeafGridView GV;
-      const GV& gv=grid->leafGridView();
+      using ES = Dune::PDELab::NonOverlappingEntitySet<GV>;
+      ES es(grid->leafGridView());
 #ifdef PROBLEM_A
-        typedef ParameterA<GV,double> PROBLEM;
+        typedef ParameterA<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_B
-        typedef ParameterB<GV,double> PROBLEM;
+        typedef ParameterB<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_C
-        typedef ParameterC<GV,double> PROBLEM;
+        typedef ParameterC<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_D
-        typedef ParameterD<GV,double> PROBLEM;
+        typedef ParameterD<ES,double> PROBLEM;
         Dune::FieldVector<double,GV::Grid::dimension> correlation_length;
         correlation_length = 1.0/64.0;
-        PROBLEM problem(gv,correlation_length,1.0,0.0,5000,-1083);
+        PROBLEM problem(es,correlation_length,1.0,0.0,5000,-1083);
 #endif
 #ifdef PROBLEM_E
-        typedef ParameterE<GV,double> PROBLEM;
+        typedef ParameterE<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_F
-        typedef ParameterF<GV,double> PROBLEM;
+        typedef ParameterF<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 
@@ -356,11 +360,10 @@ int main(int argc, char** argv)
       typedef GridType::ctype DF;
       typedef double R;
       const int k=1;
-      const int q=2*k;
-      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> FEM;
-      FEM fem(gv);
+      typedef Dune::PDELab::PkLocalFiniteElementMap<ES,DF,R,k> FEM;
+      FEM fem(es);
 
-      driver(problem,gv,fem,"ALU3d_P1_PlastkDoeddel",q);
+      driver(problem,es,fem,"ALU3d_P1_PlastkDoeddel");
     }
     // ALU Q1 3D test
     if (false)
@@ -398,41 +401,42 @@ int main(int argc, char** argv)
 
       // get view
       typedef GridType::LeafGridView GV;
-      const GV& gv=grid->leafGridView();
+      using ES = Dune::PDELab::NonOverlappingEntitySet<GV>;
+      ES es(grid->leafGridView());
 #ifdef PROBLEM_A
-        typedef ParameterA<GV,double> PROBLEM;
+        typedef ParameterA<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_B
-        typedef ParameterB<GV,double> PROBLEM;
+        typedef ParameterB<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_C
-        typedef ParameterC<GV,double> PROBLEM;
+        typedef ParameterC<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_D
-        typedef ParameterD<GV,double> PROBLEM;
+        typedef ParameterD<ES,double> PROBLEM;
         Dune::FieldVector<double,GV::Grid::dimension> correlation_length;
         correlation_length = 1.0/64.0;
-        PROBLEM problem(gv,correlation_length,1.0,0.0,5000,-1083);
+        PROBLEM problem(es,correlation_length,1.0,0.0,5000,-1083);
 #endif
 #ifdef PROBLEM_E
-        typedef ParameterE<GV,double> PROBLEM;
+        typedef ParameterE<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 #ifdef PROBLEM_F
-        typedef ParameterF<GV,double> PROBLEM;
+        typedef ParameterF<ES,double> PROBLEM;
         PROBLEM problem;
 #endif
 
       // make finite element map
       typedef GridType::ctype DF;
       const int degree = 1;
-      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;
-      FEM fem(gv);
+      typedef Dune::PDELab::QkLocalFiniteElementMap<ES,DF,double,degree> FEM;
+      FEM fem(es);
 
-      driver(problem,gv,fem,"ALU3d_Q1",2*degree);
+      driver(problem,es,fem,"ALU3d_Q1");
     }
 #endif
 
