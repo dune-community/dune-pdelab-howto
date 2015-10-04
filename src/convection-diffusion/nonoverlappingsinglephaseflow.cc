@@ -177,15 +177,15 @@ int main(int argc, char** argv)
       const GV& gv=grid.leafGridView();
 #ifdef PROBLEM_A
         typedef ParameterA<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_B
         typedef ParameterB<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_C
         typedef ParameterC<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_D
         typedef ParameterD<GV,double> PROBLEM;
@@ -195,11 +195,11 @@ int main(int argc, char** argv)
 #endif
 #ifdef PROBLEM_E
         typedef ParameterE<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_F
         typedef ParameterF<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 
         typedef Dune::YaspGrid<dim>::ctype DF;
@@ -226,15 +226,15 @@ int main(int argc, char** argv)
       const GV& gv=grid.leafGridView();
 #ifdef PROBLEM_A
         typedef ParameterA<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_B
         typedef ParameterB<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_C
         typedef ParameterC<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_D
         typedef ParameterD<GV,double> PROBLEM;
@@ -244,11 +244,11 @@ int main(int argc, char** argv)
 #endif
 #ifdef PROBLEM_E
         typedef ParameterE<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_F
         typedef ParameterF<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 
         typedef Dune::YaspGrid<dim>::ctype DF;
@@ -282,15 +282,15 @@ int main(int argc, char** argv)
       const GV& gv=grid.leafGridView();
 #ifdef PROBLEM_A
         typedef ParameterA<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_B
         typedef ParameterB<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_C
         typedef ParameterC<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_D
         typedef ParameterD<GV,double> PROBLEM;
@@ -300,11 +300,11 @@ int main(int argc, char** argv)
 #endif
 #ifdef PROBLEM_E
         typedef ParameterE<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_F
         typedef ParameterF<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 
       // make finite element map
@@ -337,15 +337,15 @@ int main(int argc, char** argv)
       const GV& gv=grid->leafGridView();
 #ifdef PROBLEM_A
         typedef ParameterA<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_B
         typedef ParameterB<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_C
         typedef ParameterC<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_D
         typedef ParameterD<GV,double> PROBLEM;
@@ -355,11 +355,11 @@ int main(int argc, char** argv)
 #endif
 #ifdef PROBLEM_E
         typedef ParameterE<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_F
         typedef ParameterF<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 
       // make finite element map
@@ -411,15 +411,15 @@ int main(int argc, char** argv)
       const GV& gv=grid->leafGridView();
 #ifdef PROBLEM_A
         typedef ParameterA<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_B
         typedef ParameterB<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_C
         typedef ParameterC<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_D
         typedef ParameterD<GV,double> PROBLEM;
@@ -429,11 +429,11 @@ int main(int argc, char** argv)
 #endif
 #ifdef PROBLEM_E
         typedef ParameterE<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_F
         typedef ParameterF<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 
       // make finite element map
