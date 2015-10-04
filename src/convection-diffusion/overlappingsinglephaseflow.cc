@@ -99,6 +99,14 @@ void driver (PROBLEM& problem,
   G g(gv,problem);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::constraints(bctype,gfs,cc,false);
+  Dune::PDELab::set_nonconstrained_dofs(cc,0.0,x);
+
+  // make vector consistent
+  {
+      Dune::PDELab::CopyDataHandle<GFS,V> dh(gfs,x);
+      if(gfs.gridView().comm().size() > 1)
+          gfs.gridView().communicate(dh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+  }
 
   // typedef Dune::PDELab::ISTLBackend_CG_AMG_SSOR<GO> LS;
   // LS ls(gfs,5000,3);
