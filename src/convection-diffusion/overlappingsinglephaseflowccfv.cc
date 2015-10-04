@@ -73,9 +73,8 @@ void test (const GV& gv)
   Dune::PDELab::constraints(gfs,cc,false);
 
   // grid operator
-
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  MBE mbe(5); // Maximal number of nonzeros per row can be cross-checked by patternStatistics().
+  MBE mbe(2*dim+1); // Maximal number of nonzeros per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,RF,RF,RF,CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop,mbe);
 
@@ -84,6 +83,14 @@ void test (const GV& gv)
   V x(gfs);
   x = 0.0;
   Dune::PDELab::interpolate(g,gfs,x);
+  Dune::PDELab::set_nonconstrained_dofs(cc,0.0,x);
+
+  // make vector consistent
+  {
+      Dune::PDELab::CopyDataHandle<GFS,V> dh(gfs,x);
+      if(gfs.gridView().comm().size() > 1)
+          gfs.gridView().communicate(dh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+  }
 
   // typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GO> LS;
   // LS ls(gfs,5000,3);

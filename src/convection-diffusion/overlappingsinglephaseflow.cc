@@ -87,7 +87,7 @@ void driver (PROBLEM& problem,
   typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP;
   LOP lop(problem);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
+  MBE mbe(27); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator
       <GFS,GFS,LOP,MBE,R,R,R,CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop,mbe);
@@ -181,15 +181,15 @@ int main(int argc, char** argv)
         const GV& gv=grid.leafGridView();
 #ifdef PROBLEM_A
         typedef ParameterA<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_B
         typedef ParameterB<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_C
         typedef ParameterC<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_D
         typedef ParameterD<GV,double> PROBLEM;
@@ -199,11 +199,11 @@ int main(int argc, char** argv)
 #endif
 #ifdef PROBLEM_E
         typedef ParameterE<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_F
         typedef ParameterF<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 
         typedef Dune::YaspGrid<dim>::ctype DF;
@@ -234,15 +234,15 @@ int main(int argc, char** argv)
         const GV& gv=grid.leafGridView();
 #ifdef PROBLEM_A
         typedef ParameterA<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_B
         typedef ParameterB<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_C
         typedef ParameterC<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_D
         typedef ParameterD<GV,double> PROBLEM;
@@ -252,11 +252,11 @@ int main(int argc, char** argv)
 #endif
 #ifdef PROBLEM_E
         typedef ParameterE<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_F
         typedef ParameterF<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 
         typedef Dune::YaspGrid<dim>::ctype DF;
