@@ -52,7 +52,6 @@ void navierstokesvecfem(
                         pFEM pFem)
 {
   // constants and types
-  typedef typename GV::Grid::ctype DF;
   const unsigned int dim = GV::dimension;
 
   // vector backend for velocity and pressure
@@ -115,7 +114,6 @@ void navierstokesvecfem(
   GOS gos(gfs,gfs,lop,mbe);
 
   typedef typename GOS::Traits::Domain V;
-  typedef typename GOS::Traits::Jacobian M;
 
   // random initial guess
   V x(gfs);
