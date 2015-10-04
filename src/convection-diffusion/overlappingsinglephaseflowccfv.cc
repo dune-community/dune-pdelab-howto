@@ -39,7 +39,7 @@ void test (const GV& gv)
   const int dim = GV::dimension;
 
   typedef ParameterA<GV,RF> PROBLEM;
-  PROBLEM problem;
+  PROBLEM problem(gv);
 
   Dune::Timer watch;
 
