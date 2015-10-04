@@ -23,24 +23,24 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
-#include<dune/pdelab/localoperator/diffusionccfv.hh>
-#include<dune/pdelab/localoperator/laplacedirichletccfv.hh>
+#include<dune/pdelab/localoperator/convectiondiffusionccfv.hh>
+#include<dune/pdelab/localoperator/darcy_CCFV.hh>
+#include<dune/pdelab/localoperator/permeability_adapter.hh>
 #include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 
-#include"problemA.hh"
-#include"problemB.hh"
-#include"problemC.hh"
-#include"problemD.hh"
-#include"problemE.hh"
-#include"problemF.hh"
+#include"parameterA.hh"
 
-template<class GV>
+template<typename GV>
 void test (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
   typedef double RF;
   const int dim = GV::dimension;
+
+  typedef ParameterA<GV,RF> PROBLEM;
+  PROBLEM problem(gv);
+
   Dune::Timer watch;
 
   // instantiate finite element maps
@@ -57,23 +57,13 @@ void test (const GV& gv)
 
   // local operator
   watch.reset();
-  typedef k_A<GV,RF> KType;
-  KType k(gv);
-  // Dune::FieldVector<double,dim> correlation_length;
-  // correlation_length = 1.0/64.0;
-  // KType k(gv,correlation_length,0.5,0.0,5000,-1083);
-  typedef A0_A<GV,RF> A0Type;
-  A0Type a0(gv);
-  typedef F_A<GV,RF> FType;
-  FType f(gv);
-  typedef B_A<GV> BType;
-  BType b(gv);
-  typedef J_A<GV,RF> JType;
-  JType j(gv);
-  typedef G_A<GV,RF> GType;
-  GType g(gv);
-  typedef Dune::PDELab::DiffusionCCFV<KType,A0Type,FType,BType,JType,GType> LOP;
-  LOP lop(k,a0,f,b,j,g);
+
+  typedef Dune::PDELab::ConvectionDiffusionCCFV<PROBLEM> LOP;
+  LOP lop(problem);
+
+  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
+  G g(gv,problem);
+
   std::cout << "=== local operator setup " <<  watch.elapsed() << " s" << std::endl;
 
   // make constraints map and initialize it from a function
@@ -83,9 +73,8 @@ void test (const GV& gv)
   Dune::PDELab::constraints(gfs,cc,false);
 
   // grid operator
-
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  MBE mbe(5); // Maximal number of nonzeros per row can be cross-checked by patternStatistics().
+  MBE mbe(2*dim+1); // Maximal number of nonzeros per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,RF,RF,RF,CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop,mbe);
 
@@ -94,6 +83,14 @@ void test (const GV& gv)
   V x(gfs);
   x = 0.0;
   Dune::PDELab::interpolate(g,gfs,x);
+  Dune::PDELab::set_nonconstrained_dofs(cc,0.0,x);
+
+  // make vector consistent
+  {
+      Dune::PDELab::CopyDataHandle<GFS,V> dh(gfs,x);
+      if(gfs.gridView().comm().size() > 1)
+          gfs.gridView().communicate(dh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+  }
 
   // typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GO> LS;
   // LS ls(gfs,5000,3);
@@ -110,8 +107,21 @@ void test (const GV& gv)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  vtkwriter.pwrite("single_phase_yasp2d_CCFV","vtk","",Dune::VTK::appendedraw);
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(dgf,"solution"));
+
+  typedef DarcyVelocityFromHeadCCFV<PROBLEM,DGF> DarcyDGF;
+  DarcyDGF darcydgf(problem,dgf);
+  typedef Dune::PDELab::VTKGridFunctionAdapter<DarcyDGF> DarcyVTKDGF;
+  vtkwriter.addVertexData(std::make_shared<DarcyVTKDGF>(darcydgf,"darcyvelocity"));
+
+  typedef PermeabilityAdapter<PROBLEM> PermDGF;
+  PermDGF permdgf(gv,problem);
+  typedef Dune::PDELab::VTKGridFunctionAdapter<PermDGF> PermVTKDGF;
+  vtkwriter.addCellData(std::make_shared<PermVTKDGF>(permdgf,"logK"));
+
+  std::stringstream filename;
+  filename << "single_phase_yasp" << dim << "d_CCFV";
+  vtkwriter.pwrite(filename.str(),"vtk","",Dune::VTK::appendedraw);
 }
 
 int main(int argc, char** argv)
@@ -146,7 +156,7 @@ int main(int argc, char** argv)
       N[0] = nx; N[1] = ny;
       std::bitset<dim> B(false);
       int overlap=3;
-      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<dim> grid(L,N,B,overlap);
       //      grid.globalRefine(6);
 
       // solve problem :)
@@ -154,7 +164,7 @@ int main(int argc, char** argv)
     }
 
     // Q1, 3d
-    if (false)
+    if (true)
     {
       // make grid
       const int dim = 3;
@@ -163,7 +173,7 @@ int main(int argc, char** argv)
       N[0] = nx; N[1] = ny; N[2] = nz;
       std::bitset<dim> B(false);
       int overlap=1;
-      Dune::YaspGrid<dim> grid(helper.getCommunicator(),L,N,B,overlap);
+      Dune::YaspGrid<dim> grid(L,N,B,overlap);
 
       // solve problem :)
       test(grid.leafGridView());

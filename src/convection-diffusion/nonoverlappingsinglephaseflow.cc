@@ -12,17 +12,21 @@
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
+#include<dune/common/typetraits.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/grid/yaspgrid.hh>
+
 #if HAVE_ALBERTA
 #include<dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
 #endif
+
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
+
 #if HAVE_DUNE_ALUGRID
 #include<dune/alugrid/grid.hh>
 #include<dune/grid/io/file/dgfparser/dgfalu.hh>
@@ -167,15 +171,15 @@ int main(int argc, char** argv)
 
 #ifdef PROBLEM_A
         typedef ParameterA<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_B
         typedef ParameterB<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_C
         typedef ParameterC<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_D
         typedef ParameterD<ES,double> PROBLEM;
@@ -185,11 +189,11 @@ int main(int argc, char** argv)
 #endif
 #ifdef PROBLEM_E
         typedef ParameterE<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_F
         typedef ParameterF<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 
         typedef Dune::YaspGrid<dim>::ctype DF;
@@ -218,15 +222,15 @@ int main(int argc, char** argv)
 
 #ifdef PROBLEM_A
         typedef ParameterA<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_B
         typedef ParameterB<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_C
         typedef ParameterC<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_D
         typedef ParameterD<ES,double> PROBLEM;
@@ -236,11 +240,11 @@ int main(int argc, char** argv)
 #endif
 #ifdef PROBLEM_E
         typedef ParameterE<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_F
         typedef ParameterF<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 
         typedef Dune::YaspGrid<dim>::ctype DF;
@@ -275,15 +279,15 @@ int main(int argc, char** argv)
       ES es(grid.leafGridView());
 #ifdef PROBLEM_A
         typedef ParameterA<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_B
         typedef ParameterB<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_C
         typedef ParameterC<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_D
         typedef ParameterD<ES,double> PROBLEM;
@@ -293,11 +297,11 @@ int main(int argc, char** argv)
 #endif
 #ifdef PROBLEM_E
         typedef ParameterE<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_F
         typedef ParameterF<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 
       // make finite element map
@@ -331,15 +335,15 @@ int main(int argc, char** argv)
       ES es(grid->leafGridView());
 #ifdef PROBLEM_A
         typedef ParameterA<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_B
         typedef ParameterB<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_C
         typedef ParameterC<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_D
         typedef ParameterD<ES,double> PROBLEM;
@@ -349,11 +353,11 @@ int main(int argc, char** argv)
 #endif
 #ifdef PROBLEM_E
         typedef ParameterE<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_F
         typedef ParameterF<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 
       // make finite element map
@@ -405,15 +409,15 @@ int main(int argc, char** argv)
       ES es(grid->leafGridView());
 #ifdef PROBLEM_A
         typedef ParameterA<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_B
         typedef ParameterB<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_C
         typedef ParameterC<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_D
         typedef ParameterD<ES,double> PROBLEM;
@@ -423,11 +427,11 @@ int main(int argc, char** argv)
 #endif
 #ifdef PROBLEM_E
         typedef ParameterE<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 #ifdef PROBLEM_F
         typedef ParameterF<ES,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(es);
 #endif
 
       // make finite element map

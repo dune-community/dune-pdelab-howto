@@ -11,7 +11,7 @@
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
+#include<dune/common/typetraits.hh>
 #include<dune/common/timer.hh>
 #include<dune/grid/yaspgrid.hh>
 
@@ -28,6 +28,8 @@
 #include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionfem.hh>
+#include<dune/pdelab/localoperator/darcy_FEM.hh>
+#include<dune/pdelab/localoperator/permeability_adapter.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 
 #define PROBLEM_A
@@ -85,7 +87,7 @@ void driver (PROBLEM& problem,
   typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP;
   LOP lop(problem);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
+  MBE mbe(27); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator
       <GFS,GFS,LOP,MBE,R,R,R,CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop,mbe);
@@ -97,6 +99,14 @@ void driver (PROBLEM& problem,
   G g(gv,problem);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::constraints(bctype,gfs,cc,false);
+  Dune::PDELab::set_nonconstrained_dofs(cc,0.0,x);
+
+  // make vector consistent
+  {
+      Dune::PDELab::CopyDataHandle<GFS,V> dh(gfs,x);
+      if(gfs.gridView().comm().size() > 1)
+          gfs.gridView().communicate(dh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+  }
 
   // typedef Dune::PDELab::ISTLBackend_CG_AMG_SSOR<GO> LS;
   // LS ls(gfs,5000,3);
@@ -115,8 +125,20 @@ void driver (PROBLEM& problem,
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  vtkwriter.write(filename,Dune::VTK::appendedraw);
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(dgf,"solution"));
+
+  typedef DarcyVelocityFromHeadFEM<PROBLEM,GFS,V> DarcyDGF;
+  DarcyDGF darcydgf(problem,gfs,x);
+  typedef Dune::PDELab::VTKGridFunctionAdapter<DarcyDGF> DarcyVTKDGF;
+  vtkwriter.addVertexData(std::make_shared<DarcyVTKDGF>(darcydgf,"darcyvelocity"));
+
+  typedef PermeabilityAdapter<PROBLEM> PermDGF;
+  PermDGF permdgf(gv,problem);
+  typedef Dune::PDELab::VTKGridFunctionAdapter<PermDGF> PermVTKDGF;
+  vtkwriter.addCellData(std::make_shared<PermVTKDGF>(permdgf,"logK"));
+
+
+  vtkwriter.pwrite(filename,"vtk","",Dune::VTK::appendedraw);
 }
 
 //===============================================================
@@ -159,15 +181,15 @@ int main(int argc, char** argv)
         const GV& gv=grid.leafGridView();
 #ifdef PROBLEM_A
         typedef ParameterA<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_B
         typedef ParameterB<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_C
         typedef ParameterC<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_D
         typedef ParameterD<GV,double> PROBLEM;
@@ -177,11 +199,11 @@ int main(int argc, char** argv)
 #endif
 #ifdef PROBLEM_E
         typedef ParameterE<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_F
         typedef ParameterF<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 
         typedef Dune::YaspGrid<dim>::ctype DF;
@@ -198,7 +220,7 @@ int main(int argc, char** argv)
       }
 
     // Q1, 3d
-    if (false)
+    if (true)
       {
         // make grid
         const int dim = 3;
@@ -212,15 +234,15 @@ int main(int argc, char** argv)
         const GV& gv=grid.leafGridView();
 #ifdef PROBLEM_A
         typedef ParameterA<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_B
         typedef ParameterB<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_C
         typedef ParameterC<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_D
         typedef ParameterD<GV,double> PROBLEM;
@@ -230,11 +252,11 @@ int main(int argc, char** argv)
 #endif
 #ifdef PROBLEM_E
         typedef ParameterE<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 #ifdef PROBLEM_F
         typedef ParameterF<GV,double> PROBLEM;
-        PROBLEM problem;
+        PROBLEM problem(gv);
 #endif
 
         typedef Dune::YaspGrid<dim>::ctype DF;

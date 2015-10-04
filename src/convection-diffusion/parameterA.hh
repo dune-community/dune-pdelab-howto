@@ -4,10 +4,18 @@
 template<typename GV, typename RF>
 class ParameterA
 {
+  const GV gv;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
 public:
+  typedef RF RangeFieldType;
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
+
+  ParameterA( const GV gv_ ) : gv(gv_)
+  {
+  }
+
+  std::string name() const {return "A";};
 
   //! tensor diffusion coefficient
   typename Traits::PermTensorType
@@ -29,19 +37,19 @@ public:
   }
 
   //! sink term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 0.0;
   }
 
   //! source term
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
-	typename Traits::RangeFieldType norm = xglobal.two_norm2();
-	return (2.0*GV::dimension-4.0*norm)*exp(-norm); 
+    typename Traits::RangeFieldType norm = xglobal.two_norm2();
+    return (2.0*GV::dimension-4.0*norm)*exp(-norm);
   }
 
   //! boundary condition type function
@@ -52,7 +60,7 @@ public:
   }
 
   //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
@@ -61,21 +69,20 @@ public:
   }
 
   //! Neumann boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
   }
 
   //! outflow boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
   }
+
 };
-
-
 
 
 #endif // DUNE_PARAMETERA_HH
