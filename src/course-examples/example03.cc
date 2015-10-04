@@ -1,10 +1,10 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 /** \file
-    
+
     \brief Solve parabolic problem with conforming finite elements in space and implicit one step methods in time
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<math.h>
 #include<iostream>
@@ -24,7 +24,7 @@
 #include<dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
 #endif
-#if HAVE_UG 
+#if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
 #if HAVE_DUNE_ALUGRID
@@ -54,6 +54,7 @@
 #include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 #include<dune/pdelab/instationary/onestep.hh>
+#include<dune/pdelab/common/instationaryfilenamehelper.hh>
 
 #include"example03_bctype.hh"
 #include"example03_bcextension.hh"

@@ -1,9 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-/** \file 
+/** \file
     \brief Solve two-phase flow in porous media with cell-centered FV in pressure-pressure formulation
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -36,6 +36,8 @@
 #include<dune/pdelab/instationary/onestep.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/gridoperator/onestep.hh>
+#include<dune/pdelab/common/instationaryfilenamehelper.hh>
+
 //==============================================================================
 // Problem definition
 //==============================================================================
@@ -51,13 +53,13 @@ const double lense_height_max = 0.3;
 
 // parameter class for local operator
 template<typename GV, typename RF>
-class TwoPhaseParameter 
-  : public Dune::PDELab::TwoPhaseParameterInterface<Dune::PDELab::TwoPhaseParameterTraits<GV,RF>, 
+class TwoPhaseParameter
+  : public Dune::PDELab::TwoPhaseParameterInterface<Dune::PDELab::TwoPhaseParameterTraits<GV,RF>,
                                                     TwoPhaseParameter<GV,RF> >
 {
   static const RF eps1;
   static const RF eps2;
-  
+
 public:
   typedef Dune::PDELab::TwoPhaseParameterTraits<GV,RF> Traits;
   enum {dim=GV::Grid::dimension};
@@ -69,18 +71,18 @@ public:
   }
 
   //! porosity
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   phi (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 0.4;
   }
 
   //! capillary pressure function
-  typename Traits::RangeFieldType 
-  pc (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  pc (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
        typename Traits::RangeFieldType s_l) const
   {
-    Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,Traits::GridViewType::Grid::dimension> 
+    Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,Traits::GridViewType::Grid::dimension>
       global = e.geometry().global(x);
     for (int i=0; i<dim-1; i++)
       if (global[i]<lense_width_min || global[i]>lense_width_max)
@@ -89,13 +91,13 @@ public:
       return pentry/pow(s_l,1/2.5);
     return pentry_lense/sqrt(s_l);
   }
-	  
+
   //! inverse capillary pressure function
-  typename Traits::RangeFieldType 
-  s_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  s_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
        typename Traits::RangeFieldType pc) const
   {
-    Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,Traits::GridViewType::Grid::dimension> 
+    Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,Traits::GridViewType::Grid::dimension>
       global = e.geometry().global(x);
     for (int i=0; i<dim-1; i++)
       if (global[i]<lense_width_min || global[i]>lense_width_max)
@@ -104,44 +106,44 @@ public:
       return (pentry/pc)*(pentry/pc)*sqrt(pentry/pc);
     return (pentry_lense/pc)*(pentry_lense/pc);
   }
-	  
+
   //! liquid phase relative permeability
-  typename Traits::RangeFieldType 
-  kr_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  kr_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
         typename Traits::RangeFieldType s_l) const
   {
     if (s_l<=eps1) return 0.0; else return (s_l-eps1)*(s_l-eps1);
   }
 
   //! gas phase relative permeability
-  typename Traits::RangeFieldType 
-  kr_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  kr_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
         typename Traits::RangeFieldType s_g) const
   {
     if (s_g<=eps1) return 0.0; else return (s_g-eps1)*(s_g-eps1);
   }
 
   //! liquid phase viscosity
-  typename Traits::RangeFieldType 
-  mu_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  mu_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
         typename Traits::RangeFieldType p_l) const
   {
     return 1E-3;
   }
 
   //! gas phase viscosity
-  typename Traits::RangeFieldType 
-  mu_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  mu_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
         typename Traits::RangeFieldType p_g) const
   {
     return 0.9E-3;
   }
-	  
+
   //! absolute permeability (scalar!)
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   k_abs (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,Traits::GridViewType::Grid::dimension> 
+    Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,Traits::GridViewType::Grid::dimension>
       global = e.geometry().global(x);
     for (int i=0; i<dim-1; i++)
       if (global[i]<lense_width_min || global[i]>lense_width_max)
@@ -162,42 +164,42 @@ public:
   }
 
   //! liquid phase molar density
-  typename Traits::RangeFieldType 
-  nu_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  nu_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
         typename Traits::RangeFieldType p_l) const
   {
     return 1000.0;
   }
 
   //! gas phase molar density
-  typename Traits::RangeFieldType 
-  nu_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  nu_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
         typename Traits::RangeFieldType p_g) const
   {
     return 1460.0;
   }
 
   //! liquid phase mass density
-  typename Traits::RangeFieldType 
-  rho_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  rho_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
          typename Traits::RangeFieldType p_l) const
   {
     return 1000.0;
   }
 
   //! gas phase mass density
-  typename Traits::RangeFieldType 
-  rho_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  rho_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
          typename Traits::RangeFieldType p_g) const
   {
     return 1460.0;
   }
-	  
+
   //! liquid phase boundary condition type
   int
   bc_l (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
   {
-    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
+    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension>
       global = is.geometry().global(x);
 
     for (int i=0; i<dim-1; i++)
@@ -216,7 +218,7 @@ public:
   int
   bc_g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
   {
-    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
+    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension>
       global = is.geometry().global(x);
 
     for (int i=0; i<dim-1; i++)
@@ -232,35 +234,35 @@ public:
   }
 
   //! liquid phase Dirichlet boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   g_l (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
   {
-    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
+    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension>
       global = is.geometry().global(x);
     return (height-global[dim-1])*9810.0;
   }
 
   //! gas phase Dirichlet boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   g_g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
   {
-    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
+    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension>
       global = is.geometry().global(x);
     return (height-global[dim-1])*9810.0+pentry;
   }
 
   //! liquid phase Neumann boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   j_l (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
   {
     return 0.0;
   }
 
   //! gas phase Neumann boundary condition
-  typename Traits::RangeFieldType 
+  typename Traits::RangeFieldType
   j_g (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x, typename Traits::RangeFieldType time) const
   {
-    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension> 
+    Dune::FieldVector<typename Traits::IntersectionType::ctype,Traits::IntersectionType::dimension>
       global = is.geometry().global(x);
 
     if (global[dim-1]<height-eps2)
@@ -274,16 +276,16 @@ public:
   }
 
   //! liquid phase source term
-  typename Traits::RangeFieldType 
-  q_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  q_l (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
        typename Traits::RangeFieldType time) const
   {
     return 0.0;
   }
-  
+
   //! gas phase source term
-  typename Traits::RangeFieldType 
-  q_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x, 
+  typename Traits::RangeFieldType
+  q_g (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
        typename Traits::RangeFieldType time) const
   {
     return 0.0;
@@ -315,7 +317,7 @@ public:
   P_l (const GV& gv, const TwoPhaseParameter<GV,RF>& tp_) : BaseT(gv), tp(tp_) {}
 
 
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
  	y = (height-x[dim-1])*9810;
@@ -335,16 +337,16 @@ public:
 
   P_g (const GV& gv_, const TwoPhaseParameter<GV,RF>& tp_) : gv(gv_), tp(tp_) {}
 
-  inline void evaluate (const typename Traits::ElementType& e, 
+  inline void evaluate (const typename Traits::ElementType& e,
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  {  
+  {
     const int dim = Traits::GridViewType::Grid::dimension;
-    Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,dim> 
+    Dune::FieldVector<typename Traits::GridViewType::Grid::ctype,dim>
       global = e.geometry().global(x);
  	y = (height-global[dim-1])*9810 + tp.pc(e,x,1.0-1E-9);
   }
-  
+
   inline const typename Traits::GridViewType& getGridView ()
   {
     return gv;
@@ -377,16 +379,16 @@ public:
 
   S_l (const T& t_, const PL& pl_, const PG& pg_) : t(t_), pl(pl_), pg(pg_) {}
 
-  inline void evaluate (const typename Traits::ElementType& e, 
+  inline void evaluate (const typename Traits::ElementType& e,
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  {  
+  {
     typename PL::Traits::RangeType pl_value,pg_value;
     pl.evaluate(e,x,pl_value);
     pg.evaluate(e,x,pg_value);
     y = t.s_l(e,x,pg_value-pl_value);
   }
-  
+
   inline const typename Traits::GridViewType& getGridView ()
   {
     return pl.getGridView();
@@ -413,16 +415,16 @@ public:
 
   S_g (const T& t_, const PL& pl_, const PG& pg_) : t(t_), pl(pl_), pg(pg_) {}
 
-  inline void evaluate (const typename Traits::ElementType& e, 
+  inline void evaluate (const typename Traits::ElementType& e,
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  {  
+  {
     typename PL::Traits::RangeType pl_value,pg_value;
     pl.evaluate(e,x,pl_value);
     pg.evaluate(e,x,pg_value);
     y = 1.0-t.s_l(e,x,pg_value-pl_value);
   }
-  
+
   inline const typename Traits::GridViewType& getGridView ()
   {
     return pl.getGridView();
@@ -435,7 +437,7 @@ public:
 //==============================================================================
 int rank;
 
-template<class GV> 
+template<class GV>
 void test (const GV& gv, int timesteps, double timestep)
 {
   // <<<1>>> choose some types
@@ -488,10 +490,10 @@ void test (const GV& gv, int timesteps, double timestep)
   Dune::PDELab::Alexander2Parameter<RF> method;
   typedef Dune::PDELab::GridOperator<TPGFS,TPGFS,LOP,MBE,RF,RF,RF,C,C> GO0;
   GO0 go0(tpgfs,cg,tpgfs,cg,lop,mbe);
-   
+
   typedef Dune::PDELab::GridOperator<TPGFS,TPGFS,MLOP,MBE,RF,RF,RF,C,C> GO1;
   GO1 go1(tpgfs,cg,tpgfs,cg,mlop,mbe);
-   
+
   typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
   IGO igo(go0,go1);
 
@@ -517,16 +519,16 @@ void test (const GV& gv, int timesteps, double timestep)
   P_lDGF p_ldgf(p_lsub,pnew);
   typedef Dune::PDELab::DiscreteGridFunction<P_gSUB,V> P_gDGF;
   P_gDGF p_gdgf(p_gsub,pnew);
-  typedef S_l<TP,P_lDGF,P_gDGF> S_lDGF; 
+  typedef S_l<TP,P_lDGF,P_gDGF> S_lDGF;
   S_lDGF s_ldgf(tp,p_ldgf,p_gdgf);
-  typedef S_g<TP,P_lDGF,P_gDGF> S_gDGF; 
+  typedef S_g<TP,P_lDGF,P_gDGF> S_gDGF;
   S_gDGF s_gdgf(tp,p_ldgf,p_gdgf);
 
-  // <<<10>>> Make a linear solver 
+  // <<<10>>> Make a linear solver
   // Comment out below and uncomment to use different solver
   //typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<TPGFS,C> LS;
   //LS ls(tpgfs,cg,5000,5,1);
-  
+
   typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<IGO> LS;
   LS ls (tpgfs, 2000, 1);
 
@@ -673,4 +675,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}

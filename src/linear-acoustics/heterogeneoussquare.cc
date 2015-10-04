@@ -41,8 +41,11 @@
 #include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
+#include<dune/pdelab/gridoperator/onestep.hh>
 #include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/instationary/onestep.hh>
+#include<dune/pdelab/common/instationaryfilenamehelper.hh>
 #include<dune/pdelab/localoperator/linearacousticsdg.hh>
 
 #include<dune/pdelab/gridoperator/onestep.hh>
@@ -204,11 +207,12 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
   // <<<2>>> Make grid function space
   const int blocksize = Dune::PB::PkSize<degree,dim>::value;
   typedef Dune::PDELab::NoConstraints CON;
-  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::fixed,blocksize> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend
+    <Dune::PDELab::ISTLParameters::static_blocking,blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEMDG,CON,VBE> GFSDG;
   GFSDG gfsdg(gv,femdg);
   typedef Dune::PDELab::PowerGridFunctionSpace
-    <GFSDG,dim+1,Dune::PDELab::istl::VectorBackend<> > GFS;
+    <GFSDG,dim+1,Dune::PDELab::ISTLVectorBackend<> > GFS;
   GFS gfs(gfsdg);
   typedef typename GFS::template ConstraintsContainer<Real>::Type C;
   C cg;
@@ -276,9 +280,8 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
     int refinement = std::max(degree-1,0);
     if (degree>=2) refinement+=2;
     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,refinement);
-    vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"u"));
+    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"u"));
     vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
-
     fn.increment();
   }
 
@@ -300,7 +303,7 @@ void explicit_scheme (const GV& gv, const FEMDG& femdg, double Tend, double time
           int refinement = std::max(degree-1,0);
           if (degree>=2) refinement+=2;
           Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,refinement);
-          vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"u"));
+          vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"u"));
           vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
           fn.increment();
         }
@@ -358,10 +361,9 @@ int main(int argc, char** argv)
         Dune::array<int,dim> N(Dune::fill_array<int,dim>(20));
         std::bitset<dim> periodic(false);
         int overlap=1;
-        Dune::YaspGrid<dim> grid(L,N,periodic,overlap,helper.getCommunicator());
-
+        Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,periodic,overlap);
         for (int i=0; i<max_level; i++) grid.globalRefine(1);
-        typedef Dune::YaspGrid<dim>::LeafGridView GV;
+        typedef Dune::YaspGrid<2>::LeafGridView GV;
         const GV& gv=grid.leafGridView();
         if (p==0)
           {
