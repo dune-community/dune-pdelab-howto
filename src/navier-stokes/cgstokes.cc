@@ -53,7 +53,7 @@
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/backend/istl.hh>
-#include<dune/pdelab/localoperator/cg_stokes.hh>
+#include<dune/pdelab/localoperator/taylorhoodnavierstokes.hh>
 #include <dune/common/parametertreeparser.hh>
 #include<dune/pdelab/newton/newton.hh>
 #include "navierstokes_initial.hh"
@@ -62,7 +62,7 @@
 // The driver for all examples
 //===============================================================
 
-template<typename GV, typename V_FEM, typename P_FEM, typename IF, typename PRM, int q>
+template<typename GV, typename V_FEM, typename P_FEM, typename IF, typename PRM>
 void navierstokes
 (
  const GV& gv,
@@ -82,7 +82,7 @@ void navierstokes
   ///////////////////////////////////////////////////////
   // Construct grid function spaces
   typedef Dune::PDELab::ConformingDirichletConstraints ConstraintsAssembler;
-  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking,1>
+  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::none,1>
     VectorBackend;
   typedef Dune::PDELab::VectorGridFunctionSpace
     <GV,V_FEM,dim,VectorBackend,VectorBackend,ConstraintsAssembler> PGFS_V_GFS;
@@ -123,7 +123,7 @@ void navierstokes
 
   // Make grid function operator
   typedef Dune::PDELab::TaylorHoodNavierStokes<PRM> LOP;
-  LOP lop(parameters,q);
+  LOP lop(parameters);
 
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
@@ -262,7 +262,6 @@ int main(int argc, char** argv)
       const GV& gv=grid.leafGridView();
 
       const int p=2;
-      const int q=2*p;
 
       typedef Dune::YaspGrid<dim>::ctype DF;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,p> V_FEM;
@@ -296,7 +295,7 @@ int main(int argc, char** argv)
          initial_solution,neumann_flux);
 
       // solve problem (Stokes equations by default)
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters>
         (gv,"hagenpoiseuille_yasp_Q2Q1_2d", parameters, vFem, pFem, initial_solution);
     }
 
@@ -323,7 +322,6 @@ int main(int argc, char** argv)
       typedef Grid::ctype DF;
       typedef double R;
       const int k=2;
-      const int q=2*k;
 
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
@@ -357,7 +355,7 @@ int main(int argc, char** argv)
          initial_solution,neumann_flux);
 
       // solve problem (Stokes equations by default)
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters>
         (gv,"hagenpoiseuille_alu_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
 #endif
@@ -387,7 +385,6 @@ int main(int argc, char** argv)
       typedef GridType::ctype DF;
       typedef double R;
       const int k=2;
-      const int q=2*k;
 
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
@@ -431,7 +428,7 @@ int main(int argc, char** argv)
          initial_solution,neumann_flux);
 
       // solve problem (Stokes equations by default)
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters>
         (gv,"turbtube_ug_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
 #endif
@@ -461,7 +458,6 @@ int main(int argc, char** argv)
       typedef GridType::ctype DF;
       typedef double R;
       const int k=2;
-      const int q=2*k;
 
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
@@ -505,7 +501,7 @@ int main(int argc, char** argv)
          initial_solution,neumann_flux);
 
       // solve problem (Stokes equations by default)
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters>
         (gv,"lshape_ug_P2P1_2d", parameters, vFem, pFem, initial_solution);
     }
 #endif
@@ -536,7 +532,6 @@ int main(int argc, char** argv)
       typedef GridType::ctype DF;
       typedef double R;
       const int k=2;
-      const int q=2*k;
 
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
@@ -570,7 +565,7 @@ int main(int argc, char** argv)
          initial_solution,neumann_flux);
 
       // solve problem (Stokes equations by default)
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters>
         (gv,"hagenpoiseuille_ug_P2P1_3d", parameters, vFem, pFem, initial_solution);
     }
 #endif
@@ -597,7 +592,6 @@ int main(int argc, char** argv)
       typedef GridType::ctype DF;
       typedef double R;
       const int k=2;
-      const int q=2*k;
 
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
@@ -643,7 +637,7 @@ int main(int argc, char** argv)
          initial_solution,neumann_flux);
 
       // solve problem (Stokes equations by default)
-      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters,q>
+      navierstokes<GV,V_FEM,P_FEM,InitialSolution,LOPParameters>
         (gv,"turbtube_ug_P2P1_3d", parameters, vFem, pFem, initial_solution);
 
     }

@@ -48,8 +48,7 @@
 #include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/backend/istl.hh>
-#include<dune/pdelab/localoperator/laplacedirichletp12d.hh>
-#include<dune/pdelab/localoperator/cg_stokes.hh>
+#include<dune/pdelab/localoperator/taylorhoodnavierstokes.hh>
 #include <dune/common/parametertreeparser.hh>
 
 #include<dune/pdelab/localoperator/l2.hh>
@@ -66,7 +65,7 @@
 // The driver for all examples
 //===============================================================
 
-template<int q, typename GV, typename V_FEM, typename P_FEM, typename IF, typename PRM>
+template<int vOrder, typename GV, typename V_FEM, typename P_FEM, typename IF, typename PRM>
 void navierstokes
 (
  const GV& gv,
@@ -88,7 +87,7 @@ void navierstokes
   ///////////////////////////////////////////////////////
   // Construct grid function spaces
   typedef Dune::PDELab::ConformingDirichletConstraints ConstraintsAssembler;
-  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::no_blocking,1>
+  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::none,1>
     VectorBackend;
   typedef Dune::PDELab::VectorGridFunctionSpace
     <GV,V_FEM,dim,VectorBackend,VectorBackend,ConstraintsAssembler> PGFS_V_GFS;
@@ -129,9 +128,9 @@ void navierstokes
 
   // Make grid function operator
   typedef Dune::PDELab::TaylorHoodNavierStokes<PRM> LOP;
-  LOP lop(parameters);
+  LOP lop(parameters,1);
   typedef Dune::PDELab::NavierStokesMass<PRM> MLOP;
-  MLOP mlop(parameters,q);
+  MLOP mlop(parameters,1);
 
   Dune::PDELab::FractionalStepParameter<RF> method;
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
@@ -214,7 +213,7 @@ void navierstokes
 
   // Compute norm of final solution
   typename PDGF::Traits::RangeType l1norm(0);
-  Dune::PDELab::integrateGridFunction(pdgf,l1norm,q);
+  Dune::PDELab::integrateGridFunction(pdgf,l1norm,2*vOrder+2);
   std::cout << std::setw(12) << std::setprecision(7) << std::scientific
             << "L1 norm: " <<  l1norm << std::endl;
 
@@ -296,7 +295,6 @@ int main(int argc, char** argv)
       typedef GridType::ctype DF;
       typedef double R;
       const int k=2;
-      const int q=2*k;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
       V_FEM vFem(gv); P_FEM pFem(gv);
@@ -338,7 +336,7 @@ int main(int argc, char** argv)
          initial_solution,neumann_flux);
 
       // solve problem (Navier-Stokes equations)
-      navierstokes<q>
+      navierstokes<k>
         (gv,"turbtube_ug_P2P1_2d", parameters, config_parser, vFem, pFem, initial_solution);
     }
 #endif
@@ -369,7 +367,6 @@ int main(int argc, char** argv)
       typedef GridType::ctype DF;
       typedef double R;
       const int k=2;
-      const int q=2*k;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k> V_FEM;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,R,k-1> P_FEM;
       V_FEM vFem(gv); P_FEM pFem(gv);
@@ -409,7 +406,7 @@ int main(int argc, char** argv)
          initial_solution,neumann_flux);
 
       // solve problem (Navier-Stokes equations)
-      navierstokes<q>
+      navierstokes<k>
         (gv,"lshape_ug_P2P1_2d", parameters, config_parser, vFem, pFem, initial_solution);
     }
 #endif
