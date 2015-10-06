@@ -26,7 +26,7 @@ set(TEX_FILES adaptivity.tex algebraicformulation.tex constrainedspaces.tex
         pdelab-howto-article.tex  stationaryproblems.tex summary.tex
 	systems.tex weightedresidual.tex workflow.tex)
 
-set(EPS_IMAGES
+set(IMAGES
   EPS/adaptivity/adaptive_iso.eps
   EPS/adaptivity/adaptivity1.eps
   EPS/adaptivity/adaptivity2.eps
@@ -61,6 +61,9 @@ set(EPS_IMAGES
   EPS/crank/geo2.eps
   EPS/dd.eps
   EPS/dnapl-3d-het-iso.eps
+  EPS/entities.pdf
+  EPS/entities_cd.pdf
+  EPS/iterators.pdf
   EPS/example01a_Q1.eps
   EPS/example01a_Q2.eps
   EPS/example01a_RT.eps
@@ -79,6 +82,7 @@ set(EPS_IMAGES
   EPS/gcad3d_cyl_gmsh.eps
   EPS/gcad3d_deckel.eps
   EPS/hammer_surfgroups.eps
+  EPS/intersection.pdf
   EPS/istlsolver.eps
   EPS/iwrlogo.eps
   EPS/iwrlogo-klein.eps
@@ -113,6 +117,7 @@ set(EPS_IMAGES
   EPS/q1laplace3d.eps
   EPS/q1laplace.eps
   EPS/quadrilateral.eps
+  EPS/refelem-mapping.pdf
   EPS/rotbilinear.eps
   EPS/scalarmatrix.eps
   EPS/SecMesh2D.eps
@@ -186,13 +191,17 @@ set(SOURCES
   src_examples/cadsample_P1.hh
   src_examples/cadsample_parameter.hh
   src_examples/gridtest.cc
-
+  src_examples/iterators.cc
+  src_examples/entity.cc
+  src_examples/intersection.cc
+  src_examples/intersection2.cc
+  src_examples/communicate.cc
 )
 
 # Install documentation
 # We assume that ${DOCFILES} and ${DOCFILES_EXTRA} are targets
 if(LATEX_USABLE)
   dune_add_latex_document(pdelab-howto-article.tex FATHER_TARGET doc DEFAULT_PDF
-      INPUTS ${TEX_FILES} turing.avi turing_3D.avi ${SOURCES} IMAGES ${EPS_IMAGES} BIBFILES lit.bib)
+      INPUTS ${TEX_FILES} turing.avi turing_3D.avi ${SOURCES} IMAGES ${IMAGES} BIBFILES lit.bib)
  create_doc_install(${DOCFILES} ${docdir} pdelab-howto-article_safepdf)
 endif(LATEX_USABLE)
