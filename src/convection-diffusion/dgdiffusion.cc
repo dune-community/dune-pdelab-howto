@@ -219,7 +219,7 @@ int main(int argc, char** argv)
     }
 
   // read command line arguments
-  if (argc!=7)
+  if (argc!=6)
     {
       std::cout << "usage: dgdiffusion <dim> <geometry> <level> <method> <degree>" << std::endl;
       std::cout << "       <dim>      = 2 | 3" << std::endl;
@@ -236,12 +236,11 @@ int main(int argc, char** argv)
 
   typedef double Real;
 
-  char choice; sscanf(argv[1],"%c",&choice);
-  int dim_dyn; sscanf(argv[2],"%d",&dim_dyn);
-  std::string mesh(argv[3]);
-  int level; sscanf(argv[4],"%d",&level);
-  std::string method(argv[5]);
-  int degree_dyn; sscanf(argv[6],"%d",&degree_dyn);
+  int dim_dyn; sscanf(argv[1],"%d",&dim_dyn);
+  std::string mesh(argv[2]);
+  int level; sscanf(argv[3],"%d",&level);
+  std::string method(argv[4]);
+  int degree_dyn; sscanf(argv[5],"%d",&degree_dyn);
 
   try {
 
