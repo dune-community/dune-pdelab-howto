@@ -24,7 +24,7 @@
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionccfv.hh>
-#include<dune/pdelab/localoperator/darcy_CCFV.hh>
+#include<dune/pdelab/localoperator/darcyccfv.hh>
 #include<dune/pdelab/localoperator/permeability_adapter.hh>
 #include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>

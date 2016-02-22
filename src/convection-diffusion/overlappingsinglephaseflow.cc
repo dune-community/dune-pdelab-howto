@@ -28,7 +28,7 @@
 #include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionfem.hh>
-#include<dune/pdelab/localoperator/darcy_FEM.hh>
+#include<dune/pdelab/localoperator/darcyfem.hh>
 #include<dune/pdelab/localoperator/permeability_adapter.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
 
