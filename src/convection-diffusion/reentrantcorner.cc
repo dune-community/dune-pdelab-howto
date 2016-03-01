@@ -233,7 +233,7 @@ void poisson_driver (const GV& gv, const FEM& fem, std::string filename, int k)
   typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
   LS ls (5000,2);
   typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,V> SLP;
-  SLP slp(go,x0,ls,1e-12);
+  SLP slp(go,ls,x0,1e-12);
   slp.apply();
 
   // make discrete function object
