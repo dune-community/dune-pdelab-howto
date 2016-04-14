@@ -197,7 +197,6 @@ void navierstokes
   // graphics for initial guess
   vtkwriter.write(time,Dune::VTK::appendedraw);
   V x(gfs,0.0);
-  Dune::PDELab::interpolate(initial_solution,gfs,x);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x);
   while (time < final_time - dt_min*0.5)
     {

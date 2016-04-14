@@ -220,7 +220,7 @@ class TUVelocity :
   TUVelocity<GV,RF,dim> >
 {
   RF time;
-  const RF& meanflow_;
+  const RF meanflow_;
 
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dim> Traits;
