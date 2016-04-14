@@ -183,7 +183,8 @@ void navierstokes
   VDGF vdgf(velocitySubGfs,xold);
   typedef Dune::PDELab::DiscreteGridFunction<PressureSubGFS,V> PDGF;
   PDGF pdgf(pressureSubGfs,xold);
-  Dune::SubsamplingVTKSequenceWriter<GV> vtkwriter(gv,2,filename.c_str(),filename.c_str(),"");
+  auto stationaryvtkwriter = std::make_shared<Dune::SubsamplingVTKWriter<GV> >(gv,2);
+  Dune::VTKSequenceWriter<GV> vtkwriter(stationaryvtkwriter,filename.c_str(),filename.c_str(),"");
   vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<VDGF> >(vdgf,"v"));
   vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<PDGF> >(pdgf,"p"));
 
