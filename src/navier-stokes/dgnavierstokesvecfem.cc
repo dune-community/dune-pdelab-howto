@@ -52,7 +52,9 @@ void navierstokesvecfem(
                         pFEM pFem)
 {
   // constants and types
-  const unsigned int dim = GV::dimension;
+  using ES = Dune::PDELab::AllEntitySet<GV>;
+  ES es(gv);
+  const unsigned int dim = ES::dimension;
 
   // vector backend for velocity and pressure
   typedef Dune::PDELab::istl::VectorBackend<> VelocityVectorBackend;
@@ -62,13 +64,13 @@ void navierstokesvecfem(
   typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::none> VectorBackend;
 
   // velocity grid function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,vFEM,Dune::PDELab::NoConstraints,VelocityVectorBackend> velocityGFS;
-  velocityGFS velocityGfs(gv,vFem);
+  typedef Dune::PDELab::GridFunctionSpace<ES,vFEM,Dune::PDELab::NoConstraints,VelocityVectorBackend> velocityGFS;
+  velocityGFS velocityGfs(es,vFem);
   velocityGfs.name("v");
 
   // pressure grid function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,pFEM,Dune::PDELab::NoConstraints,PVectorBackend> pGFS;
-  pGFS pGfs(gv,pFem);
+  typedef Dune::PDELab::GridFunctionSpace<ES,pFEM,Dune::PDELab::NoConstraints,PVectorBackend> pGFS;
+  pGFS pGfs(es,pFem);
   pGfs.name("p");
 
   // composite grid function space
@@ -83,12 +85,12 @@ void navierstokesvecfem(
   // boundary conditions and parameters
   typedef BCTypeParamGlobalDirichlet BType;
   BType b;
-  typedef ZeroVectorFunction<GV,RF,dim> FType;
-  FType f(gv);
-  typedef HagenPoiseuilleVelocityBox<GV,RF,dim> VType;
-  VType v(gv);
-  typedef ZeroScalarFunction<GV,RF> PType;
-  PType p(gv);
+  typedef ZeroVectorFunction<ES,RF,dim> FType;
+  FType f(es);
+  typedef HagenPoiseuilleVelocityBox<ES,RF,dim> VType;
+  VType v(es);
+  typedef ZeroScalarFunction<ES,RF> PType;
+  PType p(es);
 
   const RF mu = 1.0;
   const RF rho = 1.0;
@@ -96,7 +98,7 @@ void navierstokesvecfem(
   typedef typename Dune::PDELab::DefaultInteriorPenalty<RF> PenaltyTerm;
   PenaltyTerm ip_term(method,mu);
 
-  typedef Dune::PDELab::DGNavierStokesParameters<GV,RF,FType,BType,VType,PType,true,false,PenaltyTerm>
+  typedef Dune::PDELab::DGNavierStokesParameters<ES,RF,FType,BType,VType,PType,true,false,PenaltyTerm>
     LocalDGOperatorParameters;
   LocalDGOperatorParameters lop_params(method,mu,rho,f,b,v,p,ip_term);
 
@@ -177,7 +179,7 @@ int main(int argc, char** argv)
 
       // get view
       typedef Dune::YaspGrid<dim>::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      const GV gv=grid.leafGridView();
 
       // make finite element map
       const int vOrder = 1;
@@ -218,7 +220,7 @@ int main(int argc, char** argv)
 
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv = grid->leafGridView();
+      const GV gv = grid->leafGridView();
 
       // make finite element map
       const int vOrder = 1;

@@ -46,8 +46,10 @@ template<typename GV, typename RF, int vOrder, int pOrder>
 void stokes (const GV& gv, std::string filename, const std::string method)
 {
   // <<<1>>> constants and types
-  typedef typename GV::Grid::ctype DF;
-  static const unsigned int dim = GV::dimension;
+  using ES = Dune::PDELab::AllEntitySet<GV>;
+  ES es(gv);
+  typedef typename ES::Grid::ctype DF;
+  static const unsigned int dim = ES::dimension;
   Dune::Timer watch;
   std::cout << "=== Initialize" << std::endl;
 
@@ -77,19 +79,19 @@ void stokes (const GV& gv, std::string filename, const std::string method)
   Dune::dinfo << "--- v^dim" << std::endl;
   typedef Dune::PDELab::EntityBlockedOrderingTag VelocityOrderingTag;
   typedef Dune::PDELab::VectorGridFunctionSpace<
-    GV,vFEM,dim,
+    ES,vFEM,dim,
     VelocityVectorBackend,
     VVectorBackend,
     Dune::PDELab::NoConstraints,
     VelocityOrderingTag
     > velocityGFS;
-  velocityGFS velocityGfs(gv,vFem);
+  velocityGFS velocityGfs(es,vFem);
   velocityGfs.name("v");
   // p
   Dune::dinfo << "--- p" << std::endl;
-  typedef Dune::PDELab::GridFunctionSpace<GV,pFEM,
+  typedef Dune::PDELab::GridFunctionSpace<ES,pFEM,
                                           Dune::PDELab::NoConstraints, PVectorBackend> pGFS;
-  pGFS pGfs(gv,pFem);
+  pGFS pGfs(es,pFem);
   pGfs.name("p");
   // GFS
   Dune::dinfo << "--- v^dim,p" << std::endl;
@@ -106,12 +108,12 @@ void stokes (const GV& gv, std::string filename, const std::string method)
 
   typedef BCTypeParamGlobalDirichlet BType;
   BType b;
-  typedef ZeroVectorFunction<GV,RF,dim> FType;
-  FType f(gv);
-  typedef HagenPoiseuilleVelocityBox<GV,RF,dim> VType;
-  VType v(gv);
-  typedef ZeroScalarFunction<GV,RF> PType;
-  PType p(gv);
+  typedef ZeroVectorFunction<ES,RF,dim> FType;
+  FType f(es);
+  typedef HagenPoiseuilleVelocityBox<ES,RF,dim> VType;
+  VType v(es);
+  typedef ZeroScalarFunction<ES,RF> PType;
+  PType p(es);
 
   // <<<4>>> Make grid Function operator
   watch.reset();
@@ -120,7 +122,7 @@ void stokes (const GV& gv, std::string filename, const std::string method)
   typedef typename Dune::PDELab::DefaultInteriorPenalty<RF> PenaltyTerm;
   PenaltyTerm ip_term(method,mu);
 
-  typedef Dune::PDELab::DGNavierStokesParameters<GV,RF,FType,BType,VType,PType,false,false,PenaltyTerm>
+  typedef Dune::PDELab::DGNavierStokesParameters<ES,RF,FType,BType,VType,PType,false,false,PenaltyTerm>
     LocalDGOperatorParameters;
   LocalDGOperatorParameters lop_params(method,mu,rho,f,b,v,p,ip_term);
   typedef Dune::PDELab::DGNavierStokes<LocalDGOperatorParameters> LocalDGOperator;
@@ -227,7 +229,7 @@ int main(int argc, char** argv)
 
       // get view
       typedef Dune::YaspGrid<dim>::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      const GV gv=grid.leafGridView();
 
       // solve problem
       Dune::dinfo.push(false);
@@ -248,7 +250,7 @@ int main(int argc, char** argv)
 
       // get view
       typedef Dune::YaspGrid<dim>::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      const GV gv=grid.leafGridView();
 
       // solve problem
       stokes<GV,double,2,1>(gv,"dgstokes-3D-2-1", method);
