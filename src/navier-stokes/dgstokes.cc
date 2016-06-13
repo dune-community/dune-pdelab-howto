@@ -43,7 +43,7 @@
 
 // generate a composite P2/P1 function and output it
 template<typename GV, typename RF, int vOrder, int pOrder>
-void stokes (const GV& gv, std::string filename, const std::string method)
+void stokes (const GV& gv, const Dune::ParameterTree& configuration, std::string filename)
 {
   // <<<1>>> constants and types
   using ES = Dune::PDELab::AllEntitySet<GV>;
@@ -117,14 +117,11 @@ void stokes (const GV& gv, std::string filename, const std::string method)
 
   // <<<4>>> Make grid Function operator
   watch.reset();
-  const double mu = 1.0;
-  const double rho = 1.0;
-  typedef typename Dune::PDELab::DefaultInteriorPenalty<RF> PenaltyTerm;
-  PenaltyTerm ip_term(method,mu);
+  typedef Dune::PDELab::DefaultInteriorPenalty<RF> PenaltyTerm;
 
   typedef Dune::PDELab::DGNavierStokesParameters<ES,RF,FType,BType,VType,PType,false,false,PenaltyTerm>
     LocalDGOperatorParameters;
-  LocalDGOperatorParameters lop_params(method,mu,rho,f,b,v,p,ip_term);
+  LocalDGOperatorParameters lop_params(configuration.sub("parameters"),f,b,v,p);
   typedef Dune::PDELab::DGNavierStokes<LocalDGOperatorParameters> LocalDGOperator;
   const int superintegration_order = 0;
   LocalDGOperator lop(lop_params,superintegration_order);
@@ -207,15 +204,19 @@ int main(int argc, char** argv)
     int x=2;
     int y=2;
     int z=2;
-    std::string method = "nipg";
     if (argc > 1)
       x = atoi(argv[1]);
     if (argc > 2)
       y = atoi(argv[2]);
     if (argc > 3)
       z = atoi(argv[3]);
-    if (argc > 4)
-      method = argv[4];
+
+    Dune::ParameterTree configuration;
+    const std::string config_filename("dgstokes.ini");
+    std::cout << "Reading ini-file \""<< config_filename
+              << "\"" << std::endl;
+
+    Dune::ParameterTreeParser::readINITree(config_filename, configuration);
 
     // YaspGrid P2/P1 2D test
     if(1){
@@ -233,7 +234,7 @@ int main(int argc, char** argv)
 
       // solve problem
       Dune::dinfo.push(false);
-      stokes<GV,double,2,1>(gv,"dgstokes-2D-2-1", method);
+      stokes<GV,double,2,1>(gv,configuration,"dgstokes-2D-2-1");
     }
 
 
@@ -253,7 +254,7 @@ int main(int argc, char** argv)
       const GV gv=grid.leafGridView();
 
       // solve problem
-      stokes<GV,double,2,1>(gv,"dgstokes-3D-2-1", method);
+      stokes<GV,double,2,1>(gv,configuration,"dgstokes-3D-2-1");
     }
 #endif
 

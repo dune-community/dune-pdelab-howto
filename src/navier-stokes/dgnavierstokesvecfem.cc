@@ -47,6 +47,7 @@
 template<typename GV, typename RF, typename vFEM, typename pFEM>
 void navierstokesvecfem(
                         const GV& gv,
+                        const Dune::ParameterTree& configuration,
                         std::string filename,
                         vFEM vFem,
                         pFEM pFem)
@@ -92,15 +93,11 @@ void navierstokesvecfem(
   typedef ZeroScalarFunction<ES,RF> PType;
   PType p(es);
 
-  const RF mu = 1.0;
-  const RF rho = 1.0;
-  std::string method = "-1 20.0 1";
-  typedef typename Dune::PDELab::DefaultInteriorPenalty<RF> PenaltyTerm;
-  PenaltyTerm ip_term(method,mu);
+  typedef Dune::PDELab::DefaultInteriorPenalty<RF> PenaltyTerm;
 
   typedef Dune::PDELab::DGNavierStokesParameters<ES,RF,FType,BType,VType,PType,true,false,PenaltyTerm>
     LocalDGOperatorParameters;
-  LocalDGOperatorParameters lop_params(method,mu,rho,f,b,v,p,ip_term);
+  LocalDGOperatorParameters lop_params(configuration.sub("parameters"),f,b,v,p);
 
   // local operators
   typedef Dune::PDELab::DGNavierStokesVelVecFEM<LocalDGOperatorParameters> LocalDGOperator;
@@ -165,6 +162,13 @@ int main(int argc, char** argv)
   else
     example_switch = argv[1];
 
+  Dune::ParameterTree configuration;
+  const std::string config_filename("dgstokes.ini");
+  std::cout << "Reading ini-file \""<< config_filename
+            << "\"" << std::endl;
+
+  Dune::ParameterTreeParser::readINITree(config_filename, configuration);
+
   try {
 
     // YaspGrid Hagen-Poiseuille test
@@ -193,7 +197,7 @@ int main(int argc, char** argv)
 
       // solve problem
       navierstokesvecfem<GV,RF,vFEM,pFEM>
-        (gv,"hagenpoiseuille_yasp_BDM1Q0_2d",vFem,pFem);
+        (gv,configuration,"hagenpoiseuille_yasp_BDM1Q0_2d",vFem,pFem);
     }
 
     //==================================================================//
@@ -234,7 +238,7 @@ int main(int argc, char** argv)
 
       // solve problem
       navierstokesvecfem<GV,RF,vFEM,pFEM>
-        (gv,"hagenpoiseuille_alu_BDM1P0_2d",vFem,pFem);
+        (gv,configuration,"hagenpoiseuille_alu_BDM1P0_2d",vFem,pFem);
     }
 #endif
 #endif
