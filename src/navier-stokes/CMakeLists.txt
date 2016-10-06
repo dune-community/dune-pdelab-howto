@@ -5,4 +5,4 @@ add_executable(dgnavierstokesvecfem dgnavierstokesvecfem.cc)
 add_executable(dgstokes dgstokes.cc)
 endif()
 
-dune_symlink_to_source_files(FILES cgstokes.ini cgstokes_instat.ini grids)
+dune_symlink_to_source_files(FILES cgstokes.ini cgstokes_instat.ini dgstokes.ini grids)
