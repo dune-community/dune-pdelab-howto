@@ -70,7 +70,7 @@ void navierstokes
 (
  const GV& gv,
  std::string filename,
- const PRM & parameters,
+ PRM & parameters,
  const Dune::ParameterTree parser,
  V_FEM & vFem, P_FEM & pFem,
  IF & initial_solution)

@@ -67,7 +67,7 @@ void navierstokes
 (
  const GV& gv,
  std::string filename,
- const PRM & parameters,
+ PRM & parameters,
  V_FEM & vFem, P_FEM & pFem,
  IF & initial_solution )
 {
