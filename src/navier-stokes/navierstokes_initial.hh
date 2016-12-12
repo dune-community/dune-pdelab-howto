@@ -96,6 +96,10 @@ public:
     else
       y = BC::VelocityDirichlet;
   }
+
+  template<typename Time>
+  void setTime(Time)
+  {}
 };
 
 /** \brief Boundary conditions for three dimensional flow around a cylinder obstacle
@@ -162,6 +166,10 @@ public:
     else
       y = BC::VelocityDirichlet;
   }
+
+  template<typename Time>
+  void setTime(Time)
+  {}
 };
 
 /** \brief Dirichlet velocity function for Hagen-Poiseuille flow in a box.
@@ -466,6 +474,10 @@ public:
     else if(x[direction]-origin > length-1e-6)
       y = 0.;
   }
+
+  template<typename Time>
+  void setTime(Time)
+  {}
 };
 
 
