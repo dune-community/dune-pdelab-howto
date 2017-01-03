@@ -15,7 +15,6 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/float_cmp.hh>
-#include<dune/common/static_assert.hh>
 #include<dune/grid/yaspgrid.hh>
 #if HAVE_ALBERTA
 #include<dune/grid/albertagrid.hh>
