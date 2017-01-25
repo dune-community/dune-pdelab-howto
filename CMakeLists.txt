@@ -34,7 +34,7 @@ set(EXTRA_DIST
         CC-BY-SA        
         RELEASE_NOTES)
 
-set(SUBDIRS  doc m4 src)
+set(SUBDIRS  doc src)
 
 # don't follow the full GNU-standard
 # we need automake 1.5
